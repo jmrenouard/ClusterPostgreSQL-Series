@@ -8,7 +8,7 @@
 | Phase | Milestone | Scope | Status | Verification |
 | :--- | :--- | :--- | :---: | :--- |
 | **Phase 1** | Repository Governance & Harness | License, governance, `.env.example`, CI, Makefile, tests | Complete | `make test` |
-| **Phase 2** | Comparative Study (`en` / `fr`) | Architectural taxonomy, matrices, consensus limits | Planned | `make check-math` |
+| **Phase 2** | Comparative Study (`en` / `fr`) | Architectural taxonomy, matrices, consensus limits | In Progress | `make check-math` |
 | **Phase 3** | Reproducible Docker PoCs | Native logical, Spock/pgEdge, Bucardo, Citus, YugabyteDB, CockroachDB | Planned | `make test-*` |
 | **Phase 4** | Benchmarks & Synthesis | Empirical limits, pgbench/sysbench throughput & latency | Planned | `make bench-all` |
 
@@ -16,9 +16,13 @@
 
 | Action ID | Date (ISO) | Issue / Branch | Status | Summary |
 | :--- | :--- | :--- | :--- | :--- |
-| *None* | - | - | - | All Phase 1 actions completed and archived below. |
+| *None* | - | - | - | All tracked actions archived below once verified. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-004 - Land English Chapter 01 Executive Summary & Taxonomy (Issue `#7`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#7` (`docs/issue-7-en-01-executive-summary`)
+- **Request / Changes / Result**: Added `docs/en/01_executive_summary_and_taxonomy.md` and marked Phase 2 `In Progress`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
 
 ### ACT-003 - Add Markdown LaTeX Math Validation Suite & `make check-math` (Issue `#5`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#5` (`feat/issue-5-docs-math-syntax-tests`)
