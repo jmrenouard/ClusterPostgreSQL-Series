@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-012 - Land French Chapter 02 Theoretical Foundations (Issue `#23`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#23` (`docs/issue-23-fr-02-fondements-theoriques`)
+- **Request / Changes / Result**: Added `docs/fr/02_fondements_theoriques_cap_pacelc_conflits.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
+
 ### ACT-011 - Land French Chapter 01 Executive Summary & Taxonomy (Issue `#21`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#21` (`docs/issue-21-fr-01-synthese-taxonomie`)
 - **Request / Changes / Result**: Added `docs/fr/01_synthese_et_taxonomie.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
