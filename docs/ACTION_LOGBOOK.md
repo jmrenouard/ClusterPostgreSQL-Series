@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-042 - Land Root English `README.md` (Issue `#83`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#83` (`docs/issue-83-readme-en`)
+- **Request / Changes / Result**: Added `README.md`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-041 - Land English Chapter 08 Limits & Failure Modes (Issue `#81`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#81` (`docs/issue-81-en-08-limits-failure-modes`)
 - **Request / Changes / Result**: Added `docs/en/08_limits_and_failure_modes.md`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
