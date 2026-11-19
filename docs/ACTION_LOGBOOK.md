@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-016 - Land French Chapter 05 PoC Architectures & Test Protocol (Issue `#31`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#31` (`docs/issue-31-fr-05-architectures-poc`)
+- **Request / Changes / Result**: Added `docs/fr/05_architectures_poc_et_protocole_de_test.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
+
 ### ACT-015 - Land French Chapter 04 Feature Comparison (Issue `#29`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#29` (`docs/issue-29-fr-04-etude-comparative`)
 - **Request / Changes / Result**: Added `docs/fr/04_etude_comparative_fonctionnalites.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
