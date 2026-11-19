@@ -1,0 +1,3 @@
+[submodule "env/multi-db-docker-env"]
+	path = env/multi-db-docker-env
+	url = https://github.com/jmrenouard/multi-db-docker-env.git
