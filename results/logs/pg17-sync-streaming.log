@@ -1,0 +1,192 @@
+=== [pg17-sync-streaming] Start ===
+pgbench (17.11 (Debian 17.11-1.pgdg13+2))
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 2
+query mode: simple
+number of clients: 8
+number of threads: 4
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 8192
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 19.537 ms
+initial connection time = 13.515 ms
+tps = 409.483420 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2))
+transaction type: /tmp/s_d1.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 4076
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 19.636 ms
+initial connection time = 12.590 ms
+tps = 203.708983 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2))
+transaction type: /tmp/s_d2.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 4076
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 19.636 ms
+initial connection time = 13.916 ms
+tps = 203.702620 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2))
+transaction type: /tmp/s_ov.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 4675
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 17.133 ms
+initial connection time = 12.138 ms
+tps = 233.467924 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2))
+transaction type: /tmp/s_ov.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 4640
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 17.260 ms
+initial connection time = 13.147 ms
+tps = 231.749259 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2))
+transaction type: <builtin: select only>
+scaling factor: 2
+query mode: simple
+number of clients: 8
+number of threads: 4
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 543834
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 0.294 ms
+initial connection time = 19.729 ms
+tps = 27217.485846 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2))
+transaction type: <builtin: select only>
+scaling factor: 2
+query mode: simple
+number of clients: 8
+number of threads: 4
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 544785
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 0.293 ms
+initial connection time = 20.571 ms
+tps = 27265.587194 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2))
+transaction type: /tmp/s_hot.sql
+scaling factor: 1
+query mode: simple
+number of clients: 8
+number of threads: 4
+maximum number of tries: 100
+duration: 15 s
+number of transactions actually processed: 20541
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 5.839 ms
+initial connection time = 13.604 ms
+tps = 1370.101401 (without initial connection time)
+sysbench 1.0.20 (using system LuaJIT 2.1.1700206165)
+
+Running the test with following options:
+Number of threads: 8
+Initializing random number generator from current time
+
+
+Initializing worker threads...
+
+Threads started!
+
+SQL statistics:
+    queries performed:
+        read:                            231210
+        write:                           65575
+        other:                           33278
+        total:                           330063
+    transactions:                        16397  (819.36 per sec.)
+    queries:                             330063 (16493.23 per sec.)
+    ignored errors:                      118    (5.90 per sec.)
+    reconnects:                          0      (0.00 per sec.)
+
+General statistics:
+    total time:                          20.0109s
+    total number of events:              16397
+
+Latency (ms):
+         min:                                    4.67
+         avg:                                    9.76
+         max:                                 1014.79
+         95th percentile:                       11.65
+         sum:                               159993.03
+
+Threads fairness:
+    events (avg/stddev):           2049.6250/15.27
+    execution time (avg/stddev):   19.9991/0.00
+
+pgbench (17.11 (Debian 17.11-1.pgdg13+2))
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 2
+query mode: simple
+number of clients: 8
+number of threads: 4
+maximum number of tries: 100
+duration: 15 s
+number of transactions actually processed: 866
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 140.354 ms
+initial connection time = 17.449 ms
+tps = 56.998779 (without initial connection time)
+=== [pg17-sync-streaming] Down ===
