@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-022 - Land Benchmark Orchestrator & Baseline/Birep Setup Scripts (Issue `#43`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#43` (`feat/issue-43-scripts-bench-runner`)
+- **Request / Changes / Result**: Added `scripts/bench_pg_multimaster.sh`, `scripts/setup_pg17_baseline.sh`, and `scripts/setup_birep.sh`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-021 - Land Benchmark Runner Dockerfile & Python Helper Library (Issue `#41`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#41` (`feat/issue-41-scripts-bench-lib`)
 - **Request / Changes / Result**: Added `scripts/Dockerfile.bench` and `scripts/bench_pg_lib.py`; marked Phase 4 `In Progress`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
