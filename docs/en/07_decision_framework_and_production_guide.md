@@ -1,0 +1,94 @@
+# 07 — Decision Framework and Production Architecture Guide
+
+**Series:** PostgreSQL Multi-Master & Active-Active Architectures  
+**Author:** Jean-Marie Renouard (`jmrenouard`) — [LightPath](https://www.lightpath.fr)  
+**License:** MIT License
+
+---
+
+## 1. Architectural Selection Decision Tree
+
+Most "multi-master" initiatives stem from three conflated goals: **high availability (`RTO < 30 s`)**, **low-latency global reads**, or **true simultaneous multi-region writes**. Selecting the right topology starts by isolating which requirement is genuinely non-negotiable:
+
+```mermaid
+flowchart TD
+    Start["Start: PostgreSQL Scaling or Multi-Region Goal"] --> Q1{"Need Multi-Region or Multi-Node Active WRITES?"}
+    Q1 -- "No (HA + Read Scale Only)" --> A1["#15 Patroni + etcd + Read Replicas (or AlloyDB)"]
+    Q1 -- "Yes" --> Q2{"Can Single Key/Row Be Written Simultaneously Across Regions?"}
+
+    Q2 -- "No: Strict Serializability & RPO=0 Required" --> Q3{"Need High PG Extension / PL/pgSQL Parity?"}
+    Q3 -- "Yes (Self-Hosted)" --> A2["#5 YugabyteDB (YSQL) or #4 EDB PGD (CAMO/Eager, Commercial)"]
+    Q3 -- "Wire-Level Suffices / Cloud" --> A3["#6 CockroachDB (Self/Cloud) or #13 Spanner PG (GCP)"]
+
+    Q2 -- "Yes: Horizontal Sharding by Tenant/Key Works" --> Q4{"Managed AWS vs Self-Hosted PG?"}
+    Q4 -- "Self-Hosted PG 17" --> A4["#7 Citus (Hash-Distributed + 2PC Reference Tables)"]
+    Q4 -- "AWS Managed" --> A5["#12 AWS Aurora Limitless Database"]
+
+    Q2 -- "Yes: Local Write Latency (PA/EL) Beats Strong Sync" --> Q5{"Homogeneous PostgreSQL?"}
+    Q5 -- "Yes (Need LWW / CRDT / Auto-DDL)" --> A6["#2 pgEdge / Spock v5 (OSS) or #4 EDB PGD Async (Commercial)"]
+    Q5 -- "Yes (Strict Partitioned Keyspaces Only)" --> A7["#1 PG 17/18 Native Bidirectional (origin=none)"]
+    Q5 -- "Heterogeneous / Offline Edge" --> A8["#10 SymmetricDS (avoid #9/#14 for heavy OLTP)"]
+```
+
+---
+
+## 2. Workload-to-Architecture Mapping Matrix
+
+| Canonical Workload Pattern | Recommended Pick | Runner-Up | Architectural Rationale |
+| :--- | :--- | :--- | :--- |
+| **Single-Region Mission-Critical OLTP** | **#15 Patroni + etcd** | #4 EDB PGD (Write-Lead) | Zero conflict risk, 100% PG extension parity, deterministic `RPO=0` sync HA |
+| **Multi-Tenant SaaS Exceeding 1 Node Writes** | **#7 Citus** | #5 YugabyteDB / #12 Limitless | `tenant_id` sharding routes 95%+ queries to 1 worker without WAN 2PC tax |
+| **Global Financial Ledger (Zero Lost Updates)** | **#6 CockroachDB** or **#13 Spanner PG** | #5 YugabyteDB (`SERIALIZABLE`) | Strict `SERIALIZABLE` / External Consistency eliminates async LWW anomalies |
+| **Geo-Distributed Edge / User-Local Active-Active** | **#2 pgEdge / Spock v5** | #4 EDB PGD (Async + CRDT) | Sub-millisecond local commits (`PA/EL`) + `snowflake` + `delta_apply` CRDTs |
+| **Regional Partitioned Tables (EU writes EU, US writes US)** | **#1 PG 17/18 Native (`origin=none`)** | #2 pgEdge / Spock v5 | Zero third-party extension risk when key ownership never overlaps across regions |
+| **Regulated Enterprise Multi-Region PG with SLA** | **#4 EDB PGD (BDR)** | #5 YugabyteDB Enterprise | Raft DDL locks, CAMO, Write-Lead proxy, and commercial vendor support |
+| **Disconnected Retail POS / Heterogeneous DB Sync** | **#10 SymmetricDS** | #9 Bucardo 5 (PG-only low vol) | Tolerates multi-hour offline stores and MySQL/Oracle/SQLite heterogeneous peers |
+| **Read-Heavy Global Analytics + Local Writes** | **#15 Patroni + Cross-Region Replicas** | #13 AlloyDB / #7 Citus | Logical or physical read replicas scale reads infinitely without multi-writer risk |
+
+---
+
+## 3. Six Critical Multi-Master Anti-Patterns
+
+Avoiding catastrophic production incidents requires recognizing the six recurring failure patterns observed across PostgreSQL multi-master deployments:
+
+1. **The 2-Node Split-Brain / Quorum Trap:** Deploying a 2-node consensus cluster (or 2-node Patroni without a 3rd witness/etcd voter) makes quorum impossible when one link drops: either both halves fence themselves (`0%` availability) or both promote (`100%` split-brain corruption). Always deploy **odd voter counts (`3` or `5`)** or a dedicated lightweight witness node.
+2. **Uncoordinated `SERIAL` / `IDENTITY` Sequences:** Leaving standard `1, 2, 3...` sequences active on two bidirectional nodes guarantees `SQLSTATE 23505` collisions within milliseconds of concurrent traffic. Enforce **stepped offsets** (`INCREMENT BY N`), **Snowflake 64-bit IDs**, or **UUIDv7** from day one.
+3. **Keyless Tables in Logical Replication:** Legacy audit logs or join tables lacking a `PRIMARY KEY` cannot be updated or deleted under `pgoutput` (`SQLSTATE 55000`), and Bucardo refuses to sync them outright. Mandate surrogate primary keys on every replicated table via CI schema linting.
+4. **Hot-Row Contention Under Distributed Consensus:** Putting a global hit counter, sequential batch counter, or single `pgbench_branches` row behind cross-region Raft (`#5 YugabyteDB`, `#6 CockroachDB`, `#4 EDB Eager`) serializes the entire cluster behind `2 * RTT` per transaction and triggers `SQLSTATE 40001` retry storms. Shard counters (`bucket_id`) or offload increments to CRDTs / async streams.
+5. **PgPool-II Statement Broadcast on Non-Deterministic SQL:** Using PgPool-II Replication Mode (`#11`) with triggers, `RANDOM()`, `gen_random_uuid()`, or mixed `NOW()` calls silently corrupts state across backends. Restrict PgPool-II strictly to **Streaming Replication (Single-Primary)** read/write splitting.
+6. **Clock-Drift Blindness Under LWW (`PA/EL`):** Running LWW conflict resolution (`#2 pgEdge`, `#3 pglogical`, `#9 Bucardo`) without strict `chrony`/NTP monitoring lets a drifted server win every future conflict (`clock + skew > real_time`), silently discarding legitimate updates from healthy peers.
+
+---
+
+## 4. Production Sizing, Quorum & Observability Guardrails
+
+| Operational Layer | Mandatory Production Standard | Rationale |
+| :--- | :--- | :--- |
+| **Quorum Topology** | 3 or 5 Raft voters across 3 AZs/regions (or 2 Data + 1 Witness) | Prevents minority split-brain while surviving single-AZ failure (`RPO=0`) |
+| **WAL Slot Disk Guard** | Set `max_slot_wal_keep_size` explicitly (`pg_replication_slots`) | Prevents one offline subscriber from filling `pg_wal` and crashing the surviving primary |
+| **Clock Hygiene** | `chrony` with redundant NTP/PTP sources; alert if drift `> 10 ms` | Protects LWW causality bounds and prevents HLC `max_clock_skew` node eviction |
+| **Application Retry Loop** | Exponential backoff + jitter for `SQLSTATE 40001` & `40P01` | Required by CockroachDB, YugabyteDB (`RR`/`SSI`), and multi-shard Citus deadlocks |
+| **Secrets & Transport** | TLS 1.3 mutual auth (`sslmode=verify-full`) + external KMS / secrets manager | Eliminates plaintext credential files and secures cross-DC WAL/Raft links |
+| **Observability Metrics** | Track `pg_stat_replication`, `pg_stat_subscription_stats`, conflict counters, `40001` rate | Detects silent apply stalls (`23505`) or rising contention before SLA breach |
+
+---
+
+## 5. Cluster-Wide Backup, PITR & Zero-Downtime Migration
+
+### 5.1 Why Independent Node Backups Fail Cluster PITR
+
+Taking asynchronous `pgBackRest` snapshots independently on `Node A` and `Node B` at `12:00:00` does **not** produce a transactionally consistent distributed database backup: transactions committed on `Node A` at `11:59:59.900` may not yet appear in `Node B`'s snapshot, while transactions originating on `Node B` may appear only on `Node B`.
+
+- **Raft / Paxos Distributed Engines (`#5 YugabyteDB`, `#6 CockroachDB`, `#13 Spanner`):** Use built-in distributed snapshot/backup primitives coordinated via HLC/TrueTime read timestamps so every shard reflects an identical global instant.
+- **Logical Multi-Master (`#1`, `#2`, `#4`):** For catastrophic recovery, restore **one canonical authoritative node** to PITR, validate data integrity, and re-seed peers via logical snapshot (`copy_data = true` or `Barman` / `PGD` orchestrated restore) rather than mixing stale independent PITR timelines.
+
+### 5.2 Incremental Zero-Downtime Migration Path
+
+Organizations migrating from a single primary should adopt a staged progression rather than jumping blindly into complex active-active meshes:
+
+1. **Stage 1 — Harden Single-Primary HA (`#15`):** Deploy Patroni + etcd + HAProxy, enforce primary keys on 100% of tables, and migrate `SERIAL` keys to UUIDv7 or stepped/Snowflake sequences.
+2. **Stage 2 — Partition & Validate Logical Decoding (`#1`):** Enable `wal_level = logical` and `track_commit_timestamp = on`; replicate read-only regional reporting replicas to measure real WAN lag and WAL generation rate.
+3. **Stage 3 — Targeted Active-Active Rollout (`#2` / `#4` / `#5` / `#7`):**
+   - If tenant-isolated OLTP scaling is the bottleneck -> shard onto **#7 Citus**.
+   - If zero-RPO cross-AZ/region active writes are mandatory -> adopt **#5 YugabyteDB**, **#6 CockroachDB**, or **#4 EDB PGD** with automated `40001` retry middleware.
+   - If sub-millisecond regional writes on standard PG 17 are mandatory -> cut over cleanly via logical sync to **#2 pgEdge / Spock v5** with `delta_apply` CRDTs on numeric counters and strict `chrony` alerting.
