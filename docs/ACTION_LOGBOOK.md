@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-038 - Land `bucardo` Benchmark Result Log (Issue `#75`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#75` (`data/issue-75-log-bucardo`)
+- **Request / Changes / Result**: Added `results/logs/bucardo.log`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-037 - Land `pgedge` Benchmark Result Log (Issue `#73`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#73` (`data/issue-73-log-pgedge`)
 - **Request / Changes / Result**: Added `results/logs/pgedge.log`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
