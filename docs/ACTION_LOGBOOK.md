@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-046 - Wire `Makefile` Pattern Targets to `stacks/` & `scripts/` (Issue `#91`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#91` (`build/issue-91-makefile-stacks`)
+- **Request / Changes / Result**: Updated `Makefile` (`up-%`, `down-%`, `setup-%`, `test-%`, `stacks`); `make help`, `make stacks`, `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-045 - Land Root French `README.fr.md` (Issue `#89`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#89` (`docs/issue-89-readme-fr`)
 - **Request / Changes / Result**: Added `README.fr.md`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
