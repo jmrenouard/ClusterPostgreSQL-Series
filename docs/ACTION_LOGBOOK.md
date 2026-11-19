@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-023 - Land Remaining Cluster Setup Scripts (Issue `#45`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#45` (`feat/issue-45-scripts-cluster-setups`)
+- **Request / Changes / Result**: Added `scripts/setup_{pgedge,bucardo,citus,cockroach,yugabyte}.sh`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-022 - Land Benchmark Orchestrator & Baseline/Birep Setup Scripts (Issue `#43`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#43` (`feat/issue-43-scripts-bench-runner`)
 - **Request / Changes / Result**: Added `scripts/bench_pg_multimaster.sh`, `scripts/setup_pg17_baseline.sh`, and `scripts/setup_birep.sh`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
