@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-037 - Land `pgedge` Benchmark Result Log (Issue `#73`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#73` (`data/issue-73-log-pgedge`)
+- **Request / Changes / Result**: Added `results/logs/pgedge.log`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-036 - Land `cockroach` Benchmark Result Log (Issue `#71`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#71` (`data/issue-71-log-cockroach`)
 - **Request / Changes / Result**: Added `results/logs/cockroach.log`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
