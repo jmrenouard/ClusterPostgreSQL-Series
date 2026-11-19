@@ -7,7 +7,7 @@
 
 | Phase | Milestone | Scope | Status | Verification |
 | :--- | :--- | :--- | :---: | :--- |
-| **Phase 1** | Repository Governance & Harness | License, governance, `.env.example`, CI, Makefile, tests | In Progress | `make test` |
+| **Phase 1** | Repository Governance & Harness | License, governance, `.env.example`, CI, Makefile, tests | Complete | `make test` |
 | **Phase 2** | Comparative Study (`en` / `fr`) | Architectural taxonomy, matrices, consensus limits | Planned | `make check-math` |
 | **Phase 3** | Reproducible Docker PoCs | Native logical, Spock/pgEdge, Bucardo, Citus, YugabyteDB, CockroachDB | Planned | `make test-*` |
 | **Phase 4** | Benchmarks & Synthesis | Empirical limits, pgbench/sysbench throughput & latency | Planned | `make bench-all` |
@@ -16,9 +16,15 @@
 
 | Action ID | Date (ISO) | Issue / Branch | Status | Summary |
 | :--- | :--- | :--- | :--- | :--- |
-| *None* | - | - | - | Next planned action: Issue for LaTeX math validation test suite. |
+| *None* | - | - | - | All Phase 1 actions completed and archived below. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-003 - Add Markdown LaTeX Math Validation Suite & `make check-math` (Issue `#5`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#5` (`feat/issue-5-docs-math-syntax-tests`)
+- **Request**: Add `tests/test_docs_math_syntax.py`, wire `make check-math`, and mark Phase 1 complete.
+- **Changes**: Created `tests/test_docs_math_syntax.py`, added `check-math` target to `Makefile`, updated Phase 1 status to `Complete` and logged `IDEA-002`.
+- **Result**: `python3 -m unittest discover -s tests -v` (`6/6` OK) and `make check-math`/`make test` passed in WSL2 Ubuntu-24.04; PR diff under 15,000 chars.
 
 ### ACT-002 - Add Makefile Orchestrator & Governance/Security Tests (Issue `#3`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#3` (`feat/issue-3-makefile-ci-and-tests`)
