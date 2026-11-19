@@ -1,0 +1,57 @@
+topology,suite,pg_scale,clients,duration_s,tps,qps,lat_avg_ms,lat_stddev_ms,lat_p95_ms,tx_committed,tx_failed,retries_40001,convergence_status,balance_drift,notes
+pg17-standalone,A_single_rw,2,8,20,866.82,N/A,9.216,9.408,23.958,17328,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=-46570 pg17_standalone:acc=-46570/br=-46570/hist=17328
+pg17-standalone,B1_disjoint_rw,2,8,20,920.07,N/A,8.679,4.625,16.543,18397,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=415041 pg17_standalone:acc=415041/br=415041/hist=18397
+pg17-standalone,B2_overlap_rw,2,8,20,879.01,N/A,9.088,7.091,23.395,17577,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=-514470 pg17_standalone:acc=-514470/br=-514470/hist=17577
+pg17-standalone,C_multinode_ro,2,16,20,55614.16,N/A,0.257,0.068,0.355,1110839,0,0,PASS,0,select_only 16 clients
+pg17-standalone,D_hot_conflict,2,8,15,3128.63,N/A,2.541,0.965,3.946,46888,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=2362664 pg17_standalone:acc=2362664/br=0/hist=46888
+pg17-standalone,E_sysbench_oltp_rw,2,8,20,1129.51,22687.48,7.05,0,7.56,23387,112,0,PASS,0,oltp_read_write tables=4 size=10000
+pg17-sync-streaming,A_single_rw,2,8,20,409.48,N/A,19.516,15.543,50.307,8192,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=472382 pg17_sync_primary:acc=472382/br=472382/hist=8192 pg17_sync_standby:acc=472382/br=472382/hist=8192
+pg17-sync-streaming,B1_disjoint_rw,2,8,20,407.41,N/A,19.612,16.57,45.134,8152,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=-190293 pg17_sync_primary:acc=-190293/br=-190293/hist=8152 pg17_sync_standby:acc=-190293/br=-190293/hist=8152
+pg17-sync-streaming,B2_overlap_rw,2,8,20,465.22,N/A,17.171,18.922,46.194,9315,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=230906 pg17_sync_primary:acc=230906/br=230906/hist=9315 pg17_sync_standby:acc=230906/br=230906/hist=9315
+pg17-sync-streaming,C_multinode_ro,2,16,20,54483.07,N/A,0.271,0.091,0.427,1088619,0,0,PASS,0,select_only 16 clients
+pg17-sync-streaming,D_hot_conflict,2,8,15,1370.1,N/A,5.827,1.424,8.725,20541,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=1035721 pg17_sync_primary:acc=1035721/br=0/hist=20541 pg17_sync_standby:acc=1035721/br=0/hist=20541
+pg17-sync-streaming,E_sysbench_oltp_rw,2,8,20,819.36,16493.23,9.76,0,11.65,16397,118,0,PASS,0,oltp_read_write tables=4 size=10000
+pg17-sync-streaming,F_wan_netem_25ms,2,8,15,57.0,N/A,139.564,98.831,353.493,866,0,0,PASS_NETEM_25MS,0,tc netem 25ms (pg17_sync_standby)
+pg-birep,A_single_rw,2,8,20,875.91,N/A,9.121,6.78,22.938,17512,0,0,PASS_CONVERGED,0,exp_delta=412424 pg_birep_node1:acc=412424/br=412424/hist=17512 pg_birep_node2:acc=412424/br=412424/hist=17512
+pg-birep,B1_disjoint_rw,2,8,20,820.09,N/A,9.738,7.935,24.124,16395,0,0,PASS_CONVERGED,0,exp_delta=278752 pg_birep_node1:acc=278752/br=278752/hist=16395 pg_birep_node2:acc=278752/br=278752/hist=16395
+pg-birep,B2_overlap_rw,2,8,20,1228.6,N/A,6.499,5.993,12.532,24563,0,0,EXPECTED_LIMITATION_DIVERGED,-4567,exp_delta=-189377 pg_birep_node1:acc=-193944/br=-27614/hist=24563 pg_birep_node2:acc=-208996/br=-19115/hist=24563
+pg-birep,C_multinode_ro,2,16,20,53072.52,N/A,0.279,0.11,0.441,1060571,0,0,PASS,0,select_only 16 clients
+pg-birep,D_hot_conflict,2,8,15,1231.15,N/A,6.476,5.517,13.007,18469,0,0,EXPECTED_LIMITATION_DIVERGED,-71063,exp_delta=922873 pg_birep_node1:acc=851810/br=0/hist=18469 pg_birep_node2:acc=851747/br=0/hist=18469
+pg-birep,E_sysbench_oltp_rw,2,8,20,1105.32,22192.83,7.23,0,10.84,22115,96,0,PASS,0,oltp_read_write tables=4 size=10000
+pg-birep,F_wan_netem_25ms,2,8,15,824.04,N/A,9.694,10.444,24.949,12354,0,0,PASS_NETEM_25MS,0,tc netem 25ms (pg_birep_node2)
+pgedge,A_single_rw,2,8,20,556.06,N/A,14.368,13.796,38.157,11122,0,0,PASS_CONVERGED,0,exp_delta=147770 pgedge_node1:acc=147770/br=147770/hist=11122 pgedge_node2:acc=147770/br=147770/hist=11122 pgedge_node3:acc=147770/br=147770/hist=11122
+pgedge,B1_disjoint_rw,2,8,20,346.95,N/A,23.028,18.442,52.575,6944,0,0,PASS_CONVERGED,0,exp_delta=370940 pgedge_node1:acc=370940/br=370940/hist=6944 pgedge_node2:acc=370940/br=370940/hist=6944 pgedge_node3:acc=370940/br=370940/hist=6944
+pgedge,B2_overlap_rw,2,8,20,818.65,N/A,9.759,11.037,28.907,16366,0,0,EXPECTED_LIMITATION_LOST_UPDATE,-66328,exp_delta=-78525 pgedge_node1:acc=-144853/br=93351/hist=16366 pgedge_node2:acc=-144853/br=93351/hist=16366 pgedge_node3:acc=-144853/br=93351/hist=16366
+pgedge,C_multinode_ro,2,16,20,54124.99,N/A,0.273,0.089,0.431,1081446,0,0,PASS,0,select_only 16 clients
+pgedge,D_hot_conflict,2,8,15,2280.11,N/A,3.492,3.187,5.311,34175,0,0,EXPECTED_LIMITATION_LOST_UPDATE,-278698,exp_delta=1737102 pgedge_node1:acc=1458404/br=0/hist=34175 pgedge_node2:acc=1458404/br=0/hist=34175 pgedge_node3:acc=1458404/br=0/hist=34175
+pgedge-delta-apply,D_hot_conflict,2,8,15,1837.64,N/A,4.336,4.186,9.347,27545,0,0,PASS_CONVERGED,0,exp_delta=1391780 pgedge_node1:acc=1391780/br=0/hist=27545 pgedge_node2:acc=1391780/br=0/hist=27545 pgedge_node3:acc=1391780/br=0/hist=27545
+pgedge,E_sysbench_oltp_rw,2,8,20,888.56,17873.46,8.99,0,15.27,17834,114,0,PASS,0,oltp_read_write tables=4 size=10000
+pgedge,F_wan_netem_25ms,2,8,15,646.77,N/A,12.324,11.513,32.402,9737,0,0,PASS_NETEM_25MS,0,"tc netem 25ms (pgedge_node2,pgedge_node3)"
+bucardo,A_single_rw,2,8,20,735.38,N/A,10.864,9.234,28.017,14705,0,0,PASS_CONVERGED,0,exp_delta=-101091 bucardo_node1:acc=-101091/br=-101091/hist=14705 bucardo_node2:acc=-101091/br=-101091/hist=14705
+bucardo,B1_disjoint_rw,2,8,20,1078.9,N/A,7.402,3.739,14.458,21570,0,0,PASS_CONVERGED,0,exp_delta=267463 bucardo_node1:acc=267463/br=267463/hist=21570 bucardo_node2:acc=267463/br=267463/hist=21570
+bucardo,B2_overlap_rw,2,8,20,1267.77,N/A,6.297,2.914,11.503,25346,0,0,EXPECTED_LIMITATION_LOST_UPDATE,123679,exp_delta=662527 bucardo_node1:acc=786206/br=438325/hist=25346 bucardo_node2:acc=786206/br=438325/hist=25346
+bucardo,C_multinode_ro,2,16,20,53731.92,N/A,0.274,0.098,0.439,1073565,0,0,PASS,0,select_only 16 clients
+bucardo,D_hot_conflict,2,8,15,1378.79,N/A,5.794,1.232,8.033,20671,0,0,EXPECTED_LIMITATION_LOST_UPDATE,-531620,exp_delta=1046798 bucardo_node1:acc=515178/br=0/hist=20671 bucardo_node2:acc=515178/br=0/hist=20671
+bucardo,E_sysbench_oltp_rw,2,8,20,1232.84,24757.64,6.48,0,7.7,24667,112,0,PASS,0,oltp_read_write tables=4 size=10000
+bucardo,F_wan_netem_25ms,2,8,15,763.23,N/A,10.466,8.486,27.255,11444,0,0,PASS_NETEM_25MS,0,tc netem 25ms (bucardo_node2)
+citus,A_single_rw,2,8,20,309.04,N/A,25.853,21.845,62.289,6183,0,0,PASS_CONVERGED,0,exp_delta=97887 citus_coord:acc=97887/br=97887/hist=6183
+citus,B1_disjoint_rw,2,8,20,265.29,N/A,30.123,23.832,68.37,5308,0,0,PASS_CONVERGED,0,exp_delta=-264358 citus_coord:acc=-264358/br=-264358/hist=5308
+citus,B2_overlap_rw,2,8,20,312.98,N/A,25.533,23.759,59.067,6263,0,0,PASS_CONVERGED,0,exp_delta=235069 citus_coord:acc=235069/br=235069/hist=6263
+citus,C_multinode_ro,2,16,20,21324.7,N/A,0.724,0.242,1.04,425845,0,0,PASS,0,select_only 16 clients
+citus,D_hot_conflict,2,8,15,1691.45,N/A,4.716,1.265,6.722,25354,0,0,PASS_CONVERGED,0,exp_delta=1283370 citus_coord:acc=1283370/br=0/hist=25354
+citus,E_sysbench_oltp_rw,2,8,20,189.44,3796.81,42.17,0,50.11,3797,9,0,PASS,0,oltp_read_write tables=4 size=10000
+citus,F_wan_netem_25ms,2,8,15,21.67,N/A,364.812,138.872,633.963,332,0,0,PASS_NETEM_25MS,0,"tc netem 25ms (citus_worker1,citus_worker2)"
+yugabyte,A_single_rw,2,8,20,173.64,N/A,45.881,41.181,131.768,3485,0,0,PASS_CONVERGED,0,exp_delta=-546253 yb-node1:acc=-546253/br=-546253/hist=3485 yb-node2:acc=-546253/br=-546253/hist=3485 yb-node3:acc=-546253/br=-546253/hist=3485
+yugabyte,B1_disjoint_rw,2,8,20,194.75,N/A,41.039,31.351,101.369,3895,0,0,PASS_CONVERGED,0,exp_delta=192538 yb-node1:acc=192538/br=192538/hist=3895 yb-node2:acc=192538/br=192538/hist=3895 yb-node3:acc=192538/br=192538/hist=3895
+yugabyte,B2_overlap_rw,2,8,20,170.19,N/A,46.962,49.146,152.133,3407,0,0,PASS_CONVERGED,0,exp_delta=-69540 yb-node1:acc=-69540/br=-69540/hist=3407 yb-node2:acc=-69540/br=-69540/hist=3407 yb-node3:acc=-69540/br=-69540/hist=3407
+yugabyte,C_multinode_ro,2,16,20,17150.58,N/A,0.922,0.438,1.423,341974,0,0,PASS,0,select_only 16 clients
+yugabyte,D_hot_conflict,2,8,15,832.65,N/A,9.591,7.008,15.138,12457,0,0,PASS_CONVERGED,0,exp_delta=624295 yb-node1:acc=624295/br=0/hist=12457 yb-node2:acc=624295/br=0/hist=12457 yb-node3:acc=624295/br=0/hist=12457
+yugabyte,E_sysbench_oltp_rw,2,8,20,128.24,2564.8,62.25,0,81.48,2574,0,0,PASS,0,oltp_read_write tables=4 size=10000
+yugabyte,F_wan_netem_25ms,2,8,15,5.78,N/A,1327.297,1114.498,3401.333,95,0,0,PASS_NETEM_25MS,0,"tc netem 25ms (yb_node2,yb_node3)"
+cockroach,A_single_rw,2,8,20,42.08,N/A,187.6,304.051,625.042,849,0,44,PASS_CONVERGED,0,exp_delta=20895 crdb_node1:acc=20895/br=20895/hist=849 crdb_node2:acc=20895/br=20895/hist=849 crdb_node3:acc=20895/br=20895/hist=849
+cockroach,B1_disjoint_rw,2,8,20,60.35,N/A,132.318,209.453,431.931,1212,0,87,PASS_CONVERGED,0,exp_delta=-33916 crdb_node1:acc=-33916/br=-33916/hist=1212 crdb_node2:acc=-33916/br=-33916/hist=1212 crdb_node3:acc=-33916/br=-33916/hist=1212
+cockroach,B2_overlap_rw,2,8,20,74.17,N/A,106.436,213.013,385.921,1490,0,96,PASS_CONVERGED,0,exp_delta=-1851 crdb_node1:acc=-1851/br=-1851/hist=1490 crdb_node2:acc=-1851/br=-1851/hist=1490 crdb_node3:acc=-1851/br=-1851/hist=1490
+cockroach,C_multinode_ro,2,16,20,13185.54,N/A,1.199,0.586,2.161,263668,0,0,PASS,0,select_only 16 clients
+cockroach,D_hot_conflict,2,8,15,471.61,N/A,16.913,8.303,34.165,7091,0,0,PASS_CONVERGED,0,exp_delta=359402 crdb_node1:acc=359402/br=0/hist=7091 crdb_node2:acc=359402/br=0/hist=7091 crdb_node3:acc=359402/br=0/hist=7091
+cockroach,E_sysbench_oltp_rw,2,8,20,44.84,1531.47,177.91,0,502.2,902,685,0,PASS,0,oltp_read_write tables=4 size=10000
+cockroach,F_wan_netem_25ms,2,8,15,10.06,N/A,715.768,1072.655,2930.542,167,0,14,PASS_NETEM_25MS,0,"tc netem 25ms (crdb_node2,crdb_node3)"
