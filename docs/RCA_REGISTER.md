@@ -54,6 +54,27 @@
 - **Fix**: Added RF=3 readiness wait + memory caps in `stacks/yugabytedb/`, verified `40001` application retry convergence (`bal=1100`), and recorded all raw SQLSTATEs honestly.
 - **Result**: `10/10` functional/limit probes passed across `citus`, `cockroach`, and `yugabyte`.
 
+### RCA-008 - `pgedge` `SQL_ASCII` Encoding Rejects Non-ASCII `chr()` With `SQLSTATE 54000`
+- **Date / Action**: `2026-11-19` (`ACT-051` / `ACT-064`)
+- **Symptom**: During the `T14` rich-data fidelity probe, `chr()` calls for multi-byte UTF-8 codepoints failed on `pgedge` with `SQLSTATE 54000` (`requested character too large for encoding`).
+- **Root Cause**: `ghcr.io/pgedge/pgedge-postgres:17-spock5-minimal` initializes default databases with `SQL_ASCII` encoding rather than `UTF8`.
+- **Fix / Mitigation**: Verified raw UTF-8 byte-stream preservation across all 3 Spock nodes (`md5=f798eb5a` identical on 3/3 nodes) while explicitly preserving `SQLSTATE 54000` in `results/extended_functional_matrix.csv` and Chapter 08; production deployments must enforce `initdb -E UTF8`.
+- **Result**: Documented transparently across `results/extended_functional_matrix.csv`, dashboard matrix tab, and EN/FR Chapter 08.
+
+### RCA-009 - Native Logical Replication Sequence Non-Sync Causes Post-Failover `SQLSTATE 23505`
+- **Date / Action**: `2026-11-19` (`ACT-051` / `ACT-067`)
+- **Symptom**: In `T18` (`sequence_sync_after_50`), promoting or writing to the peer node after 50 `SERIAL` inserts on node 1 immediately failed with `SQLSTATE 23505` (`duplicate key value violates unique constraint`) across `pg17-logical`, `pg-birep`, `pgedge` (without Snowflake), and `bucardo`.
+- **Root Cause**: PostgreSQL 17 logical decoding does not replicate sequence state changes (`last_value` stayed stuck at `1|false` on subscribers/peers), whereas physical WAL streaming (`pg17-async-streaming`, `pg17-sync-streaming`) replicated exact WAL sequence state (`66|true`) and Raft engines (`yugabyte`, `cockroach`) advanced global sequences cleanly.
+- **Fix / Mitigation**: Documented the mandatory operational workarounds (Snowflake/UUIDv7 keys, disjoint `INCREMENT`/`START` strides, or `setval()` failover runbook) in Chapters 08 and 10 and recorded `23505` verbatim in `results/extended_functional_matrix.csv`.
+- **Result**: Verified deterministically across all 10 topologies (`T18` matrix and Chapter 10).
+
+### RCA-010 - `pg-birep` `FOR ALL TABLES` Sysbench Schema Propagation Catch-Up
+- **Date / Action**: `2026-11-19` (`ACT-052` / `ACT-071`)
+- **Symptom**: Running V2 Sysbench suites (`E2`-`E4`) dynamically created `sbtest1` on `pg_birep_node1` without automatic replication to `pg_birep_node2` under `FOR ALL TABLES`.
+- **Root Cause**: PostgreSQL 17 logical replication does not propagate DDL (`CREATE TABLE`), and existing subscriptions only discover newly created `FOR ALL TABLES` relations after `ALTER SUBSCRIPTION ... REFRESH PUBLICATION` once matching DDL exists on the peer.
+- **Fix**: Updated the V2 benchmark harness in `env/multi-db-docker-env` (`scripts/bench_pg_v2_lib.py`) to create symmetric Sysbench DDL on both nodes and refresh subscriptions with `copy_data = false` before workload execution.
+- **Result**: All V2 Sysbench suites (`E2_sysbench_oltp_ro`, `E3_sysbench_oltp_wo`, `E4_sysbench_point_select`) converged cleanly across both `pg-birep` nodes.
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters
@@ -70,6 +91,11 @@
 - **Date / Action**: `2026-11-19` (`ACT-021`)
 - **Rejected Approach**: Running `pgbench`/`sysbench` over WSL2/Windows localhost port-forwarding or running multiple multi-node clusters simultaneously without memory caps inside 16.4 GiB RAM.
 - **Reason**: Host NAT skews RTT and concurrent clusters risk OOM kills. Replaced with sequential one-stack-at-a-time execution using `multi-db-pgbench-sysbench:latest` inside each stack's isolated Docker bridge network.
+
+### IMP-004 - Duplicated Standalone `stacks/` Compose & Script Copies
+- **Date / Action**: `2026-11-19` (`ACT-071`..`ACT-075`)
+- **Rejected Approach**: Maintaining mirrored Docker Compose stacks and setup scripts inside `ClusterPostgreSQL-Series/stacks/<topology>/` alongside `jmrenouard/multi-db-docker-env`.
+- **Reason**: Dual maintenance caused configuration drift and omitted newer V2 topologies (`pg-streaming`, `pg-logical`, `T11-T18`, `bench_pg_v2_runner.sh`). Replaced with a real Git submodule (`env/multi-db-docker-env` pinned to `v2.2.0` commit `84acc72`), delegated `Makefile` targets (`MDB_DIR`, `init-env`, `up/down/setup/test-%`, `bench-all`, 9-stack `lint`), and a single-source-of-truth `stacks/README.md`.
 
 ## 3. Current Approximations & Simplifying Assumptions (`APP-XXX`)
 
@@ -98,6 +124,11 @@
 - **Assumption**: EDB Postgres Distributed (PGD/BDR), AWS Aurora Limitless, and Google Cloud Spanner/AlloyDB are covered in theoretical/feature chapters without live Docker PoCs.
 - **Impact & Removal Condition**: Reflects licensing and managed-cloud boundaries rather than omission; benchmark comparison tables explicitly mark non-tested commercial/cloud offerings.
 
+### APP-006 - Single-Host V2 Concurrency (`c=1..32`) & Multi-Point `tc netem` (`10/25/50ms`) Sweeps
+- **Date / Action**: `2026-11-19` (`ACT-051`..`ACT-052`)
+- **Assumption**: V2 concurrency sweeps (`c=1, 4, 8, 16, 32`) and 3-point WAN sweeps (`10ms`, `25ms`, `50ms` egress `tc netem`) run sequentially on one Docker host (`20` vCPU / `16.4` GiB NVMe).
+- **Impact & Removal Condition**: Accurately exposes relative scaling knees, Raft/sync RTT amplification, and async decoupling across 10 topologies, while remaining bounded by shared host I/O; removable via multi-region bare-metal/cloud clusters.
+
 ## 4. Unimplemented Ideas & Future Roadmap (`IDEA-XXX`)
 
 ### IDEA-001 - Automated Cross-Topology `pgbench` & `sysbench` Matrix
@@ -115,3 +146,7 @@
 ### IDEA-004 - Retry-Aware Distributed SQL `sysbench` Driver & Delta-Apply Torture Suite
 - **Date / Action**: `2026-11-19` (`ACT-047`)
 - **Proposal**: Add an exponential-backoff `SQLSTATE 40001` retry wrapper for `sysbench` on CockroachDB/YugabyteDB and expand `spock.delta_apply` testing to multi-column composite counters.
+
+### IDEA-005 - Automated GitHub Pages Publishing & PostgreSQL 18+ Native Sequence Sync Study
+- **Date / Action**: `2026-11-19` (`ACT-076`)
+- **Proposal**: Publish `dashboard/index.html` and `assets/charts/` automatically via GitHub Pages once `workflow` OAuth scope is granted (`RCA-003`), and benchmark PostgreSQL 18/19 native logical sequence synchronization against `RCA-009`.
