@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-025 - Land `pgedge` Functional & Limits Test Script (Issue `#49`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#49` (`test/issue-49-pgedge`)
+- **Request / Changes / Result**: Added `scripts/test_pgedge.sh`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-024 - Land `pg-birep` Functional & Limits Test Script (Issue `#47`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#47` (`test/issue-47-pg-birep`)
 - **Request / Changes / Result**: Added `scripts/test_pg_birep.sh`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
