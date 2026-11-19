@@ -1,0 +1,241 @@
+=== [yugabyte] Start ===
+=== YugabyteDB Cluster Bootstrap ===
+[INFO] Waiting for YSQL on yb_node1 (yb-node1)...
+[INFO] Waiting for YSQL on yb_node2 (yb-node2)...
+[INFO] Waiting for YSQL on yb_node3 (yb-node3)...
+[INFO] Waiting for 3 TServers in RF=3 quorum...
+[OK] YugabyteDB cluster status:
+
+/ Fetching status...
+- Fetching status...
+\ Fetching status...
+[2K
++----------------------------------------------------------------------------------------------+
+|                                          yugabyted                                           |
++----------------------------------------------------------------------------------------------+
+| Status     : Running.                                                                        |
+| YSQL Status: Ready                                                                           |
+| Replication Factor: 3                                                                               |
+| YugabyteDB UI: http://yb-node1:15433                                                           |
+| JDBC       : jdbc:postgresql://yb-node1:5433/yugabyte?user=yugabyte&password=yugabyte        |
+| YSQL       : bin/ysqlsh -h yb-node1  -U yugabyte -d yugabyte                                 |
+| YCQL       : bin/ycqlsh yb-node1 9042 -u cassandra                                           |
+| Data Dir   : /home/yugabyte/var/data                                                         |
+| Log Dir    : /home/yugabyte/var/logs                                                         |
+| Universe UUID: 9c69c259-1cc9-43ae-8b32-47e8682c31be                                            |
++----------------------------------------------------------------------------------------------+
+   host   | port | cloud | region | zone  
+----------+------+-------+--------+-------
+ yb-node1 | 5433 | local | dc1    | zone1
+ yb-node2 | 5433 | local | dc1    | zone2
+ yb-node3 | 5433 | local | dc1    | zone3
+(3 rows)
+
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 15.12-YB-2026.1.3.0-b0)
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 2
+query mode: simple
+number of clients: 8
+number of threads: 4
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 3485
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 46.071 ms
+initial connection time = 47.708 ms
+tps = 173.644277 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 15.12-YB-2026.1.3.0-b0)
+transaction type: /tmp/s_d1.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 1721
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 46.578 ms
+initial connection time = 37.795 ms
+tps = 85.877678 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 15.12-YB-2026.1.3.0-b0)
+transaction type: /tmp/s_d2.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 2174
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 36.740 ms
+initial connection time = 56.975 ms
+tps = 108.874499 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 15.12-YB-2026.1.3.0-b0)
+transaction type: /tmp/s_ov.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 1351
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 59.508 ms
+initial connection time = 41.112 ms
+tps = 67.218385 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 15.12-YB-2026.1.3.0-b0)
+transaction type: /tmp/s_ov.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 2056
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 38.846 ms
+initial connection time = 61.882 ms
+tps = 102.970163 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 15.12-YB-2026.1.3.0-b0)
+transaction type: <builtin: select only>
+scaling factor: 2
+query mode: simple
+number of clients: 8
+number of threads: 4
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 139618
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 1.143 ms
+initial connection time = 57.417 ms
+tps = 7000.328010 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 15.12-YB-2026.1.3.0-b0)
+transaction type: <builtin: select only>
+scaling factor: 2
+query mode: simple
+number of clients: 8
+number of threads: 4
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 202356
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 0.788 ms
+initial connection time = 64.858 ms
+tps = 10150.247296 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 15.12-YB-2026.1.3.0-b0)
+transaction type: /tmp/s_hot.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 15 s
+number of transactions actually processed: 6024
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 9.933 ms
+initial connection time = 47.807 ms
+tps = 402.699100 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 15.12-YB-2026.1.3.0-b0)
+transaction type: /tmp/s_hot.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 15 s
+number of transactions actually processed: 6433
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 9.303 ms
+initial connection time = 47.216 ms
+tps = 429.952699 (without initial connection time)
+sysbench 1.0.20 (using system LuaJIT 2.1.1700206165)
+
+Running the test with following options:
+Number of threads: 8
+Initializing random number generator from current time
+
+
+Initializing worker threads...
+
+Threads started!
+
+SQL statistics:
+    queries performed:
+        read:                            36036
+        write:                           10296
+        other:                           5148
+        total:                           51480
+    transactions:                        2574   (128.24 per sec.)
+    queries:                             51480  (2564.80 per sec.)
+    ignored errors:                      0      (0.00 per sec.)
+    reconnects:                          0      (0.00 per sec.)
+
+General statistics:
+    total time:                          20.0707s
+    total number of events:              2574
+
+Latency (ms):
+         min:                                   42.19
+         avg:                                   62.25
+         max:                                  178.00
+         95th percentile:                       81.48
+         sum:                               160233.32
+
+Threads fairness:
+    events (avg/stddev):           321.7500/2.49
+    execution time (avg/stddev):   20.0292/0.02
+
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 15.12-YB-2026.1.3.0-b0)
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 2
+query mode: simple
+number of clients: 8
+number of threads: 4
+maximum number of tries: 100
+duration: 15 s
+number of transactions actually processed: 95
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 1384.713 ms
+initial connection time = 53.290 ms
+tps = 5.777372 (without initial connection time)
+=== [yugabyte] Down ===
