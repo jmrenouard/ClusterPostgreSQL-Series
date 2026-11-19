@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-015 - Land French Chapter 04 Feature Comparison (Issue `#29`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#29` (`docs/issue-29-fr-04-etude-comparative`)
+- **Request / Changes / Result**: Added `docs/fr/04_etude_comparative_fonctionnalites.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
+
 ### ACT-014 - Land French Chapter 03b Distributed, Trigger & Cloud Solutions (Issue `#27`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#27` (`docs/issue-27-fr-03b-catalogue-distribue`)
 - **Request / Changes / Result**: Added `docs/fr/03b_catalogue_distribue_triggers_cloud.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
