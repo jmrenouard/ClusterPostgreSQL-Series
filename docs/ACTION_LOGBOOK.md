@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-009 - Land English Chapter 05 PoC Architectures & Test Protocol (Issue `#17`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#17` (`docs/issue-17-en-05-poc-test-protocol`)
+- **Request / Changes / Result**: Added `docs/en/05_poc_architectures_and_test_protocol.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
+
 ### ACT-008 - Land English Chapter 04 Feature Comparison (Issue `#15`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#15` (`docs/issue-15-en-04-feature-comparison`)
 - **Request / Changes / Result**: Added `docs/en/04_comprehensive_feature_comparison.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
