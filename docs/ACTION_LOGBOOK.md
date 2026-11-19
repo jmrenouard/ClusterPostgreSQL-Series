@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-024 - Land `pg-birep` Functional & Limits Test Script (Issue `#47`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#47` (`test/issue-47-pg-birep`)
+- **Request / Changes / Result**: Added `scripts/test_pg_birep.sh`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-023 - Land Remaining Cluster Setup Scripts (Issue `#45`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#45` (`feat/issue-45-scripts-cluster-setups`)
 - **Request / Changes / Result**: Added `scripts/setup_{pgedge,bucardo,citus,cockroach,yugabyte}.sh`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
