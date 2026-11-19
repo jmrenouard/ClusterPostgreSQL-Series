@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-019 - Land `pgedge-spock` & `bucardo` Docker Stacks (Issue `#37`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#37` (`feat/issue-37-stacks-pgedge-bucardo`)
+- **Request / Changes / Result**: Added `stacks/pgedge-spock/*` and `stacks/bucardo/*`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-018 - Land `pg17-baseline` & `pg-birep` Docker Stacks (Issue `#35`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#35` (`feat/issue-35-stacks-baseline-birep`)
 - **Request / Changes / Result**: Added `stacks/pg17-baseline/*` and `stacks/pg-birep/*`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
