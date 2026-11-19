@@ -1,0 +1,13 @@
+.env
+*.log
+*.tmp
+*.swp
+*.bak
+datadir_*
+certs*
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+reports/*.html
+.DS_Store
