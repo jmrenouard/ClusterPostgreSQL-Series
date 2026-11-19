@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-014 - Land French Chapter 03b Distributed, Trigger & Cloud Solutions (Issue `#27`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#27` (`docs/issue-27-fr-03b-catalogue-distribue`)
+- **Request / Changes / Result**: Added `docs/fr/03b_catalogue_distribue_triggers_cloud.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
+
 ### ACT-013 - Land French Chapter 03a Native & Extension Solutions (Issue `#25`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#25` (`docs/issue-25-fr-03a-catalogue-natif`)
 - **Request / Changes / Result**: Added `docs/fr/03a_catalogue_natif_et_extensions.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
