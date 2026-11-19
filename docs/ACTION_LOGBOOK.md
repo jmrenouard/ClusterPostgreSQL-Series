@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-008 - Land English Chapter 04 Feature Comparison (Issue `#15`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#15` (`docs/issue-15-en-04-feature-comparison`)
+- **Request / Changes / Result**: Added `docs/en/04_comprehensive_feature_comparison.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
+
 ### ACT-007 - Land English Chapter 03b Distributed, Trigger & Cloud Solutions (Issue `#13`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#13` (`docs/issue-13-en-03b-distributed-cloud`)
 - **Request / Changes / Result**: Added `docs/en/03b_solutions_distributed_triggers_cloud.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
