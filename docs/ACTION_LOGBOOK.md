@@ -8,9 +8,9 @@
 | Phase | Milestone | Scope | Status | Verification |
 | :--- | :--- | :--- | :---: | :--- |
 | **Phase 1** | Repository Governance & Harness | License, governance, `.env.example`, CI, Makefile, tests | Complete | `make test` |
-| **Phase 2** | Comparative Study (`en` / `fr`) | Architectural taxonomy, matrices, consensus limits | In Progress | `make check-math` |
-| **Phase 3** | Reproducible Docker PoCs | Native logical, Spock/pgEdge, Bucardo, Citus, YugabyteDB, CockroachDB | In Progress | `make test-*` |
-| **Phase 4** | Benchmarks & Synthesis | Empirical limits, pgbench/sysbench throughput & latency | In Progress | `make bench-all` |
+| **Phase 2** | Comparative Study (`en` / `fr`) | Architectural taxonomy, matrices, consensus limits | Complete | `make check-math` |
+| **Phase 3** | Reproducible Docker PoCs | Native logical, Spock/pgEdge, Bucardo, Citus, YugabyteDB, CockroachDB | Complete | `make test-*` |
+| **Phase 4** | Benchmarks & Synthesis | Empirical limits, pgbench/sysbench throughput & latency | Complete | `make bench-all` |
 
 ## 1. Ongoing Actions (`IN PROGRESS`)
 
@@ -19,6 +19,10 @@
 | *None* | - | - | - | All tracked actions archived below once verified. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-047 - Finalize Governance Registers & Phase Milestones (Issue `#93`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#93` (`docs/issue-93-finalize-governance-registers`)
+- **Request / Changes / Result**: Marked Phases 2-4 `Complete` in `docs/ACTION_LOGBOOK.md` and recorded empirical `RCA-004..007`, `IMP-002..003`, `APP-003..005`, and `IDEA-003..004` in `docs/RCA_REGISTER.md`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
 
 ### ACT-046 - Wire `Makefile` Pattern Targets to `stacks/` & `scripts/` (Issue `#91`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#91` (`build/issue-91-makefile-stacks`)
