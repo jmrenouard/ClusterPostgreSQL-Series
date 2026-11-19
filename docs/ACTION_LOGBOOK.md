@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-045 - Land Root French `README.fr.md` (Issue `#89`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#89` (`docs/issue-89-readme-fr`)
+- **Request / Changes / Result**: Added `README.fr.md`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-044 - Land French Chapter 08 Limits & Failure Modes (Issue `#87`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#87` (`docs/issue-87-fr-08-limites-defaillance`)
 - **Request / Changes / Result**: Added `docs/fr/08_limites_et_modes_de_defaillance.md`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
