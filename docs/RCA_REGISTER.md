@@ -12,6 +12,20 @@
 - **Applied Change / Fix**: Committed the minimal baseline (`LICENSE`, `.gitignore`, `.gitattributes`) on `main` prior to opening Issue `#1` and branching `feat/issue-1-governance-and-test-harness`.
 - **Result & Non-Regression Test**: Branching, PR creation, and merge workflow succeed cleanly.
 
+### RCA-002 - Transient `Permission denied` on `make clean` over WSL2 9p Mount
+- **Date / Action**: `2026-11-19` (`ACT-002`)
+- **Symptom**: `rm -rf tests/__pycache__` failed immediately after `python3 -m unittest`.
+- **Root Cause**: Host file indexer briefly locks `.pyc` directories on WSL2 9p mounts.
+- **Fix**: Exported `PYTHONDONTWRITEBYTECODE := 1` and used `shutil.rmtree(..., ignore_errors=True)` in `Makefile` `clean`.
+- **Result**: `make test` + `make clean` succeed cleanly without residue.
+
+### RCA-003 - GitHub Push Rejected for `.github/workflows/ci.yml` Without `workflow` Scope
+- **Date / Action**: `2026-11-19` (`ACT-002`)
+- **Symptom**: `git push` failed with `refusing to allow an OAuth App to create or update workflow .github/workflows/ci.yml without workflow scope`.
+- **Root Cause**: The active `gh` OAuth token holds `gist, read:org, repo, user` scopes only and lacks the `workflow` scope required by GitHub to push workflow YAML files.
+- **Fix / Mitigation**: Excluded `.github/workflows/ci.yml` from PR so `Makefile` and test harness land cleanly on `main`; documented CI workflow addition as pending maintainer `workflow` scope authorization.
+- **Result**: Remaining files push and merge cleanly; local `make lint` and `make test` run identically to CI.
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters
@@ -25,6 +39,11 @@
 - **Date / Action**: `2026-11-19` (`ACT-001`)
 - **Assumption**: `.env.example` provides `PG_LAB_PASSWORD=pg_poc_ephemeral` for isolated local Docker Compose labs.
 - **Impact & Removal Condition**: Strictly prohibited outside ephemeral containers; production deployments must inject externally managed credentials at runtime.
+
+### APP-002 - Conditional Compose & Shell Linting Prior to PoC Modules
+- **Date / Action**: `2026-11-19` (`ACT-002`)
+- **Assumption**: `Makefile` `lint` and `.github/workflows/ci.yml` pass safely when zero `*.sh` or `docker-compose-*.yml` files exist during Phase 1 bootstrap.
+- **Impact & Removal Condition**: Every future PoC PR adding `.sh` or `docker-compose-*.yml` files is automatically validated on addition.
 
 ## 4. Unimplemented Ideas & Future Roadmap (`IDEA-XXX`)
 

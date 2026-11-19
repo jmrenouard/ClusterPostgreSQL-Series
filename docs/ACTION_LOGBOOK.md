@@ -16,9 +16,15 @@
 
 | Action ID | Date (ISO) | Issue / Branch | Status | Summary |
 | :--- | :--- | :--- | :--- | :--- |
-| *None* | - | - | - | Next planned action: Issue #2 (Makefile, CI, test suites). |
+| *None* | - | - | - | Next planned action: Issue for LaTeX math validation test suite. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-002 - Add Makefile Orchestrator & Governance/Security Tests (Issue `#3`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#3` (`feat/issue-3-makefile-ci-and-tests`)
+- **Request**: Deliver `Makefile` lifecycle/check targets and governance/secret-hygiene/shell-safety unit tests under `< 15,000` diff characters.
+- **Changes**: Added `Makefile` and `tests/test_governance_and_security.py`; logged `RCA-002`, `RCA-003` (GitHub OAuth token lacks `workflow` scope for `.github/workflows/ci.yml`), and `APP-002`.
+- **Result**: `python3 -m unittest discover -s tests -v` (`4/4` OK) and `make help`/`test`/`check-security`/`lint`/`bench-all`/`clean` passed in WSL2 Ubuntu-24.04; PR diff under 15,000 chars.
 
 ### ACT-001 - Bootstrap Repository Governance, Registers & Environment Template (Issue `#1`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#1` (`feat/issue-1-governance-and-test-harness`)
