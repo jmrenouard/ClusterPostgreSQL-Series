@@ -9,7 +9,7 @@
 | :--- | :--- | :--- | :---: | :--- |
 | **Phase 1** | Repository Governance & Harness | License, governance, `.env.example`, CI, Makefile, tests | Complete | `make test` |
 | **Phase 2** | Comparative Study (`en` / `fr`) | Architectural taxonomy, matrices, consensus limits | In Progress | `make check-math` |
-| **Phase 3** | Reproducible Docker PoCs | Native logical, Spock/pgEdge, Bucardo, Citus, YugabyteDB, CockroachDB | Planned | `make test-*` |
+| **Phase 3** | Reproducible Docker PoCs | Native logical, Spock/pgEdge, Bucardo, Citus, YugabyteDB, CockroachDB | In Progress | `make test-*` |
 | **Phase 4** | Benchmarks & Synthesis | Empirical limits, pgbench/sysbench throughput & latency | Planned | `make bench-all` |
 
 ## 1. Ongoing Actions (`IN PROGRESS`)
@@ -19,6 +19,10 @@
 | *None* | - | - | - | All tracked actions archived below once verified. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-018 - Land `pg17-baseline` & `pg-birep` Docker Stacks (Issue `#35`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#35` (`feat/issue-35-stacks-baseline-birep`)
+- **Request / Changes / Result**: Added `stacks/pg17-baseline/*` and `stacks/pg-birep/*`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
 
 ### ACT-017 - Land French Chapter 07 Decision Framework & Production Guide (Issue `#33`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#33` (`docs/issue-33-fr-07-guide-de-choix`)
