@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LightPath | PostgreSQL Clustering &amp; Multi-Master Benchmark Explorer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <img src="../assets/lightpath-logo-dark.svg" alt="LightPath Official Logo" class="brand-logo" height="42">
+        <div class="brand-text">
+          <h1 data-fr="Explorateur Benchmarks Clustering &amp; Multi-Master PostgreSQL">PostgreSQL Clustering &amp; Multi-Master Benchmark Explorer</h1>
+          <p class="subtitle" data-fr="Benchmarks empiriques Docker PoC, &#233;chelles Log10 &amp; Matrice CAP/PACELC">Empirical Docker PoC Benchmarks, Log10 Scaling &amp; CAP/PACELC Limits Matrix</p>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="seg" role="group" aria-label="Language switch">
+          <button type="button" class="seg-btn active" data-lang="en">EN</button>
+          <button type="button" class="seg-btn" data-lang="fr">FR</button>
+        </div>
+        <button type="button" id="btn-export" class="btn-export" data-fr="Exporter CSV filtr&#233;">Export Filtered CSV</button>
+      </div>
+    </div>
+    <div class="accent-bar"></div>
+  </header>
+
+  <main class="container">
+    <nav class="tabs" role="tablist">
+      <button type="button" class="tab-btn active" data-tab="bench" data-fr="Benchmarks &amp; Graphiques Log10">Benchmarks &amp; Log10 Charts</button>
+      <button type="button" class="tab-btn" data-tab="matrix" data-fr="Matrice Fonctionnelle &amp; Limites (L1-L8 / T11-T18)">Functional &amp; Limits Matrix (L1-L8 / T11-T18)</button>
+      <span id="meta-stamp" class="meta-stamp"></span>
+    </nav>
+
+    <section class="card controls">
+      <div class="ctrl-row">
+        <div class="ctrl-head">
+          <span class="ctrl-label" data-fr="Solutions">Solutions</span>
+          <div class="presets">
+            <button type="button" class="preset-btn" data-preset="all" data-fr="Toutes (10)">All 10</button>
+            <button type="button" class="preset-btn" data-preset="stream_logical" data-fr="Streaming vs Logique vs BiRep">Streaming vs Logical vs BiRep</button>
+            <button type="button" class="preset-btn" data-preset="active_active" data-fr="Actif-Actif">Active-Active Only</button>
+            <button type="button" class="preset-btn" data-preset="raft_async" data-fr="Raft vs Asynchrone">Raft vs Async</button>
+            <button type="button" class="preset-btn preset-clear" data-preset="clear" data-fr="Effacer">Clear</button>
+          </div>
+        </div>
+        <div id="topo-pills" class="pill-grid"></div>
+      </div>
+
+      <div id="bench-controls" class="ctrl-row ctrl-split">
+        <div class="ctrl-group">
+          <span class="ctrl-label" data-fr="Suite de charge / Vue courbe">Workload Suite / View</span>
+          <select id="suite-select" class="select-input"></select>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label" data-fr="&#201;chelle axe Y">Y-Axis Scale</span>
+          <div class="seg" role="group" aria-label="Scale toggle">
+            <button type="button" class="seg-btn active" id="scale-log" data-scale="log" data-fr="Logarithmique (log10)">Logarithmic (log10)</button>
+            <button type="button" class="seg-btn" id="scale-linear" data-scale="linear" data-fr="Lin&#233;aire">Linear</button>
+          </div>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label" data-fr="M&#233;trique latence">Latency Metric</span>
+          <div class="seg" role="group" aria-label="Latency metric">
+            <button type="button" class="seg-btn active" data-lat="both" data-fr="Moy + p95">Avg + p95</button>
+            <button type="button" class="seg-btn" data-lat="avg" data-fr="Moy ms">Avg ms</button>
+            <button type="button" class="seg-btn" data-lat="p95" data-fr="p95 ms">p95 ms</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-bench">
+      <div id="kpi-grid" class="kpi-grid"></div>
+
+      <div class="charts-grid">
+        <article class="card chart-card">
+          <div class="chart-head">
+            <h2 id="title-tps" data-fr="D&#233;bit (TPS)">Throughput (TPS)</h2>
+            <span id="badge-scale-tps" class="scale-pill">log10</span>
+          </div>
+          <div id="chart-tps" class="chart-box"></div>
+        </article>
+        <article class="card chart-card">
+          <div class="chart-head">
+            <h2 id="title-lat" data-fr="Latence transactionnelle (ms)">Transaction Latency (ms)</h2>
+            <span id="badge-scale-lat" class="scale-pill">log10</span>
+          </div>
+          <div id="chart-lat" class="chart-box"></div>
+        </article>
+      </div>
+
+      <section class="card table-card">
+        <div class="table-head">
+          <h2 data-fr="Tableau comparatif empirique">Empirical Comparison Table</h2>
+          <input type="search" id="table-filter" class="search-input" placeholder="Filter suite, topology, status...">
+        </div>
+        <div class="table-wrap">
+          <table id="bench-table" class="data-table">
+            <thead>
+              <tr>
+                <th data-sort="topology" data-fr="Topologie">Topology</th>
+                <th data-sort="suite" data-fr="Suite">Suite</th>
+                <th data-sort="clients" class="num" data-fr="Clients">Clients</th>
+                <th data-sort="tps" class="num" data-fr="TPS">TPS</th>
+                <th data-sort="lat_avg_ms" class="num" data-fr="Moy (ms)">Avg (ms)</th>
+                <th data-sort="lat_p95_ms" class="num" data-fr="p95 (ms)">p95 (ms)</th>
+                <th data-sort="tx_committed" class="num" data-fr="TX valid&#233;es">Committed TX</th>
+                <th data-sort="retries_40001" class="num" data-fr="Retries 40001">40001 Retries</th>
+                <th data-sort="convergence_status" data-fr="Int&#233;grit&#233;">Integrity Status</th>
+                <th data-sort="balance_drift" class="num" data-fr="D&#233;rive solde">Balance Drift</th>
+              </tr>
+            </thead>
+            <tbody id="bench-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <section id="panel-matrix" class="hidden">
+      <div class="card table-card">
+        <div class="table-head">
+          <div class="seg" role="group" aria-label="Matrix suite switch">
+            <button type="button" class="seg-btn active" data-mtab="core" data-fr="Limites de base (L1-L8)">Core Limits (L1-L8)</button>
+            <button type="button" class="seg-btn" data-mtab="ext" data-fr="R&#233;silience &#233;tendue (T11-T18)">Extended Resilience (T11-T18)</button>
+          </div>
+          <input type="search" id="matrix-filter" class="search-input" placeholder="Search SQLSTATE, test, limitation...">
+        </div>
+        <div id="matrix-notice" class="notice hidden"></div>
+        <div class="table-wrap">
+          <table id="matrix-table" class="data-table matrix-table">
+            <thead id="matrix-thead"></thead>
+            <tbody id="matrix-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>&copy; 2026 Jean-Marie Renouard &mdash; <a href="https://www.lightpath.fr" target="_blank" rel="noopener">LightPath</a> &mdash; ClusterPostgreSQL-Series (MIT License)</span>
+    <span data-fr="Explorateur interactif 100% hors-ligne (z&#233;ro d&#233;pendance CDN)">100% offline-capable interactive explorer (zero external CDN dependencies)</span>
+  </footer>
+
+  <div id="lp-tooltip" class="tooltip hidden" role="tooltip"></div>
+
+  <script src="data_bench.js"></script>
+  <script src="data_bench_2.js"></script>
+  <script src="data_bench_3.js"></script>
+  <script src="data_matrix.js"></script>
+  <script src="data_matrix_ext.js"></script>
+  <script src="charts.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
