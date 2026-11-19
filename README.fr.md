@@ -71,7 +71,7 @@ Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne dans tout n
 
 ## 3. Démarrage rapide, sous-module `multi-db-docker-env` et `Makefile`
 
-Les piles opérationnelles, la suite étendue (`T11–T18`) et les benchmarks V2 s'appuient directement sur le dépôt [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) intégré comme sous-module Git sous **`env/multi-db-docker-env`** (en complément des piles autonomes `stacks/` et résultats bruts `results/`).
+Les piles opérationnelles, la suite étendue (`T11–T18`) et les benchmarks V2 s'appuient exclusivement sur le dépôt [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) intégré comme sous-module Git sous **`env/multi-db-docker-env`** (voir [`stacks/README.md`](stacks/README.md) pour la délégation source unique de vérité et `results/` pour les jeux de données bruts).
 
 ### Commandes `Makefile` essentielles
 
@@ -83,7 +83,7 @@ make up-pgedge && make test-pgedge && make down-pgedge
 make bench-all && make charts && make dashboard  # Benchmarks, 7 PNG Log10 et dashboard HTML
 ```
 
-### Piles Docker disponibles (`stacks/` & `env/multi-db-docker-env`)
+### Piles Docker disponibles (`env/multi-db-docker-env` — voir [`stacks/README.md`](stacks/README.md))
 
 - `pg17-baseline` / `pg-streaming` / `pg-logical` (Standalone, Streaming Async/Sync, Logique Uni)
 - `pg-birep` (`#1` PG 17 natif `origin = none`), `pgedge-spock` (`#2` Spock 5 + Snowflake), `bucardo` (`#9` Bucardo 5.6)

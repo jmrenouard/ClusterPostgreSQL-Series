@@ -76,17 +76,18 @@ Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser 
 
 ## Reproducible Lab Stacks, `multi-db-docker-env` Submodule & `Makefile`
 
-The operational PoC topologies, extended test runners (`T11–T18`), and V2 benchmark harnesses integrate and rely directly on [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) mounted as a Git submodule at **`env/multi-db-docker-env`** (alongside mirrored compose stacks in `stacks/` and raw CSV/JSON datasets in `results/`):
+The operational PoC topologies, extended test runners (`T11–T18`), and V2 benchmark harnesses rely exclusively on [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) mounted as a Git submodule at **`env/multi-db-docker-env`** (see [`stacks/README.md`](stacks/README.md) for the single-source-of-truth mapping and `results/` for raw CSV/JSON datasets):
 
-| Stack Directory | Topology | Primary Images |
+| Submodule Compose (`env/multi-db-docker-env/`) | Topology | Primary Images |
 | :--- | :--- | :--- |
-| `stacks/pg17-baseline/` & `env/` | PG 17 Standalone, Async/Sync Streaming & Uni-Logical | `postgres:17` |
-| `stacks/pg-birep/` | PG 17 Bidirectional (`origin=none`) + HAProxy | `postgres:17`, `haproxy:2.9-alpine` |
-| `stacks/pgedge-spock/` | 3-Node pgEdge Spock `5.0.14` + Snowflake + HAProxy | `ghcr.io/pgedge/pgedge-postgres:17-spock5-minimal` |
-| `stacks/bucardo/` | 2-Node PG 17 (`plperl`) + Bucardo `5.6.0` Daemon | Custom `postgres:17` + `debian:trixie-slim` |
-| `stacks/citus/` | Citus `14.2.0` (1 Coordinator + 2 Workers) | `citusdata/citus:14.2.0-pg17` |
-| `stacks/yugabytedb/` | 3-Node YugabyteDB RF=3 YSQL + DocDB | `yugabytedb/yugabyte:2026.1.3.0-b100` |
-| `stacks/cockroachdb/` | 3-Node CockroachDB RF=3 Multi-Raft | `cockroachdb/cockroach:v24.3.0` |
+| `docker-compose-pg17-baseline.yml` | PG 17 Standalone & Sync Streaming | `postgres:17` |
+| `docker-compose-pg-streaming.yml` / `pg-logical.yml` | PG 17 Async Streaming & Uni-Logical | `postgres:17` |
+| `docker-compose-pg-birep.yml` | PG 17 Bidirectional (`origin=none`) + HAProxy | `postgres:17`, `haproxy:2.9-alpine` |
+| `docker-compose-pgedge.yml` | 3-Node pgEdge Spock `5.0.14` + Snowflake + HAProxy | `ghcr.io/pgedge/pgedge-postgres:17-spock5-minimal` |
+| `docker-compose-bucardo.yml` | 2-Node PG 17 (`plperl`) + Bucardo `5.6.0` Daemon | Custom `postgres:17` + `debian:trixie-slim` |
+| `docker-compose-citus.yml` | Citus `14.2.0` (1 Coordinator + 2 Workers) | `citusdata/citus:14.2.0-pg17` |
+| `docker-compose-yugabyte.yml` | 3-Node YugabyteDB RF=3 YSQL + DocDB | `yugabytedb/yugabyte:2026.1.3.0-b100` |
+| `docker-compose-cockroach.yml` | 3-Node CockroachDB RF=3 Multi-Raft | `cockroachdb/cockroach:v24.3.0` |
 
 ### Common Commands
 
