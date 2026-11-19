@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-030 - Land Empirical Benchmark Summary CSV & Log Allowlist (Issue `#59`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#59` (`data/issue-59-benchmark-summary-csv`)
+- **Request / Changes / Result**: Added `results/benchmark_summary.csv` and `!results/logs/*.log` in `.gitignore`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-029 - Land `yugabyte` Functional & Limits Test Script (Issue `#57`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#57` (`test/issue-57-yugabyte`)
 - **Request / Changes / Result**: Added `scripts/test_yugabyte.sh`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.

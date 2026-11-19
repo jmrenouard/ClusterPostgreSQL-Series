@@ -1,5 +1,6 @@
 .env
 *.log
+!results/logs/*.log
 *.tmp
 *.swp
 *.bak
