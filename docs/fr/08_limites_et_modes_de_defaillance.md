@@ -75,3 +75,18 @@ Trois problèmes d'intégration reproductibles ont également été documentés 
 1. **pgEdge / Spock (`SQLSTATE 42501`)** : L'image minimale `17-spock5-minimal` restreint par défaut `output_plugin_libraries = 'pgoutput, test_decoding'`, bloquant `spock_output` (`42501`) jusqu'à surcharge explicite par `-c output_plugin_libraries=pgoutput,spock_output`.
 2. **Bucardo (`PL/PerlU`)** : Le schéma de contrôle Bucardo (`db_getconn`) exige `PL/PerlU` et `libdbd-pg-perl` dans le conteneur PostgreSQL lui-même (et non uniquement dans le conteneur daemon), imposant une image PostgreSQL 17 personnalisée (`Dockerfile.pg`).
 3. **YugabyteDB `yugabyted` RF=3** : Le facteur de réplication n'atteint `RF = 3` qu'après jonction effective des 3 nœuds TServer et mise à jour de placement, nécessitant une attente explicite sur la vue `yb_servers()` avant tout test de tolérance aux pannes.
+
+---
+
+## 4. Matrice étendue `T11–T18` (10 topologies, Streaming & Logique inclus)
+
+Les huit tests avancés (`results/extended_functional_matrix.csv`, `functional_limits_matrix.csv`) intègrent **`pg17-async-streaming`** et **`pg17-logical`** :
+
+- **`T11` Bulk 10k & rattrapage :** `22 079` (`cockroach`) à `67 406 lignes/s` (`pgedge`) ; rattrapage `105–115 ms` (streaming), `139 ms` (`bucardo`), `265 ms` (`cockroach`), `333–350 ms` (logique/Spock), `417 ms` (`yugabyte`).
+- **`T12` `UPDATE` vs `DELETE` :** **`pg17-logical` diverge** (`pub=upd_n1` vs `sub=DELETED`) ; les maillages async convergent vers `DELETED` ; streaming rejette (`25006`) ; Citus/YB/CRDB convergent.
+- **`T13` Course FK inter-nœuds :** Streaming bloque (`25006x10`) ; **`bucardo` échoue `0/10` (`23503x10`)** ; Raft/Citus et logique LAN passent `10/10`.
+- **`T14` Fidélité (64 Kio `BYTEA`, `JSONB`, UTF-8) :** `9/10` identiques (`md5=00493e3a`) ; image `pgedge` en **`SQL_ASCII`** (`chr(20013)` -> **`54000`** ; UTF-8 échappé `3/3` `md5=f798eb5a`).
+- **`T15` Lag RAW (`n=30`, `p50/p95` ms) :** `standalone` `1,15/1,55`, `pgedge` `1,16/1,63`, `pg-birep` `1,47/2,28`, `pg17-logical` `1,68/2,14`, `pg17-sync` `1,88/2,74`, `yugabyte` `2,01/2,83`, `citus` `1,71/13,89`, `cockroach` `4,09/4,98`, `pg17-async` `9,65/25,13`, **`bucardo` `548,74/1 275,25`**.
+- **`T16` Crash `SIGKILL` & `RPO` :** `20/20` (`RPO=0`) et `21/21` sur 8 piles ; `citus` `worker2` -> **`08006`** puis `21/21` ; `bucardo` `node1` -> `20/21`.
+- **`T17` TX ouverte 3 s :** `NO_DIRTY_READ` sur 10/10 ; `cockroach` bloque via intention (`serializable_intent_wait=2,1 s`).
+- **`T18` Séquences (50 inserts) :** Streaming (`66|true`), `yugabyte` (`101`), `cockroach`/`citus` (`51`) sûrs ; les 4 moteurs logiques/triggers restent à `1|false` -> **`23505`** (`pg17-logical` : `27 320 o` WAL vs `3 088 o` streaming).
