@@ -13,7 +13,9 @@ Les quatre premières suites comparent le débit nominal sur un nœud (`A`), l'�
 | Topologie | A : Single RW (TPS / lat) | B1 : Disjoint RW (TPS / lat) | B2 : Overlap RW (TPS / lat) | Dérive B2 (`balance_drift`) | C : Read-Only 16c (TPS / lat) |
 |:---|---:|---:|---:|---:|---:|
 | **`pg17-standalone`** | 866,82 / 9,22 ms | 920,07 / 8,68 ms | 879,01 / 9,09 ms | **0** (Mono) | 55 614,16 / 0,26 ms |
+| **`pg17-async-streaming`** | 610,15 / 13,09 ms | 627,39 / 12,73 ms | 584,80 / 13,66 ms | **0** (Async) | 45 358,52 / 0,33 ms |
 | **`pg17-sync-streaming`** | 409,48 / 19,52 ms | 407,41 / 19,61 ms | 465,22 / 17,17 ms | **0** (Sync) | 54 483,07 / 0,27 ms |
+| **`pg17-logical`** | 532,38 / 14,99 ms | 251,63 / 31,75 ms | 355,57 / 22,48 ms | **0** (Logique) | 42 302,43 / 0,35 ms |
 | **`pg-birep` (`#1`)** | 875,91 / 9,12 ms | 820,09 / 9,74 ms | 1 228,60 / 6,50 ms | **-4 567 (Diverge)** | 53 072,52 / 0,28 ms |
 | **`pgedge` LWW (`#2`)** | 556,06 / 14,37 ms | 346,95 / 23,03 ms | 818,65 / 9,76 ms | **-66 328 (Lost Upd.)** | 54 124,99 / 0,27 ms |
 | **`bucardo` (`#9`)** | 735,38 / 10,86 ms | 1 078,90 / 7,40 ms | 1 267,77 / 6,30 ms | **+123 679 (Lost Upd.)** | 53 731,92 / 0,27 ms |
@@ -35,6 +37,8 @@ La Suite D concentre 8 clients concurrents sur 50 comptes chauds (`aid = random(
 | Topologie | TPS | Lat. moy. (ms) | p95 (ms) | Tx validées | Attendu (`exp_delta`) | Observé (`abalance`) | Dérive (`drift`) | Statut |
 |:---|---:|---:|---:|---:|---:|---:|---:|:---|
 | **`pg17-standalone`** | 3 128,63 | 2,541 | 3,946 | 46 888 | 2 362 664 | 2 362 664 | **0** | `PASS_SINGLE_PRIMARY` |
+| **`pg17-logical`** | 2 386,93 | 3,327 | 5,468 | 35 747 | 1 808 364 | 1 808 364 | **0** | `PASS_SINGLE_PRIMARY` |
+| **`pg17-async-streaming`** | 2 081,26 | 3,820 | 6,117 | 31 189 | 1 578 778 | 1 578 778 | **0** | `PASS_SINGLE_PRIMARY` |
 | **`pgedge` (LWW défaut)** | 2 280,11 | 3,492 | 5,311 | 34 175 | 1 737 102 | 1 458 404 | **-278 698** | `LOST_UPDATE` (-16,0 %) |
 | **`pgedge-delta-apply`** | **1 837,64** | 4,336 | 9,347 | 27 545 | **1 391 780** | **1 391 780 (x3)** | **0** | **`PASS_CONVERGED`** |
 | **`citus`** | 1 691,45 | 4,716 | 6,722 | 25 354 | 1 283 370 | 1 283 370 | **0** | `PASS_CONVERGED` |
@@ -56,7 +60,9 @@ La Suite E évalue un profil OLTP multi-requêtes (`sysbench oltp_read_write`, 4
 | Topologie | E : `sysbench` TPS | E : `sysbench` QPS | E : Lat. avg / p95 | E : Erreurs ignorées | F : TPS sous `netem 25ms` | F : Lat. avg / p95 (`netem`) | Ratio F / A |
 |:---|---:|---:|---:|---:|---:|---:|---:|
 | **`pg17-standalone`** | 1 129,51 | 22 687,48 | 7,05 / 7,56 ms | 112 | N/A | N/A | N/A |
+| **`pg17-async-streaming`** | 962,84 | 19 353,12 | 8,30 / 10,27 ms | 107 | **599,61** | 13,32 / 34,38 ms | -1,7 % |
 | **`pg17-sync-streaming`** | 819,36 | 16 493,23 | 9,76 / 11,65 ms | 118 | **57,00** | 139,56 / 353,49 ms | **-86,1 %** |
+| **`pg17-logical`** | 595,81 | 11 974,58 | 13,42 / 23,95 ms | 65 | **654,11** | 12,21 / 30,58 ms | +22,9 % |
 | **`pg-birep` (`#1`)** | 1 105,32 | 22 192,83 | 7,23 / 10,84 ms | 96 | **824,04** | 9,69 / 24,95 ms | -5,9 % |
 | **`pgedge` (`#2`)** | 888,56 | 17 873,46 | 8,99 / 15,27 ms | 114 | **646,77** | 12,32 / 32,40 ms | +16,3 % |
 | **`bucardo` (`#9`)** | 1 232,84 | 24 757,64 | 6,48 / 7,70 ms | 112 | **763,23** | 10,47 / 27,26 ms | +3,8 % |
@@ -76,3 +82,18 @@ La Suite E évalue un profil OLTP multi-requêtes (`sysbench oltp_read_write`, 4
 - **Zone à risque silencieux** (`#1`, `#2 LWW`, `#9`) : Débit local élevé et insensibilité au RTT WAN, mais **dérive financière garantie** dès que deux nœuds écrivent sur des clés communes.
 - **Compromis applicatif ciblé** (`#2 Spock Delta-Apply`) : Préserve les performances asynchrones locales tout en garantissant une dérive nulle sur les compteurs CRDT, sans offrir de cohérence globale sur les clés étrangères ou index `UNIQUE`.
 - **Zone ACID distribuée** (`#5`, `#6`, `#7`, `#15 sync`) : Intégrité comptable stricte (`balance_drift = 0`), mais soumission directe aux lois de la latence RTT inter-nœuds et obligation d'implémenter le retry `40001` pour les moteurs optimistes/sérialisables.
+
+---
+
+## 5. Balayages étendus V2 (`E2–E4`, `H`, WAN `10/25/50 ms`, `c=1..32`) et Graphiques Log10
+
+Les 187 mesures sur 10 topologies (`benchmark_extended_workloads.csv`, `benchmark_wan_sweep.csv`, `benchmark_concurrency_sweep.csv`) confirment ces tendances (méthodologie au [Chapitre 09](09_methodologie_benchmarks_et_graphiques.md) ; comparatif 5 niveaux au [Chapitre 10](10_comparatif_streaming_logique_multimaster.md) ; explorateur interactif [**`dashboard/index.html`**](../../dashboard/index.html)) :
+
+- **`sysbench` étendu (`E2–E4`) et `H_append_only` :** Les piles PG natives atteignent `1 659–1 806 TPS` (`E2` RO), `801–1 784 TPS` (`E3` WO ; `pg17-sync` chute à `370,71`) et `124 105–148 022 TPS` (`E4` point-select) contre `180–522` (`E2`), `119–563` (`E3`) et `11 557–19 831 TPS` (`E4`) en moteurs distribués. L'append-only (`H`) brille sur `yugabyte` (`2 987,24 TPS`) et `pgedge` (`2 206,60`) près de `standalone` (`3 108,22`).
+- **Balayage WAN (`10 -> 25 -> 50 ms`) :** Les piles asynchrones restent stables (`pg17-async` `587->600->619`, `pgedge` `645->647->687`, `bucardo` `593->763->613 TPS`), tandis que les moteurs `PC/EC` décrochent (`pg17-sync` `121,8->57,0->25,8`, `citus` `44,4->21,7->8,8`, `cockroach` `19,4->10,1->4,5`, `yugabyte` `15,4->5,8->3,1 TPS`, `p95 = 5 474,7 ms`).
+- **Concurrence (`c = 1..32`) :** `standalone` grimpe de `298` à `801 TPS` ; `pg17-sync` sature à `425 TPS` ; `cockroach` culmine à `c = 4` (`74,11 TPS`) puis recule à `40,25 TPS` (`88` retries, `p95 = 3 400 ms`) à `c = 32`.
+
+![Débit Log10 toutes suites](../../assets/charts/chart_01_tps_log_all_suites.png)
+![Latence Log10 toutes suites](../../assets/charts/chart_02_latency_log_all_suites.png)
+![Sensibilité WAN Log10](../../assets/charts/chart_04_wan_netem_sweep_log.png)
+![Intégrité vs Débit](../../assets/charts/chart_07_integrity_vs_throughput.png)
