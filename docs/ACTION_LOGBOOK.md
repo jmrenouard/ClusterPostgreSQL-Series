@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-007 - Land English Chapter 03b Distributed, Trigger & Cloud Solutions (Issue `#13`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#13` (`docs/issue-13-en-03b-distributed-cloud`)
+- **Request / Changes / Result**: Added `docs/en/03b_solutions_distributed_triggers_cloud.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
+
 ### ACT-006 - Land English Chapter 03a Native & Extension Solutions (Issue `#11`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#11` (`docs/issue-11-en-03a-native-extensions`)
 - **Request / Changes / Result**: Added `docs/en/03a_solutions_native_and_extensions.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
