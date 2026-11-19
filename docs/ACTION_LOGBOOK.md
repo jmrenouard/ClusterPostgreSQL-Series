@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-005 - Land English Chapter 02 Theoretical Foundations (Issue `#9`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#9` (`docs/issue-9-en-02-theoretical-foundations`)
+- **Request / Changes / Result**: Added `docs/en/02_theoretical_foundations_cap_pacelc_conflicts.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
+
 ### ACT-004 - Land English Chapter 01 Executive Summary & Taxonomy (Issue `#7`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#7` (`docs/issue-7-en-01-executive-summary`)
 - **Request / Changes / Result**: Added `docs/en/01_executive_summary_and_taxonomy.md` and marked Phase 2 `In Progress`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
