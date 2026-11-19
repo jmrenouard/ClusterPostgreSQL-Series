@@ -55,3 +55,17 @@ cockroach,C_multinode_ro,2,16,20,13185.54,N/A,1.199,0.586,2.161,263668,0,0,PASS,
 cockroach,D_hot_conflict,2,8,15,471.61,N/A,16.913,8.303,34.165,7091,0,0,PASS_CONVERGED,0,exp_delta=359402 crdb_node1:acc=359402/br=0/hist=7091 crdb_node2:acc=359402/br=0/hist=7091 crdb_node3:acc=359402/br=0/hist=7091
 cockroach,E_sysbench_oltp_rw,2,8,20,44.84,1531.47,177.91,0,502.2,902,685,0,PASS,0,oltp_read_write tables=4 size=10000
 cockroach,F_wan_netem_25ms,2,8,15,10.06,N/A,715.768,1072.655,2930.542,167,0,14,PASS_NETEM_25MS,0,"tc netem 25ms (crdb_node2,crdb_node3)"
+pg17-async-streaming,A_single_rw,2,8,20,610.15,N/A,13.094,10.073,33.928,12199,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=-76286 pg_stream_primary:acc=-76286/br=-76286/hist=12199 pg_stream_standby:acc=-76286/br=-76286/hist=12199
+pg17-async-streaming,B1_disjoint_rw,2,8,20,627.39,N/A,12.731,6.053,24.346,12540,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=-294045 pg_stream_primary:acc=-294045/br=-294045/hist=12540 pg_stream_standby:acc=-294045/br=-294045/hist=12540
+pg17-async-streaming,B2_overlap_rw,2,8,20,584.8,N/A,13.663,10.657,34.406,11686,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=-90089 pg_stream_primary:acc=-90089/br=-90089/hist=11686 pg_stream_standby:acc=-90089/br=-90089/hist=11686
+pg17-async-streaming,C_multinode_ro,2,16,20,45358.52,N/A,0.325,0.147,0.557,906086,0,0,PASS,0,select_only 16 clients
+pg17-async-streaming,D_hot_conflict,2,8,15,2081.26,N/A,3.82,1.843,6.117,31189,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=1578778 pg_stream_primary:acc=1578778/br=0/hist=31189 pg_stream_standby:acc=1578778/br=0/hist=31189
+pg17-async-streaming,E_sysbench_oltp_rw,2,8,20,962.84,19353.12,8.3,0,10.27,19268,107,0,PASS,0,oltp_read_write tables=4 size=10000
+pg17-async-streaming,F_wan_netem_25ms,2,8,15,599.61,N/A,13.317,10.473,34.381,8991,0,0,PASS_NETEM_25MS,0,tc netem 25ms (pg_stream_standby)
+pg17-logical,A_single_rw,2,8,20,532.38,N/A,14.994,14.472,39.319,10658,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=135941 pg_logical_pub:acc=135941/br=135941/hist=10658 pg_logical_sub:acc=135941/br=135941/hist=10658
+pg17-logical,B1_disjoint_rw,2,8,20,251.63,N/A,31.747,28.543,78.407,5038,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=-8919 pg_logical_pub:acc=-8919/br=-8919/hist=5038 pg_logical_sub:acc=-8919/br=-8919/hist=5038
+pg17-logical,B2_overlap_rw,2,8,20,355.57,N/A,22.475,29.148,77.992,7109,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=246607 pg_logical_pub:acc=246607/br=246607/hist=7109 pg_logical_sub:acc=246607/br=246607/hist=7109
+pg17-logical,C_multinode_ro,2,16,20,42302.43,N/A,0.348,0.213,0.637,845078,0,0,PASS,0,select_only 16 clients
+pg17-logical,D_hot_conflict,2,8,15,2386.93,N/A,3.327,1.17,5.468,35747,0,0,PASS_SINGLE_PRIMARY,0,exp_delta=1808364 pg_logical_pub:acc=1808364/br=0/hist=35747 pg_logical_sub:acc=1808364/br=0/hist=35747
+pg17-logical,E_sysbench_oltp_rw,2,8,20,595.81,11974.58,13.42,0,23.95,11926,65,0,PASS,0,oltp_read_write tables=4 size=10000
+pg17-logical,F_wan_netem_25ms,2,8,15,654.11,N/A,12.207,9.064,30.581,9806,0,0,PASS_NETEM_25MS,0,tc netem 25ms (pg_logical_sub)
