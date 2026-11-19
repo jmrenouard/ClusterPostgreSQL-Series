@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-040 - Land English Chapter 06 Empirical Benchmark Results (Issue `#79`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#79` (`docs/issue-79-en-06-benchmark-results`)
+- **Request / Changes / Result**: Added `docs/en/06_empirical_test_and_benchmark_results.md`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-039 - Land `yugabyte` Benchmark Result Log (Issue `#77`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#77` (`data/issue-77-log-yugabyte`)
 - **Request / Changes / Result**: Added `results/logs/yugabyte.log`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
