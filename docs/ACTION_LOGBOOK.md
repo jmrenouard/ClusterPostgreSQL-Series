@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-031 - Land Functional Limits Matrix & `pg17-standalone` Log (Issue `#61`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#61` (`data/issue-61-limits-matrix-standalone-log`)
+- **Request / Changes / Result**: Added `results/functional_limits_matrix.csv` and `results/logs/pg17-standalone.log`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-030 - Land Empirical Benchmark Summary CSV & Log Allowlist (Issue `#59`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#59` (`data/issue-59-benchmark-summary-csv`)
 - **Request / Changes / Result**: Added `results/benchmark_summary.csv` and `!results/logs/*.log` in `.gitignore`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
