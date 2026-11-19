@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-028 - Land `cockroach` Functional & Limits Test Script (Issue `#55`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#55` (`test/issue-55-cockroach`)
+- **Request / Changes / Result**: Added `scripts/test_cockroach.sh`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-027 - Land `citus` Functional & Limits Test Script (Issue `#53`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#53` (`test/issue-53-citus`)
 - **Request / Changes / Result**: Added `scripts/test_citus.sh`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
