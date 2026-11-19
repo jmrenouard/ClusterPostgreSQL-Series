@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-020 - Land `citus`, `yugabytedb` & `cockroachdb` Docker Stacks (Issue `#39`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#39` (`feat/issue-39-stacks-distributed-sql`)
+- **Request / Changes / Result**: Added `stacks/citus/*`, `stacks/yugabytedb/*`, and `stacks/cockroachdb/*`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-019 - Land `pgedge-spock` & `bucardo` Docker Stacks (Issue `#37`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#37` (`feat/issue-37-stacks-pgedge-bucardo`)
 - **Request / Changes / Result**: Added `stacks/pgedge-spock/*` and `stacks/bucardo/*`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
