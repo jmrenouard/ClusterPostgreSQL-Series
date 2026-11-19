@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-034 - Land `pg17-sync-streaming` & `citus` Result Logs (Issue `#67`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#67` (`data/issue-67-logs-sync-citus`)
+- **Request / Changes / Result**: Added `results/logs/pg17-sync-streaming.log` and `results/logs/citus.log`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-033 - Land Empirical Benchmark Summary JSON Part 2 (Issue `#65`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#65` (`data/issue-65-benchmark-summary-part2`)
 - **Request / Changes / Result**: Added `results/benchmark_summary_part2.json`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
