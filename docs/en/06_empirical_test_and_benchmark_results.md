@@ -21,7 +21,9 @@ The table below consolidates verbatim metrics from `results/benchmark_summary.cs
 | Topology | Suite A TPS (`avg ms`) | Suite B1 Disjoint TPS (`avg ms`) | Suite B2 Overlap TPS (`avg ms`) | B2 Retries (`40001`) | B2 Balance Drift | Suite C RO TPS (`avg ms`) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | **#15 `pg17-standalone`** | `866.82` (`9.22`) | `920.07` (`8.68`) | `879.01` (`9.09`) | `0` | `0` | **`55,614.16`** (`0.257`) |
+| **#15 `pg17-async-streaming`** | `610.15` (`13.09`) | `627.39` (`12.73`) | `584.80` (`13.66`) | `0` | `0` | `45,358.52` (`0.325`) |
 | **#15 `pg17-sync-streaming`** | `409.48` (`19.52`) | `407.41` (`19.61`) | `465.22` (`17.17`) | `0` | `0` | `54,483.07` (`0.271`) |
+| **#14 `pg17-logical`** | `532.38` (`14.99`) | `251.63` (`31.75`) | `355.57` (`22.48`) | `0` | `0` | `42,302.43` (`0.348`) |
 | **#1 `pg-birep`** | `875.91` (`9.12`) | `820.09` (`9.74`) | `1,228.60` (`6.50`) | `0` | **`-4,567` (Diverged)** | `53,072.52` (`0.279`) |
 | **#2 `pgedge` (Spock 5)** | `556.06` (`14.37`) | `346.95` (`23.03`) | `818.65` (`9.76`) | `0` | **`-66,328` (Lost)** | `54,124.99` (`0.273`) |
 | **#9 `bucardo`** | `735.38` (`10.86`) | `1,078.90` (`7.40`) | **`1,267.77`** (`6.30`) | `0` | **`+123,679` (Lost)** | `53,731.92` (`0.274`) |
@@ -45,7 +47,9 @@ Suite D (`15 s`, `8` total clients targeting `50` hot accounts `aid = 1..50` wit
 | Topology | TPS | `lat_avg_ms` (`p95`) | Expected `SUM(delta)` | Observed `SUM(abalance)` | `balance_drift` | Convergence Verdict |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
 | **`pg17-standalone`** | `3,128.63` | `2.54` (`3.95`) | `2,362,664` | `2,362,664` | `0` | `PASS_SINGLE_PRIMARY` |
+| **`pg17-async-streaming`** | `2,081.26` | `3.82` (`6.12`) | `1,578,778` | `1,578,778` | `0` | `PASS_SINGLE_PRIMARY` |
 | **`pg17-sync-streaming`** | `1,370.10` | `5.83` (`8.73`) | `1,035,721` | `1,035,721` | `0` | `PASS_SINGLE_PRIMARY` |
+| **`pg17-logical`** | `2,386.93` | `3.33` (`5.47`) | `1,808,364` | `1,808,364` | `0` | `PASS_SINGLE_PRIMARY` |
 | **`pg-birep`** | `1,231.15` | `6.48` (`13.01`) | `922,873` | `n1: 851,810 / n2: 851,747` | **`-71,063`** | **`EXPECTED_LIMITATION_DIVERGED`** |
 | **`pgedge` (Default LWW)** | `2,280.11` | `3.49` (`5.31`) | `1,737,102` | `1,458,404` (all 3) | **`-278,698`** | **`EXPECTED_LIMITATION_LOST_UPDATE`** |
 | **`pgedge-delta-apply`** | **`1,837.64`** | `4.34` (`9.35`) | `1,391,780` | `1,391,780` (all 3) | **`0`** | **`PASS_CONVERGED` (CRDT)** |
@@ -67,7 +71,9 @@ To avoid single-benchmark bias (`pgbench`) and sub-millisecond Docker loopback i
 | Topology | Suite E `sysbench` TPS | Suite E QPS (`p95 ms`) | Suite E `tx_failed` | Suite A Local TPS | Suite F `netem 25ms` TPS (`p95 ms`) | WAN Drop |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | **`pg17-standalone`** | `1,129.51` | `22,687.48` (`7.56`) | `112` | `866.82` | N/A | N/A |
+| **`pg17-async-streaming`** | `962.84` | `19,353.12` (`10.27`) | `107` | `610.15` | **`599.61`** (`34.38`) | `-1.7%` |
 | **`pg17-sync-streaming`** | `819.36` | `16,493.23` (`11.65`) | `118` | `409.48` | **`57.00`** (`353.49`) | **`-86.1%`** |
+| **`pg17-logical`** | `595.81` | `11,974.58` (`23.95`) | `65` | `532.38` | **`654.11`** (`30.58`) | `0%` (+23% var) |
 | **`pg-birep`** | `1,105.32` | `22,192.83` (`10.84`) | `96` | `875.91` | **`824.04`** (`24.95`) | `-5.9%` |
 | **`pgedge` (Spock 5)** | `888.56` | `17,873.46` (`15.27`) | `114` | `556.06` | **`646.77`** (`32.40`) | `0%` (+16% var) |
 | **`bucardo`** | **`1,232.84`** | `24,757.64` (`7.70`) | `112` | `735.38` | **`763.23`** (`27.26`) | `0%` (+4% var) |
@@ -83,3 +89,18 @@ To avoid single-benchmark bias (`pgbench`) and sub-millisecond Docker loopback i
    - `citus` collapsed by `-93.0%` (`21.67 TPS`, `avg = 364.81 ms`) as multi-shard TPC-B statements paid cross-worker RTTs and 2PC overhead.
    - `yugabyte` (`5.78 TPS`, `avg = 1,327.30 ms`, `p95 = 3,401.33 ms`) and `cockroach` (`10.06 TPS`, `avg = 715.77 ms`, `14` retries) dropped `-96.7%` and `-76.1%` because each TPC-B transaction touched multiple non-colocated tablets/ranges (`accounts`, `tellers`, `branches`, `history`), paying repeated `2 * RTT` distributed commit trips.
    - Asynchronous `PA/EL` systems (`pg-birep` `824.04 TPS`, `pgedge` `646.77 TPS`, `bucardo` `763.23 TPS`) committed locally without waiting for WAN round-trips.
+
+---
+
+## 5. Extended V2 Sweeps (`E2–E4`, `H`, WAN `10/25/50 ms`, `c=1..32`) & Log10 Charts
+
+Expanded 10-topology sweeps (`187` rows total; full methodology in [Chapter 09](09_benchmarks_methodology_and_charts.md), 5-tier comparison in [Chapter 10](10_streaming_vs_logical_vs_multimaster.md), interactive explorer in [**`dashboard/index.html`**](../../dashboard/index.html)):
+
+- **`sysbench` `E2–E4` & `H`:** Native PG reached `1,659–1,806` (`E2` RO), `801–1,784` (`E3` WO; `pg17-sync` `370.71`), and `124k–148k TPS` (`E4` point-select) vs distributed `180–522` (`E2`), `119–563` (`E3`), `11.6k–19.8k` (`E4`). Append-only `H` hit `3,108` (`standalone`), `2,987` (`yugabyte`), and `2,207` (`pgedge`).
+- **WAN (`10 -> 25 -> 50 ms`):** Async stayed flat (`pg17-async` `587->600->619`, `pgedge` `645->647->687`, `bucardo` `593->763->613`) while `PC/EC` fell steeply (`pg17-sync` `121.8->57.0->25.8`, `citus` `44.4->21.7->8.8`, `cockroach` `19.4->10.1->4.5`, `yugabyte` `15.4->5.8->3.1 TPS`, `p95=5,475 ms`).
+- **Concurrency (`c=1..32`):** `standalone` scaled `298->801`; `pg17-sync` plateaued at `425`; `cockroach` peaked at `c=4` (`74.1`) then fell to `40.3` (`88` retries, `p95=3,400 ms`) at `c=32`.
+
+![Log10 Throughput All Suites](../../assets/charts/chart_01_tps_log_all_suites.png)
+![Log10 Latency All Suites](../../assets/charts/chart_02_latency_log_all_suites.png)
+![Log10 WAN Netem Sweep](../../assets/charts/chart_04_wan_netem_sweep_log.png)
+![Integrity vs Throughput](../../assets/charts/chart_07_integrity_vs_throughput.png)
