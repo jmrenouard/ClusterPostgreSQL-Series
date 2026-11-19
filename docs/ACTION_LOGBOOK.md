@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-010 - Land English Chapter 07 Decision Framework & Production Guide (Issue `#19`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#19` (`docs/issue-19-en-07-decision-framework`)
+- **Request / Changes / Result**: Added `docs/en/07_decision_framework_and_production_guide.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
+
 ### ACT-009 - Land English Chapter 05 PoC Architectures & Test Protocol (Issue `#17`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#17` (`docs/issue-17-en-05-poc-test-protocol`)
 - **Request / Changes / Result**: Added `docs/en/05_poc_architectures_and_test_protocol.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
