@@ -11,6 +11,7 @@
 | **Phase 2** | Comparative Study (`en` / `fr`) | Architectural taxonomy, matrices, consensus limits | Complete | `make check-math` |
 | **Phase 3** | Reproducible Docker PoCs | Native logical, Spock/pgEdge, Bucardo, Citus, YugabyteDB, CockroachDB | Complete | `make test-*` |
 | **Phase 4** | Benchmarks & Synthesis | Empirical limits, pgbench/sysbench throughput & latency | Complete | `make bench-all` |
+| **Phase 5** | V2 10-Topology Study, Charts, Dashboard & Submodule | Streaming/logical PoCs, T11-T18, Log10 PNGs, offline dashboard, `env/multi-db-docker-env` | Complete | `make test && make lint` |
 
 ## 1. Ongoing Actions (`IN PROGRESS`)
 
@@ -19,6 +20,42 @@
 | *None* | - | - | - | All tracked actions archived below once verified. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-076 - Finalize V2 Governance Registers (`ACTION_LOGBOOK.md` & `RCA_REGISTER.md`) (Issue `#151`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#151` (`docs/issue-151-v2-governance-registers`)
+- **Request / Changes / Result**: Added Phase 5 milestone, `ACT-048..076`, and `RCA-008..010`, `IMP-004`, `APP-006`, `IDEA-005`; `make test` (`12/12` OK), `make lint`, and PR diff `< 14,900` chars verified.
+
+### ACT-075 - Align Root READMEs to Single-Source Submodule Delegation (Issue `#149`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#149` / PR `#150` (`docs/issue-149-readme-submodule-single-source-links`)
+- **Request / Changes / Result**: Updated `README.md` and `README.fr.md` stack tables to point exclusively to `env/multi-db-docker-env` and `stacks/README.md` (diff `4,574` B; `0` broken links across 32 `.md` files).
+
+### ACT-074 - Deduplicate `stacks/` Part 3: Citus, YugabyteDB, CockroachDB (Issue `#147`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#147` / PR `#148` (`refactor/issue-147-dedup-stacks-part3-citus-yb-crdb`)
+- **Request / Changes / Result**: Removed duplicate `stacks/citus`, `stacks/yugabytedb`, and `stacks/cockroachdb` directories delegated to `env/multi-db-docker-env` (diff `12,349` B; `12/12` tests + `lint` OK).
+
+### ACT-073 - Deduplicate `stacks/` Part 2: pgEdge Spock & Bucardo (Issue `#145`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#145` / PR `#146` (`refactor/issue-145-dedup-stacks-part2-pgedge-bucardo`)
+- **Request / Changes / Result**: Removed duplicate `stacks/pgedge-spock` and `stacks/bucardo` directories delegated to `env/multi-db-docker-env` (diff `13,443` B; `12/12` tests + `lint` OK).
+
+### ACT-072 - Deduplicate `stacks/` Part 1 & Add `stacks/README.md` (Issue `#143`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#143` / PR `#144` (`refactor/issue-143-dedup-stacks-part1-baseline-birep`)
+- **Request / Changes / Result**: Removed duplicate `stacks/pg17-baseline` and `stacks/pg-birep` and added `stacks/README.md` single-source mapping (diff `13,139` B; `12/12` tests + `lint` OK).
+
+### ACT-071 - Integrate `multi-db-docker-env` `v2.2.0` Git Submodule & Wire `Makefile` (Issue `#141`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#141` / PR `#142` (`feat/issue-141-submodule-makefile-integration`)
+- **Request / Changes / Result**: Registered `jmrenouard/multi-db-docker-env@84acc72` (`v2.2.0`) at `env/multi-db-docker-env`, excluded `env/` from repo-local test scans, wired `Makefile` (`MDB_DIR`, `init-env`, `charts`, `dashboard`, `up/down/setup/test-%`, `test-pg-extended`, `bench-all`, 9-stack `lint`), and added submodule assertions (diff `10,621` B; `12/12` tests + `9/9` compose lint OK).
+
+### ACT-063 to ACT-070 - Land V2 Bilingual Documentation & READMEs (Issues `#125`..`#139`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#125`/`#126` (Ch06 EN/FR, `12,476` B), `#127`/`#128` (Ch08 EN/FR, `6,997` B), `#129`/`#130` (Ch09 EN, `10,855` B), `#131`/`#132` (Ch09 FR, `10,752` B), `#133`/`#134` (Ch10 EN, `12,856` B), `#135`/`#136` (Ch10 FR, `12,796` B), `#137`/`#138` (`README.md`, `7,255` B), `#139`/`#140` (`README.fr.md`, `10,584` B)
+- **Request / Changes / Result**: Landed all 10 updated/new bilingual documentation files with 10-topology empirical tables, T11-T18 limits, Log10 charts, LightPath SVG picture banners, and zero `TBD_EMPIRICAL_V2` placeholders; `make test` (`11/11` OK) and `make lint` verified on every PR.
+
+### ACT-054 to ACT-062 - Land Chart Generator, Offline HTML Dashboard & Artifact Unit Tests (Issues `#107`..`#123`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#107`/`#108` (`generate_charts.py`, `13,863` B), `#109`/`#110` (`index.html` + `data_bench_3.js`, `8,650` B), `#111`/`#112` (`styles.css`, `10,061` B), `#113`/`#114` (`charts.js`, `13,341` B), `#115`/`#116` (`app.js`, `13,751` B), `#117`/`#118` (`data_bench.js`, `10,732` B), `#119`/`#120` (`data_matrix.js` + `data_bench_2.js`, `13,133` B), `#121`/`#122` (`build_dashboard.py` + `data_matrix_ext.js`, `13,228` B), `#123`/`#124` (`test_benchmark_artifacts.py`, `7,615` B)
+- **Request / Changes / Result**: Landed complete zero-CDN offline HTML Benchmark Explorer, Log10 matplotlib chart builder, auto-sharding dashboard builder, and automated artifact validation suite (`11/11` OK, `make lint` OK).
+
+### ACT-048 to ACT-053 - Land LightPath SVG Logos, 7 Log10 PNG Charts & V2 10-Topology CSV/Log Datasets (Issues `#95`..`#105`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#95`/`#96` (LightPath dark/light SVGs, `13,554` B), `#97`/`#98` (7 180-DPI Log10 PNG charts, `1,700` B), `#99`/`#100` (`benchmark_summary.csv` + `functional_limits_matrix.csv`, `8,980` B), `#101`/`#102` (`extended_functional_matrix.csv` + `benchmark_wan_sweep.csv`, `10,099` B), `#103`/`#104` (`benchmark_extended_workloads.csv` + `benchmark_concurrency_sweep.csv`, `10,659` B), `#105`/`#106` (`pg17-async-streaming.log` + `pg17-logical.log`, `13,902` B)
+- **Request / Changes / Result**: Landed branding assets, all 7 publication Log10 PNG charts, all 4 merged benchmark CSVs (178 unique empirical rows across 10 topologies x 18 suites), both 10-topology functional matrices (`L1-L8`, `T11-T18`), and raw streaming/logical logs (`11/11` tests + `lint` OK).
 
 ### ACT-047 - Finalize Governance Registers & Phase Milestones (Issue `#93`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#93` (`docs/issue-93-finalize-governance-registers`)
