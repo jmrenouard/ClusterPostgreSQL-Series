@@ -183,6 +183,18 @@ class TestBenchmarkArtifacts(unittest.TestCase):
                         oversized.append(f"{path.relative_to(ROOT)} ({size} B)")
         self.assertEqual(oversized, [], f"Files >= 14,000 bytes: {oversized}")
 
+    def test_submodule_and_makefile_integration(self) -> None:
+        """Verify multi-db-docker-env Git submodule registration and Makefile targets."""
+        gitmodules = ROOT / ".gitmodules"
+        self.assertTrue(gitmodules.is_file(), "Missing .gitmodules file")
+        gm_txt = gitmodules.read_text(encoding="utf-8")
+        self.assertIn("path = env/multi-db-docker-env", gm_txt)
+        self.assertIn("jmrenouard/multi-db-docker-env", gm_txt)
+
+        mk_txt = (ROOT / "Makefile").read_text(encoding="utf-8")
+        for tok in ("MDB_DIR", "init-env:", "charts:", "dashboard:"):
+            self.assertIn(tok, mk_txt, f"Missing Makefile token: {tok}")
+
 
 if __name__ == "__main__":
     unittest.main()

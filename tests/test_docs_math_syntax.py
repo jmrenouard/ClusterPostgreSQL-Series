@@ -7,7 +7,7 @@ import re
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-SKIP = {".git", "__pycache__", ".pytest_cache", ".venv", "venv"}
+SKIP = {".git", "__pycache__", ".pytest_cache", ".venv", "venv", "env"}
 FENCE_RE = re.compile(r"^\s*(```+|~~~+)")
 CODE_RE = re.compile(r"(`+)(?:(?!\1).)*?\1")
 CURRENCY_RE = re.compile(r"^\d+(?:[.,]\d+)?[-/]$")

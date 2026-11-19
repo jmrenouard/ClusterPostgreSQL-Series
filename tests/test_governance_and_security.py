@@ -7,7 +7,7 @@ import re
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-SKIP = {".git", "__pycache__", ".pytest_cache", ".venv", "venv"}
+SKIP = {".git", "__pycache__", ".pytest_cache", ".venv", "venv", "env"}
 BANNED = (
     ("secret-store term", re.compile(r"\b(?:k[e]epass|v[a]ult|password[_ -]?manag[e]r)\b", re.I)),
     ("secret-store ext", re.compile(r"\.(?:kdb[x]|key[x])\b", re.I)),
@@ -74,7 +74,7 @@ class TestGovernanceAndSecurity(unittest.TestCase):
             *ROOT.rglob("*.sh"),
         ]
         accents, no_strict = [], []
-        for path in sorted({p for p in targets if p.is_file()}):
+        for path in sorted({p for p in targets if p.is_file() and not any(part in SKIP for part in p.parts)}):
             txt = path.read_text(encoding="utf-8")
             rel = str(path.relative_to(ROOT))
             if ACCENTS.search(txt):
