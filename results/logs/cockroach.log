@@ -1,0 +1,221 @@
+=== [cockroach] Start ===
+=== CockroachDB Cluster Bootstrap ===
+[INFO] Waiting for crdb_node1 SQL socket...
+[OK] Cluster initialized.
+[INFO] Waiting for 3 live nodes...
+[OK] CockroachDB node status:
+id	address	sql_address	build	started_at	updated_at	locality	is_available	is_live
+1	crdb_node1:26257	crdb_node1:26257	v24.3.0	2026-11-19 11:47:00.174673 +0000 UTC	2026-11-19 11:47:03.205532 +0000 UTC		true	true
+2	crdb_node3:26257	crdb_node3:26257	v24.3.0	2026-11-19 11:47:01.0023 +0000 UTC	2026-11-19 11:47:01.025471 +0000 UTC		true	true
+3	crdb_node2:26257	crdb_node2:26257	v24.3.0	2026-11-19 11:47:01.055465 +0000 UTC	2026-11-19 11:47:01.082342 +0000 UTC		true	true
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+NOTICE:  No license is installed. Throttling will begin after 2026-11-26 11:46:58 +0000 UTC unless a license is installed before then.
+NOTICE:  No license is installed. Throttling will begin after 2026-11-26 11:46:58 +0000 UTC unless a license is installed before then.
+[... repeated CRDB enterprise license NOTICE lines omitted ...]
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 2
+query mode: simple
+number of clients: 8
+number of threads: 4
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 849
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 33 (3.887%)
+total number of retries: 44
+latency average = 190.129 ms
+initial connection time = 4.088 ms
+tps = 42.076639 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: /tmp/s_d1.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 625
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 32 (5.120%)
+total number of retries: 45
+latency average = 128.517 ms
+initial connection time = 4.010 ms
+tps = 31.124176 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: /tmp/s_d2.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 587
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 32 (5.451%)
+total number of retries: 42
+latency average = 136.864 ms
+initial connection time = 4.053 ms
+tps = 29.226185 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: /tmp/s_ov.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 906
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 27 (2.980%)
+total number of retries: 29
+latency average = 88.729 ms
+initial connection time = 3.945 ms
+tps = 45.081035 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: /tmp/s_ov.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 584
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 42 (7.192%)
+total number of retries: 67
+latency average = 137.505 ms
+initial connection time = 3.608 ms
+tps = 29.089885 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: <builtin: select only>
+scaling factor: 2
+query mode: simple
+number of clients: 8
+number of threads: 4
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 174237
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 0.918 ms
+initial connection time = 4.610 ms
+tps = 8713.219282 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: <builtin: select only>
+scaling factor: 2
+query mode: simple
+number of clients: 8
+number of threads: 4
+maximum number of tries: 100
+duration: 20 s
+number of transactions actually processed: 89431
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 1.789 ms
+initial connection time = 4.788 ms
+tps = 4472.320581 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: /tmp/s_hot.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 15 s
+number of transactions actually processed: 3861
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 15.584 ms
+initial connection time = 3.983 ms
+tps = 256.674791 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: /tmp/s_hot.sql
+scaling factor: 1
+query mode: simple
+number of clients: 4
+number of threads: 2
+maximum number of tries: 100
+duration: 15 s
+number of transactions actually processed: 3230
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 18.610 ms
+initial connection time = 4.168 ms
+tps = 214.932613 (without initial connection time)
+sysbench 1.0.20 (using system LuaJIT 2.1.1700206165)
+
+Running the test with following options:
+Number of threads: 8
+Initializing random number generator from current time
+
+
+Initializing worker threads...
+
+Threads started!
+
+SQL statistics:
+    queries performed:
+        read:                            22159
+        write:                           3748
+        other:                           4903
+        total:                           30810
+    transactions:                        902    (44.84 per sec.)
+    queries:                             30810  (1531.47 per sec.)
+    ignored errors:                      685    (34.05 per sec.)
+    reconnects:                          0      (0.00 per sec.)
+
+General statistics:
+    total time:                          20.1168s
+    total number of events:              902
+
+Latency (ms):
+         min:                                   20.18
+         avg:                                  177.91
+         max:                                 1508.06
+         95th percentile:                      502.20
+         sum:                               160473.12
+
+Threads fairness:
+    events (avg/stddev):           112.7500/9.19
+    execution time (avg/stddev):   20.0591/0.04
+
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 2
+query mode: simple
+number of clients: 8
+number of threads: 4
+maximum number of tries: 100
+duration: 15 s
+number of transactions actually processed: 167
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 13 (7.784%)
+total number of retries: 14
+latency average = 794.931 ms
+initial connection time = 4.099 ms
+tps = 10.063766 (without initial connection time)
+=== [cockroach] Down ===

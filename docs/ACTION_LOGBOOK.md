@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-036 - Land `cockroach` Benchmark Result Log (Issue `#71`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#71` (`data/issue-71-log-cockroach`)
+- **Request / Changes / Result**: Added `results/logs/cockroach.log`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-035 - Land `pg-birep` Benchmark Result Log (Issue `#69`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#69` (`data/issue-69-log-pg-birep`)
 - **Request / Changes / Result**: Added `results/logs/pg-birep.log`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
