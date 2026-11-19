@@ -1,8 +1,18 @@
+<p align="center">
+  <a href="https://www.lightpath.fr">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/lightpath-logo-dark.svg">
+      <source media="(prefers-color-scheme: light)" srcset="assets/lightpath-logo-light.svg">
+      <img alt="LightPath" src="assets/lightpath-logo-light.svg" width="240">
+    </picture>
+  </a>
+</p>
+
 # ClusterPostgreSQL-Series : Étude comparative, PoCs reproductibles et benchmarks PostgreSQL Multi-Maîtres
 
 > **Auteur** : Jean-Marie Renouard (`jmrenouard`) - [LightPath](https://www.lightpath.fr) | **Licence** : MIT | [English Version (`README.md`)](README.md)
 
-Étude d'ingénierie approfondie, reproductible et sans concession sur les architectures **PostgreSQL Multi-Maîtres / Active-Active**, évaluant **15 solutions** réparties en **7 familles architecturales** et confrontant la théorie (CAP, PACELC, dérive d'horloge, consensus) à des **tests fonctionnels, sondes de limites (`SQLSTATE`) et benchmarks empiriques (`pgbench`, `sysbench`, `tc netem 25ms`)**.
+Étude d'ingénierie reproductible sur **15 solutions PostgreSQL** (7 familles) et **10 topologies Docker opérationnelles** (appuyées sur le sous-module [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env)), incluant **18 tests fonctionnels/limites (`L1–L8` + `T11–T18`)**, **187 mesures empiriques (`pgbench`, `sysbench`, `tc netem 10/25/50 ms`, `c=1..32`)** et l'[**Explorateur HTML interactif hors-ligne (`dashboard/index.html`)**](dashboard/index.html).
 
 ---
 
@@ -13,7 +23,9 @@ Tous les tests ont été exécutés séquentiellement sur hôte Docker WSL2 (20 
 | Topologie | Famille (`#`) | Suite A : Single RW (TPS) | Suite B2 : Overlap RW (TPS) | Suite D : Hot 50c (TPS) | Dérive solde (`Suite D`) | Suite E : `sysbench` (TPS) | Suite F : `netem 25ms` (TPS) | Limites `SQLSTATE` vérifiées |
 |:---|:---|---:|---:|---:|---:|---:|---:|:---|
 | **`pg17-standalone`** | Baseline (`#15`) | 866,82 | 879,01 | 3 128,63 | **0** | 1 129,51 | N/A | `23505` |
-| **`pg17-sync-streaming`** | Baseline HA (`#15`) | 409,48 | 465,22 | 1 370,10 | **0** | 819,36 | **57,00** (-86 %) | `23505`, `25006` |
+| **`pg17-async-streaming`** | Stream Async (`#15`) | 610,15 | 584,80 | 2 081,26 | **0** | 962,84 | **599,61** | `25006` RO ; seq `66\|true` |
+| **`pg17-sync-streaming`** | Stream Sync (`#15`) | 409,48 | 465,22 | 1 370,10 | **0** | 819,36 | **57,00** (-86 %) | `23505`, `25006` |
+| **`pg17-logical`** | Logique Uni (`#14`) | 532,38 | 355,57 | 2 386,93 | **0** | 595,81 | **654,11** | `55000`, piège seq `23505` |
 | **`pg-birep`** | Logique natif (`#1`) | 875,91 | 1 228,60 | 1 231,15 | **-71 063** (Diverge) | 1 105,32 | **824,04** | `23505`, `55000` |
 | **`pgedge` (LWW)** | Extension (`#2`) | 556,06 | 818,65 | 2 280,11 | **-278 698** (Lost Upd.) | 888,56 | **646,77** | `23505` (`transdiscard`) |
 | **`pgedge-delta-apply`** | CRDT (`#2`) | - | - | **1 837,64** | **0** (Exact x3 nœuds) | - | - | Protège `+delta` |
@@ -21,6 +33,16 @@ Tous les tests ont été exécutés séquentiellement sur hôte Docker WSL2 (20 
 | **`citus`** | Sharding MPP (`#7`) | 309,04 | 312,98 | 1 691,45 | **0** | 189,44 | **21,67** (-93 %) | `0A000`, `40001` |
 | **`yugabyte`** | Raft DocDB (`#5`) | 173,64 | 170,19 | 832,65 | **0** | 128,24 | **5,78** (-97 %) | `40001`, `23505`, `0A000` |
 | **`cockroach`** | Raft Pebble (`#6`) | 42,08 | 74,17 | 471,61 | **0** | 44,84 | **10,06** (-76 %) | `40001`, `XCEXF`, `42601`, `57014` |
+
+---
+
+## 1b. Explorateur HTML interactif et graphiques logarithmiques (`log10`)
+
+Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne dans tout navigateur (sélecteur multi-solutions, bascule `log10`/linéaire, interface EN/FR, matrice `L1–L8` + `T11–T18`, export CSV) ou consultez les 7 graphiques dans le [Chapitre 09](docs/fr/09_methodologie_benchmarks_et_graphiques.md) :
+
+![Débit Log10 toutes suites](assets/charts/chart_01_tps_log_all_suites.png)
+![Latence Log10 toutes suites](assets/charts/chart_02_latency_log_all_suites.png)
+![Streaming vs Logique vs Multi-Maîtres Log10](assets/charts/chart_06_streaming_vs_logical_vs_mm.png)
 
 ### Trois conclusions clés
 1. **L'illusion de la performance asynchrone** : En écriture concurrente sur des clés partagées (`B2` et `D`), les solutions asynchrones LWW sans CRDT perdent silencieusement jusqu'à **50,8 %** des mises à jour (`bucardo`: `-531 620`) ou divergent (`pg-birep`: `-71 063`). Seul **`spock.delta_apply`** (`#2`) préserve une dérive `0` à 1 837,64 TPS sur compteurs numériques.
@@ -41,51 +63,33 @@ Tous les tests ont été exécutés séquentiellement sur hôte Docker WSL2 (20 
 | **05** | [Architectures PoC et protocole de test](docs/fr/05_architectures_poc_et_protocole_de_test.md) | [PoC Architectures & Test Protocol](docs/en/05_poc_architectures_and_test_protocol.md) | Hôte WSL2, réseau Docker isolé, surrogate PK, protocoles 10/8 points, biais |
 | **06** | [Résultats empiriques des tests et benchmarks](docs/fr/06_resultats_tests_et_benchmarks.md) | [Empirical Test & Benchmark Results](docs/en/06_empirical_test_and_benchmark_results.md) | Suites A–F (`pgbench`, `sysbench`, `netem 25ms`), `delta_apply`, dérives |
 | **07** | [Guide de choix, anti-patterns et architecture](docs/fr/07_guide_de_choix_et_architecture_cible.md) | [Decision Framework & Guide](docs/en/07_decision_framework_and_production_guide.md) | Arbre de décision Mermaid, 5 anti-patterns, dimensionnement, PITR, migration |
-| **08** | [Limites empiriques et modes de défaillance](docs/fr/08_limites_et_modes_de_defaillance.md) | [Limits & Failure Modes](docs/en/08_limits_and_failure_modes.md) | Catalogue `L1`–`L8`, verbatim `SQLSTATE` (`23505`, `55000`, `0A000`, `40001`, `XCEXF`, `57014`) |
+| **08** | [Limites empiriques et modes de défaillance](docs/fr/08_limites_et_modes_de_defaillance.md) | [Limits & Failure Modes](docs/en/08_limits_and_failure_modes.md) | Catalogue `L1`–`L8` + `T11`–`T18`, `SQLSTATE` vérifiés (`23505`, `55000`, `40001`, `25006`) |
+| **09** | [Méthodologie benchmarks et graphiques Log10](docs/fr/09_methodologie_benchmarks_et_graphiques.md) | [Benchmarks Methodology & Charts](docs/en/09_benchmarks_methodology_and_charts.md) | Protocole `pgbench`/`sysbench`/`netem`, échelles `log10`, 7 PNG et `dashboard/` |
+| **10** | [Streaming Physique vs Logique vs Multi-Maîtres](docs/fr/10_comparatif_streaming_logique_multimaster.md) | [Streaming vs Logical vs Multi-Master](docs/en/10_streaming_vs_logical_vs_multimaster.md) | 5 niveaux, matrice 25 critères, piège séquences `23505`, upgrades PG 15->17->18 |
 
 ---
 
-## 3. Démarrage rapide et reproductibilité (`Makefile` & `stacks/`)
+## 3. Démarrage rapide, sous-module `multi-db-docker-env` et `Makefile`
 
-Le dépôt fournit des piles Docker Compose autonomes sous `stacks/` ainsi que les scripts d'initialisation, de test fonctionnel et d'exécution des benchmarks sous `scripts/`.
+Les piles opérationnelles, la suite étendue (`T11–T18`) et les benchmarks V2 s'appuient directement sur le dépôt [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) intégré comme sous-module Git sous **`env/multi-db-docker-env`** (en complément des piles autonomes `stacks/` et résultats bruts `results/`).
 
-### Validation de gouvernance, syntaxe et mathématiques LaTeX
-
-```bash
-make test            # Exécute tous les tests unitaires (sécurité + syntaxe mathématique)
-make check-math      # Valide les blocs $$ en colonne 0 et la syntaxe LaTeX Markdown
-make check-security  # Vérifie l'hygiène (zéro secret, zéro chemin local, set -euo pipefail)
-make lint            # Valide bash -n et docker compose config sur toutes les piles
-```
-
-### Lancement d'une pile PoC individuelle (séquentiel recommandé)
+### Commandes `Makefile` essentielles
 
 ```bash
+make init-env        # Initialise le sous-module Git env/multi-db-docker-env
+make test && make lint  # Valide gouvernance, sécurité, LaTeX, artefacts, Bash et Compose
 cp .env.example .env
-# Exemple : pile pgEdge / Spock 5 (3 nœuds + HAProxy)
-docker compose --env-file .env.example -f stacks/pgedge-spock/docker-compose-pgedge.yml up -d
-bash scripts/setup_pgedge.sh
-bash scripts/test_pgedge.sh
-docker compose --env-file .env.example -f stacks/pgedge-spock/docker-compose-pgedge.yml down -v
+make up-pgedge && make test-pgedge && make down-pgedge
+make bench-all && make charts && make dashboard  # Benchmarks, 7 PNG Log10 et dashboard HTML
 ```
 
-### Piles autonomes disponibles sous `stacks/`
+### Piles Docker disponibles (`stacks/` & `env/multi-db-docker-env`)
 
-- `stacks/pg17-baseline/docker-compose-pg17-baseline.yml` (Standalone & Streaming synchrone)
-- `stacks/pg-birep/docker-compose-pg-birep.yml` (`#1` PG 17 natif `origin = none` + HAProxy)
-- `stacks/pgedge-spock/docker-compose-pgedge.yml` (`#2` Spock 5 + Snowflake + HAProxy)
-- `stacks/bucardo/docker-compose-bucardo.yml` (`#9` Bucardo 5.6 + PG 17 `plperl`)
-- `stacks/citus/docker-compose-citus.yml` (`#7` Citus 14.2 sur PG 17)
-- `stacks/yugabytedb/docker-compose-yugabyte.yml` (`#5` YugabyteDB 2026.1.3 RF=3)
-- `stacks/cockroachdb/docker-compose-cockroach.yml` (`#6` CockroachDB v24.3.0 RF=3)
+- `pg17-baseline` / `pg-streaming` / `pg-logical` (Standalone, Streaming Async/Sync, Logique Uni)
+- `pg-birep` (`#1` PG 17 natif `origin = none`), `pgedge-spock` (`#2` Spock 5 + Snowflake), `bucardo` (`#9` Bucardo 5.6)
+- `citus` (`#7` Citus 14.2), `yugabytedb` (`#5` YugabyteDB 2026.1.3 RF=3), `cockroachdb` (`#6` CockroachDB v24.3.0 RF=3)
 
-### Exécution complète de la campagne de benchmarks
-
-```bash
-make bench-all       # Lance scripts/bench_pg_multimaster.sh (exécution séquentielle + down -v)
-```
-
-Les sorties brutes sont publiées dans `results/benchmark_summary.csv`, `results/benchmark_summary_part1.json`, `results/benchmark_summary_part2.json`, `results/functional_limits_matrix.csv` et `results/logs/`.
+Les sorties brutes sont publiées dans `results/` (`benchmark_summary.csv`, `benchmark_extended_workloads.csv`, `benchmark_wan_sweep.csv`, `benchmark_concurrency_sweep.csv`, `functional_limits_matrix.csv`, `extended_functional_matrix.csv`).
 
 ---
 
