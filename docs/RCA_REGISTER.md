@@ -50,3 +50,7 @@
 ### IDEA-001 - Automated Cross-Topology `pgbench` & `sysbench` Matrix
 - **Date / Action**: `2026-11-19` (`ACT-001`)
 - **Proposal**: Implement `scripts/bench_*.sh` hooks driven by `make bench-all` to collect reproducible TPS, p95/p99 latency, and conflict rates across all PostgreSQL multi-master PoCs.
+
+### IDEA-002 - GitHub Actions CI Workflow Enablement Pending `workflow` OAuth Scope
+- **Date / Action**: `2026-11-19` (`ACT-003`)
+- **Proposal**: Add `.github/workflows/ci.yml` executing `python3 -m unittest discover -s tests -v`, `bash -n`, and `docker compose config` once the maintainer grants the GitHub `workflow` OAuth scope (`RCA-003`).

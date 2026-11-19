@@ -2,13 +2,16 @@ SHELL := /usr/bin/env bash
 .DEFAULT_GOAL := help
 export PYTHONDONTWRITEBYTECODE := 1
 
-.PHONY: help test lint check-security clean bench-all
+.PHONY: help test lint check-math check-security clean bench-all
 
 help: ## Show targets
 	@awk 'BEGIN {FS = ":.*##"; printf "\nTargets:\n"} /^[a-zA-Z0-9_%-]+:.*##/ { printf "  %-16s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
 test: ## Run all unit tests
 	python3 -m unittest discover -s tests -v
+
+check-math: ## Validate Markdown LaTeX math rules
+	python3 -m unittest tests/test_docs_math_syntax.py -v
 
 check-security: ## Validate governance and security rules
 	python3 -m unittest tests/test_governance_and_security.py -v
