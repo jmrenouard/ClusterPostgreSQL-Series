@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-017 - Land French Chapter 07 Decision Framework & Production Guide (Issue `#33`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#33` (`docs/issue-33-fr-07-guide-de-choix`)
+- **Request / Changes / Result**: Added `docs/fr/07_guide_de_choix_et_architecture_cible.md` (completing all 14 core `en`/`fr` chapters `01-05,07`); `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
+
 ### ACT-016 - Land French Chapter 05 PoC Architectures & Test Protocol (Issue `#31`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#31` (`docs/issue-31-fr-05-architectures-poc`)
 - **Request / Changes / Result**: Added `docs/fr/05_architectures_poc_et_protocole_de_test.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
