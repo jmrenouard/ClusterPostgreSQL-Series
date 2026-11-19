@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-043 - Land French Chapter 06 Empirical Benchmark Results (Issue `#85`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#85` (`docs/issue-85-fr-06-resultats-benchmarks`)
+- **Request / Changes / Result**: Added `docs/fr/06_resultats_tests_et_benchmarks.md`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
+
 ### ACT-042 - Land Root English `README.md` (Issue `#83`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#83` (`docs/issue-83-readme-en`)
 - **Request / Changes / Result**: Added `README.md`; `make test` (`6/6` OK), `make lint`, and PR diff `< 15,000` chars verified.
