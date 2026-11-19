@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-013 - Land French Chapter 03a Native & Extension Solutions (Issue `#25`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#25` (`docs/issue-25-fr-03a-catalogue-natif`)
+- **Request / Changes / Result**: Added `docs/fr/03a_catalogue_natif_et_extensions.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
+
 ### ACT-012 - Land French Chapter 02 Theoretical Foundations (Issue `#23`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#23` (`docs/issue-23-fr-02-fondements-theoriques`)
 - **Request / Changes / Result**: Added `docs/fr/02_fondements_theoriques_cap_pacelc_conflits.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
