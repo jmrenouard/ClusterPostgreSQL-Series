@@ -20,6 +20,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-006 - Land English Chapter 03a Native & Extension Solutions (Issue `#11`)
+- **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#11` (`docs/issue-11-en-03a-native-extensions`)
+- **Request / Changes / Result**: Added `docs/en/03a_solutions_native_and_extensions.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
+
 ### ACT-005 - Land English Chapter 02 Theoretical Foundations (Issue `#9`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#9` (`docs/issue-9-en-02-theoretical-foundations`)
 - **Request / Changes / Result**: Added `docs/en/02_theoretical_foundations_cap_pacelc_conflicts.md`; `make test` (`6/6` OK) and PR diff `< 15,000` chars verified.
