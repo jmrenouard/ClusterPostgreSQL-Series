@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-111 - Add English Architectural Reference Sheet for PgPool-II (#11) (Issue `#221`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#221` (`docs/issue-221-pgpool-ii-en`)
+- **Request / Changes / Result**: Created `docs/en/solutions/pgpool_ii.md` (`#11`, Architectural Reference, explicitly not live-benchmarked) disambiguating `streaming_replication` (companion Docker PoC `pgpool/pgpool:4.6` with HAProxy `5100`/`5101`/`8406` and 3x `postgres:17` nodes `5611-5613`) from `replication` statement-broadcast, `snapshot_isolation`, `logical_replication`/`raw`, and `Watchdog` quorum modes, with Mermaid diagram, strengths/weaknesses, verified `results/benchmark_summary.csv` baselines (`#15b`, `#1 pg-birep`), and Ch. 03b/10 footer links; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-110 - Fix Sysbench E_sysbench_oltp_rw Denominator in CockroachDB EN/FR Sheets (Issue `#219`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#219` (`docs/issue-219-cockroachdb-sysbench-denominator`)
 - **Request / Changes / Result**: Fixed the `E_sysbench_oltp_rw` transaction denominator on line 71 of `docs/en/solutions/cockroachdb.md` and `docs/fr/solutions/cockroachdb.md` (`685` failed with `902` committed / `1,587` attempted instead of `685` of `902`, matching `results/benchmark_summary.csv`, `results/logs/cockroach.log:184-191`, and `scripts/bench_pg_lib.py:225-226`), audited all 8 M3 sheets (`citus`, `yugabytedb`, `cockroachdb`, `opentenbase_pgxl` EN/FR) confirming zero other `tx_failed` denominator conflations, and added `RCA-013` to `docs/RCA_REGISTER.md`; `make test` (`13/13` OK) and `make lint` verified.
