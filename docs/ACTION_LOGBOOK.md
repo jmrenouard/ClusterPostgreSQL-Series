@@ -14,6 +14,7 @@
 | **Phase 5** | V2 10-Topology Study, Charts, Dashboard & Submodule | Streaming/logical PoCs, T11-T18, Log10 PNGs, offline dashboard, `env/multi-db-docker-env` | Complete | `make test && make lint` |
 | **Phase 6** | Bilingual Per-Technology Architecture Sheets | Dedicated EN+FR ~1-2 A4 sheets (`docs/{en,fr}/solutions/`) + Mermaid + navigation links + Tiers 1-5 E2E | Complete | `make test && make lint` |
 | **Phase 7** | Wave 3: Ecosystem Popularity, PG 18.6, Charts 08-10 & Dashboard V3 | GitHub API popularity study, PG 18.6 PoC & 87 benchmarks, Ch. 11-12 EN/FR, Charts 08-10, 15-topology Dashboard V3, submodule `v2.3.0` | Complete | `make test && make lint` |
+| **Phase 8** | Wave 4: PG 18.6 Sheet #17, YT Cluster 1.21.3 / YT Cluster Lite PoC & Sheet #18, 17-Topology Dashboard & Submodule `v2.4.0` | PG 18.6 18th sheet & core chapters, YT Cluster 22-row live PoC & 19th sheet, 22-entry popularity & Charts 08-09, 17-topology offline dashboard, 19-slug E2E tests, 13-stack `Makefile` & submodule `v2.4.0` | Complete | `make test && make lint` |
 
 ## 1. Ongoing Actions (`IN PROGRESS`)
 
@@ -22,6 +23,30 @@
 | *None* | - | - | - | All tracked actions archived below once verified. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-148 - Finalize Wave 4 Governance Registers (ACTION_LOGBOOK & RCA_REGISTER) (Issue `#375`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#375` (`docs/issue-375-wave4-governance-registers`)
+- **Request / Changes / Result**: Added Phase 8 Wave 4 milestone and `ACT-143..148` in `docs/ACTION_LOGBOOK.md`, and logged `RCA-021..023`, `IMP-007`, `APP-008`, and `IDEA-007` in `docs/RCA_REGISTER.md` (100% 7-bit ASCII English, zero banned terms/paths); `make test` (`20/20` OK), `make lint` (all 13 submodule Compose files valid), and `node --check` on all `dashboard/*.js` verified in WSL2.
+
+### ACT-147 - Update Root READMEs, Upgrade 19-Slug E2E Tests & Bump Submodule to v2.4.0 (Issues `#367`, `#369`, `#371`, `#373`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#367`/`#369`/`#371`/`#373` (`PRs #368`, `#370`, `#372`, `#374`)
+- **Request / Changes / Result**: Updated `README.md` (`PR #368`, `10,892` B) and `README.fr.md` (`PR #370`, `10,844` B) with the 19-row Solutions Catalog (`#17` PG 18.6 native clustering, `#18` YT Cluster Lite), 17 benchmarked topologies / 287 rows, and 22 ecosystem entries; upgraded `tests/test_solution_sheets*.py` (`PR #372`, `13,556` B) to strict 19-slug / 38-sheet / 19-row catalog parity with PG 18.6 & YT Cluster CSV and popularity checks; bumped `env/multi-db-docker-env` submodule to `v2.4.0` (`e130508f89bf9c9c61cad3f7aa8d9299e4bcca93`) and wired `yt-cluster` (13 stacks total) + `bench-yt-cluster` in `Makefile` and `stacks/README.md` (`PR #374`, `3,902` B); verified `make lint` (13 stacks) and `make test` (`20/20` OK).
+
+### ACT-146 - Publish Bilingual Sheets #17-#18 and Update Core Chapters 01, 03a, 04, 07, 11 EN/FR (Issues `#343`..`#365`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#343`..`#365` (`PRs #344`..`#366`)
+- **Request / Changes / Result**: Added symmetric bilingual architecture sheets `docs/{en,fr}/solutions/yt_cluster_lite.md` (`#18`, 19th sheet) and `docs/{en,fr}/solutions/pg18_native_clustering.md` (`#17`, 18th sheet), and updated core Chapters `01`, `03a`, `04`, `07`, and `11` (EN and FR, splitting Ch. 11 into matrix + insights PRs to stay strictly `< 14,500` B) across 12 atomic PRs; verified `make test` (`20/20` OK) on every PR.
+
+### ACT-145 - Upgrade Offline Dashboard to 17 Topologies (287 Rows) & Artifact Tests (Issues `#333`..`#341`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#333`..`#341` (`PRs #334`..`#342`)
+- **Request / Changes / Result**: Extended `scripts/build_dashboard.py` and added `dashboard/data_bench_yt.js` (`22` rows + `1` matrix row), regenerated `dashboard/data_bench.js` (`17` topologies, `287` total rows) and `dashboard/data_popularity.js` (`22` entries), upgraded `dashboard/{index.html,styles.css,app.js,charts.js,popularity.js}` (`13,197` B, zero CDN, `node --check` PASS), and completed `tests/test_benchmark_artifacts.py` (`PR #342`); verified `make test` (`20/20` OK).
+
+### ACT-144 - Update Charts 08-09 & generate_charts_v3.py for 19 Public Repos (Issues `#329`, `#331`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#329`/`#331` (`PRs #330`, `#332`)
+- **Request / Changes / Result**: Compacted `chart_09`/`chart_10` typography kwargs in `scripts/generate_charts_v3.py` (`PR #330`, `7,301` B) to maintain the `< 14 KB` script cap, then added `DBinvent/yt-cluster-lite` (`19th` public repo) and regenerated 180-DPI Log10 PNGs `chart_08_popularity_stars_forks_log.png` and `chart_09_popularity_commits_activity_log.png` (`PR #332`, `8,909` B); verified `py_compile` and `make test` (`20/20` OK).
+
+### ACT-143 - Land YT Cluster 1.21.3 Live PoC Artifacts & 22-Entry Popularity Dataset (Issues `#325`, `#327`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#325`/`#327` (`PRs #326`, `#328`)
+- **Request / Changes / Result**: Added `results/benchmark_yt_cluster.csv` (`22` rows across sync `cc=half` `yt-cluster` and async `cc=0` `yt-cluster-async`), `results/functional_limits_yt_cluster.csv` (`1` row), and `results/logs/yt-cluster-benchmark.log` (`PR #326`, `10,398` B), and added `DBinvent/yt-cluster-lite` to `scripts/collect_popularity.py` and `results/project_popularity.csv` (`22` rows / `19` public repos, `PR #328`, `11,429` B); verified `make test` (`20/20` OK).
 
 ### ACT-142 - Finalize Wave 3 Governance Registers (ACTION_LOGBOOK & RCA_REGISTER) (Issue `#321`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#321` (`docs/issue-321-wave3-governance-registers`)
