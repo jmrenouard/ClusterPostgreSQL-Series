@@ -101,30 +101,24 @@
 
   function renderTable(rows) {
     const c = st.sort, d = st.dir, loc = st.lang === "fr" ? "fr-FR" : "en-US";
-    const sr = [...rows].sort((a, b) => {
-      const an = +a[c], bn = +b[c];
-      return (a[c] !== "" && b[c] !== "" && !Number.isNaN(an) && !Number.isNaN(bn)) ? (an - bn) * d : String(a[c] ?? "").localeCompare(String(b[c] ?? "")) * d;
-    });
+    const sr = [...rows].sort((a, b) => { const an = +a[c], bn = +b[c]; return (a[c] !== "" && b[c] !== "" && !Number.isNaN(an) && !Number.isNaN(bn)) ? (an - bn) * d : String(a[c] ?? "").localeCompare(String(b[c] ?? "")) * d; });
     $$("#bench-table th[data-sort]").forEach((th) => th.classList.toggle("sorted", th.dataset.sort === c));
+    const n = (v, m) => (+(v || 0)).toLocaleString(loc, m ? { maximumFractionDigits: m } : undefined);
     $("bench-tbody").innerHTML = sr.map((r) => {
-      const dr = +(r.balance_drift || 0), n = (v, m) => (+(v || 0)).toLocaleString(loc, m ? { maximumFractionDigits: m } : undefined);
-      return `<tr><td><span class="topo-cell">${dot(r.topology)}${esc(TL[r.topology] || r.topology)}</span></td><td>${esc(r.suite)}</td>` +
-        `<td class="num">${esc(r.clients)}</td><td class="num"><strong>${n(r.tps, 2)}</strong></td>` +
-        `<td class="num">${fmtNum(r.lat_avg_ms)}</td><td class="num">${fmtNum(r.lat_p95_ms)}</td>` +
-        `<td class="num">${n(r.tx_committed)}</td><td class="num">${esc(r.retries_40001 || 0)}</td>` +
-        `<td>${bdg(isBad(r) ? "badge-err" : "badge-ok", r.convergence_status || "PASS")}</td>` +
-        `<td class="num">${bdg(dr ? "badge-err" : "badge-ok", dr ? (dr > 0 ? "+" : "") + n(dr) : "0 drift")}</td></tr>`;
+      const dr = +(r.balance_drift || 0);
+      return `<tr><td><span class="topo-cell">${dot(r.topology)}${esc(TL[r.topology] || r.topology)}</span></td><td>${esc(r.suite)}</td><td class="num">${esc(r.clients)}</td><td class="num"><strong>${n(r.tps, 2)}</strong></td><td class="num">${fmtNum(r.lat_avg_ms)}</td><td class="num">${fmtNum(r.lat_p95_ms)}</td><td class="num">${n(r.tx_committed)}</td><td class="num">${esc(r.retries_40001 || 0)}</td><td>${bdg(isBad(r) ? "badge-err" : "badge-ok", r.convergence_status || "PASS")}</td><td class="num">${bdg(dr ? "badge-err" : "badge-ok", dr ? (dr > 0 ? "+" : "") + n(dr) : "0 drift")}</td></tr>`;
     }).join("");
   }
 
   function renderMatrix() {
     const ds = MAT[st.mtab], nt = $("matrix-notice");
-    if (!ds.rows.length) { nt.textContent = tr("extPending"); nt.classList.remove("hidden"); $("matrix-thead").innerHTML = $("matrix-tbody").innerHTML = ""; return; }
-    nt.classList.add("hidden");
+    if (!ds || !ds.rows.length) { nt.textContent = tr("matEmpty"); nt.classList.remove("hidden"); $("matrix-thead").innerHTML = $("matrix-tbody").innerHTML = ""; return; }
+    const has = ds.rows.some((r) => st.sel.has(r.topology));
+    nt.textContent = tr("matAll"); nt.classList.toggle("hidden", has);
     const q = st.qM.trim().toLowerCase();
-    const rows = ds.rows.filter((r) => st.sel.has(r.topology) && (!q || Object.values(r).join(" ").toLowerCase().includes(q)));
+    const rows = ds.rows.filter((r) => (!has || st.sel.has(r.topology)) && (!q || Object.values(r).join(" ").toLowerCase().includes(q)));
     $("matrix-thead").innerHTML = `<tr>${ds.cols.map((c) => `<th>${esc(c.replace(/_/g, " "))}</th>`).join("")}</tr>`;
-    const rxs = [[/^EXPECTED_LIMITATION:?\s*/i, "badge-warn", "LIMIT"], [/^PASS:?\s*/i, "badge-ok", "PASS"], [/^PARTIAL:?\s*/i, "badge-warn", "PARTIAL"], [/^N\/A:?\s*/i, "badge-na", "N/A"]];
+    const rxs = [[/^EXPECTED_LIMITATION:?\s*/i, "badge-warn", "LIMIT"], [/^PASS:?\s*/i, "badge-ok", "PASS"], [/^VERIFIED:?\s*/i, "badge-ok", "VERIFIED"], [/^PARTIAL:?\s*/i, "badge-warn", "PARTIAL"], [/^N\/A:?\s*/i, "badge-na", "N/A"]];
     $("matrix-tbody").innerHTML = rows.map((r) => `<tr>${ds.cols.map((c) => {
       const v = r[c] || "";
       if (c === "topology") return `<td><span class="topo-cell">${dot(v)}${esc(TL[v] || v)}</span></td>`;
@@ -135,14 +129,11 @@
   }
 
   function exportCSV() {
-    const isB = st.tab === "bench", cols = isB ? BCOLS : MAT[st.mtab].cols;
-    const rows = isB ? fBench() : MAT[st.mtab].rows.filter((r) => st.sel.has(r.topology));
+    if (st.tab === "popularity" && window.LPPopularity) return window.LPPopularity.exportCSV();
+    const isB = st.tab === "bench", cols = isB ? BCOLS : MAT[st.mtab].cols, rows = isB ? fBench() : MAT[st.mtab].rows.filter((r) => st.sel.has(r.topology));
     const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const csv = [cols.map(q).join(","), ...rows.map((r) => cols.map((c) => q(r[c])).join(","))].join("\n") + "\n";
-    const a = Object.assign(document.createElement("a"), {
-      href: URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" })),
-      download: isB ? "cluster_pg_filtered_benchmarks.csv" : `cluster_pg_${st.mtab}_matrix.csv`,
-    });
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" })), download: isB ? "cluster_pg_filtered_benchmarks.csv" : `cluster_pg_${st.mtab}_matrix.csv` });
     a.click(); URL.revokeObjectURL(a.href);
   }
 
@@ -150,23 +141,14 @@
     buildControls();
     $$("[data-fr]").forEach((e) => { if (!e.dataset.en) e.dataset.en = e.textContent; e.textContent = st.lang === "fr" ? e.dataset.fr : e.dataset.en; });
     $$("[data-lang]").forEach((b) => b.classList.toggle("active", b.dataset.lang === st.lang));
-    const isB = st.tab === "bench";
-    $("panel-bench").classList.toggle("hidden", !isB);
-    $("bench-controls").classList.toggle("hidden", !isB);
-    $("panel-matrix").classList.toggle("hidden", isB);
-    if (isB) { const r = fBench(); renderKPIs(r); renderCharts(); renderTable(r); } else renderMatrix();
+    const isB = st.tab === "bench", isM = st.tab === "matrix", isP = st.tab === "popularity";
+    [["main-controls", isP], ["bench-controls", !isB], ["panel-bench", !isB], ["panel-matrix", !isM], ["panel-popularity", !isP]].forEach(([id, h]) => $(id).classList.toggle("hidden", h));
+    if (isB) { const r = fBench(); renderKPIs(r); renderCharts(); renderTable(r); } else if (isM) renderMatrix(); else if (window.LPPopularity) window.LPPopularity.render(st.lang);
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    const P = {
-      all: ALL_T, clear: [],
-      stream_logical: ["pg17-standalone", "pg17-async-streaming", "pg17-sync-streaming", "pg17-logical", "pg-birep"],
-      active_active: ["pg-birep", "pgedge", "pgedge-delta-apply", "bucardo", "yugabyte", "cockroach"],
-      raft_async: ["pg-birep", "pgedge", "bucardo", "yugabyte", "cockroach"],
-    };
-    const wire = (a, k, cb) => $$(`[${a}]`).forEach((b) => {
-      b.onclick = () => { st[k] = b.getAttribute(a); $$(`[${a}]`).forEach((x) => x.classList.toggle("active", x.getAttribute(a) === st[k])); cb(); };
-    });
+    const P = { all: ALL_T, clear: [], pg18_vs_pg17: TO.slice(0, 10), stream_logical: TO.slice(0, 5), active_active: ["pg-birep", "pg18-birep", "pgedge", "pgedge-delta-apply", "bucardo", "yugabyte", "cockroach"], raft_async: ["pg-birep", "pgedge", "bucardo", "yugabyte", "cockroach"] };
+    const wire = (a, k, cb) => $$(`[${a}]`).forEach((b) => { b.onclick = () => { st[k] = b.getAttribute(a); $$(`[${a}]`).forEach((x) => x.classList.toggle("active", x.getAttribute(a) === st[k])); cb(); }; });
     [["data-lang", "lang", renderAll], ["data-tab", "tab", renderAll], ["data-mtab", "mtab", renderMatrix], ["data-scale", "scale", renderCharts], ["data-lat", "lat", renderCharts]].forEach((x) => wire(...x));
     $$("[data-preset]").forEach((b) => { b.onclick = () => { st.sel = new Set((P[b.dataset.preset] || []).filter((t) => ALL_T.includes(t))); renderAll(); }; });
     $("suite-select").onchange = (e) => { st.suite = e.target.value; renderAll(); };
