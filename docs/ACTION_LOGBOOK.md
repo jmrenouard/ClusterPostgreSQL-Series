@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-168 - Link Official dbinvent/yt Docker Hub and agent.md in README Solutions Catalog (Issue `#417`)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#417` (`docs/issue-417-readme-yt-docker-agent-links`)
+- **Request / Changes / Result**: Added official `https://hub.docker.com/r/dbinvent/yt` and `https://dbinvent.com/agent.md` references to row `#18` of the Solutions Catalog in `README.md` and `README.fr.md` (split from `#415` to keep every PR diff strictly `< 15,000` bytes); verified `make test` (`21/21` OK) and `make lint`.
+
 ### ACT-167 - Link Official dbinvent/yt Docker Hub Image and agent.md Reference in YT Cluster Sheets and READMEs (Issue `#415`)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#415` (`docs/issue-415-yt-cluster-docker-agent-refs`)
 - **Request / Changes / Result**: Added direct links to `https://hub.docker.com/r/dbinvent/yt` and `https://dbinvent.com/agent.md` across `docs/en/solutions/yt_cluster_lite.md`, `docs/fr/solutions/yt_cluster_lite.md`, `README.md`, and `README.fr.md`, explicitly clarifying that `DBinvent/yt-cluster-lite` (MIT) is designed to be embedded and connected to a real `dbinvent/yt` cluster node (matching our live 3-node `dbinvent/yt:1.21.3` PoC); verified `make test` (`21/21` OK), `make lint`, and diff `< 15,000` chars.
