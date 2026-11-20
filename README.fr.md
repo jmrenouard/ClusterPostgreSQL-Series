@@ -6,7 +6,7 @@
 
 > **Auteur** : Jean-Marie Renouard (`jmrenouard`) | **Soutenu par** : [LightPath](https://www.lightpath.fr) | **Licence** : MIT | [English Version (`README.md`)](README.md)
 
-Étude d'ingénierie reproductible sur **15 solutions PostgreSQL** (7 familles) et **15 topologies Docker opérationnelles** (`10` PG 17/distribuées + `5` PostgreSQL 18.6 via le sous-module [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.3.0`), incluant **18 tests fonctionnels/limites (`L1–L8` + `T11–T18`)** plus les sondes PG 18.6 AIO/`uuidv7()`/conflits, **274 mesures empiriques** (`187` V2 + `87` PG 18.6 : `pgbench`, `sysbench`, `tc netem 10/25/50 ms`, `c=1..32`), **21 entrées de télémétrie GitHub**, **10 graphiques `log10`** et l'[**Explorateur HTML interactif hors-ligne (`dashboard/index.html`)**](dashboard/index.html).
+Étude d'ingénierie reproductible sur **16 solutions PostgreSQL** (7 familles, **19 fiches d'architecture**) et **17 topologies Docker opérationnelles** (`10` PG 17/distribuées + `5` PostgreSQL 18.6 + `2` YT Cluster 1.21.3 via le sous-module [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.4.0`, `13` piles), incluant **18 tests fonctionnels/limites (`L1–L8` + `T11–T18`)** plus les sondes PG 18.6 AIO/`uuidv7()`/conflits et `T_REVERT` YT Cluster, **296 mesures empiriques** (`187` V2 + `87` PG 18.6 + `22` YT Cluster : `pgbench`, `sysbench`, `tc netem 10/25/50 ms`, `c=1..32`), **22 entrées de télémétrie GitHub** (`19` dépôts publics + `3` fermés/managés), **10 graphiques `log10`** et l'[**Explorateur HTML interactif hors-ligne (`dashboard/index.html`)**](dashboard/index.html).
 
 ---
 
@@ -28,11 +28,27 @@ Tous les tests ont été exécutés séquentiellement sur hôte Docker WSL2 (20 
 | **`yugabyte`** | Raft DocDB (`#5`) | 173,64 | 170,19 | 832,65 | **0** | 128,24 | **5,78** (-97 %) | `40001`, `23505`, `0A000` |
 | **`cockroach`** | Raft Pebble (`#6`) | 42,08 | 74,17 | 471,61 | **0** | 44,84 | **10,06** (-76 %) | `40001`, `XCEXF`, `42601`, `57014` |
 
+### Topologies cibles PostgreSQL 18.6 (`results/benchmark_pg18.csv`, `PG_SCALE = 2`)
+
+Mesures séquentielles dans le même harnais Docker isolé sur `PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)` avec `io_method=worker` (`io_workers=3`) et `data_checksums=on` par défaut (voir [Fiche #17](docs/fr/solutions/pg18_native_clustering.md) et [Chapitre 12](docs/fr/12_clustering_postgresql_18_et_benchmarks.md)) :
+
+| Topologie (`#17` PG 18.6) | `A_single_rw` (TPS) | `B2_overlap_rw` TPS (`Dérive`) | `D_hot_conflict` TPS (`Dérive`) | `E_sysbench_oltp_rw` TPS (`Échecs`) | `H_append_only_insert` (TPS) | `F_wan_netem_25ms` (TPS) | Limites `SQLSTATE` vérifiées |
+|:---|---:|---:|---:|---:|---:|---:|:---|
+| **`pg18-standalone`** | 784,43 | 506,21 (`0`) | 2 117,66 (`0`) | 1 046,67 (`74`) | 1 956,76 | N/A | `23505`, `42601` (`FOR ALL SEQUENCES`) |
+| **`pg18-async-streaming`** | 558,34 | 353,30 (`0`) | 2 277,43 (`0`) | 980,72 (`75`) | 1 423,07 | **554,93** | `25006` RO ; WAL seq `66\|true` |
+| **`pg18-sync-streaming`** | 497,94 | 472,20 (`0`) | 1 223,75 (`0`) | 767,63 (`76`) | 1 760,26 | **41,56** | `25006`, gel `SyncRep`, `25,60` @ `50ms` |
+| **`pg18-logical`** | 314,26 | 475,08 (`0`) | 2 998,37 (`0`) | 1 027,84 (`79`) | **3 518,49** | **844,10** | `23505`, `42601`, `55000` (`substream=p`) |
+| **`pg18-birep`** (`uuidv7()`) | 514,28 | 792,45 (**`-338`**) | 1 774,11 (**`-83 252`**) | 1 055,55 (`76`) | **2 066,70** (`3,30x`) | **747,42** | `23503`, `23505`, `42601`, `55000`, 7 `confl_*` |
+| **`yt-cluster`** (`#18` `cc=half`) | 20,63 | 10,69 (`0`) | 67,76 (`0`) | 28,48 (`12`) | 110,53 | 2,25 | `0A000`, `40001`, `55409`, `57P03` (`T_REVERT` OK) |
+| **`yt-cluster-async`** (`#18` `nodes>=0`) | 41,45 | 55,03 (`0`) | 163,01 (`0`) | - | - | 4,78 | `40001`, `55409` (`2,0x-5,1x` vs `half`, dérive `0`) |
+
+*Note : `yt-cluster` / `yt-cluster-async` exécutés sur 3 nœuds `dbinvent/yt:1.21.3` (PG 18.7 + `yt_cluster 1.21` / `ytserv`, `results/benchmark_yt_cluster.csv`, `22` lignes ; voir [Fiche #18](docs/fr/solutions/yt_cluster_lite.md)).*
+
 ---
 
 ## 1b. Explorateur HTML interactif et graphiques logarithmiques (`log10`)
 
-Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne dans tout navigateur (sélecteur 15 topologies PG 17 & PG 18.6, bascule `log10`/linéaire, interface EN/FR, matrices `L1–L8` / `T11–T18` / `PG 18.6`, onglet Popularité & Vitalité, export CSV) ou consultez les **10 graphiques** dans les [Chapitre 09](docs/fr/09_methodologie_benchmarks_et_graphiques.md) (`chart_01`–`07`), [Chapitre 11](docs/fr/11_popularite_et_vitalite_ecosysteme.md) (`chart_08`–`09`) et [Chapitre 12](docs/fr/12_clustering_postgresql_18_et_benchmarks.md) (`chart_10`) :
+Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne dans tout navigateur (sélecteur 17 topologies PG 17, PG 18.6 & YT Cluster, bascule `log10`/linéaire, interface EN/FR, matrices `L1–L8` / `T11–T18` / `PG 18.6` / `YT`, onglet Popularité & Vitalité à 22 entrées, export CSV) ou consultez les **10 graphiques** dans les [Chapitre 09](docs/fr/09_methodologie_benchmarks_et_graphiques.md) (`chart_01`–`07`), [Chapitre 11](docs/fr/11_popularite_et_vitalite_ecosysteme.md) (`chart_08`–`09`) et [Chapitre 12](docs/fr/12_clustering_postgresql_18_et_benchmarks.md) (`chart_10`) :
 
 ![Débit Log10 toutes suites](assets/charts/chart_01_tps_log_all_suites.png)
 ![Latence Log10 toutes suites](assets/charts/chart_02_latency_log_all_suites.png)
@@ -68,7 +84,7 @@ Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne dans tout n
 
 ---
 
-## 2b. Catalogue des solutions et fiches techniques (`17` fiches FR + EN)
+## 2b. Catalogue des solutions et fiches techniques (`19` fiches FR + EN)
 
 Chaque solution étudiée dispose d'une fiche technique dédiée d'environ 1 à 2 pages A4 en français (`docs/fr/solutions/`) et en anglais (`docs/en/solutions/`) incluant schémas Mermaid, principes internes, modes d'implémentation, forces/faiblesses et métriques vérifiées (ou références d'exclusion architecturale).
 
@@ -93,6 +109,8 @@ Chaque solution étudiée dispose d'une fiche technique dédiée d'environ 1 à 
 | **[#15a — PostgreSQL 17 Standalone](docs/fr/solutions/pg17_standalone.md)** | [Doc PG 17](https://www.postgresql.org/docs/17/index.html) | [`postgres/postgres`](https://github.com/postgres/postgres) | Ligne de base mono-écrivain PostgreSQL 17 sur WAL local (`CA`) sans surcharge de réplication, servant à mesurer le coût de coordination multi-maîtres. |
 | **[#15b — PG 17 Streaming Physique & Patroni](docs/fr/solutions/pg17_physical_streaming_patroni.md)** | [PG 17 HA](https://www.postgresql.org/docs/17/high-availability.html) · [Patroni](https://patroni.readthedocs.io/en/latest/) | [`postgres/postgres`](https://github.com/postgres/postgres) · [`patroni/patroni`](https://github.com/patroni/patroni) | Streaming physique WAL par blocs mono-primaire (`async` `PA/EL` ou `sync` `PC/EC` `RPO=0`) orchestré par Patroni, `etcd` Raft et HAProxy. |
 | **[#16 — PG 17 Logique Unidirectionnelle](docs/fr/solutions/pg17_logical_unidirectional.md)** | [Doc PG 17 Logique](https://www.postgresql.org/docs/17/logical-replication.html) | [`postgres/postgres`](https://github.com/postgres/postgres) | Réplication logique native unidirectionnelle par publication/abonnement (`pgoutput`, `PA/EL`) découplant stockage et versions majeures (`N3`, upgrades sans coupure). |
+| **[#17 — Clustering Natif PostgreSQL 18.6 (AIO, uuidv7, Streaming & Logique)](docs/fr/solutions/pg18_native_clustering.md)** | [Doc PG 18](https://www.postgresql.org/docs/18/index.html) | [`postgres/postgres`](https://github.com/postgres/postgres) | Pile cible native PG 18.6 sur les 5 niveaux ajoutant AIO `worker`, `data_checksums=on`, clés `uuidv7()` actif-actif, 7 compteurs `confl_*`, `substream=p` et report `42601` de synchro des séquences. |
+| **[#18 — YT Cluster & YT Cluster Lite](docs/fr/solutions/yt_cluster_lite.md)** | [Aperçu YT](https://dbinvent.com/30p) · [Rapport Jepsen](https://dbinvent.com/cluster/articles/jepsen) | [`DBinvent/yt-cluster-lite`](https://github.com/DBinvent/yt-cluster-lite) | PG 18 non modifié + triggers + daemon Rust `ytserv` XA 2PC (`cc=half`), dérive zéro (`55409`/`40001`), réversibilité `DROP EXTENSION` ; cœur leaf/ext MIT vs `ytserv` PolyForm/Commercial. |
 
 ---
 
@@ -103,21 +121,22 @@ Les piles opérationnelles, la suite étendue (`T11–T18`) et les benchmarks V2
 ### Commandes `Makefile` essentielles
 
 ```bash
-make init-env        # Initialise le sous-module Git env/multi-db-docker-env (v2.3.0, 12 piles)
-make test && make lint  # Valide gouvernance, sécurité, LaTeX, 10 graphiques, Bash et 12 Compose
+make init-env        # Initialise le sous-module Git env/multi-db-docker-env (v2.4.0, 13 piles)
+make test && make lint  # Valide gouvernance, sécurité, LaTeX, 10 graphiques, Bash et 13 Compose
 cp .env.example .env
 make up-pgedge && make test-pgedge && make down-pgedge
 make bench-all && make bench-pg18 && make popularity && make charts && make dashboard
 ```
 
-### Piles Docker disponibles (`env/multi-db-docker-env` `v2.3.0` — voir [`stacks/README.md`](stacks/README.md))
+### Piles Docker disponibles (`env/multi-db-docker-env` `v2.4.0` — voir [`stacks/README.md`](stacks/README.md))
 
 - `pg17-baseline` / `pg-streaming` / `pg-logical` (Standalone, Streaming Async/Sync, Logique Uni PG 17)
 - `pg-birep` (`#1` PG 17 natif `origin = none`), `pgedge-spock` (`#2` Spock 5 + Snowflake), `bucardo` (`#9` Bucardo 5.6)
 - `citus` (`#7` Citus 14.2), `yugabytedb` (`#5` YugabyteDB 2026.1.3 RF=3), `cockroachdb` (`#6` CockroachDB v24.3.0 RF=3)
 - `pg18-streaming` / `pg18-logical` / `pg18-birep` (PostgreSQL 18.6 : Standalone, Async/Sync, Logique Uni, BiRep `uuidv7()`)
+- `yt-cluster` (`#18` YT Cluster 1.21.3 sur PG 18.7 : 3 nœuds `dbinvent/yt:1.21.3` XA 2PC `cc=half` / `nodes>=0`)
 
-Les sorties brutes sont publiées dans `results/` (`benchmark_summary.csv`, `benchmark_extended_workloads.csv`, `benchmark_wan_sweep.csv`, `benchmark_concurrency_sweep.csv`, `benchmark_pg18.csv`, `functional_limits_matrix.csv`, `extended_functional_matrix.csv`, `functional_limits_pg18.csv`, `project_popularity.csv`).
+Les sorties brutes sont publiées dans `results/` (`benchmark_summary.csv`, `benchmark_extended_workloads.csv`, `benchmark_wan_sweep.csv`, `benchmark_concurrency_sweep.csv`, `benchmark_pg18.csv`, `benchmark_yt_cluster.csv`, `functional_limits_matrix.csv`, `extended_functional_matrix.csv`, `functional_limits_pg18.csv`, `functional_limits_yt_cluster.csv`, `project_popularity.csv`).
 
 ---
 
