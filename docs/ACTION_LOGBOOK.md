@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-090 - Remediate pg17_logical_unidirectional EN and FR Sheets (Issue `#179`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#179` (`docs/issue-179-m1-r2-logical-uni`)
+- **Request / Changes / Result**: Remediated `docs/{en,fr}/solutions/pg17_logical_unidirectional.md` (`../../../README*.md` footers, FR L15 `(logique unidirectionnel)`, L18 Ch. 10 path replacing non-repo `PROJECT.md`, L53 stray `\|` removal, p99 latency wording); `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-089 - Remediate pg17_standalone EN and FR Sheets (Issue `#177`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#177` (`docs/issue-177-m1-r2-standalone-logical`)
 - **Request / Changes / Result**: Remediated `docs/{en,fr}/solutions/pg17_standalone.md` (`../../../README*.md` footers, L24 `-52.8%`/`-93.4%`/`-86.1%` baseline clarity, FR L55 `L_{\text{N0-standalone}}`, p99 latency wording, Table D setup script path); `make test` (`13/13` OK) and `make lint` verified.

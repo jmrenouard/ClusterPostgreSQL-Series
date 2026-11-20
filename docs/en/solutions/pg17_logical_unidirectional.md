@@ -15,7 +15,7 @@
 | **CAP / PACELC Profile** | `AP / PA-EL (uni-directional logical)` |
 | **License / Deployment** | PostgreSQL License / 2 containers (`docker-compose-pg-logical.yml`) |
 
-> **Catalog ID Disambiguation (`#16` vs `#14`):** `PROJECT.md` assigns **`#16`** (`T3`) to `pg17-logical` and reserves `#14` for Legacy Trigger Systems (`Slony-I / Londiste / RubyRep`). Some legacy CSV/chapter tables (`results/functional_limits_matrix.csv`, `06`) still tag `pg17-logical` as `#14 Baseline`.
+> **Catalog ID Disambiguation (`#16` vs `#14`):** `docs/en/10_streaming_vs_logical_vs_multimaster.md` assigns **`#16`** (`T3`) to `pg17-logical` and reserves `#14` for Legacy Trigger Systems (`Slony-I / Londiste / RubyRep`). Some legacy CSV/chapter tables (`results/functional_limits_matrix.csv`, `06`) still tag `pg17-logical` as `#14 Baseline`.
 
 ---
 
@@ -50,7 +50,7 @@ $$
 L_{\text{T3-logical}} \approx L_{\text{disk}} \quad (\text{local publisher WAL fsync; apply is asynchronous})
 $$
 
-3. **Three Mandatory Operational Traps:** (a) keyless tables reject `UPDATE`/`DELETE` (`SQLSTATE 55000`); (b) DDL (`ALTER TABLE ADD COLUMN`) is not replicated; (c) **Sequence Non-Sync (`T18` / `L1`):** PostgreSQL 15–17 logical replication never advances subscriber sequences (`pub=50\|true` vs `sub=1\|false`), triggering `23505` on failover unless `setval()` is run first.
+3. **Three Mandatory Operational Traps:** (a) keyless tables reject `UPDATE`/`DELETE` (`SQLSTATE 55000`); (b) DDL (`ALTER TABLE ADD COLUMN`) is not replicated; (c) **Sequence Non-Sync (`T18` / `L1`):** PostgreSQL 15–17 logical replication never advances subscriber sequences (`pub=50|true` vs `sub=1|false`), triggering `23505` on failover unless `setval()` is run first.
 
 | Mode / Option | Scope | Behavior & Filter Mechanics | Failover / Sequence Impact | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
@@ -77,7 +77,7 @@ $$
 
 ## 5. Empirical Benchmark Results, Functional Limits & PoC Spec
 
-All tests ran at `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` are measured (`lat_p99_ms` unmeasured).
+All tests ran at `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` are measured (p99 latency is unmeasured).
 
 ### Table A — Core & Extended Workloads (`benchmark_summary.csv`, `benchmark_extended_workloads.csv`)
 
@@ -142,4 +142,4 @@ All tests ran at `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Only
 
 ---
 
-**Navigation:** [Index](../../README.md) · [Ch. 03a — Native & Extensions](../03a_solutions_native_and_extensions.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/pg17_logical_unidirectional.md)
+**Navigation:** [Index](../../../README.md) · [Ch. 03a — Native & Extensions](../03a_solutions_native_and_extensions.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/pg17_logical_unidirectional.md)
