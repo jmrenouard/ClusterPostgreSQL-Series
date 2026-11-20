@@ -21,6 +21,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-077 - Add Dedicated ClusterPostgreSQL-Series Project Logo & Position LightPath as Supporter (Issue `#153`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#153` (`feat/issue-153-project-logo-and-lightpath-support`)
+- **Request / Changes / Result**: Generated dedicated project banner (`assets/clusterpostgresql-series-logo.png`) and square emblem (`assets/clusterpostgresql-series-icon.png`), updated `README.md`, `README.fr.md`, and `dashboard/index.html` + `styles.css` so the project logo owns the primary hero/header slot while LightPath SVGs appear explicitly as `"Supported by"` / `"Soutenu par"` project support; expanded `tests/test_benchmark_artifacts.py` (`13/13` tests OK, `make lint` OK, headless Chrome verified).
+
 ### ACT-076 - Finalize V2 Governance Registers (`ACTION_LOGBOOK.md` & `RCA_REGISTER.md`) (Issue `#151`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#151` (`docs/issue-151-v2-governance-registers`)
 - **Request / Changes / Result**: Added Phase 5 milestone, `ACT-048..076`, and `RCA-008..010`, `IMP-004`, `APP-006`, `IDEA-005`; `make test` (`12/12` OK), `make lint`, and PR diff `< 14,900` chars verified.

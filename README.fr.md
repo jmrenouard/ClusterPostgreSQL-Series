@@ -1,16 +1,10 @@
 <p align="center">
-  <a href="https://www.lightpath.fr">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="assets/lightpath-logo-dark.svg">
-      <source media="(prefers-color-scheme: light)" srcset="assets/lightpath-logo-light.svg">
-      <img alt="LightPath" src="assets/lightpath-logo-light.svg" width="240">
-    </picture>
-  </a>
+  <img alt="ClusterPostgreSQL-Series — Laboratoire Multi-Maîtres et Actif-Actif" src="assets/clusterpostgresql-series-logo.png" width="640">
 </p>
 
 # ClusterPostgreSQL-Series : Étude comparative, PoCs reproductibles et benchmarks PostgreSQL Multi-Maîtres
 
-> **Auteur** : Jean-Marie Renouard (`jmrenouard`) - [LightPath](https://www.lightpath.fr) | **Licence** : MIT | [English Version (`README.md`)](README.md)
+> **Auteur** : Jean-Marie Renouard (`jmrenouard`) | **Soutenu par** : [LightPath](https://www.lightpath.fr) | **Licence** : MIT | [English Version (`README.md`)](README.md)
 
 Étude d'ingénierie reproductible sur **15 solutions PostgreSQL** (7 familles) et **10 topologies Docker opérationnelles** (appuyées sur le sous-module [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env)), incluant **18 tests fonctionnels/limites (`L1–L8` + `T11–T18`)**, **187 mesures empiriques (`pgbench`, `sysbench`, `tc netem 10/25/50 ms`, `c=1..32`)** et l'[**Explorateur HTML interactif hors-ligne (`dashboard/index.html`)**](dashboard/index.html).
 
@@ -97,4 +91,21 @@ Les sorties brutes sont publiées dans `results/` (`benchmark_summary.csv`, `ben
 
 - **Honnêteté expérimentale** : Les échecs et limitations (`XCEXF`, `0A000`, `55000`, `42601`, `57014`, perte de mises à jour en LWW) sont conservés tels quels dans les matrices et analysés sans masquage.
 - **Registres vivants** : Les décisions, incidents et pistes d'évolution sont maintenus dans [docs/ACTION_LOGBOOK.md](docs/ACTION_LOGBOOK.md) et [docs/RCA_REGISTER.md](docs/RCA_REGISTER.md).
-- **Licence** : Distribué sous licence MIT ([LICENSE](LICENSE)) - Copyright (c) 2026 Jean-Marie Renouard ([LightPath](https://www.lightpath.fr)).
+- **Licence** : Distribué sous licence MIT ([LICENSE](LICENSE)) - Copyright (c) 2026 Jean-Marie Renouard.
+
+---
+
+## 5. Soutien et attribution
+
+Cette série technique open-source indépendante est réalisée par **Jean-Marie Renouard** (`jmrenouard`) sous licence [MIT](LICENSE), avec le soutien technique de **LightPath** :
+
+<p align="center">
+  <sub>Soutenu par</sub><br>
+  <a href="https://www.lightpath.fr">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/lightpath-logo-dark.svg">
+      <source media="(prefers-color-scheme: light)" srcset="assets/lightpath-logo-light.svg">
+      <img alt="Soutenu par LightPath" src="assets/lightpath-logo-light.svg" width="145">
+    </picture>
+  </a>
+</p>

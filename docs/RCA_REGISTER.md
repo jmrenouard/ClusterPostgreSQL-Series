@@ -97,6 +97,11 @@
 - **Rejected Approach**: Maintaining mirrored Docker Compose stacks and setup scripts inside `ClusterPostgreSQL-Series/stacks/<topology>/` alongside `jmrenouard/multi-db-docker-env`.
 - **Reason**: Dual maintenance caused configuration drift and omitted newer V2 topologies (`pg-streaming`, `pg-logical`, `T11-T18`, `bench_pg_v2_runner.sh`). Replaced with a real Git submodule (`env/multi-db-docker-env` pinned to `v2.2.0` commit `84acc72`), delegated `Makefile` targets (`MDB_DIR`, `init-env`, `up/down/setup/test-%`, `bench-all`, 9-stack `lint`), and a single-source-of-truth `stacks/README.md`.
 
+### IMP-005 - Using Corporate Supporter Logo in the Series Primary Hero Slot
+- **Date / Action**: `2026-11-20` (`ACT-077`, Issue `#153`)
+- **Rejected Approach**: Placing the LightPath corporate SVG logo alone in the top hero banner of `README.md`, `README.fr.md`, and the `.brand` slot of `dashboard/index.html`.
+- **Reason**: Conflated project identity with corporate sponsorship. Generated dedicated `ClusterPostgreSQL-Series` project branding (`assets/clusterpostgresql-series-logo.png` and `assets/clusterpostgresql-series-icon.png`) for primary headers, and repositioned LightPath SVG logos explicitly as `"Supported by"` / `"Soutenu par"` support branding.
+
 ## 3. Current Approximations & Simplifying Assumptions (`APP-XXX`)
 
 ### APP-001 - Ephemeral Local Laboratory Credentials

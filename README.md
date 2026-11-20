@@ -1,16 +1,10 @@
 <p align="center">
-  <a href="https://www.lightpath.fr">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="assets/lightpath-logo-dark.svg">
-      <source media="(prefers-color-scheme: light)" srcset="assets/lightpath-logo-light.svg">
-      <img alt="LightPath" src="assets/lightpath-logo-light.svg" width="240">
-    </picture>
-  </a>
+  <img alt="ClusterPostgreSQL-Series — Multi-Master & Active-Active Lab" src="assets/clusterpostgresql-series-logo.png" width="640">
 </p>
 
 # ClusterPostgreSQL-Series — PostgreSQL Multi-Master & Active-Active Architectures
 
-**Author:** Jean-Marie Renouard (`jmrenouard`) — [LightPath](https://www.lightpath.fr) | **License:** [MIT](LICENSE) | **Version française :** [README.fr.md](README.fr.md)
+**Author:** Jean-Marie Renouard (`jmrenouard`) | **Supported by:** [LightPath](https://www.lightpath.fr) | **License:** [MIT](LICENSE) | **Version française :** [README.fr.md](README.fr.md)
 
 A rigorous engineering study, 36-criterion comparative matrix, reproducible Docker Compose labs (powered by [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env)), 18-test empirical failure-mode catalog (`L1–L8` + `T11–T18`), **187 standardized `pgbench` / `sysbench` / `tc netem` benchmark rows** across **10 live PostgreSQL topologies**, and an offline-capable [**Interactive HTML Benchmark Explorer (`dashboard/index.html`)**](dashboard/index.html).
 
@@ -112,3 +106,20 @@ make bench-all && make charts && make dashboard
 - **Living Registers:** Every engineering decision, bug RCA, dead-end, and simplification is tracked in [`docs/ACTION_LOGBOOK.md`](docs/ACTION_LOGBOOK.md) and [`docs/RCA_REGISTER.md`](docs/RCA_REGISTER.md).
 - **Credential Hygiene:** Repository files contain zero real passwords or host paths; lab containers read ephemeral defaults from [`.env.example`](.env.example).
 - **Threats to Validity:** Local Docker benchmarks share one 20-vCPU / 16.4 GiB NVMe host; WAN effects were modeled via `tc netem` egress delay (`25 ms`), not independent intercontinental failure domains (see [Chapter 05](docs/en/05_poc_architectures_and_test_protocol.md)).
+
+---
+
+## Support & Attribution
+
+This independent open-source technical series is created by **Jean-Marie Renouard** (`jmrenouard`) under the [MIT License](LICENSE), with engineering and infrastructure support from **LightPath**:
+
+<p align="center">
+  <sub>Supported by</sub><br>
+  <a href="https://www.lightpath.fr">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/lightpath-logo-dark.svg">
+      <source media="(prefers-color-scheme: light)" srcset="assets/lightpath-logo-light.svg">
+      <img alt="Supported by LightPath" src="assets/lightpath-logo-light.svg" width="145">
+    </picture>
+  </a>
+</p>
