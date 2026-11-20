@@ -203,6 +203,11 @@
 - **Rejected Approach**: Landing all Wave 4 `scripts/generate_charts_v3.py` edits (`15,328` B unified diff) or full Chapter 11 EN/FR rewrites (`14,746` B / `14,904` B) in single PRs, or staging new solution sheets without intermediate test synchronization.
 - **Reason**: Exceeded or breached the strict `< 14,800`-byte PR diff cap and would break strict `len(SLUGS)` assertions mid-wave. Split `generate_charts_v3.py` into typography compaction (`7,301` B) + 19-repo Charts 08-09 (`8,909` B), split EN/FR Chapter 11 into matrix (`~9.9 KB`) + insights (`~5.2 KB`), and maintained `20/20` OK on every single Wave 4 PR.
 
+### IMP-008 - Copying Partial Wave-4 Section 6 Layout or Uncompacted M1 Sheets Exceeding `14,000` B / `15,000`-Char Caps
+- **Date / Action**: `2026-11-20` (`ACT-149`)
+- **Rejected Approach**: Reusing the abbreviated 2-bullet Section 6 table from Wave 4 (`pg18_native_clustering.md`, `yt_cluster_lite.md` omitting `open_issues`/full `pushed_at` ISO) or appending full Section 6 onto `pg17_physical_streaming_patroni.md` (`12,955`/`13,205` B) and `pgedge_spock.md` (`12,973`/`13,158` B) without prose compaction.
+- **Reason**: Omitting `open_issues`/`watchers`/`SPDX`/full `pushed_at` violates R1 verbatim telemetry coverage, and uncompacted sheets exceed the `14,000`-byte per-file test ceiling (`14.3-14.9` KB). Standardized on the full 8-column / 3-bullet Section 6 schema with surgical prose compaction preserving every CSV/probe number.
+
 ## 3. Current Approximations & Simplifying Assumptions (`APP-XXX`)
 
 ### APP-001 - Ephemeral Local Laboratory Credentials
@@ -244,6 +249,11 @@
 - **Date / Action**: `2026-11-20` (`ACT-143`, `ACT-146`)
 - **Assumption**: `results/project_popularity.csv` tracks the public MIT-licensed `DBinvent/yt-cluster-lite` Rust leaf repository (`15` stars, `21` commits, `2` contributors), while the benchmarked `ytserv` cluster server binary (`1.21.3`) is closed/dual-licensed; additionally, published Jepsen consistency claims come from DBinvent's own self-run test suite targeting `cursor-stability` rather than an independent third-party serializability audit.
 - **Impact & Removal Condition**: Documented explicitly across `docs/{en,fr}/solutions/yt_cluster_lite.md` and Chapters `03a`/`04`/`07`/`11` so production evaluators distinguish MIT leaf telemetry from closed server licensing and verify isolation guarantees independently; removable if `ytserv` is open-sourced and independently Jepsen-audited.
+
+### APP-009 - GitHub Mirror Issue/Tag Artifacts (`2026-11-20T17:26:02Z`) & `< 14 KB` Sheet Compaction Ceiling
+- **Date / Action**: `2026-11-20` (`ACT-149`)
+- **Assumption**: `results/project_popularity.csv` (`2026-11-20T17:26:02Z`, `22` rows) reports `open_issues=0`, `contributors=58` (trusted committers), and next-major tag `REL_19_0` on the `postgres/postgres` GitHub mirror (canonical issue tracking lives on `pgsql-bugs`), while `pgEdge/spock` reports `v6.0.0-beta.2` alongside stable `5.0.14` tested in the PoC; additionally, tight sheets (`pg17_physical_streaming_patroni`, `pgedge_spock`) near `13 KB` require prose compaction in Sections 1-5/Table D to fit Section 6 under the `14,000`-byte cap (`tests/test_solution_sheets.py:200`).
+- **Impact & Removal Condition**: Preserves 100% verbatim CSV-to-Markdown telemetry parity and zero benchmark metric loss without loosening test density bounds; mirror caveats and `v5.0.14` PoC alignment are stated inline, and telemetry refreshes via `make popularity`.
 
 ## 4. Unimplemented Ideas & Future Roadmap (`IDEA-XXX`)
 

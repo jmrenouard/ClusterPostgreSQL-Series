@@ -17,17 +17,17 @@
 
 ---
 
-## 1. Description de la technologie et rôle
+## 1. Description et rôle
 
-La **réplication physique en streaming** est le mécanisme HA natif au niveau bloc de PostgreSQL. Un primaire unique (`walsender`) expédie octet par octet les blocs WAL 8 Kio vers des standbys chauds (`walreceiver`), qui rejouent pages heap, index, séquences et DDL en continu (`hot_standby = on`).
+La **réplication physique en streaming** expédie le WAL 8 Kio du primaire (`walsender`) aux standbys chauds (`walreceiver`), rejouant heap, index, séquences et DDL (`hot_standby = on`).
 
-Elle opère en mode **asynchrone (`N1`/`T1`)** ou **synchrone (`N2`/`T2`)**, et s'associe en production à **Patroni + etcd + HAProxy** (`docker-compose-patroni.yml`) pour l'élection Raft, le fencing watchdog (`RTO ~ 10–30 s`) et le routage `/primary` vs `/replica`.
+Modes **async (`N1`/`T1`)** ou **sync (`N2`/`T2`)**, couplés à **Patroni + etcd + HAProxy** (`docker-compose-patroni.yml`) : Raft, watchdog (`RTO ~ 10–30 s`), routage `/primary`/`/replica`.
 
 ---
 
 ## 2. Architecture et flux de données
 
-Le PoC sépare les benchmarks streaming bruts (`15434/15435`, `15432/15433`) du cluster Patroni 7 conteneurs (`patroni_net`, `etcd` mTLS, REST SSL `:8008`) :
+Le PoC sépare le streaming brut (`15434/15435`, `15432/15433`) de Patroni HA 7 conteneurs (`patroni_net`, `etcd` mTLS, REST `:8008`) :
 
 ```mermaid
 flowchart TB
@@ -42,30 +42,30 @@ flowchart TB
     N3 <--> ETCD
 ```
 
-Les standbys rejettent toute écriture (`SQLSTATE 25006`), éliminant tout conflit multi-écrivain.
+Les standbys rejettent les écritures (`SQLSTATE 25006`) : zéro conflit.
 
 ---
 
-## 3. Principes de fonctionnement et modes d'implémentation
+## 3. Principes de fonctionnement et modes
 
-1. **Slot physique & `pg_basebackup` :** Initialisation par `pg_basebackup -Fp -Xs -P -R -S slot_stream_standby` avec rétention WAL lors des coupures (`3088B` en `L7`).
+1. **Slot & `pg_basebackup` :** `pg_basebackup -Fp -Xs -P -R -S slot_stream_standby` retient le WAL si coupure (`3088B` en `L7`).
 2. **Modèle de latence de commit :**
 
 $$
 L_{\text{N1-async}} \approx L_{\text{disque}}, \qquad L_{\text{N2-sync}} \approx L_{\text{disque}} + \text{RTT}_{\text{standby}}
 $$
 
-3. **Bail DCS Patroni :** `node1..3` lancent `/usr/bin/patroni /etc/patroni.yml` via `supervisord`, renouvelant la clé Raft `etcd` (défauts standard `ttl=30`, `loop_wait=10`, `retry_timeout=10`) avec fencing OS.
+3. **Bail Patroni :** `node1..3` lancent `patroni /etc/patroni.yml` (`supervisord`), renouvelant le bail `etcd` (`ttl=30`, `loop_wait=10`, `retry_timeout=10`) avec fencing.
 
 | Mode / Paramètre | Portée | Chemin de commit | RPO / Blocage | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
-| **`pg17-async-streaming`** (`N1`, PoC) | `synchronous_standby_names=''` | Flush WAL local ; envoi async | `RPO > 0` ; zéro gel primaire | `610.15 TPS` (`A`) ; insensible au WAN `25ms` (`599.61`) |
-| **`pg17-sync-streaming`** (`N2`, PoC) | `synchronous_commit=on` | Flush disque primaire + standby | **`RPO = 0`** ; perte standby **gèle primaire** | `409.48 TPS` (`-52,8 %` vs standalone) ; `57.0 TPS` sous `25ms` WAN |
-| **`remote_write`** | Session / global *(Arch.)* | `write()` OS standby (sans `fsync`) | Survit crash PG ; `RPO > 0` coupure secteur | Latence moindre que `on` |
-| **`remote_apply`** | Session / global *(Arch.)* | Rejeu WAL sur standby avant `COMMIT` | **`RPO = 0`** + lecture stricte sur RO | Latence synchrone maximale |
-| **`off` / `local`** | Session *(Arch.)* | `off` : local async ; `local` : flush local | Relâche la synchro distante par tx | Chemin rapide non critique |
-| **`FIRST 1` vs `ANY k`** | `synchronous_standby_names` | Priorité vs quorum `k`-sur-`N` | Évite le gel si `N >= 2` standbys | Exige >=2 standbys pour HA |
-| **Patroni + etcd + HAProxy** | Plan de contrôle HA | Bail Raft, `/primary` & `/replica` (`3s/fall 3/rise 2`) | Bascule auto (`RTO ~ 10–30 s`) | Remplace `pg_promote()` manuel |
+| **`pg17-async-streaming`** (`N1`, PoC) | `synchronous_standby_names=''` | Flush local ; async | `RPO > 0` ; sans gel | `610.15 TPS` (`A`) ; WAN `25ms` `599.61` |
+| **`pg17-sync-streaming`** (`N2`, PoC) | `synchronous_commit=on` | Flush primaire + standby | **`RPO = 0`** ; perte **gèle** | `409.48 TPS` (`-52,8 %` vs standalone) ; `57.0 TPS` WAN `25ms` |
+| **`remote_write`** | Session/global *(Arch.)* | `write()` OS (sans `fsync`) | Survit crash PG ; `RPO > 0` | Latence < `on` |
+| **`remote_apply`** | Session/global *(Arch.)* | Rejeu standby pré-`COMMIT` | **`RPO = 0`** + RO strict | Latence sync max |
+| **`off` / `local`** | Session *(Arch.)* | `off` : async ; `local` : flush local | Relâche synchro/tx | Fast-path non critique |
+| **`FIRST 1` / `ANY k`** | `synchronous_standby_names` | Priorité vs quorum `k`/`N` | Évite gel si `N >= 2` | Exige >=2 standbys |
+| **Patroni + etcd + HAProxy** | Contrôle HA | Raft, `/primary` & `/replica` (`3s/fall 3/rise 2`) | Bascule auto (`RTO ~ 10–30 s`) | Remplace `pg_promote()` |
 
 ---
 
@@ -73,10 +73,10 @@ $$
 
 | Forces | Faiblesses et pièges opérationnels |
 | :--- | :--- |
-| **Parité PG & séquences 100 % :** Réplique DML sans PK (`L2`), DDL/`SAVEPOINT` (`L5`), séquences (`T18` : `66\|true`, `next_id=67`), `pg_largeobject`, extensions (`L6`). | **Couplage WAN & gel (`N2`) :** `25ms` WAN réduit `F` à `57.0 TPS` (`-86,1 %` vs sync LAN), `50ms` à `25.79` ; perte de l'unique standby sync gèle le primaire (`L7`/`L8`). |
-| **Dérive nulle (`0`) :** Zéro conflit (`A`–`D`), zéro retry `40001`, `RPO = 0` sur `SIGKILL` (`T16` : `20/20`). | **Pas d'écriture multi-maître :** Rejet `25006` sur standby (`T12`, `T13`) ; scaler en écriture exige sharding (`#7`) ou MM. |
-| **Fort délestage lecture :** `45358.52` (async) / `54483.07 TPS` (sync) en `C` ; `148022.41` / `124105.25 TPS` en `E4`. | **Couplage binaire strict :** Impose même version majeure PG, CPU et `glibc` (pas d'upgrade PG 15 -> 17). |
-| **HA clôturée (Patroni) :** Élection Raft `etcd` + coupure sessions HAProxy sans logique applicative. | **Inflation WAL sur slot (`L7`) :** Un slot déconnecté retient le WAL (`3088B` en test) sans `max_slot_wal_keep_size`. |
+| **Parité PG 100 % :** DML sans PK (`L2`), DDL/`SAVEPOINT` (`L5`), séqs (`T18` : `66\|true`, `next_id=67`), `pg_largeobject`, exts (`L6`). | **WAN & gel (`N2`) :** `25ms` WAN -> `57.0 TPS` (`-86,1 %` vs LAN), `50ms` -> `25.79` ; perte sync gèle le primaire (`L7`/`L8`). |
+| **Zéro dérive (`0`) :** Zéro conflit (`A`–`D`), zéro `40001`, `RPO = 0` sur `SIGKILL` (`T16` : `20/20`). | **Mono-maître :** Rejet `25006` sur standby (`T12`, `T13`) ; écriture scalée = sharding (`#7`) ou MM. |
+| **Lecture scalée :** `45358.52` (async) / `54483.07 TPS` (sync) en `C` ; `148022.41` / `124105.25 TPS` en `E4`. | **Couplage binaire :** Même majeur PG, CPU et `glibc` requis (pas d'upgrade PG 15 -> 17). |
+| **HA clôturée (Patroni) :** Raft `etcd` + coupure HAProxy sans logique app. | **Inflation WAL (`L7`) :** Slot offline garde WAL (`3088B` en test) sans `max_slot_wal_keep_size`. |
 
 ---
 
@@ -141,8 +141,8 @@ Tests à `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Seules `Avg`
 | Stack | Compose & Setup | Conteneurs, Ports & Images | GUCs / Notes clés |
 | :--- | :--- | :--- | :--- |
 | **Streaming** | `docker-compose-pg-streaming.yml` + `scripts/pg_streaming/setup_pg_streaming.sh` | `pg_stream_primary` (`15434:5432`), `pg_stream_standby` (`15435:5432`), `postgres:17` | `wal_level=replica`, `wal_keep_size=64MB`, slot `slot_stream_standby`, `hot_standby=on` |
-| **Paire Sync** | `docker-compose-pg17-baseline.yml` + `scripts/bench_pg_v2_runner.sh` (`ALTER SYSTEM` ; `scripts/setup_pg17_baseline.sh` du dépôt parent) | `pg17_sync_primary` (`15432:5432`), `pg17_sync_standby` (`15433:5432`), `postgres:17` | `synchronous_standby_names='pg17_sync_standby'`, `synchronous_commit='on'` |
-| **Patroni HA** | `docker-compose-patroni.yml` + `conf/haproxy-patroni.cfg` | `etcd1..3` (`2379:2379` `etcd1`), `node1..3` (`5432`/`8008`), `haproxy-patroni` (`5000`/`5001`/`7000`), `patroni-rhel8-*` | mTLS `etcd`, `hostssl`/`verify-ca` ; `/etc/patroni.yml` intégré à l'image (défauts `ttl=30/loop_wait=10/retry_timeout=10`). `documentation/patroni_cluster.md` cite PgBouncer `:6432`, absent du compose. |
+| **Paire Sync** | `docker-compose-pg17-baseline.yml` + `scripts/bench_pg_v2_runner.sh` (`ALTER SYSTEM`; `scripts/setup_pg17_baseline.sh`) | `pg17_sync_primary` (`15432:5432`), `pg17_sync_standby` (`15433:5432`), `postgres:17` | `synchronous_standby_names='pg17_sync_standby'`, `synchronous_commit='on'` |
+| **Patroni HA** | `docker-compose-patroni.yml` + `conf/haproxy-patroni.cfg` | `etcd1..3` (`2379:2379`), `node1..3` (`5432`/`8008`), `haproxy-patroni` (`5000/5001/7000`), `patroni-rhel8-*` | mTLS `etcd`, `hostssl`/`verify-ca` ; `/etc/patroni.yml` (`ttl=30/loop_wait=10/retry_timeout=10`). PgBouncer `:6432` absent du compose. |
 
 ---
 
