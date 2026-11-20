@@ -284,3 +284,7 @@
 ### IDEA-007 - Independent Jepsen Fault-Injection & Multi-Region WAN Audit for YT Cluster 1.21+
 - **Date / Action**: `2026-11-20` (`ACT-148`)
 - **Proposal**: Run an independent multi-host Jepsen-style nemesis suite (network partitions, clock skew, asymmetric packet loss) against YT Cluster `1.21+` under `cc=half` and `cc=0` beyond vendor self-run `cursor-stability` tests (`APP-008`), and re-test `SAVEPOINT` (`RCA-022`) if supported in future releases.
+
+### IDEA-008 - Automated `make popularity` Markdown Sync & Drift Guard Across All 38 Solution Sheets
+- **Date / Action**: `2026-11-20` (`ACT-154`)
+- **Proposal**: Add a deterministic `scripts/sync_popularity_sheets.py` helper (wired to `make popularity`) to refresh Section 6 telemetry rows across all 38 `docs/{en,fr}/solutions/*.md` sheets directly from `results/project_popularity.csv` whenever the live GitHub snapshot is regenerated.

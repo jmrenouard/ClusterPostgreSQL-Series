@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-154 - Enrich PG 17 Uni-Directional Logical (#16) EN/FR Sheets With Popularity Telemetry (Issue `#389`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#389` (`docs/issue-389-logical-uni-popularity`)
+- **Request / Changes / Result**: Added standardized Section 6 GitHub popularity, git presence, `pushed_at` freshness, and Manageability synthesis (`postgres-core`, preserving `#16` with zero `#14` collisions) from `results/project_popularity.csv` (`2026-11-20T17:26:02Z`) to `docs/en/solutions/pg17_logical_unidirectional.md` (`13,516` B / `157` L) and `docs/fr/solutions/pg17_logical_unidirectional.md` (`13,321` B / `157` L), plus `docs/ACTION_LOGBOOK.md` and `docs/RCA_REGISTER.md` (`IDEA-008`); verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
+
 ### ACT-153 - Enrich pgEdge Spock (#2) EN/FR Sheets With Popularity Telemetry (Issue `#387`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#387` (`docs/issue-387-pgedge-spock-popularity`)
 - **Request / Changes / Result**: Added standardized 3-repo Section 6 GitHub popularity, git presence, `pushed_at` freshness, and Manageability synthesis (`pgedge-spock`, `pgedge-snowflake`, `pgedge-lolor`) from `results/project_popularity.csv` (`2026-11-20T17:26:02Z`) to `docs/en/solutions/pgedge_spock.md` (`13,714` B / `165` L) and `docs/fr/solutions/pgedge_spock.md` (`13,718` B / `165` L), plus `docs/ACTION_LOGBOOK.md`; verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
