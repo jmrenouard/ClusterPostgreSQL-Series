@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-115 - Add English Architectural Reference Sheet for AWS Aurora Limitless (#12) (Issue `#229`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#229` (`docs/issue-229-aws-aurora-limitless-en`)
+- **Request / Changes / Result**: Created `docs/en/solutions/aws_aurora_limitless.md` (`#12`, Architectural Reference, `APP-005` managed cloud exclusion) with Mermaid DB Shard Group and 4/6 storage quorum diagram, AWS Time Sync MVCC latency model, implementation modes (Standard Aurora, Limitless Single-Shard vs Multi-Shard 2PC, Global DB Write Forwarding, retired Multi-Master v1), strengths/weaknesses, verified `results/*.csv` `T5` baselines (`#7 citus`, `#5 yugabyte`, `#6 cockroach`, `#15a pg17-standalone`), and Ch. 03b/10 footer links; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-114 - Add French Architectural Reference Sheet for SymmetricDS (#10) (Issue `#227`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#227` (`docs/issue-227-symmetricds-fr`)
 - **Request / Changes / Result**: Created `docs/fr/solutions/symmetricds.md` mirroring `docs/en/solutions/symmetricds.md` section-for-section (`#10`, Architectural Reference, explicitly not live-benchmarked) with French Mermaid diagram, trigger/channel/HTTP batch modes, `sym_conflict` detection/resolution, strengths/weaknesses, verified `results/benchmark_summary.csv` and `results/extended_functional_matrix.csv` anchors (`#9 bucardo`, `#2 pgedge`, `#1 pg-birep`), and Ch. 03b/10 footer links; `make test` (`13/13` OK) and `make lint` verified.
