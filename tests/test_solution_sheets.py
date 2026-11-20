@@ -20,10 +20,18 @@ SPEC = dict(x.split(":") for x in (
     "cockroachdb:cockroach pglogical2: edb_pgd: opentenbase_pgxl: pgpool_ii: symmetricds: "
     "aws_aurora_limitless: gcp_spanner_alloydb: legacy_triggers:"
 ).split())
-SLUGS = tuple(SPEC)
+EXTRA_BENCH = {
+    "pg18_native_clustering": ("pg18-standalone", "pg18-async-streaming", "pg18-sync-streaming", "pg18-logical", "pg18-birep"),
+    "yt_cluster_lite": ("yt-cluster", "yt-cluster-async"),
+}
+EXTRA_SPECS = (
+    ("pg18_native_clustering", "benchmark_pg18.csv", "functional_limits_pg18.csv", 87, 5, "t11_bulk_10k_throughput_and_catchup", {"A_single_rw", "C_multinode_ro", "E_sysbench_oltp_rw", "E3_sysbench_oltp_wo", "H_append_only_insert", "F_wan_netem_25ms"}),
+    ("yt_cluster_lite", "benchmark_yt_cluster.csv", "functional_limits_yt_cluster.csv", 22, 1, "t11_bulk_10k", {"A_single_rw", "B2_overlap_rw", "C_multinode_ro", "D_hot_conflict", "E_sysbench_oltp_rw", "E4_sysbench_point_select", "H_append_only_insert", "F_wan_netem_25ms"}),
+)
+SLUGS = tuple(SPEC) + tuple(EXTRA_BENCH)
 BENCH = {k: tuple(v.split(",")) for k, v in SPEC.items() if v}
 REF = tuple(k for k, v in SPEC.items() if not v)
-NAV_03A = frozenset(SLUGS[:5] + ("pglogical2", "edb_pgd"))
+NAV_03A = frozenset(tuple(SPEC)[:5] + ("pglogical2", "edb_pgd", "pg18_native_clustering", "yt_cluster_lite"))
 
 FENCE_RE = rc(r"^\s*(```+|~~~+)(.*)$")
 DHDR_RE = rc(r"^(?:(?:flowchart|graph)(?:\s+(?:TB|TD|BT|RL|LR))?|sequenceDiagram|stateDiagram(?:-v2)?|classDiagram|erDiagram)(?:\s*%%.*)?$")
@@ -50,7 +58,7 @@ def rel_path(path: pathlib.Path) -> str:
 
 
 def iter_sheets() -> list[tuple[str, str, pathlib.Path, str]]:
-    return [(lg, p.stem, p, p.read_text(encoding="utf-8")) for lg, d in (("en", SOL_EN), ("fr", SOL_FR)) if d.is_dir() for p in sorted(d.glob("*.md")) if p.stem in SLUGS]
+    return [(lg, p.stem, p, p.read_text(encoding="utf-8")) for lg, d in (("en", SOL_EN), ("fr", SOL_FR)) if d.is_dir() for p in sorted(d.glob("*.md"))]
 
 
 def unfenced_lines(text: str) -> list[str]:
@@ -171,11 +179,11 @@ class TestTier1And2SolutionSheets(unittest.TestCase):
     """Tier 1 (coverage, metadata, density) and Tier 2 (Mermaid, structure, compliance)."""
 
     def test_tier1_slug_parity_headers_and_density(self) -> None:
-        self.assertEqual((len(SLUGS), set(BENCH) | set(REF), set(BENCH) & set(REF)), (17, set(SLUGS), set()))
+        self.assertEqual((len(SLUGS), set(BENCH) | set(EXTRA_BENCH) | set(REF), set(BENCH) & set(REF), set(EXTRA_BENCH) & (set(BENCH) | set(REF))), (19, set(SLUGS), set(), set()))
         for d in (SOL_EN, SOL_FR):
-            self.assertTrue(set(SLUGS).issubset({p.stem for p in d.glob("*.md")} if d.is_dir() else set()))
+            self.assertEqual({p.stem for p in d.glob("*.md")} if d.is_dir() else set(), set(SLUGS))
         sh = iter_sheets()
-        self.assertEqual(len(sh), 34)
+        self.assertEqual(len(sh), 38)
         e = []
         for lg, _, p, txt in sh:
             rel, lns, sz = rel_path(p), txt.splitlines(), p.stat().st_size
@@ -214,7 +222,7 @@ class TestTier1And2SolutionSheets(unittest.TestCase):
 
     def test_tier2_structure_mermaid_and_compliance(self) -> None:
         sh = iter_sheets()
-        self.assertEqual(len(sh), 34)
+        self.assertEqual(len(sh), 38)
         mm, sm = _load_sibling("test_docs_math_syntax"), _load_sibling("test_governance_and_security")
         lre = {
             "en": (r"description|overview|what\s+it|architecture", r"principle|internal|mechanism|operating|how\s+it", r"implementation\s+mode|variants?|topologies", r"strengths?|pros?", r"weaknesses?|cons?|limits?|traps?"),
@@ -236,7 +244,7 @@ class TestTier1And2SolutionSheets(unittest.TestCase):
                 e.append(f"{rel}: Modes table")
             if not any(len(r) >= 2 and rs(sa, s := f"{h} {' '.join(c)}", re.I) and rs(sb, s, re.I) for h, c, r in tb):
                 e.append(f"{rel}: SW table")
-            if slug in BENCH and not rs(r"results/|Suite\s+[A-F]", txt):
+            if (slug in BENCH or slug in EXTRA_BENCH) and not rs(r"results/|Suite\s+[A-F]", txt):
                 e.append(f"{rel}: bench ref")
             e.extend(mm.check_markdown_text(txt, rel))
             e.extend(f"{rel}: banned {lb}" for lb, pt in sm.BANNED if pt.search(txt))
