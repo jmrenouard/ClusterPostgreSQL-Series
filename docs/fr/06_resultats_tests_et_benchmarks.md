@@ -15,13 +15,15 @@ Les quatre premières suites comparent le débit nominal sur un nœud (`A`), l'�
 | **`pg17-standalone`** | 866,82 / 9,22 ms | 920,07 / 8,68 ms | 879,01 / 9,09 ms | **0** (Mono) | 55 614,16 / 0,26 ms |
 | **`pg17-async-streaming`** | 610,15 / 13,09 ms | 627,39 / 12,73 ms | 584,80 / 13,66 ms | **0** (Async) | 45 358,52 / 0,33 ms |
 | **`pg17-sync-streaming`** | 409,48 / 19,52 ms | 407,41 / 19,61 ms | 465,22 / 17,17 ms | **0** (Sync) | 54 483,07 / 0,27 ms |
-| **`pg17-logical`** | 532,38 / 14,99 ms | 251,63 / 31,75 ms | 355,57 / 22,48 ms | **0** (Logique) | 42 302,43 / 0,35 ms |
+| **`pg17-logical` (`#16`)** | 532,38 / 14,99 ms | 251,63 / 31,75 ms | 355,57 / 22,48 ms | **0** (Logique) | 42 302,43 / 0,35 ms |
 | **`pg-birep` (`#1`)** | 875,91 / 9,12 ms | 820,09 / 9,74 ms | 1 228,60 / 6,50 ms | **-4 567 (Diverge)** | 53 072,52 / 0,28 ms |
 | **`pgedge` LWW (`#2`)** | 556,06 / 14,37 ms | 346,95 / 23,03 ms | 818,65 / 9,76 ms | **-66 328 (Lost Upd.)** | 54 124,99 / 0,27 ms |
 | **`bucardo` (`#9`)** | 735,38 / 10,86 ms | 1 078,90 / 7,40 ms | 1 267,77 / 6,30 ms | **+123 679 (Lost Upd.)** | 53 731,92 / 0,27 ms |
 | **`citus` (`#7`)** | 309,04 / 25,85 ms | 265,29 / 30,12 ms | 312,98 / 25,53 ms | **0** (Converge) | 21 324,70 / 0,72 ms |
 | **`yugabyte` (`#5`)** | 173,64 / 45,88 ms | 194,75 / 41,04 ms | 170,19 / 46,96 ms | **0** (Converge) | 17 150,58 / 0,92 ms |
 | **`cockroach` (`#6`)** | 42,08 / 187,60 ms | 60,35 / 132,32 ms | 74,17 / 106,44 ms | **0** (96 retries `40001`) | 13 185,54 / 1,20 ms |
+
+*Désambiguïsation des ID : `#16` (`N3`) désigne `pg17-logical` (le fichier historique `results/functional_limits_matrix.csv` mentionne `#14 Baseline`), tandis que `#14` est réservé aux systèmes historiques à triggers (`Slony-I / Londiste / RubyRep`).*
 
 ### Enseignements majeurs des suites A à C
 1. **L'illusion de la vitesse en asynchrone sous chevauchement (`B2`)** : `bucardo` (1 267,77 TPS) et `pg-birep` (1 228,60 TPS) affichent les débits bruts les plus élevés sur `B2`, car chaque nœud acquitte localement sans coordination. Mais le bilan comptable révèle l'ampleur de la corruption : `bucardo` perd/fausse le solde global de `+123 679` (`acc=786206` vs `exp_delta=662527`), `pgedge` LWW de `-66 328` (`-144853` vs `-78525`), et `pg-birep` laisse les deux nœuds diverger durablement (`node1=-193944` vs `node2=-208996`, `branches=-27614` vs `-19115`).

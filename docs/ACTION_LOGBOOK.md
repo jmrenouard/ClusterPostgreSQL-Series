@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-128 - Disambiguate #16 pg17-logical in Ch. 06 and Log RCA-014 (Issue `#255`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#255` (`docs/issue-255-ch06-id-polish-rca014`)
+- **Request / Changes / Result**: Updated `docs/en/06_empirical_test_and_benchmark_results.md:26` (`#14 pg17-logical` -> `#16 pg17-logical`) and `docs/fr/06_resultats_tests_et_benchmarks.md:18` (added `(#16)`) with explicit `#16` vs `#14` disambiguation footnotes; logged `RCA-014` in `docs/RCA_REGISTER.md` (split `pgpool_ii` check-count alignment into follow-up PR to keep diff `< 15,000` bytes); `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-127 - Update Ch. 01 EN/FR Status and Chapter 02-10 Navigation Links (Issue `#253`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#253` (`docs/issue-253-ch01-status-links`)
 - **Request / Changes / Result**: Updated `docs/en/01_executive_summary_and_taxonomy.md` and `docs/fr/01_synthese_et_taxonomie.md` to clear stale `Pending` / `phase empirique suivante` / `apres execution complete` text, fixed the Chapter 08 title (`08 - Limits & Failure Modes`), and added clickable Markdown links for Chapters `02` through `10` (including `06`, `08`, `09`, `10`); `make test` (`13/13` OK) and `make lint` verified.
