@@ -207,9 +207,6 @@ class TestTier5AdversarialCoverage(unittest.TestCase):
                                 if not any(PARITY.has_csv_number(rn, ms.group(1), True) for rn in t15_rows):
                                     e.append(f"{rel}: T15 miss {k} {stat}={ms.group(1)}")
 
-        with (RESULTS / "project_popularity.csv").open(encoding="utf-8", newline="") as fh:
-            pop = {r["solution_id"].strip(): r for r in csv.DictReader(fh)}
-        pop_map = {"pg18_native_clustering": ("postgres-core", "patroni"), "yt_cluster_lite": ("yt-cluster-lite",)}
         for slug, bf, _, _, _, _, suites in PARITY.EXTRA_SPECS:
             with (RESULTS / bf).open(encoding="utf-8", newline="") as fh:
                 ex_rows = list(csv.DictReader(fh))
@@ -217,16 +214,11 @@ class TestTier5AdversarialCoverage(unittest.TestCase):
                 p = d / f"{slug}.md"
                 rel = BASE.rel_path(p)
                 txt = p.read_text(encoding="utf-8")
-                norm_doc = _norm(txt)
                 _, tables = BASE.extract_sections_and_tables(txt)
                 tab_norm = "\n".join(_norm(" | ".join(rw)) for _, _, rows in tables for rw in rows if rw)
                 for r in ex_rows:
                     if r["suite"].strip() in suites and not PARITY.has_csv_number(tab_norm, r["tps"]):
                         e.append(f"{rel}: table miss {r['topology']}/{r['suite']} tps={r['tps']}")
-                for sid in pop_map[slug]:
-                    for col in ("stars", "forks", "total_commits", "commits_12m"):
-                        if not PARITY.has_csv_number(norm_doc, pop[sid][col]):
-                            e.append(f"{rel}: miss popularity {sid}/{col}={pop[sid][col]}")
 
         for slug in SLUGS:
             en_tb = BASE.extract_sections_and_tables((SOL_EN / f"{slug}.md").read_text(encoding="utf-8"))[1]
@@ -235,6 +227,125 @@ class TestTier5AdversarialCoverage(unittest.TestCase):
             fr_shape = [len(r) for _, _, r in fr_tb]
             if en_shape != fr_shape:
                 e.append(f"{slug}: EN/FR table shape mismatch EN={en_shape} FR={fr_shape}")
+        self.assertEqual(e, [], "\n".join(e))
+
+    def test_tier5_popularity_vitality_and_freshness_parity(self) -> None:
+        """Verify row-scoped Section 6 popularity, vitality, freshness, and synthesis across 38 sheets and 22 CSV rows."""
+        pop_map: dict[str, tuple[str, ...]] = {
+            "pg17_standalone": ("postgres-core",), "pg17_physical_streaming_patroni": ("postgres-core", "patroni"),
+            "pg17_logical_unidirectional": ("postgres-core",), "pg17_bidirectional_logical": ("postgres-core",),
+            "pg18_native_clustering": ("postgres-core", "patroni"),
+            "pgedge_spock": ("pgedge-spock", "pgedge-snowflake", "pgedge-lolor"),
+            "pglogical2": ("pglogical2",), "edb_pgd": ("edb-pgd",), "yugabytedb": ("yugabytedb",),
+            "cockroachdb": ("cockroachdb",), "citus": ("citus",), "opentenbase_pgxl": ("opentenbase",),
+            "bucardo": ("bucardo",), "symmetricds": ("symmetricds",), "pgpool_ii": ("pgpool2",),
+            "aws_aurora_limitless": ("aurora-limitless",),
+            "gcp_spanner_alloydb": ("gcp-spanner-alloydb", "spanner-pgadapter"),
+            "legacy_triggers": ("slony1", "pgq", "londiste", "rubyrep"), "yt_cluster_lite": ("yt-cluster-lite",),
+        }
+        prop_re = {"edb-pgd": rc(r"EDB|PGD|BDR", re.I), "aurora-limitless": rc(r"Aurora|Limitless", re.I), "gcp-spanner-alloydb": rc(r"Spanner|AlloyDB", re.I)}
+        with (RESULTS / "project_popularity.csv").open(encoding="utf-8", newline="") as fh:
+            pop = {r["solution_id"].strip(): r for r in csv.DictReader(fh)}
+        self.assertEqual((len(pop), set(pop_map), {s for ss in pop_map.values() for s in ss}), (22, set(SLUGS), set(pop)))
+
+        sec_re = rc(r"(?:popularit.*vitalit|vitalit.*popularit)", re.I)
+        sec_hdr = {
+            "en": rc(r"^6\.\s+GitHub\s+Popularity,\s+Git\s+Presence\s+&\s+Maintenance\s+Vitality\s+\(`results/project_popularity\.csv`\)$"),
+            "fr": rc(r"^6\.\s+Popularit\u00e9\s+GitHub,\s+pr\u00e9sence\s+Git\s+et\s+vitalit\u00e9\s+de\s+maintenance\s+\(`results/project_popularity\.csv`\)$"),
+        }
+        table_hdr = {
+            "en": ["Project", "Git Presence / Role", "Repo (`Account / Repos`)", "Stars / Forks / Watch", "Commits (`Tot / 12m`)", "Contrib / Issues", "Lang / SPDX", "Release / Last Push"],
+            "fr": ["Projet", "Pr\u00e9sence / R\u00f4le Git", "D\u00e9p\u00f4t (`Compte / D\u00e9p\u00f4ts`)", "Stars / Forks / Watch", "Commits (`Tot / 12m`)", "Contrib / Issues", "Lang / SPDX", "Tag / Dernier Push"],
+        }
+        intro_re = {
+            "en": rc(r"^Live\s+GitHub\s+telemetry\s+\(`2026-11-20T17:26:02Z`,\s+`archived\s+=\s+false`\s+unless\s+`N/A`\):$", re.M),
+            "fr": rc(r"^T\u00e9l\u00e9m\u00e9trie\s+GitHub\s+en\s+direct\s+\(`2026-11-20T17:26:02Z`,\s+`archived\s+=\s+false`\s+sauf\s+`N/A`\)\s+:$", re.M),
+        }
+        synth_re = {
+            "en": (
+                ("maint", rc(r"^-\s+\*\*Maintenance\s+Level:\*\*\s+\*\*(?:Tier\s+[SABCD]\s+\([^)]+\)|Closed\s+/\s+(?:Proprietary|Managed\s+Cloud(?:\s+\(\+\s+OSS\s+Proxy\))?))\*\*(?:\s+\+\s+\*\*Tier\s+[SABCD]\s+\([^)]+\)\*\*)?\s+--\s+\S", re.M)),
+                ("fresh", rc(r"^-\s+\*\*Currency\s+/\s+Freshness:\*\*\s+\*\*(?:Current\s+--\s+(?:Daily\s+Active|High\s+Velocity|Active|Steady|Young)|Low\s+Cadence|Stale\s+/\s+Dormant|Dormant\s+/\s+Minimal\s+Maintenance|Opaque\s+\(Vendor-Managed\)|Opaque\s+Engine\s+\+\s+Active\s+Proxy)\*\*\s+--\s+\S", re.M)),
+                ("ops", rc(r"^-\s+\*\*Operational\s+Manageability:\*\*\s+\*\*(?:Low\s+Risk|Moderate|High\s+Risk|Do\s+Not\s+Deploy|Vendor\s+Lock-In)\*\*\s+--\s+\S", re.M)),
+            ),
+            "fr": (
+                ("maint", rc(r"^-\s+\*\*Niveau\s+de\s+maintenance\s*:\*\*\s+\*\*(?:Niveau\s+[SABCD]\s+\([^)]+\)|Ferm\u00e9\s+/\s+(?:Propri\u00e9taire|Cloud\s+Manag\u00e9(?:\s+\(\+\s+Proxy\s+OSS\))?))\*\*(?:\s+\+\s+\*\*Niveau\s+[SABCD]\s+\([^)]+\)\*\*)?\s+--\s+\S", re.M)),
+                ("fresh", rc(r"^-\s+\*\*Fra\u00eecheur\s+/\s+Actualit\u00e9\s*:\*\*\s+\*\*(?:(?:Actuel|\u00c0\s+jour)\s+--\s+(?:Actif\s+au\s+quotidien|V\u00e9locit\u00e9\s+\u00e9lev\u00e9e|Actif|R\u00e9gulier|Jeune)|Cadence\s+faible|Obsol\u00e8te\s+/\s+Dormant|Dormant\s+/\s+Maintenance\s+minimale|Opaque\s+\(G\u00e9r\u00e9\s+par\s+l'\u00e9diteur\)|Moteur\s+opaque\s+\+\s+Proxy\s+actif)\*\*\s+--\s+\S", re.M)),
+                ("ops", rc(r"^-\s+\*\*Maintenabilit\u00e9\s+op\u00e9rationnelle\s*:\*\*\s+\*\*(?:Risque\s+faible|Mod\u00e9r\u00e9|Risque\s+\u00e9lev\u00e9|Ne\s+pas\s+d\u00e9ployer|Verrouillage\s+\u00e9diteur)\*\*\s+--\s+\S", re.M)),
+            ),
+        }
+        tier_re = rc(r"\b(?:Tier|Niveau)\s+[SABCD]\b|Closed\s*/|Ferm\u00e9\s*/", re.I)
+        dormant_re = rc(r"dormant|EOL|inactive|inactif|0\s+commit|Tier\s+D|Niveau\s+D", re.I)
+        active_tier_re = rc(r"\b(?:Tier|Niveau)\s+[SA]\b", re.I)
+        prop_prose_re = rc(r"closed|proprietary|managed|opaque|propri\u00e9taire|manag\u00e9|ferm\u00e9", re.I)
+
+        e: list[str] = []
+        for d, lang in ((SOL_EN, "en"), (SOL_FR, "fr")):
+            for slug in SLUGS:
+                p = d / f"{slug}.md"
+                rel = BASE.rel_path(p)
+                pr, tb = BASE.extract_sections_and_tables(p.read_text(encoding="utf-8"))
+                sec_tabs = [(h, hd, rows) for h, hd, rows in tb if sec_re.search(h)]
+                if len(sec_tabs) != 1:
+                    e.append(f"{rel}: expected 1 Sec 6 table, got {len(sec_tabs)}")
+                    continue
+                sec_h, hd, pop_rows = sec_tabs[0]
+                prose, sids = pr.get(sec_h, ""), pop_map[slug]
+                snap = pop[sids[0]]["snapshot_utc"].strip()
+                if not sec_hdr[lang].match(sec_h):
+                    e.append(f"{rel}: bad Sec 6 heading {sec_h!r}")
+                if hd != table_hdr[lang] or len(pop_rows) != len(sids):
+                    e.append(f"{rel}: header/rows mismatch rows={len(pop_rows)} exp={len(sids)}")
+                if "results/project_popularity.csv" not in sec_h and "results/project_popularity.csv" not in prose:
+                    e.append(f"{rel}: missing project_popularity.csv ref")
+                if snap not in prose or "archived = false" not in prose or not intro_re[lang].search(prose):
+                    e.append(f"{rel}: missing intro/{snap}/archived=false")
+                for lbl, pat in synth_re[lang]:
+                    if not pat.search(prose):
+                        e.append(f"{rel}: bad synthesis bullet {lbl}")
+                if not tier_re.search(prose):
+                    e.append(f"{rel}: missing tier/status label")
+
+                for sid in sids:
+                    r = pop[sid]
+                    repo = r["github_repo"].strip()
+                    if repo == "N/A":
+                        matched = [rw for rw in pop_rows if rw and prop_re[sid].search(rw[0]) and "N/A" in " | ".join(rw[2:])]
+                        if len(matched) != 1:
+                            e.append(f"{rel}: expected 1 prop row {sid}, got {len(matched)}")
+                            continue
+                        rw = matched[0]
+                        if len(rw) != 8 or rs(r"https://github\.com/", " | ".join(rw)) or rs(r"\d", " | ".join(rw[1:])):
+                            e.append(f"{rel}: prop row {sid} digits/URL: {rw!r}")
+                        if not all("N/A" in c for c in rw[2:]) or not rs(r"Proprietary|Propri\u00e9taire", rw[2], re.I) or "Proprietary" not in rw[6]:
+                            e.append(f"{rel}: prop row {sid} missing N/A/Proprietary")
+                        if r["git_present"].strip() not in rw[1] or r["git_role"].strip() not in rw[1]:
+                            e.append(f"{rel}: {sid} git_present/git_role mismatch")
+                        if not prop_prose_re.search(prose):
+                            e.append(f"{rel}: {sid} missing opacity prose")
+                        continue
+                    matched = [rw for rw in pop_rows if rw and repo in " | ".join(rw)]
+                    if len(matched) != 1 or len(matched[0]) != 8 or f"https://github.com/{repo}" not in matched[0][2]:
+                        e.append(f"{rel}: bad row/URL for {sid} ({repo})")
+                        continue
+                    rw = matched[0]
+                    acct = "Org" if r["account_type"].strip() == "Organization" else r["account_type"].strip()
+                    if not rs(rf"\(`?{re.escape(acct)}\s*/\s*{re.escape(r['account_public_repos'].strip())}`?\)", rw[2]):
+                        e.append(f"{rel}: {sid} miss account={acct}/{r['account_public_repos']}")
+                    role = r["git_role"].strip()
+                    role_ok = role in rw[1] or (role.startswith("Mirror") and bool(rs(r"Miroir.*git\.postgresql\.org", rw[1]))) or (role == "Primary" and "Primaire" in rw[1])
+                    if r["git_present"].strip() not in rw[1] or not role_ok:
+                        e.append(f"{rel}: {sid} miss git_present/role")
+                    cells = [re.split(r"\s+/\s+", _norm(rw[idx]).strip()) for idx in range(3, 8)]
+                    for parts, cols in zip(cells[:3], (("stars", "forks", "watchers"), ("total_commits", "commits_12m"), ("contributors", "open_issues"))):
+                        if len(parts) != len(cols) or any(not PARITY.has_csv_number(v, r[c]) for v, c in zip(parts, cols)):
+                            e.append(f"{rel}: {sid} sub-cell {cols} got {parts!r}")
+                    p6, p7 = cells[3], cells[4]
+                    if len(p6) != 2 or p6[0].strip("` ") != r["primary_language"].strip() or p6[1].strip("` ") != r["license_spdx"].strip():
+                        e.append(f"{rel}: {sid} lang/spdx got {p6!r}")
+                    if len(p7) != 2 or p7[0].strip("` ") != r["latest_release"].strip() or p7[1].strip("` ") != r["pushed_at"].strip():
+                        e.append(f"{rel}: {sid} release/pushed got {p7!r}")
+                if any(pop[s]["commits_12m"].strip() == "0" for s in sids) and (not dormant_re.search(prose) or active_tier_re.search(prose)):
+                    e.append(f"{rel}: dormant slug must state dormant/EOL and not Tier S/A")
         self.assertEqual(e, [], "\n".join(e))
 
 
