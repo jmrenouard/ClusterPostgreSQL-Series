@@ -41,7 +41,7 @@ SUITES = [
     ("H_append_only_insert", "H: Append Insert"), ("F_wan_netem_25ms", "F: WAN 25ms"),
 ]
 FOOT = "LightPath | ClusterPostgreSQL-Series | Live GitHub API Snapshot (2026-11-20 UTC)"
-BKW = {"ec": "#fff", "lw": 0.4}
+BKW, NAN = {"ec": "#fff", "lw": 0.4}, float("nan")
 
 
 def inum(v: object) -> int | None:
@@ -133,35 +133,35 @@ def chart_08(rows: list[dict]) -> None:
 
 
 def chart_09(rows: list[dict]) -> None:
-    rr = sorted(rows, key=lambda r: (int(r["m"]), int(r["t"])), reverse=True)
-    ys, h = list(range(len(rr))), 0.38
-    fig, (a1, a2) = plt.subplots(1, 2, figsize=(16.8, 8.6), sharey=True, gridspec_kw={"width_ratios": [1.14, 1.0]})
+    rr = sorted(rows, key=lambda r: (r["m"], r["t"]), reverse=True)
+    ys, h, hh = list(range(len(rr))), 0.38, 0.19
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(16.8, 8.9), sharey=True, gridspec_kw={"width_ratios": [1.14, 1.0]})
 
-    tot, c12 = [int(r["t"]) for r in rr], [int(r["m"]) for r in rr]
-    a1.barh([y - h / 2 for y in ys], tot, h, color="#334155", **BKW)
-    a1.barh([y + h / 2 for y in ys], [v or float("nan") for v in c12], h, color=["#059669" if v >= 30 else "#d97706" for v in c12], **BKW)
+    tot, c12 = [r["t"] for r in rr], [r["m"] for r in rr]
+    a1.barh([y - hh for y in ys], tot, h, color="#334155", **BKW)
+    a1.barh([y + hh for y in ys], [v or NAN for v in c12], h, color=["#059669" if v >= 30 else "#d97706" for v in c12], **BKW)
     for y, t, m in zip(ys, tot, c12):
-        a1.text(t * 1.15, y - h / 2, f"{t:,}", va="center", fontsize=6.9, color="#1e293b", weight="semibold")
+        a1.text(t * 1.15, y - hh, f"{t:,}", va="center", size=6.9, color="#1e293b", weight="semibold")
         if m > 0:
-            a1.text(m * 1.15, y + h / 2, f"{m:,}/12m", va="center", fontsize=6.7, color="#065f46" if m >= 30 else "#92400e", weight="bold")
+            a1.text(m * 1.15, y + hh, f"{m:,}/12m", va="center", size=6.7, color="#065f46" if m >= 30 else "#92400e", weight="bold")
         else:
-            a1.plot(1.25, y + h / 2, "rx", ms=5.5, mew=1.6)
-            a1.text(1.85, y + h / 2, "0 commits/12m (INACTIVE)", va="center", fontsize=6.8, color="#b91c1c", weight="bold")
-    h_setup(a1, ys, [str(r["nm"]) for r in rr], (1, 1.4e6), "Commits (Log10 Scale)")
+            a1.plot(1.25, y + hh, "rx", ms=5.5, mew=1.6)
+            a1.text(1.85, y + hh, "0 commits/12m (INACTIVE)", va="center", size=6.8, color="#b91c1c", weight="bold")
+    h_setup(a1, ys, [r["nm"] for r in rr], (1, 1.4e6), "Commits (Log10 Scale)")
     top(a1, "(a) All-Time vs 12-Month Commit Velocity (Sorted by 12m)", 28,
         [Patch(fc=c, label=l) for c, l in (("#334155", "All-Time Commits"), ("#059669", "12m Active (>=30)"), ("#d97706", "12m Low (1-29)"))], 3, 7.5)
 
-    a2.barh(ys, [int(r["n"]) for r in rr], 0.62, color=[VIT[str(r["v"])] for r in rr], **BKW)
+    a2.barh(ys, [r["n"] for r in rr], 0.62, color=[VIT[r["v"]] for r in rr], **BKW)
     for y, r in zip(ys, rr):
-        cnt, v = int(r["n"]), str(r["v"])
-        a2.text(max(cnt, 1) * 1.15, y, f"{cnt:,}{'*' if r['id'] == 'postgres-core' else ''} | {r['p']} [{v}]", va="center", fontsize=7.0, color=VIT[v], weight="bold")
+        cnt, v = r["n"], r["v"]
+        a2.text(max(cnt, 1) * 1.15, y, f"{cnt:,}{'*' if r['id'] == 'postgres-core' else ''} | {r['p']} [{v}]", va="center", size=7.0, color=VIT[v], weight="bold")
     glog(a2, "x")
     a2.set(xlim=(1, 75000), xlabel="Contributors (Log10 Scale)")
     top(a2, "(b) Contributors, Last Push & Maintenance Vitality", 28, [Patch(fc=c, ec="#fff", label=k) for k, c in VIT.items()], 4, 7.5)
 
     fig.subplots_adjust(top=0.83, bottom=0.10, wspace=0.06)
     save(fig, "chart_09_popularity_commits_activity_log.png", "PostgreSQL Ecosystem Development Velocity & Maintenance Vitality (Log10)",
-         "12-month commit cadence separates Active (>=30/yr), Maintenance (1-29/yr), and Dormant/Archived-like (0/12m); * = mirror committers")
+         f"{len(rr)} public GitHub repos | 12m cadence: Active (>=30/yr), Maintenance (1-29/yr), Dormant/Archived-like (0/12m); * = mirror committers")
 
 
 def chart_10() -> None:
@@ -183,28 +183,28 @@ def chart_10() -> None:
             ax = axes[ri, ci]
             v17 = [fnum(idx[a].get(su, {}).get(fld)) for _, a, _ in PAIRS]
             v18 = [fnum(idx[b].get(su, {}).get(fld)) for _, _, b in PAIRS]
-            b17 = ax.bar([x - w / 2 for x in xs], [v or float("nan") for v in v17], w * 0.92, color="#64748b", label="PostgreSQL 17.11", **BKW)
-            b18 = ax.bar([x + w / 2 for x in xs], [v or float("nan") for v in v18], w * 0.92, color="#0284c7", label="PostgreSQL 18.6", **BKW)
-            for i, (r17, r18, a, b) in enumerate(zip(b17, b18, v17, v18)):
+            ax.bar([x - w / 2 for x in xs], [v or NAN for v in v17], w * 0.92, color="#64748b", label="PostgreSQL 17.11", **BKW)
+            ax.bar([x + w / 2 for x in xs], [v or NAN for v in v18], w * 0.92, color="#0284c7", label="PostgreSQL 18.6", **BKW)
+            for i, (a, b) in enumerate(zip(v17, v18)):
                 if a <= 0 and b <= 0:
-                    ax.text(i, ylo * 1.7, "N/A\n(1n)", ha="center", va="bottom", fontsize=6.7, color="#94a3b8", weight="bold")
+                    ax.text(i, ylo * 1.7, "N/A\n(1n)", ha="center", va="bottom", size=6.7, color="#94a3b8", weight="bold")
                     continue
                 if a > 0:
-                    ax.text(r17.get_x() + r17.get_width() / 2, a * mul, fval(a), fontsize=6.1, color="#334155", **vkw)
+                    ax.text(i - w / 2, a * mul, fval(a), size=6.1, color="#334155", **vkw)
                 if b > 0:
-                    ax.text(r18.get_x() + r18.get_width() / 2, b * mul, fval(b), fontsize=6.2, color="#0369a1", weight="bold", **vkw)
+                    ax.text(i + w / 2, b * mul, fval(b), size=6.2, color="#0369a1", weight="bold", **vkw)
                 if (ci, i) in hero:
                     tag, ym = hero[(ci, i)]
-                    ax.text(i, max(a, b) * ym, tag, ha="center", va="bottom", fontsize=6.5, weight="bold", color="#065f46", bbox=pill)
+                    ax.text(i, max(a, b) * ym, tag, ha="center", va="bottom", size=6.5, weight="bold", color="#065f46", bbox=pill)
             glog(ax, "y")
             ax.set(xlim=(-0.62, 4.62), ylim=(ylo, yhi), xticks=xs)
             if ri == 0:
-                ax.set_title(slab, fontsize=9.4, pad=8)
+                ax.set_title(slab, size=9.4, pad=8)
                 ax.tick_params(axis="x", labelbottom=False)
             else:
-                ax.set_xticklabels([p[0] for p in PAIRS], fontsize=7.2, weight="semibold")
+                ax.set_xticklabels([p[0] for p in PAIRS], size=7.2, weight="semibold")
             if ci == 0:
-                ax.set_ylabel("Throughput TPS (Log10)" if ri == 0 else "p95 Latency ms (Log10)", fontsize=9.1)
+                ax.set_ylabel("Throughput TPS (Log10)" if ri == 0 else "p95 Latency ms (Log10)", size=9.1)
 
     hnd, _ = axes[0, 0].get_legend_handles_labels()
     hnd.append(Patch(fc="#dcfce7", ec="#16a34a", label="PG 18.6 Hero Gain (TPS speedup / p95 drop)"))
