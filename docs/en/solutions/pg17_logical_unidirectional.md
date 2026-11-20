@@ -140,6 +140,18 @@ All tests ran at `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Only
 | **Image & Volumes** | `postgres:17` (`PG 17.11`); volumes `pg_logical_pub_data`, `pg_logical_sub_data` |
 | **Key GUCs & Setup** | `wal_level=logical`, `max_wal_senders=10`, `max_replication_slots=10`, `max_logical_replication_workers=8`, `max_worker_processes=12`, `wal_keep_size=128MB`, `shared_buffers=128MB`; `pub_logical FOR ALL TABLES` + `sub_logical` (`pgoutput`, `copy_data=true`). |
 
+## 6. GitHub Popularity, Git Presence & Maintenance Vitality (`results/project_popularity.csv`)
+
+Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
+
+| Project | Git Presence / Role | Repo (`Account / Repos`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Release / Last Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **PostgreSQL Core (#1/#15/#16)** | `Yes (Mirror)` -- `Mirror (canonical: git.postgresql.org)` | [`postgres/postgres`](https://github.com/postgres/postgres) (`Org / 6`) | 22894 / 6123 / 589 | 66091 / 3446 | 58 / 0 | C / `NOASSERTION` | `REL_19_0` / `2026-11-20T16:52:40Z` |
+
+- **Maintenance Level:** **Tier S (Core)** -- `postgres/postgres` logs `3,446` commits/12m (`66,091` total, `58` mirror committers, `22,894` stars) under multi-vendor PostgreSQL governance.
+- **Currency / Freshness:** **Current -- Daily Active** -- Last push `2026-11-20T16:52:40Z`, `3,446` commits/12m, latest release `REL_19_0`.
+- **Operational Manageability:** **Low Risk** -- Built-in core feature (PostgreSQL License, zero extensions); runbooks only need `setval()` on cutover and `max_slot_wal_keep_size` guards.
+
 ---
 
 **Navigation:** [Index](../../../README.md) · [Ch. 03a — Native & Extensions](../03a_solutions_native_and_extensions.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/pg17_logical_unidirectional.md)
