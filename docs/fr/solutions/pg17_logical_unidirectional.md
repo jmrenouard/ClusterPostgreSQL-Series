@@ -12,10 +12,10 @@
 | **ID Topologie Benchmark** | `pg17-logical` (`results/*.csv`) |
 | **Famille / Niveau** | `T3` / `Niveau 3` — Réplication logique native unidirectionnelle |
 | **Version** | `PostgreSQL 17.11` (`postgres:17`, Debian `17.11-1.pgdg13+2`) |
-| **Profil CAP / PACELC** | `AP / PA-EL (uni-directional logical)` |
+| **Profil CAP / PACELC** | `AP / PA-EL (logique unidirectionnel)` |
 | **Licence / Déploiement** | PostgreSQL License / 2 conteneurs (`docker-compose-pg-logical.yml`) |
 
-> **Désambiguïsation (`#16` vs `#14`) :** `PROJECT.md` attribue **`#16`** (`T3`) à `pg17-logical` et réserve `#14` aux systèmes à triggers historiques (`Slony-I / Londiste / RubyRep`). Certains tableaux CSV/chapitres (`results/functional_limits_matrix.csv`, `06`) mentionnent encore `#14 Baseline`.
+> **Désambiguïsation (`#16` vs `#14`) :** `docs/fr/10_comparatif_streaming_logique_multimaster.md` attribue **`#16`** (`T3`) à `pg17-logical` et réserve `#14` aux systèmes à triggers historiques (`Slony-I / Londiste / RubyRep`). Certains tableaux CSV/chapitres (`results/functional_limits_matrix.csv`, `06`) mentionnent encore `#14 Baseline`.
 
 ---
 
@@ -50,7 +50,7 @@ $$
 L_{\text{N3-logique}} \approx L_{\text{disque}} \quad (\text{fsync WAL local éditeur ; application asynchrone})
 $$
 
-3. **Trois pièges opérationnels majeurs :** (a) sans PK, `UPDATE`/`DELETE` échoue (`SQLSTATE 55000`) ; (b) le DDL (`ALTER TABLE ADD COLUMN`) ne réplique pas ; (c) **Non-sync des séquences (`T18` / `L1`) :** PG 15–17 ne synchronise pas les séquences (`pub=50\|true` vs `sub=1\|false`), provoquant `23505` sur bascule sans `setval()`.
+3. **Trois pièges opérationnels majeurs :** (a) sans PK, `UPDATE`/`DELETE` échoue (`SQLSTATE 55000`) ; (b) le DDL (`ALTER TABLE ADD COLUMN`) ne réplique pas ; (c) **Non-sync des séquences (`T18` / `L1`) :** PG 15–17 ne synchronise pas les séquences (`pub=50|true` vs `sub=1|false`), provoquant `23505` sur bascule sans `setval()`.
 
 | Mode / Option | Portée | Comportement et filtrage | Impact bascule / séquences | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
@@ -77,7 +77,7 @@ $$
 
 ## 5. Résultats empiriques, limites fonctionnelles et spec PoC
 
-Tests à `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` sont mesurées (`lat_p99_ms` non mesurée).
+Tests à `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` sont mesurées (la latence p99 n'est pas mesurée).
 
 ### Tableau A — Charges principales et étendues (`benchmark_summary.csv`, `benchmark_extended_workloads.csv`)
 
@@ -142,4 +142,4 @@ Tests à `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Seules `Avg`
 
 ---
 
-**Navigation :** [Index](../../README.fr.md) · [Ch. 03a — Solutions natives et extensions](../03a_catalogue_natif_et_extensions.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](../10_comparatif_streaming_logique_multimaster.md) · [English version](../../en/solutions/pg17_logical_unidirectional.md)
+**Navigation :** [Index](../../../README.fr.md) · [Ch. 03a — Solutions natives et extensions](../03a_catalogue_natif_et_extensions.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](../10_comparatif_streaming_logique_multimaster.md) · [English version](../../en/solutions/pg17_logical_unidirectional.md)
