@@ -17,17 +17,17 @@
 
 ---
 
-## 1. Technology Description & What It Does
+## 1. Description & Role
 
-**Physical Streaming Replication** is PostgreSQL's native block-level HA replication. One writable primary (`walsender`) ships raw 8 KiB Write-Ahead Log (`WAL`) records byte-for-byte to hot standbys (`walreceiver`), which replay identical heap, index, sequence, and DDL blocks (`hot_standby = on`).
+**Physical Streaming Replication** ships raw 8 KiB WAL records from one primary (`walsender`) to hot standbys (`walreceiver`), replaying heap, index, sequence, and DDL blocks (`hot_standby = on`).
 
-It runs in **Asynchronous (`T1`)** or **Synchronous (`T2`)** mode, and pairs in production with **Patroni + etcd + HAProxy** (`docker-compose-patroni.yml`) for Raft leader election, OS watchdog fencing (`RTO ~ 10–30 s`), and `/primary` vs `/replica` routing.
+Runs in **Async (`T1`)** or **Sync (`T2`)** mode, paired with **Patroni + etcd + HAProxy** (`docker-compose-patroni.yml`) for Raft election, watchdog fencing (`RTO ~ 10–30 s`), and `/primary`/`/replica` routing.
 
 ---
 
 ## 2. Architecture & Data Flow
 
-The PoC separates raw streaming benchmarks (`15434/15435`, `15432/15433`) from the 7-container Patroni HA stack (`patroni_net`, mTLS `etcd`, SSL REST `:8008`):
+The PoC separates raw streaming (`15434/15435`, `15432/15433`) from 7-container Patroni HA (`patroni_net`, mTLS `etcd`, REST `:8008`):
 
 ```mermaid
 flowchart TB
@@ -42,20 +42,20 @@ flowchart TB
     N3 <--> ETCD
 ```
 
-Standbys reject writes (`SQLSTATE 25006`), eliminating multi-writer conflicts.
+Standbys reject writes (`SQLSTATE 25006`), preventing multi-writer conflicts.
 
 ---
 
-## 3. Operating Principles & Implementation Modes
+## 3. Operating Principles & Modes
 
-1. **Physical Slot & `pg_basebackup`:** Standbys initialize via `pg_basebackup -Fp -Xs -P -R -S slot_stream_standby`, retaining unshipped WAL (`3088B` in `L7`) during outages.
+1. **Slot & `pg_basebackup`:** `pg_basebackup -Fp -Xs -P -R -S slot_stream_standby` retains WAL on outages (`3088B` in `L7`).
 2. **Commit Latency Model:**
 
 $$
 L_{\text{T1-async}} \approx L_{\text{disk}}, \qquad L_{\text{T2-sync}} \approx L_{\text{disk}} + \text{RTT}_{\text{standby}}
 $$
 
-3. **Patroni DCS Lease:** `node1..3` run `/usr/bin/patroni /etc/patroni.yml` under `supervisord`, renewing an `etcd` Raft lease (baked defaults `ttl=30`, `loop_wait=10`, `retry_timeout=10`) with fencing.
+3. **Patroni Lease:** `node1..3` run `patroni /etc/patroni.yml` (`supervisord`), renewing `etcd` lease (`ttl=30`, `loop_wait=10`, `retry_timeout=10`) with fencing.
 
 | Mode / Parameter | Scope | Commit Path | RPO / Stall Behavior | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
@@ -73,10 +73,10 @@ $$
 
 | Strengths | Weaknesses & Operational Traps |
 | :--- | :--- |
-| **100% PG & Sequence Parity:** Replicates keyless DML (`L2`), DDL/`SAVEPOINT` (`L5`), sequences (`T18`: `66\|true`, `next_id=67`), `pg_largeobject`, extensions (`L6`). | **Sync WAN & Stall Coupling (`T2`):** `25ms` WAN drops `F` to `57.0 TPS` (`-86.1%` vs sync LAN), `50ms` to `25.79`; sole sync standby loss stalls primary (`L7`/`L8`). |
-| **Zero Drift (`0`):** No conflicts across `A`–`D`; zero `40001` retries; `RPO = 0` on `SIGKILL` (`T16`: `20/20`). | **No Multi-Master Writes:** Standby writes fail (`25006`, `T12`, `T13`); horizontal write scale needs sharding (`#7`) or MM. |
+| **100% PG Parity:** Keyless DML (`L2`), DDL/`SAVEPOINT` (`L5`), seqs (`T18`: `66\|true`, `next_id=67`), `pg_largeobject`, exts (`L6`). | **Sync WAN & Stall (`T2`):** `25ms` WAN -> `57.0 TPS` (`-86.1%` vs LAN), `50ms` -> `25.79`; sole sync loss stalls (`L7`/`L8`). |
+| **Zero Drift (`0`):** No `A`–`D` conflicts; zero `40001`; `RPO = 0` on `SIGKILL` (`T16`: `20/20`). | **Single-Writer:** Standby writes fail (`25006`, `T12`, `T13`); write scale needs sharding (`#7`) or MM. |
 | **High Read Scale:** `45358.52` (async) / `54483.07 TPS` (sync) on `C`; `148022.41` / `124105.25 TPS` on `E4`. | **Binary Lockstep:** Requires identical major PG version, CPU arch, and `glibc` (cannot cross PG 15 -> 17). |
-| **Fenced HA (Patroni):** Automatic `etcd` Raft election + HAProxy session drop without app conflict logic. | **Slot WAL Bloat (`L7`):** Offline physical slots retain WAL (`3088B` in test) unless `max_slot_wal_keep_size` is capped. |
+| **Fenced HA (Patroni):** `etcd` Raft election + HAProxy drop without app logic. | **Slot WAL Bloat (`L7`):** Offline slots keep WAL (`3088B` in test) without `max_slot_wal_keep_size`. |
 
 ---
 
@@ -84,7 +84,7 @@ $$
 
 Ran at `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` exist (p99 latency is unmeasured).
 
-### Table A — Core & Extended Workloads (`benchmark_summary.csv`, `benchmark_extended_workloads.csv`)
+### Table A — Workloads (`benchmark_summary.csv`, `benchmark_extended_workloads.csv`)
 
 | Suite (Cl/Dur) | Async TPS | Async Avg/Std/p95 (ms) | Async Comm(Fail) | Sync TPS | Sync Avg/Std/p95 (ms) | Sync Comm(Fail) | Status (Both) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
@@ -113,7 +113,7 @@ Ran at `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Only `Avg`, `S
 | `F_wan_netem_25ms` (15s) | 25 ms | 599.61 | 13.317/10.473/34.381 | 8991 | 57.0 | 139.564/98.831/353.493 | 866 | `PASS_NETEM_25MS` |
 | `F_wan_netem_50ms` (12s) | 50 ms | 619.37 | 12.897/9.903/33.368 | 7421 | 25.79 | 302.966/255.796/779.848 | 323 | `PASS_NETEM_50MS` |
 
-### Table C — Functional Limits (`F1`, `L1–L8`) & Extended Probes (`T11–T18`)
+### Table C — Limits (`F1`, `L1–L8`) & Probes (`T11–T18`)
 
 | Probe | Async (`pg17-async-streaming`) | Sync (`pg17-sync-streaming`) |
 | :--- | :--- | :--- |
@@ -142,7 +142,20 @@ Ran at `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Only `Avg`, `S
 | :--- | :--- | :--- | :--- |
 | **Streaming** | `docker-compose-pg-streaming.yml` + `scripts/pg_streaming/setup_pg_streaming.sh` | `pg_stream_primary` (`15434:5432`), `pg_stream_standby` (`15435:5432`), `postgres:17` | `wal_level=replica`, `wal_keep_size=64MB`, slot `slot_stream_standby`, `hot_standby=on` |
 | **Sync Pair** | `docker-compose-pg17-baseline.yml` + `scripts/bench_pg_v2_runner.sh` (`ALTER SYSTEM`; parent-repo `scripts/setup_pg17_baseline.sh`) | `pg17_sync_primary` (`15432:5432`), `pg17_sync_standby` (`15433:5432`), `postgres:17` | `synchronous_standby_names='pg17_sync_standby'`, `synchronous_commit='on'` |
-| **Patroni HA** | `docker-compose-patroni.yml` + `conf/haproxy-patroni.cfg` | `etcd1..3` (`2379:2379` `etcd1`), `node1..3` (`5432`/`8008`), `haproxy-patroni` (`5000`/`5001`/`7000`), `patroni-rhel8-*` | mTLS `etcd`, `hostssl`/`verify-ca`; `/etc/patroni.yml` baked in image (defaults `ttl=30/loop_wait=10/retry_timeout=10`). `documentation/patroni_cluster.md` cites PgBouncer `:6432`, absent in compose. |
+| **Patroni HA** | `docker-compose-patroni.yml` + `conf/haproxy-patroni.cfg` | `etcd1..3` (`2379:2379`), `node1..3` (`5432`/`8008`), `haproxy-patroni` (`5000/5001/7000`), `patroni-rhel8-*` | mTLS `etcd`, `hostssl`/`verify-ca`; `/etc/patroni.yml` (`ttl=30/loop_wait=10/retry_timeout=10`). PgBouncer `:6432` absent in compose. |
+
+## 6. GitHub Popularity, Git Presence & Maintenance Vitality (`results/project_popularity.csv`)
+
+Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
+
+| Project | Git Presence / Role | Repo (`Account / Repos`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Release / Last Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **PostgreSQL Core** | `Yes (Mirror)` -- Mirror (canonical: git.postgresql.org) | [`postgres/postgres`](https://github.com/postgres/postgres) (`Org / 6`) | 22894 / 6123 / 589 | 66091 / 3446 | 58 / 0 | C / `NOASSERTION` | `REL_19_0` / `2026-11-20T16:52:40Z` |
+| **Patroni HA** | `Yes` -- Primary | [`patroni/patroni`](https://github.com/patroni/patroni) (`Org / 1`) | 8847 / 1049 / 124 | 2713 / 142 | 246 / 68 | Python / `MIT` | `v4.1.5` / `2026-11-20T17:03:56Z` |
+
+- **Maintenance Level:** **Tier S (Core)** -- `postgres/postgres` (`3446` commits/12m) & `patroni/patroni` (**Tier A (Active OSS)**, `142` commits/12m, `246` contributors).
+- **Currency / Freshness:** **Current -- Daily Active** -- Last push `2026-11-20T16:52:40Z` / `2026-11-20T17:03:56Z`, `3446` / `142` commits/12m, latest release `REL_19_0` / `v4.1.5`.
+- **Operational Manageability:** **Low Risk** -- Multi-vendor core + MIT HA plane; manage `max_slot_wal_keep_size` and `etcd` quorum.
 
 ---
 

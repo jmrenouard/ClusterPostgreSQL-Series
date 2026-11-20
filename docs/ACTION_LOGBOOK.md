@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-150 - Enrich PG 17 Streaming/Patroni (#15b) EN/FR Sheets With Popularity Telemetry (Issue `#381`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#381` (`docs/issue-381-patroni-popularity`)
+- **Request / Changes / Result**: Compacted EN prose in `docs/en/solutions/pg17_physical_streaming_patroni.md` and added Section 6 GitHub popularity, git presence, `pushed_at` freshness, and Manageability synthesis (`postgres-core` + `patroni`) from `results/project_popularity.csv` (`2026-11-20T17:26:02Z`) to both `docs/{en,fr}/solutions/pg17_physical_streaming_patroni.md` (`13,749` B EN / `13,723` B FR, `162` L), plus `docs/ACTION_LOGBOOK.md`; verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
+
 ### ACT-149 - Compact FR PG 17 Streaming/Patroni (#15b) Sheet & Log M1 Governance (Issue `#379`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#379` (`docs/issue-379-fr-patroni-compact`)
 - **Request / Changes / Result**: Compacted prose and Table D notes in `docs/fr/solutions/pg17_physical_streaming_patroni.md` (`13,205` B -> `12,361` B, preserving all benchmark/probe numbers and table shapes) for Section 6 popularity headroom, and updated `docs/ACTION_LOGBOOK.md` + `docs/RCA_REGISTER.md` (`IMP-008`, `APP-009`); verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
