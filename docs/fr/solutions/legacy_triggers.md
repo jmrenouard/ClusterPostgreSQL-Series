@@ -85,7 +85,7 @@ $$
 
 **Pourquoi `#14 Systèmes historiques à triggers` n'ont pas été benchmarkés en direct :** Slony-I, Londiste/PGQ et RubyRep relèvent de générations historiques/EOL antérieures à PostgreSQL 9.4 plutôt que de piles PG 17 de production (`env/multi-db-docker-env/` exclut les daemons EOL). Aucun chiffre synthétique de TPS ou latence n'est inventé ici.
 
-**Désambiguïsation catalogue :** L'identifiant `#14` est strictement réservé à ces systèmes historiques à triggers (Slony-I, Londiste/PGQ, RubyRep), tandis que la réplication logique unidirectionnelle native PostgreSQL 17 (`pg17-logical`) est répertoriée sous `#16` (`Niveau 3`).
+**Désambiguïsation catalogue :** L'identifiant `#14` est strictement réservé à ces systèmes historiques à triggers (Slony-I, Londiste/PGQ, RubyRep), tandis que la réplication logique unidirectionnelle native PostgreSQL 17 (`pg17-logical`) est répertoriée séparément (`pg17-logical`, `Niveau 3`).
 
 À la place, ces architectures historiques à triggers se situent directement face aux références à triggers et logiques mesurées dans `results/benchmark_summary.csv`, `results/functional_limits_matrix.csv` et `results/extended_functional_matrix.csv` (la latence au 99e percentile n'est pas enregistrée dans `results/`) :
 
@@ -96,6 +96,21 @@ $$
 | **Sans PK / FK / DDL** | PK req. / Course FK / DDL manuel | PK req. / **`23503` `0/10`** / DDL manuel | `55000` sans PK / `10/10` FK / Manuel | `55000` sans PK / `10/10` FK / Manuel | PG 17 complet natif |
 | **Ancre réf. (`A` / Lag `T15`)** | Non benchmarké (référence EOL) | `735.38 TPS` (`A`) / `548.74 ms` `p50` | `532.38 TPS` (`A`) / `1.68 ms` `p50` | `875.91 TPS` (`A`) / `1.47 ms` `p50` | `866.82 TPS` (`A`, `23.958 ms` `p95`) |
 | **Cible de migration actuelle** | Remplacer par `N1–N4` / `#10 SymmetricDS` | Hooks Perl faible volume uniquement | **Upgrades natifs `PG 17` et sous-ensembles** | Actif-actif clé disjointe (`N4`) | Standard `80 %+` OLTP (`#15`) |
+
+## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
+
+Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
+
+| Projet | Présence / Rôle Git | Dépôt (`Compte / Dépôts`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Tag / Dernier Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **Slony-I (#14a)** | `Yes` -- `Primary (Maintainer Repo)` | [`ssinger/slony1-engine`](https://github.com/ssinger/slony1-engine) (`User / 36`) | 42 / 19 / 4 | 2569 / 0 | 23 / 6 | C / `NOASSERTION` | `REL_2_2_11` / `2024-03-11T01:27:53Z` |
+| **PGQ Queue (#14b)** | `Yes` -- `Primary` | [`pgq/pgq`](https://github.com/pgq/pgq) (`Org / 13`) | 427 / 23 / 15 | 89 / 8 | 7 / 0 | PLpgSQL / `ISC` | `v3.5.2` / `2026-07-09T12:49:14Z` |
+| **Londiste (#14c)** | `Yes` -- `Primary` | [`pgq/londiste`](https://github.com/pgq/londiste) (`Org / 13`) | 26 / 8 / 5 | 195 / 8 | 5 / 2 | Python / `ISC` | `v3.12` / `2026-07-22T11:29:04Z` |
+| **RubyRep (#14d)** | `Yes` -- `Primary (Dormant)` | [`rubyrep/rubyrep`](https://github.com/rubyrep/rubyrep) (`User / 2`) | 179 / 74 / 6 | 556 / 0 | 2 / 58 | Ruby / `MIT` | `v2.0.0` / `2023-07-10T16:53:19Z` |
+
+- **Niveau de maintenance :** **Niveau D (EOL / Dormant)** -- `ssinger/slony1-engine` (`0` commit/12m) et `rubyrep/rubyrep` (`0` commit/12m, `2` contributeurs, `58` issues ouvertes) sont figés ; `pgq/pgq` et `pgq/londiste` ne comptent que `8` commits/12m chacun (`7` et `5` contributeurs).
+- **Fraîcheur / Actualité :** **Dormant / Maintenance minimale** -- Dernier push `2024-03-11T01:27:53Z` (`Slony-I`), `2023-07-10T16:53:19Z` (`RubyRep`), `2026-07-09T12:49:14Z` / `2026-07-22T11:29:04Z` (`PGQ`/`Londiste`), dernières versions `REL_2_2_11`, `v3.5.2`, `v3.12`, `v2.0.0`.
+- **Maintenabilité opérationnelle :** **Ne pas déployer** -- Surcoût de triggers, fragilité des contraintes FK/DDL et absence de support PG 17+ moderne ; migrer vers la réplication logique native (`pgoutput`), `#2 pgEdge Spock 5` ou `#10 SymmetricDS`.
 
 ---
 

@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-163 - Enrich Legacy Triggers (#14) EN/FR Sheets With 4-Repo Popularity Telemetry and Scrub #16 (Issue `#407`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#407` (`docs/issue-407-legacy-triggers-popularity`)
+- **Request / Changes / Result**: Split M4 PR 8 into atomic 8a/8b/8c PRs to stay strictly under `< 15,000` diff chars; removed `#16` from line 88 of `docs/{en,fr}/solutions/legacy_triggers.md`, added 4-row Section 6 (`slony1`, `pgq`, `londiste`, `rubyrep` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`) and `Tier D (EOL / Dormant)` synthesis, plus `docs/ACTION_LOGBOOK.md`; verified zero `#16`, `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
+
 ### ACT-162 - Enrich AWS Aurora Limitless (#12) and GCP Spanner/AlloyDB (#13) EN/FR Sheets With Popularity Telemetry (Issue `#405`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#405` (`docs/issue-405-cloud-popularity`)
 - **Request / Changes / Result**: Added standardized Section 6 Git/telemetry status, `pushed_at` freshness, and Manageability synthesis (`aurora-limitless` `N/A`, `gcp-spanner-alloydb` `N/A`, and `spanner-pgadapter` `GoogleCloudPlatform/pgadapter` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`, zero invented counts on closed engines) to `docs/{en,fr}/solutions/aws_aurora_limitless.md` and `docs/{en,fr}/solutions/gcp_spanner_alloydb.md`, plus `docs/ACTION_LOGBOOK.md`; verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
