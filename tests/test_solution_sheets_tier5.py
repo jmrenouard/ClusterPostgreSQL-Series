@@ -66,14 +66,14 @@ class TestTier5AdversarialCoverage(unittest.TestCase):
             rel_rm = BASE.rel_path(rm)
             cat_rows = None
             for _, hd, rows in tables:
-                if len(hd) == 4 and len(rows) == 17:
+                if len(hd) == 4 and len(rows) in (17, 19):
                     hits = set()
                     for rw in rows:
                         for m in re.finditer(r"\[[^\]]+\]\(([^)]+)\)", rw[0]):
                             tgt = (rm.parent / m.group(1).split("#", 1)[0]).resolve()
                             if tgt.parent == sd.resolve() and tgt.is_file():
                                 hits.add(tgt.stem)
-                    if hits == set(SLUGS):
+                    if set(SLUGS).issubset(hits):
                         cat_rows = rows
                         break
             if cat_rows is None:

@@ -6,7 +6,7 @@
 
 **Author:** Jean-Marie Renouard (`jmrenouard`) | **Supported by:** [LightPath](https://www.lightpath.fr) | **License:** [MIT](LICENSE) | **Version française :** [README.fr.md](README.fr.md)
 
-A rigorous engineering study, 36-criterion comparative matrix, reproducible Docker Compose labs (powered by [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.3.0`), 18-test empirical failure-mode catalog (`L1–L8` + `T11–T18`) plus PostgreSQL 18.6 AIO/`uuidv7()`/conflict probes, **274 standardized `pgbench` / `sysbench` / `tc netem` benchmark rows** (`187` V2 + `87` PostgreSQL 18.6) across **15 live PostgreSQL topologies**, **21 GitHub ecosystem popularity telemetry rows**, **10 `log10` charts**, and an offline-capable [**Interactive HTML Benchmark Explorer (`dashboard/index.html`)**](dashboard/index.html).
+A rigorous engineering study, 36-criterion comparative matrix, reproducible Docker Compose labs (powered by [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.4.0`, `13` Compose stacks), 18-test empirical failure-mode catalog (`L1-L8` + `T11-T18`) plus PostgreSQL 18.6 AIO/`uuidv7()`/conflict and YT Cluster `T_REVERT` probes, **296 standardized `pgbench` / `sysbench` / `tc netem` benchmark rows** (`187` V2 + `87` PostgreSQL 18.6 + `22` YT Cluster 1.21.3) across **17 live PostgreSQL topologies** (`16` solutions / `19` architecture sheets), **22 GitHub ecosystem popularity telemetry rows** (`19` public repos + `3` closed/managed), **10 `log10` charts**, and an offline-capable [**Interactive HTML Benchmark Explorer (`dashboard/index.html`)**](dashboard/index.html).
 
 ---
 
@@ -38,11 +38,27 @@ Executed sequentially inside isolated Docker bridge networks on a 20-vCPU / 16.4
 | **`yugabyte` (#5 DocDB Raft)** | `173.64` | `170.19` | `832.65` (`0`) | `128.24` (`0`) | **`5.78`** (`-97%`) | `40001` (`RR`); `0A000` `LISTEN`; `2/3` halt |
 | **`cockroach` (#6 Pebble Raft)** | `42.08` | `74.17` | `471.61` (`0`) | `44.84` (**`685`**) | **`10.06`** (`-76%`) | `40001`; `XCEXF`; `42601`; `57014` (`2/3`) |
 
+### PostgreSQL 18.6 Target Topologies (`results/benchmark_pg18.csv`, `PG_SCALE = 2`)
+
+Measured sequentially in the same isolated Docker harness on `PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)` with default `io_method=worker` (`io_workers=3`) and `data_checksums=on` (see [Solution #17](docs/en/solutions/pg18_native_clustering.md) and [Chapter 12](docs/en/12_postgresql_18_clustering_and_benchmarks.md)):
+
+| Topology (`#17` PG 18.6) | `A_single_rw` TPS | `B2_overlap_rw` TPS (`Drift`) | `D_hot_conflict` TPS (`Drift`) | `E_sysbench_oltp_rw` TPS (`Failed`) | `H_append_only_insert` TPS | `F_wan_netem_25ms` TPS | Verified `SQLSTATE` Limits |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **`pg18-standalone`** | `784.43` | `506.21` (`0`) | `2,117.66` (`0`) | `1,046.67` (`74`) | `1,956.76` | N/A | `23505`; `42601` (`FOR ALL SEQUENCES`) |
+| **`pg18-async-streaming`** | `558.34` | `353.30` (`0`) | `2,277.43` (`0`) | `980.72` (`75`) | `1,423.07` | **`554.93`** | `25006` RO standby; WAL seq `66\|true` |
+| **`pg18-sync-streaming`** | `497.94` | `472.20` (`0`) | `1,223.75` (`0`) | `767.63` (`76`) | `1,760.26` | **`41.56`** | `25006`; `SyncRep` stall; `25.60` @ `50ms` |
+| **`pg18-logical`** | `314.26` | `475.08` (`0`) | `2,998.37` (`0`) | `1,027.84` (`79`) | **`3,518.49`** | **`844.10`** | `23505`; `42601`; `55000` (`substream=p`) |
+| **`pg18-birep`** (`uuidv7()`) | `514.28` | `792.45` (**`-338`**) | `1,774.11` (**`-83,252`**) | `1,055.55` (`76`) | **`2,066.70`** (`3.30x`) | **`747.42`** | `23503`; `23505`; `42601`; `55000`; 7 `confl_*` |
+| **`yt-cluster`** (`#18` `cc=half`) | `20.63` | `10.69` (`0`) | `67.76` (`0`) | `28.48` (`12`) | `110.53` | `2.25` | `0A000`; `40001`; `55409`; `57P03` (`T_REVERT` OK) |
+| **`yt-cluster-async`** (`#18` `nodes>=0`) | `41.45` | `55.03` (`0`) | `163.01` (`0`) | - | - | `4.78` | `40001`; `55409` (`2.0x-5.1x` vs `half`, `0` drift) |
+
+*Note: `yt-cluster` / `yt-cluster-async` ran on 3-node `dbinvent/yt:1.21.3` (PG 18.7 + `yt_cluster 1.21` / `ytserv`, `results/benchmark_yt_cluster.csv`, `22` rows; see [Solution #18](docs/en/solutions/yt_cluster_lite.md)).*
+
 ---
 
 ## Interactive Benchmark Explorer & Logarithmic Charts (`log10`)
 
-Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser (zero CDN, offline-ready, EN/FR switcher, 15-topology PG 17 & PG 18.6 presets, default `log10` / linear toggle, `L1–L8` / `T11–T18` / `PG 18.6` matrix tabs, Ecosystem Popularity tab, and CSV export) or browse the full **10-chart gallery** across [Chapter 09](docs/en/09_benchmarks_methodology_and_charts.md) (`chart_01`–`07`), [Chapter 11](docs/en/11_ecosystem_popularity_and_vitality.md) (`chart_08`–`09`), and [Chapter 12](docs/en/12_postgresql_18_clustering_and_benchmarks.md) (`chart_10`):
+Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser (zero CDN, offline-ready, EN/FR switcher, 17-topology PG 17, PG 18.6 & YT Cluster presets, default `log10` / linear toggle, `L1-L8` / `T11-T18` / `PG 18.6` / `YT` matrix tabs, Ecosystem Popularity tab with 22 entries, and CSV export) or browse the full **10-chart gallery** across [Chapter 09](docs/en/09_benchmarks_methodology_and_charts.md) (`chart_01`-`07`), [Chapter 11](docs/en/11_ecosystem_popularity_and_vitality.md) (`chart_08`-`09`), and [Chapter 12](docs/en/12_postgresql_18_clustering_and_benchmarks.md) (`chart_10`):
 
 ![Log10 Throughput All Suites](assets/charts/chart_01_tps_log_all_suites.png)
 ![Log10 Latency All Suites](assets/charts/chart_02_latency_log_all_suites.png)
@@ -73,7 +89,7 @@ Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser 
 
 ---
 
-## Solutions Catalog & Architecture Sheets (`17` EN + FR Deep Dives)
+## Solutions Catalog & Architecture Sheets (`19` EN + FR Deep Dives)
 
 Every solution evaluated in this study has a dedicated ~1–2 A4 architecture sheet in English (`docs/en/solutions/`) and French (`docs/fr/solutions/`) with Mermaid diagrams, operating principles, implementation modes, strengths/weaknesses, and verified metrics or architectural exclusion baselines.
 
@@ -98,6 +114,8 @@ Every solution evaluated in this study has a dedicated ~1–2 A4 architecture sh
 | **[#15a — PostgreSQL 17 Standalone](docs/en/solutions/pg17_standalone.md)** | [PG 17 Docs](https://www.postgresql.org/docs/17/index.html) | [`postgres/postgres`](https://github.com/postgres/postgres) | Single-writer PostgreSQL 17 control baseline using local WAL `fsync` (`CA`) with zero replication overhead to quantify multi-master coordination cost. |
 | **[#15b — PG 17 Physical Streaming & Patroni](docs/en/solutions/pg17_physical_streaming_patroni.md)** | [PG 17 HA](https://www.postgresql.org/docs/17/high-availability.html) · [Patroni](https://patroni.readthedocs.io/en/latest/) | [`postgres/postgres`](https://github.com/postgres/postgres) · [`patroni/patroni`](https://github.com/patroni/patroni) | Single-primary physical block-level WAL streaming (`async` `PA/EL` or `sync` `PC/EC` `RPO=0`) orchestrated by Patroni, `etcd` Raft DCS, and HAProxy failover. |
 | **[#16 — PG 17 Uni-Directional Logical](docs/en/solutions/pg17_logical_unidirectional.md)** | [PG 17 Logical Docs](https://www.postgresql.org/docs/17/logical-replication.html) | [`postgres/postgres`](https://github.com/postgres/postgres) | Built-in PG 17 `pgoutput` publish/subscribe row replication (`PA/EL`) decoupling storage and major versions (`T3`, zero-downtime upgrades, selective filtering). |
+| **[#17 - PostgreSQL 18.6 Native Clustering (AIO, uuidv7, Streaming & Logical)](docs/en/solutions/pg18_native_clustering.md)** | [PG 18 Docs](https://www.postgresql.org/docs/18/index.html) | [`postgres/postgres`](https://github.com/postgres/postgres) | Core PG 18.6 target stack across all 5 native tiers adding AIO `worker`, default `data_checksums=on`, native `uuidv7()` active-active PKs, 7 `confl_*` counters, `substream=p`, and `42601` sequence sync deferral. |
+| **[#18 - YT Cluster & YT Cluster Lite](docs/en/solutions/yt_cluster_lite.md)** | [YT Overview](https://dbinvent.com/30p) / [Jepsen Report](https://dbinvent.com/cluster/articles/jepsen) | [`DBinvent/yt-cluster-lite`](https://github.com/DBinvent/yt-cluster-lite) | Unmodified PG 18 + row triggers + Rust `ytserv` XA 2PC (`cc=half`), zero drift (`55409`/`40001`), `DROP EXTENSION` reversibility; MIT leaf/ext core vs PolyForm/Commercial `ytserv`. |
 
 ---
 
@@ -118,15 +136,16 @@ The operational PoC topologies, extended test runners (`T11–T18`), and V2 benc
 | `docker-compose-pg18-streaming.yml` | PG 18.6 Standalone, Async & Sync Streaming (`AIO worker`) | `postgres:18` (`18.6`) |
 | `docker-compose-pg18-logical.yml` | PG 18.6 Uni-Directional Logical (`substream=p`, `pubgencols=s`) | `postgres:18` (`18.6`) |
 | `docker-compose-pg18-birep.yml` | PG 18.6 Bidirectional Logical (`origin=none`, `uuidv7()`) + HAProxy | `postgres:18` (`18.6`), `haproxy:2.9-alpine` |
+| `docker-compose-yt-cluster.yml` | 3-Node YT Cluster 1.21.3 (`yt_cluster` + `ytserv` XA 2PC) | `dbinvent/yt:1.21.3` (`PG 18.7`) |
 
 ### Common Commands
 
 ```bash
-# Initialize the multi-db-docker-env Git submodule (v2.3.0, 12 Compose stacks)
+# Initialize the multi-db-docker-env Git submodule (v2.4.0, 13 Compose stacks)
 make init-env
 make help
 
-# Run unit tests (security, math, 10 charts, 15-topology dashboard) and Compose/Bash lint
+# Run unit tests (security, math, 10 charts, 17-topology dashboard) and Compose/Bash lint
 make test && make lint
 
 # Run topology lifecycle, benchmarks (V1/V2 + PG 18.6), popularity telemetry, charts, and dashboard
