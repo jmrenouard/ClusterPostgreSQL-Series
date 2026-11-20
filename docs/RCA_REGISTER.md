@@ -75,6 +75,13 @@
 - **Fix**: Updated the V2 benchmark harness in `env/multi-db-docker-env` (`scripts/bench_pg_v2_lib.py`) to create symmetric Sysbench DDL on both nodes and refresh subscriptions with `copy_data = false` before workload execution.
 - **Result**: All V2 Sysbench suites (`E2_sysbench_oltp_ro`, `E3_sysbench_oltp_wo`, `E4_sysbench_point_select`) converged cleanly across both `pg-birep` nodes.
 
+### RCA-011 - M1 Solution Sheet Depth Links, PoC Script Paths, Table B Status & ASCII Governance Gap
+- **Date / Action**: `2026-11-20` (`ACT-087`..`ACT-091`)
+- **Symptom**: Forensic audit and Iteration 2 checks on the initial 8 `docs/{en,fr}/solutions/pg17_*.md` sheets found: (1) all 8 `[Index](../../README*.md)` links resolved to missing `docs/README*.md`; (2) `docs/ACTION_LOGBOOK.md` line 55 (`ACT-079`) held 4 non-ASCII `U+2013` en-dashes undetected by `ACCENTS` regex; (3) Table D cited bare/parent-repo script paths under `env/multi-db-docker-env/` headings; (4) `pg17_physical_streaming_patroni` omitted Table B `Status (Both)` and abbreviated `L1`/`L8`, while `pg17_standalone` L24 mixed standalone (`-93.4%`) and sync LAN (`-86.1%`) denominators.
+- **Root Cause**: Solution sheets live 3 levels below repo root (`docs/{en,fr}/solutions/`), `test_governance_and_security.py` checked only French accented characters rather than `ord(c) > 127`, and Table D paths mixed submodule (`scripts/pg_*/`) and parent-repo (`scripts/`) locations.
+- **Fix**: Remediated all 8 M1 sheets across atomic `< 15,000` B PRs (`#174`, `#176`, `#178`, `#180`, `#182`), fixing `../../../README*.md` footers, exact submodule script paths, Table B `Status` and Table C `L1`/`L8` CSV parity, denominator/p99 wording, and 100% 7-bit ASCII governance registers.
+- **Result**: `0` broken relative links across all 8 sheets, `0` missing PoC paths, `0` non-ASCII lines in `ACTION_LOGBOOK.md` and `RCA_REGISTER.md`, and `make test` (`13/13` OK) + `make lint` passing on `main`.
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters
