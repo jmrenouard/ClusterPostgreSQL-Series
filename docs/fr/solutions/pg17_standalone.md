@@ -21,7 +21,7 @@
 
 **PostgreSQL 17 Standalone** (`pg17-standalone`) est un serveur relationnel mono-instance dépourvu de standby physique, d'abonné logique, de coordinateur externe ou de consensus par quorum. Dans cette étude, il sert de **ligne de base empirique sans réplication** pour l'ensemble des comparatifs multi-nœuds.
 
-En supprimant les allers-retours réseau, l'envoi du WAL, le décodage logique et les verrous distribués, `pg17-standalone` isole le **plafond matériel et moteur** : la latence locale de `fsync` sur le journal WAL ($L_{\text{disque}}$) et le débit MVCC sous verrous de ligne. Chaque pénalité mesurée ailleurs (`-52,8 %` en streaming synchrone Suite A, `-86,1 %` sous `25 ms` WAN) est calculée par rapport à cette référence.
+En supprimant les allers-retours réseau, l'envoi du WAL, le décodage logique et les verrous distribués, `pg17-standalone` isole le **plafond matériel et moteur** : la latence locale de `fsync` sur le journal WAL ($L_{\text{disque}}$) et le débit MVCC sous verrous de ligne. Les pénalités de réplication sur la Suite A (ex. `-52,8 %` en streaming synchrone LAN à `409.48 TPS`, et `-93,4 %` en synchrone WAN `25 ms` à `57.0 TPS` par rapport au standalone à `866.82 TPS`, soit `-86,1 %` par rapport au synchrone LAN à `409.48 TPS`) sont mesurées à partir de cette référence.
 
 ---
 
@@ -52,7 +52,7 @@ PostgreSQL 17 garantit l'ACID local via le **Write-Ahead Logging (WAL)** et le *
 3. **Modèle de latence de commit :**
 
 $$
-L_{\text{T0-standalone}} \approx L_{\text{disque}} + L_{\text{CPU/MVCC}}
+L_{\text{N0-standalone}} \approx L_{\text{disque}} + L_{\text{CPU/MVCC}}
 $$
 
 La durabilité dépend de `synchronous_commit` et `wal_sync_method` (valeurs par défaut PG 17 Linux : `synchronous_commit = on` et `wal_sync_method = fdatasync`, non surchargées dans le PoC) :
@@ -80,7 +80,7 @@ La durabilité dépend de `synchronous_commit` et `wal_sync_method` (valeurs par
 
 ## 5. Résultats empiriques, limites fonctionnelles et spec PoC
 
-Tests exécutés à `pg_scale = 2` (`retries_40001 = 0`). Seules les latences `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` sont mesurées (`lat_p99_ms` non mesurée). La suite `F_wan_netem_*` est `N/A` (aucun pair distant).
+Tests exécutés à `pg_scale = 2` (`retries_40001 = 0`). Seules les latences `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` sont mesurées (la latence p99 n'est pas mesurée). La suite `F_wan_netem_*` est `N/A` (aucun pair distant).
 
 ### Tableau A — Charges principales et étendues (`results/benchmark_summary.csv`, `benchmark_extended_workloads.csv`)
 
@@ -140,8 +140,8 @@ Tests exécutés à `pg_scale = 2` (`retries_40001 = 0`). Seules les latences `A
 | **Image & Version** | `postgres:17` (`PostgreSQL 17.11 (Debian 17.11-1.pgdg13+2)`) |
 | **Port & Réseau** | `127.0.0.1:15431:5432`, réseau bridge `pg17_baseline_net` |
 | **Volume & Santé** | `pg17_standalone_data:/var/lib/postgresql/data` ; `pg_isready` (`3s` / `15` essais) |
-| **GUCs & Initialisation** | Flags : `shared_buffers=128MB`, `max_connections=100`, `log_error_verbosity=verbose` ; défauts : `synchronous_commit=on`, `wal_sync_method=fdatasync`. Aucun script setup (`scripts/setup_pg17_baseline.sh` cible la paire synchrone). |
+| **GUCs & Initialisation** | Flags : `shared_buffers=128MB`, `max_connections=100`, `log_error_verbosity=verbose` ; défauts : `synchronous_commit=on`, `wal_sync_method=fdatasync`. Aucun script setup pour `pg17_standalone` (la paire sync utilise `ALTER SYSTEM` dans `scripts/bench_pg_v2_runner.sh` / `scripts/bench_pg_multimaster.sh`, ou `scripts/setup_pg17_baseline.sh` du dépôt parent). |
 
 ---
 
-**Navigation :** [Index](../../README.fr.md) · [Ch. 03a — Solutions natives et extensions](../03a_catalogue_natif_et_extensions.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](../10_comparatif_streaming_logique_multimaster.md) · [English version](../../en/solutions/pg17_standalone.md)
+**Navigation :** [Index](../../../README.fr.md) · [Ch. 03a — Solutions natives et extensions](../03a_catalogue_natif_et_extensions.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](../10_comparatif_streaming_logique_multimaster.md) · [English version](../../en/solutions/pg17_standalone.md)

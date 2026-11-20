@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-089 - Remediate pg17_standalone EN and FR Sheets (Issue `#177`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#177` (`docs/issue-177-m1-r2-standalone-logical`)
+- **Request / Changes / Result**: Remediated `docs/{en,fr}/solutions/pg17_standalone.md` (`../../../README*.md` footers, L24 `-52.8%`/`-93.4%`/`-86.1%` baseline clarity, FR L55 `L_{\text{N0-standalone}}`, p99 latency wording, Table D setup script path); `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-088 - Remediate PG 17 Physical Streaming and Patroni HA FR Sheet (Issue `#175`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#175` (`docs/issue-175-m1-r2-streaming-fr`)
 - **Request / Changes / Result**: Remediated `docs/fr/solutions/pg17_physical_streaming_patroni.md` (`../../../README.fr.md` footer, FR labels `(standby asynchrone)`/`(standby synchrone)`/`"secours"`, `vs standalone`/`vs sync LAN` denominators, p99 disclaimer, Tableau B `Statut (Les deux)`, Tableau C `L1`/`L8` CSV parity, Tableau D paths); `make test` (`13/13` OK) and `make lint` verified.
