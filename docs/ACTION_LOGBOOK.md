@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-087 - Remediate ACTION_LOGBOOK ASCII and PG 17 Streaming/Patroni EN Sheet (Issue `#173`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#173` (`docs/issue-173-m1-r2-streaming-en-ascii`)
+- **Request / Changes / Result**: Replaced all 4 `U+2013` en-dashes on `ACT-079` with ASCII `-` (100% 7-bit ASCII verified) and remediated `docs/en/solutions/pg17_physical_streaming_patroni.md` (`../../../README.md` footer, `vs standalone`/`vs sync LAN` denominators, p99 disclaimer, Table B `Status (Both)`, Table C `L1`/`L8` CSV fidelity, Table D paths); `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-086 - Add French Architecture Sheet for PG 17 Bidirectional Logical Replication (`#1`) (Issue `#171`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#171` (`docs/issue-171-pg17-birep-fr`)
 - **Request / Changes / Result**: Created `docs/fr/solutions/pg17_bidirectional_logical.md` covering `#1` (`T4`, `pg-birep`) mirroring the English sheet section-for-section with Mermaid diagram, implementation modes, strengths/weaknesses, verbatim CSV benchmarks, `F1`/`L1-L8`/`T11-T18` probes, and Docker/HAProxy PoC spec; `make test` (`13/13` OK) and `make lint` verified.
@@ -52,7 +56,7 @@
 
 ### ACT-079 - Add English Architecture Sheet for PostgreSQL 17 Standalone (`#15a`) (Issue `#157`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#157` (`docs/issue-157-pg17-standalone-en`)
-- **Request / Changes / Result**: Created `docs/en/solutions/pg17_standalone.md` covering `#15a` (`pg17-standalone`) with Mermaid architecture diagram, `synchronous_commit`/`wal_sync_method` implementation modes table, strengths/weaknesses, verbatim CSV benchmark metrics (`A`–`E`, `E2`–`E4`, `H`, `G_conc_c1..c32`), `F1`/`L1–L8`/`T11–T18` probes, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
+- **Request / Changes / Result**: Created `docs/en/solutions/pg17_standalone.md` covering `#15a` (`pg17-standalone`) with Mermaid architecture diagram, `synchronous_commit`/`wal_sync_method` implementation modes table, strengths/weaknesses, verbatim CSV benchmark metrics (`A`-`E`, `E2`-`E4`, `H`, `G_conc_c1..c32`), `F1`/`L1-L8`/`T11-T18` probes, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
 
 ### ACT-078 - Dashboard Project Emblem, LightPath Support Pill & Logo Unit Tests (Issue `#155`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#155` (`feat/issue-155-dashboard-project-logo-and-tests`)
