@@ -29,6 +29,14 @@ CORE_TOPOLOGIES = {
     "cockroach",
 }
 
+PG18_TOPOLOGIES = {
+    "pg18-standalone",
+    "pg18-async-streaming",
+    "pg18-sync-streaming",
+    "pg18-logical",
+    "pg18-birep",
+}
+
 BENCH_CSVS = (
     "benchmark_summary.csv",
     "benchmark_extended_workloads.csv",
@@ -49,23 +57,30 @@ EXPECTED_CHARTS = (
     "chart_05_sysbench_profile_log.png",
     "chart_06_streaming_vs_logical_vs_mm.png",
     "chart_07_integrity_vs_throughput.png",
+    "chart_08_popularity_stars_forks_log.png",
+    "chart_09_popularity_commits_activity_log.png",
+    "chart_10_pg18_vs_pg17_log.png",
 )
 
 EXPECTED_DASH_FILES = (
     "index.html",
     "styles.css",
     "charts.js",
+    "popularity.js",
     "app.js",
     "data_bench.js",
     "data_bench_2.js",
     "data_bench_3.js",
+    "data_bench_pg18.js",
     "data_matrix.js",
     "data_matrix_ext.js",
+    "data_matrix_pg18.js",
+    "data_popularity.js",
 )
 
 
 class TestBenchmarkArtifacts(unittest.TestCase):
-    """Verify LightPath SVG branding, 7 Log10 PNG charts, offline dashboard, and CSVs."""
+    """Verify LightPath SVG branding, 10 Log10 PNG charts, offline dashboard, and CSVs."""
 
     def test_lightpath_svg_logos(self) -> None:
         """Validate official dark and light LightPath supporter SVG logos exist and parse."""
@@ -96,8 +111,8 @@ class TestBenchmarkArtifacts(unittest.TestCase):
         self.assertIn("assets/clusterpostgresql-series-logo.png", readme_fr[:400])
         self.assertIn("Soutenu par", readme_fr)
 
-    def test_seven_png_charts_valid(self) -> None:
-        """Verify all 7 generated PNG charts exist with valid PNG headers."""
+    def test_ten_png_charts_valid(self) -> None:
+        """Verify all 10 generated PNG charts (01-10) exist with valid PNG headers."""
         png_magic = b"\x89PNG\r\n\x1a\n"
         for fname in EXPECTED_CHARTS:
             path = CHARTS / fname
@@ -107,7 +122,7 @@ class TestBenchmarkArtifacts(unittest.TestCase):
             self.assertGreater(len(raw), 10000, f"Chart unexpectedly small: {fname}")
 
     def test_dashboard_structure_and_offline_features(self) -> None:
-        """Verify offline dashboard assets, 10-topology bundles, Log10 toggle, and logo."""
+        """Verify offline dashboard assets, 15-topology PG17+PG18 bundles, Popularity tab, and logo."""
         for fname in EXPECTED_DASH_FILES:
             path = DASH / fname
             self.assertTrue(path.is_file(), f"Missing dashboard file: {fname}")
@@ -122,15 +137,22 @@ class TestBenchmarkArtifacts(unittest.TestCase):
             'data-scale="linear"',
             'id="topo-pills"',
             'data-preset="stream_logical"',
+            'data-preset="pg18_vs_pg17"',
+            'data-mtab="pg18"',
+            'data-tab="popularity"',
             'data-lang="en"',
             'data-lang="fr"',
             'id="btn-export"',
             "data_bench.js",
             "data_bench_2.js",
             "data_bench_3.js",
+            "data_bench_pg18.js",
             "data_matrix.js",
             "data_matrix_ext.js",
+            "data_matrix_pg18.js",
+            "data_popularity.js",
             "charts.js",
+            "popularity.js",
             "app.js",
         ):
             self.assertIn(token, html, f"Missing expected dashboard token: {token}")
@@ -143,26 +165,31 @@ class TestBenchmarkArtifacts(unittest.TestCase):
         self.assertIsNotNone(m_meta, "Missing LP_BENCH_META in data_bench.js")
         meta = json.loads(m_meta.group(1))
         self.assertEqual(meta["topology_count"], 10)
+        self.assertEqual(meta["pg18_topology_count"], 5)
+        self.assertEqual(meta["total_topology_count"], 15)
+        self.assertEqual(meta["pg18_row_count"], 87)
         self.assertGreaterEqual(meta["row_count"], 170)
 
-        for fname, var in (("data_matrix.js", "LP_MATRIX_CORE"), ("data_matrix_ext.js", "LP_MATRIX_EXT")):
+        pg18_js = (DASH / "data_bench_pg18.js").read_text(encoding="utf-8")
+        m18 = re.search(r"window\.LP_BENCH_ROWS_PG18=(\[.*\]);", pg18_js)
+        self.assertIsNotNone(m18, "Missing LP_BENCH_ROWS_PG18 in data_bench_pg18.js")
+        self.assertEqual(len(json.loads(m18.group(1))), 87)
+
+        for fname, var, exp_len in (
+            ("data_matrix.js", "LP_MATRIX_CORE", 10),
+            ("data_matrix_ext.js", "LP_MATRIX_EXT", 10),
+            ("data_matrix_pg18.js", "LP_MATRIX_PG18", 5),
+            ("data_popularity.js", "LP_POPULARITY", 21),
+        ):
             txt = (DASH / fname).read_text(encoding="utf-8")
             m = re.search(rf"window\.{var}=(\{{.*\}});", txt)
             self.assertIsNotNone(m, f"Missing {var} in {fname}")
             pack = json.loads(m.group(1))
-            self.assertEqual(len(pack["rows"]), 10, f"Expected 10 matrix rows in {fname}")
+            self.assertEqual(len(pack["rows"]), exp_len, f"Expected {exp_len} rows in {fname}")
 
     def test_all_benchmark_and_matrix_csvs_integrity(self) -> None:
-        """Confirm all 4 benchmark CSVs and 2 matrix CSVs cover all 10 topologies."""
-        required = {
-            "topology",
-            "suite",
-            "tps",
-            "lat_avg_ms",
-            "lat_p95_ms",
-            "convergence_status",
-            "balance_drift",
-        }
+        """Confirm V2, PG 18.6, and ecosystem popularity CSVs pass schema and row integrity."""
+        required = {"topology", "suite", "tps", "lat_avg_ms", "lat_p95_ms", "convergence_status", "balance_drift"}
         seen_topos: set[str] = set()
         seen_pairs: set[tuple[str, str]] = set()
         for name in BENCH_CSVS:
@@ -187,8 +214,34 @@ class TestBenchmarkArtifacts(unittest.TestCase):
             self.assertTrue(path.is_file(), f"Missing matrix CSV: {name}")
             with path.open(encoding="utf-8", newline="") as fh:
                 rows = list(csv.DictReader(fh))
-            m_topos = {r["topology"].strip() for r in rows}
-            self.assertEqual(m_topos, CORE_TOPOLOGIES, f"Matrix {name} topology mismatch")
+            self.assertEqual({r["topology"].strip() for r in rows}, CORE_TOPOLOGIES)
+
+        pg18_b = RESULTS / "benchmark_pg18.csv"
+        self.assertTrue(pg18_b.is_file(), "Missing benchmark_pg18.csv")
+        with pg18_b.open(encoding="utf-8", newline="") as fh:
+            b18_rows = list(csv.DictReader(fh))
+        self.assertEqual(len(b18_rows), 87)
+        self.assertTrue(required.issubset(b18_rows[0].keys()))
+        self.assertEqual({r["topology"].strip() for r in b18_rows}, PG18_TOPOLOGIES)
+        for r in b18_rows:
+            self.assertGreater(float(r["tps"]), 0.0)
+
+        pg18_m = RESULTS / "functional_limits_pg18.csv"
+        self.assertTrue(pg18_m.is_file(), "Missing functional_limits_pg18.csv")
+        with pg18_m.open(encoding="utf-8", newline="") as fh:
+            m18_rows = list(csv.DictReader(fh))
+        self.assertEqual(len(m18_rows), 5)
+        self.assertEqual({r["topology"].strip() for r in m18_rows}, PG18_TOPOLOGIES)
+
+        pop_p = RESULTS / "project_popularity.csv"
+        self.assertTrue(pop_p.is_file(), "Missing project_popularity.csv")
+        with pop_p.open(encoding="utf-8", newline="") as fh:
+            pop_rows = list(csv.DictReader(fh))
+        self.assertEqual(len(pop_rows), 21)
+        pop_cols = {"solution_id", "project_name", "git_present", "github_repo", "stars", "forks", "total_commits", "commits_12m", "contributors", "pushed_at"}
+        self.assertTrue(pop_cols.issubset(pop_rows[0].keys()))
+        public = [r for r in pop_rows if r["stars"].strip().upper() != "N/A"]
+        self.assertEqual(len(public), 18)
 
     def test_dashboard_and_scripts_file_size_cap(self) -> None:
         """Enforce < 14,000 byte limit on every text file in dashboard/ and scripts/."""
