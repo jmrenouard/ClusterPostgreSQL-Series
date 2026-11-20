@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-130 - Fix AWS Aurora Limitless Deep-Link and Align ACT-124 Line References (Issue `#259`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#259` (`docs/issue-259-aws-limitless-url-and-logbook`)
+- **Request / Changes / Result**: Replaced stale `AuroraPostgreSQL.Limitless.html` redirect URL with canonical HTTP-200 `https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/limitless.html` in `README.md:90` and `README.fr.md:85`, and aligned `ACT-124` in `docs/ACTION_LOGBOOK.md` to post-edit lines `89 and 93` in `docs/fr/03a_catalogue_natif_et_extensions.md`; live HTTP `200` (zero redirects), `make test` (`13/13` OK), and `make lint` verified.
+
 ### ACT-129 - Align pgpool_ii EN/FR Check Counts with test_pgpool.sh Runtime Assertions (Issue `#257`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#257` (`docs/issue-257-pgpool-check-count`)
 - **Request / Changes / Result**: Clarified `docs/en/solutions/pgpool_ii.md:74,89` and `docs/fr/solutions/pgpool_ii.md:74,89` to report `25` runtime `PASS` assertions across `18` functional groups (`24` documented in `env/multi-db-docker-env/documentation/pgpool_cluster.md`); `make test` (`13/13` OK) and `make lint` verified.
@@ -44,7 +48,7 @@
 
 ### ACT-124 - Add 03a FR Solution Links, #16 Section, and EDB PGD Harmonization (Issue `#247`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#247` (`docs/issue-247-03a-fr-links-edb-sync`)
-- **Request / Changes / Result**: Updated `docs/fr/03a_catalogue_natif_et_extensions.md` intro (`L5`), inserted the 7-row `03a` dedicated sheets table and per-section `Fiche(s) dediee(s)` links, appended `## #16` (`pg17-logical`, `N3`) with zero `#14` mentions, and harmonized EDB PGD lines 69 and 73 (`bdr.crdt_*`, `bdr.conflict_history`, `snowflakeid`, `galloc`, `timeshard`); `make test` (`13/13` OK) and `make lint` verified.
+- **Request / Changes / Result**: Updated `docs/fr/03a_catalogue_natif_et_extensions.md` intro (`L5`), inserted the 7-row `03a` dedicated sheets table and per-section `Fiche(s) dediee(s)` links, appended `## #16` (`pg17-logical`, `N3`) with zero `#14` mentions, and harmonized EDB PGD lines 89 and 93 (`bdr.crdt_*`, `bdr.conflict_history`, `snowflakeid`, `galloc`, `timeshard`); `make test` (`13/13` OK) and `make lint` verified.
 
 ### ACT-123 - Add 03a EN Solution Links, #16 Section, and EDB PGD Harmonization (Issue `#245`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#245` (`docs/issue-245-03a-en-links-edb-sync`)
