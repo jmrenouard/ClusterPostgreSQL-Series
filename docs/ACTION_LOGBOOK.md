@@ -12,6 +12,7 @@
 | **Phase 3** | Reproducible Docker PoCs | Native logical, Spock/pgEdge, Bucardo, Citus, YugabyteDB, CockroachDB | Complete | `make test-*` |
 | **Phase 4** | Benchmarks & Synthesis | Empirical limits, pgbench/sysbench throughput & latency | Complete | `make bench-all` |
 | **Phase 5** | V2 10-Topology Study, Charts, Dashboard & Submodule | Streaming/logical PoCs, T11-T18, Log10 PNGs, offline dashboard, `env/multi-db-docker-env` | Complete | `make test && make lint` |
+| **Phase 6** | Bilingual Per-Technology Architecture Sheets | Dedicated EN+FR ~1-2 A4 sheets (`docs/{en,fr}/solutions/`) + Mermaid + navigation links | In Progress | `make test && make lint` |
 
 ## 1. Ongoing Actions (`IN PROGRESS`)
 
@@ -20,6 +21,10 @@
 | *None* | - | - | - | All tracked actions archived below once verified. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-079 - Add English Architecture Sheet for PostgreSQL 17 Standalone (`#15a`) (Issue `#157`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#157` (`docs/issue-157-pg17-standalone-en`)
+- **Request / Changes / Result**: Created `docs/en/solutions/pg17_standalone.md` covering `#15a` (`pg17-standalone`) with Mermaid architecture diagram, `synchronous_commit`/`wal_sync_method` implementation modes table, strengths/weaknesses, verbatim CSV benchmark metrics (`A`–`E`, `E2`–`E4`, `H`, `G_conc_c1..c32`), `F1`/`L1–L8`/`T11–T18` probes, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
 
 ### ACT-078 - Dashboard Project Emblem, LightPath Support Pill & Logo Unit Tests (Issue `#155`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#155` (`feat/issue-155-dashboard-project-logo-and-tests`)
