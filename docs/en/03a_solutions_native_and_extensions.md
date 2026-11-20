@@ -14,7 +14,7 @@
 | **#2** | pgEdge Platform / Spock v5 (`pgedge`, `pgedge-delta-apply`) | [Solution #2 — pgEdge / Spock v5](solutions/pgedge_spock.md) | Live-benchmarked (`T4`, CRDT) |
 | **#3** | pglogical 2 | [Solution #3 — pglogical 2](solutions/pglogical2.md) | Architectural Reference |
 | **#4** | EDB Postgres Distributed (PGD / BDR) | [Solution #4 — EDB PGD](solutions/edb_pgd.md) | Architectural Reference |
-| **#15a** | PG 17 Standalone (`pg17-standalone`) | [Solution #15a — PG 17 Standalone](solutions/pg17_standalone.md) | Live-benchmarked (`T1` Control) |
+| **#15a** | PG 17 Standalone (`pg17-standalone`) | [Solution #15a — PG 17 Standalone](solutions/pg17_standalone.md) | Live-benchmarked (`T0` Baseline) |
 | **#15b** | PG 17 Physical Streaming & Patroni HA (`pg17-async/sync-streaming`) | [Solution #15b — PG 17 Streaming & Patroni](solutions/pg17_physical_streaming_patroni.md) | Live-benchmarked (`T1`/`T2`) |
 | **#16** | PG 17 Native Uni-Directional Logical (`pg17-logical`) | [Solution #16 — PG 17 Uni-Directional Logical](solutions/pg17_logical_unidirectional.md) | Live-benchmarked (`T3`) |
 
@@ -65,7 +65,7 @@ Developed by pgEdge for PostgreSQL 15–17, **Spock v5** modernizes the open-sou
 ### Conflict Resolution, DDL & Sequences
 
 - **LWW & Delta-Apply CRDTs:** With `track_commit_timestamp = on` and `spock.conflict_resolution = 'last_update_wins'`, Spock compares commit timestamps (breaking ties deterministically by node ID) instead of halting on conflicts. Critically, Spock implements **Delta-Apply** for numeric columns: when `balance = balance + 50` executes, Spock transmits the old and new column values so the remote node applies `target_val + (remote_new - remote_old)`, eliminating non-commutative **Lost Updates**.
-- **Snowflake Sequences (`snowflake`):** Generates 64-bit K-sortable global IDs encoding timestamp, `snowflake.node` (`1..1024`), and per-millisecond counter, eliminating `23505` PK collisions without cross-node locking.
+- **Snowflake Sequences (`snowflake`):** Generates 64-bit K-sortable global IDs encoding timestamp, `snowflake.node` (`1..1023`), and per-millisecond counter, eliminating `23505` PK collisions without cross-node locking.
 - **Auto-DDL & Large Objects:** Setting `spock.enable_ddl_replication = on` captures schema changes via event triggers and propagates them over replication sets automatically; `lolor` intercepts `pg_largeobject` operations that standard logical replication ignores.
 
 ### Strengths & Limits

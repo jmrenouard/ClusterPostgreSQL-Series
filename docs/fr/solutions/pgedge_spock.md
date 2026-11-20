@@ -130,7 +130,7 @@ Tests à `pg_scale = 2` (`retries_40001 = 0`). Seules `Avg`, `Stddev` (`0` pour 
 | `T11` Bulk 10k | `PASS: 67406 rows/s (148ms); peer_catchup=350.0ms` |
 | `T12` Upd vs Del | `EXPECTED_LIMITATION: n1/n2/n3=DELETED/DELETED/DELETED (spock.resolutions=0)` |
 | `T13` Course FK | `PASS: 10/10 immediate cross-node child inserts consistent (0 FK errors)` |
-| `T14` MD5 riche | `PASS: 3/3 identical md5=f798eb5a (SQL_ASCII chr()=54000; UTF-8 escaped)` |
+| `T14` MD5 riche | `PASS: 3/3 identical md5=f798eb5a (BYTEA=65536B; SQL_ASCII chr()=54000; UTF-8 escaped)` |
 | `T15` Lag visibilité | `p50=1.16ms p95=1.63ms max=1.71ms (n=30)` |
 | `T16` SIGKILL RPO | `PASS: peer_surv=20/20 RPO=0 peer_write_OK; post_restart=21/21` |
 | `T17` Tx longue | `PASS: NO_DIRTY_READ; side_tx_unblocked(104ms); post_commit_vis=115ms` |

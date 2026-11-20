@@ -68,9 +68,9 @@ La Suite E évalue un profil OLTP multi-requêtes (`sysbench oltp_read_write`, 4
 | **`pg-birep` (`#1`)** | 1 105,32 | 22 192,83 | 7,23 / 10,84 ms | 96 | **824,04** | 9,69 / 24,95 ms | -5,9 % |
 | **`pgedge` (`#2`)** | 888,56 | 17 873,46 | 8,99 / 15,27 ms | 114 | **646,77** | 12,32 / 32,40 ms | +16,3 % |
 | **`bucardo` (`#9`)** | 1 232,84 | 24 757,64 | 6,48 / 7,70 ms | 112 | **763,23** | 10,47 / 27,26 ms | +3,8 % |
-| **`citus` (`#7`)** | 189,44 | 3 796,81 | 42,17 / 50,11 ms | 9 | **21,67** | 364,81 / 633,96 ms | **-93,0 %** |
-| **`yugabyte` (`#5`)** | 128,24 | 2 564,80 | 62,25 / 81,48 ms | 0 | **5,78** | 1 327,30 / 3 401,33 ms | **-96,7 %** |
-| **`cockroach` (`#6`)** | 44,84 | 1 531,47 | 177,91 / 502,20 ms | **685** | **10,06** | 715,77 / 2 930,54 ms | **-76,1 %** (14 retries) |
+| **`citus` (`#7`)** | 189,44 | 3 796,81 | 42,17 / 50,11 ms | 9 (sur 3 806 ; 3 797 val.) | **21,67** | 364,81 / 633,96 ms | **-93,0 %** |
+| **`yugabyte` (`#5`)** | 128,24 | 2 564,80 | 62,25 / 81,48 ms | 0 (sur 2 574) | **5,78** | 1 327,30 / 3 401,33 ms | **-96,7 %** |
+| **`cockroach` (`#6`)** | 44,84 | 1 531,47 | 177,91 / 502,20 ms | **685** (sur 1 587 ; 902 val.) | **10,06** | 715,77 / 2 930,54 ms | **-76,1 %** (14 retries) |
 
 ### Analyse de l'effondrement WAN et du comportement `sysbench`
 1. **Validation physique de l'équation de latence WAN (`Suite F`)** : L'ajout de 25 ms sur le réseau des pairs fait s'effondrer toute architecture **PC/EC** : `yugabyte` passe de 173,64 à **5,78 TPS** (-96,7 %, p95 à **3,40 s**), `cockroach` à **10,06 TPS** (p95 à **2,93 s**), `citus` à **21,67 TPS** (p95 à **633,96 ms** par cumul d'allers-retours coordinateur $\leftrightarrow$ workers), et `pg17-sync-streaming` à **57,00 TPS**. À l'opposé, les architectures **PA/EL** (`pg-birep` 824,04 TPS, `bucardo` 763,23 TPS, `pgedge` 646,77 TPS) conservent une latence locale quasi constante autour de 10 ms.
