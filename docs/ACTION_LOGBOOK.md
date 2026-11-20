@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-133 - Align Suite E Denominators and Cross-Chapter Precision (Issue `#265`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#265` (`docs/issue-265-tier5-docs-precision`)
+- **Request / Changes / Result**: Fixed Suite E `tx_failed` denominators in `docs/en/06_empirical_test_and_benchmark_results.md:82-84` and `docs/fr/06_resultats_tests_et_benchmarks.md:71-73` to total attempts (`3,806` for `citus`, `2,574` for `yugabyte`, `1,587` for `cockroach`); aligned `#15a` Tier `T0`/`N0` and `snowflake.node` (`1..1023`) in `03a` EN/FR, OpenTenBase (`PG 10-11` fork + backports) in `03b` FR, and `BYTEA=65536B;` in `pgedge_spock.md:133` EN/FR; `make test` (`18/18` OK) and `make lint` verified in WSL2.
+
 ### ACT-132 - Integrate E2E Tiers 3-4 Parity and Navigation Test Suite (Issue `#263`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#263` (`test/issue-263-e2e-solution-sheets-parity`)
 - **Request / Changes / Result**: Added `tests/test_solution_sheets_parity.py` (`12,265` bytes LF, pure 7-bit ASCII) covering E2E Tiers 3-4 (CSV telemetry parity across `benchmark_summary.csv`, `functional_limits_matrix.csv`, and `extended_functional_matrix.csv`, `lat_p99_ms`/`p99` anti-fabrication guard, non-benchmarked reference disclaimers, navigation back-links/relative links, EN/FR symmetry, `#14`/`#16` collision guard, and Ch01 freshness); `make test-solution_sheets_parity` (`2/2` OK), `make test` (`18/18` OK), and `make lint` verified in WSL2.

@@ -12,7 +12,7 @@ Ce chapitre analyse les solutions directement ancrées dans le noyau ou l'API C 
 | **#2** | pgEdge Platform / Spock v5 (`pgedge`, `pgedge-delta-apply`) | [#2 — pgEdge / Spock v5](solutions/pgedge_spock.md) | Benchmarké (`N4`, CRDT) |
 | **#3** | pglogical 2 | [#3 — pglogical 2](solutions/pglogical2.md) | Référence architecturale |
 | **#4** | EDB Postgres Distributed (PGD / BDR) | [#4 — EDB PGD](solutions/edb_pgd.md) | Référence architecturale |
-| **#15a** | PG 17 Standalone (`pg17-standalone`) | [#15a — PG 17 Standalone](solutions/pg17_standalone.md) | Benchmarké (`N1` contrôle) |
+| **#15a** | PG 17 Standalone (`pg17-standalone`) | [#15a — PG 17 Standalone](solutions/pg17_standalone.md) | Benchmarké (`N0` contrôle) |
 | **#15b** | PG 17 Streaming physique & Patroni HA (`pg17-async/sync-streaming`) | [#15b — PG 17 Streaming & Patroni](solutions/pg17_physical_streaming_patroni.md) | Benchmarké (`N1`/`N2`) |
 | **#16** | PG 17 Logique unidirectionnelle native (`pg17-logical`) | [#16 — PG 17 Logique unidirectionnelle](solutions/pg17_logical_unidirectional.md) | Benchmarké (`N3`) |
 

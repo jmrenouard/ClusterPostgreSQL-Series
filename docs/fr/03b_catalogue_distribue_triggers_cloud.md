@@ -60,7 +60,7 @@ Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le
 
 **Architecture** : Famille MPP *shared-nothing* composée de coordinateurs sans état, de *datanodes* PostgreSQL et d'un **GTM (*Global Transaction Manager*)** centralisant l'attribution des `GXID` et des instantanés MVCC globaux pour maintenir une cohérence ACID distribuée par 2PC.
 
-**Statut et limites** : Le GTM introduit un point de contention critique sous fort taux de transactions courtes (chaque `BEGIN`/`COMMIT` sollicitant le GTM par réseau). **Postgres-XC** et **Postgres-XL** sont aujourd'hui considérés comme abandonnés/gelés sur d'anciens noyaux PG 9.x/10. **OpenTenBase** (maintenu par la communauté sur PG 10/14) demeure pertinent pour l'entreposage analytique HTAP/MPP massif, mais peu adapté à l'OLTP géo-distribué léger.
+**Statut et limites** : Le GTM introduit un point de contention critique sous fort taux de transactions courtes (chaque `BEGIN`/`COMMIT` sollicitant le GTM par réseau). **Postgres-XC** et **Postgres-XL** sont aujourd'hui considérés comme abandonnés/gelés sur d'anciens noyaux PG 9.x/10. **OpenTenBase** (maintenu par la communauté, fork PG 10–11 avec rétroportages) demeure pertinent pour l'entreposage analytique HTAP/MPP massif, mais peu adapté à l'OLTP géo-distribué léger.
 
 ---
 
