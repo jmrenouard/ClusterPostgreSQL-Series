@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-099 - Add French Architectural Reference Sheet for EDB Postgres Distributed (`#4`) (Issue `#197`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#197` (`docs/issue-197-edb-pgd-fr`)
+- **Request / Changes / Result**: Created `docs/fr/solutions/edb_pgd.md` mirroring the English sheet section-for-section (`#4`, Architectural Reference, `APP-005` commercial exclusion) with Mermaid embedded-Raft and `pgd-proxy` diagram, all 5 consistency/routing modes, `snowflakeid`/`galloc`/`timeshard` sequences, strengths/weaknesses, and baseline comparison against `#2`, `#1`, `#5`, and `#6`; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-098 - Add English Architectural Reference Sheet for EDB Postgres Distributed (`#4`) (Issue `#195`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#195` (`docs/issue-195-edb-pgd-en`)
 - **Request / Changes / Result**: Created `docs/en/solutions/edb_pgd.md` covering `#4` (Architectural Reference, `APP-005` commercial exclusion) with Mermaid embedded-Raft and `pgd-proxy` diagram, all 5 consistency/routing modes (Async, `bdr.crdt_*` columns, CAMO, Eager, Write-Lead), `snowflakeid`/`galloc`/`timeshard` sequences, strengths/weaknesses, and baseline comparison against `#2`, `#1`, `#5`, and `#6`; `make test` (`13/13` OK) and `make lint` verified.
