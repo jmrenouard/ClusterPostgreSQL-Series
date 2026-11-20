@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-088 - Remediate PG 17 Physical Streaming and Patroni HA FR Sheet (Issue `#175`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#175` (`docs/issue-175-m1-r2-streaming-fr`)
+- **Request / Changes / Result**: Remediated `docs/fr/solutions/pg17_physical_streaming_patroni.md` (`../../../README.fr.md` footer, FR labels `(standby asynchrone)`/`(standby synchrone)`/`"secours"`, `vs standalone`/`vs sync LAN` denominators, p99 disclaimer, Tableau B `Statut (Les deux)`, Tableau C `L1`/`L8` CSV parity, Tableau D paths); `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-087 - Remediate ACTION_LOGBOOK ASCII and PG 17 Streaming/Patroni EN Sheet (Issue `#173`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#173` (`docs/issue-173-m1-r2-streaming-en-ascii`)
 - **Request / Changes / Result**: Replaced all 4 `U+2013` en-dashes on `ACT-079` with ASCII `-` (100% 7-bit ASCII verified) and remediated `docs/en/solutions/pg17_physical_streaming_patroni.md` (`../../../README.md` footer, `vs standalone`/`vs sync LAN` denominators, p99 disclaimer, Table B `Status (Both)`, Table C `L1`/`L8` CSV fidelity, Table D paths); `make test` (`13/13` OK) and `make lint` verified.
