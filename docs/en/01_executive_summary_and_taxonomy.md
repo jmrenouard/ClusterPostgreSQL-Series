@@ -17,7 +17,9 @@ The market offers more than a dozen technologies claiming "PostgreSQL Multi-Mast
 3. **Sharded Shared-Nothing with 2PC (`CP/EC` / `PC/EC`)**: Tables are horizontally partitioned across independent PostgreSQL nodes. Single-shard writes scale linearly, while cross-shard queries and reference tables incur Two-Phase Commit (2PC) overhead.
 4. **Statement-Broadcast Middleware**: A proxy intercepts SQL text and replays each statement on every backend node, breaking silently whenever queries invoke non-deterministic functions or concurrent execution orders diverge.
 
-This study evaluates **15 distinct architectures across 7 engineering families**, pairing formal distributed-systems theory (CAP, PACELC, conflict calculus) with reproducible Docker Compose proofs-of-concept, empirical breaking-point limits, and standardized `pgbench`/`sysbench` benchmarks.
+This study evaluates **PostgreSQL 16, 17 (`17.11`), and 18.6** as explicit native clustering targets alongside **16+ architectures across 7 engineering families** (**19 dedicated bilingual solution sheets**), pairing formal distributed-systems theory (CAP, PACELC, conflict calculus) with reproducible Docker Compose proofs-of-concept, empirical breaking-point limits, and **296 standardized `pgbench`/`sysbench`/`tc netem` benchmark rows** (`187` V2 + `87` PostgreSQL 18.6 + `22` YT Cluster 1.21.3).
+
+**PostgreSQL 18.6 Native Leap (`#17`):** Measured live on `PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)` ([Solution #17](solutions/pg18_native_clustering.md) | [Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)), PG 18.6 introduces native RFC 9562 **`uuidv7()`** active-active primary keys (`50/50` dual-node convergence, `0` `23505` collisions, **`2,066.70 TPS`** = **`3.30x`** BiRep append-only throughput vs PG 17 `627.13 TPS`), asynchronous I/O **`io_method=worker`** (`-18.5%` cold scan latency vs `sync`) with default **`data_checksums=on`**, **7 `confl_*` counters** (`+confl_multiple_unique_conflicts`), and default parallel apply (`substream=p`), while `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` still returns `SQLSTATE 42601` (deferred to PG 19) and automated LWW/CRDT/DDL replication remains outside core.
 
 ---
 
@@ -58,6 +60,8 @@ Every serious PostgreSQL multi-master, sharded, or multi-region contender falls 
 | **7. Cloud & Baselines** | #12 | **AWS Aurora Limitless (& MM v1)** | Routers + Shards + Time Sync 2PC (MM v1 retired) | `PC/EC` (sharded) | Managed Cloud (Proprietary) |
 | **7. Cloud & Baselines** | #13 | **GCP Spanner (PG) & AlloyDB** | TrueTime Multi-Paxos (Spanner); Single-Primary (AlloyDB) | `PC/EC` (Spanner) / `PA/EL` (AlloyDB) | Managed Cloud (Proprietary) |
 | **7. Cloud & Baselines** | #15 | **Control Baselines (PG 17 & Patroni)** | Standalone PG 17; Patroni + etcd + HAProxy HA | Single-writer (`PC/EC` or `PA/EL`) | Open Source |
+| **1. Native Logical & HA** | #17 | **[PostgreSQL 18.6 Native Clustering](solutions/pg18_native_clustering.md)** | AIO `worker`, `data_checksums=on`, `uuidv7()`, 7 `confl_*`, `substream=p` | `PA/EL` (Log/Async) or `PC/EC` (Sync) | Open Source (PostgreSQL) |
+| **2. Extensions / 2PC** | #18 | **[YT Cluster / YT Cluster Lite](solutions/yt_cluster_lite.md)** | Unmodified PG 18 + row triggers + Rust `ytserv` Leader XA 2PC (`cc=half`) | `CP`-writes / `EL`-reads (`0` drift) | MIT Core + PolyForm/Commercial `ytserv` |
 
 ---
 
@@ -103,5 +107,7 @@ This repository separates **verifiable architectural mechanics** from **live emp
 | **[08 — Limits & Failure Modes](08_limits_and_failure_modes.md)** | Catalog of `L1–L8` & `T11–T18` failures, verified `SQLSTATE` exceptions | Complete |
 | **[09 — Benchmarks Methodology & Charts](09_benchmarks_methodology_and_charts.md)** | `PG_SCALE=2` harness, `E2–E4`/`H`/WAN sweeps, 7 `log10` charts | Complete |
 | **[10 — Streaming vs Logical vs Multi-Master](10_streaming_vs_logical_vs_multimaster.md)** | Five-tier replication spectrum (`T1–T5`), sequence trap `23505`, PG 15->18 | Complete |
+| **[11 - Ecosystem Popularity & Vitality](11_ecosystem_popularity_and_vitality.md)** | Live GitHub API telemetry (`21` rows), Git Presence/Accounts, stars, 12m commits | Complete |
+| **[12 - PostgreSQL 18.6 Clustering & Benchmarks](12_postgresql_18_clustering_and_benchmarks.md)** | PG 16->17->18.6 evolution, AIO, `uuidv7()`, 7 `confl_*`, 87 rows & [Sheet #17](solutions/pg18_native_clustering.md) | Complete |
 
 **Empirical Honesty Guarantee:** Theoretical chapters state only proven mechanics and explicit analytical formulas. All throughput, latency, and failure-rate metrics published in Chapters 06, 08, 09, 10, and the dedicated `solutions/` sheets were measured directly against isolated Docker topologies (`results/*.csv`).
