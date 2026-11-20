@@ -96,6 +96,13 @@
 - **Fix**: Updated line 71 in both `docs/en/solutions/cockroachdb.md` (`685` failed with `902` committed / `1,587` attempted) and `docs/fr/solutions/cockroachdb.md` (matching French wording for `685` failed, `902` committed / `1 587` attempted), and audited all 8 M3 sheets (`citus`, `yugabytedb`, `cockroachdb`, `opentenbase_pgxl` EN/FR) confirming no other sheet conflates `tx_committed` with total attempted transactions.
 - **Result**: Exact parity restored with `results/benchmark_summary.csv` and `results/logs/cockroach.log:184-191`, 149-line EN/FR parity preserved, 7-bit ASCII compliance (`ord(c) <= 127`) verified in governance registers, and `make test` (`13/13` OK) + `make lint` passing.
 
+### RCA-014 - M5 Catalog ID #14/#16 Collision, 03a EDB PGD Drift, and Stale Ch. 01 Status Remediation
+- **Date / Action**: `2026-11-20` (`ACT-121`..`ACT-128`, Issues `#241`, `#245`, `#247`, `#253`, `#255`)
+- **Symptom**: Pre-M5 repository audit detected: (1) `#14` vs `#16` Catalog ID collision tagging `pg17-logical` as `#14` in `README.md:32`, `README.fr.md:22`, and `docs/en/06_empirical_test_and_benchmark_results.md:26` while `#14` was assigned to Legacy Trigger Systems (`Slony-I / Londiste / RubyRep`); (2) `docs/en/03a_solutions_native_and_extensions.md:91,95` omitting `#16` and referencing non-existent `lww_element` / reversed `bdr.global_sequences` order; and (3) stale `Pending` / `phase empirique suivante` markers and unlinked `02`-`10` references in `01` EN/FR.
+- **Root Cause**: Chapter 10 introduced `pg17-logical` (`#16`) after early `results/functional_limits_matrix.csv` (`#14 Baseline`) and Chapter 01/03a/06 texts were authored, and `03a` pre-dated the `edb_pgd.md` sheet audit.
+- **Fix**: Reassigned all `pg17-logical` documentation references to `#16` with explicit disambiguation footnotes preserving read-only `results/functional_limits_matrix.csv`, added `#16` subsections and harmonized `bdr.crdt_*` / `bdr.conflict_history` / `bdr.global_sequences` in `03a` EN/FR, updated `01` EN/FR status and links, and added 17-row Solutions Catalog tables to `README.md` / `README.fr.md` (verified `pg17_standalone.md:147` already uses `Logique`).
+- **Result**: Zero broken relative links across all 59 Markdown files, zero `#14`/`#16` adjacency collisions, 100% 7-bit ASCII governance registers, and `make test` (`13/13` OK) + `make lint` passing.
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters
