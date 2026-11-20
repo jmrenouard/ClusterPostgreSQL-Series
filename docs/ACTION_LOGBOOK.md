@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-096 - Add English Architectural Reference Sheet for pglogical 2 (`#3`) (Issue `#191`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#191` (`docs/issue-191-pglogical2-en`)
+- **Request / Changes / Result**: Created `docs/en/solutions/pglogical2.md` covering `#3` (Architectural Reference, not live-benchmarked) with Mermaid diagram, implementation modes (async, `forward_origins` mesh, sync commit, `apply_delay`, `pglogical.conflict_resolution`, `replicate_ddl_command`, `synchronize_sequence`), strengths/weaknesses, and apples-to-apples exclusion/baseline comparison against `#16`, `#1`, and `#2`; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-095 - Add French Architecture Sheet for Bucardo 5 (`#9`) (Issue `#189`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#189` (`docs/issue-189-bucardo-fr`)
 - **Request / Changes / Result**: Created `docs/fr/solutions/bucardo.md` mirroring the English sheet section-for-section (`#9`, `T4`, `bucardo`) with Mermaid architecture diagram, implementation modes, strengths/weaknesses, all 18 CSV rows, `F1`/`L1-L8`/`T11-T18` probes (`23503;23505`), Ch. 03b link, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
