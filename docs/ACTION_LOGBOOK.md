@@ -12,7 +12,8 @@
 | **Phase 3** | Reproducible Docker PoCs | Native logical, Spock/pgEdge, Bucardo, Citus, YugabyteDB, CockroachDB | Complete | `make test-*` |
 | **Phase 4** | Benchmarks & Synthesis | Empirical limits, pgbench/sysbench throughput & latency | Complete | `make bench-all` |
 | **Phase 5** | V2 10-Topology Study, Charts, Dashboard & Submodule | Streaming/logical PoCs, T11-T18, Log10 PNGs, offline dashboard, `env/multi-db-docker-env` | Complete | `make test && make lint` |
-| **Phase 6** | Bilingual Per-Technology Architecture Sheets | Dedicated EN+FR ~1-2 A4 sheets (`docs/{en,fr}/solutions/`) + Mermaid + navigation links | In Progress | `make test && make lint` |
+| **Phase 6** | Bilingual Per-Technology Architecture Sheets | Dedicated EN+FR ~1-2 A4 sheets (`docs/{en,fr}/solutions/`) + Mermaid + navigation links + Tiers 1-5 E2E | Complete | `make test && make lint` |
+| **Phase 7** | Wave 3: Ecosystem Popularity, PG 18.6, Charts 08-10 & Dashboard V3 | GitHub API popularity study, PG 18.6 PoC & 87 benchmarks, Ch. 11-12 EN/FR, Charts 08-10, 15-topology Dashboard V3, submodule `v2.3.0` | Complete | `make test && make lint` |
 
 ## 1. Ongoing Actions (`IN PROGRESS`)
 
@@ -21,6 +22,30 @@
 | *None* | - | - | - | All tracked actions archived below once verified. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-142 - Finalize Wave 3 Governance Registers (ACTION_LOGBOOK & RCA_REGISTER) (Issue `#321`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#321` (`docs/issue-321-wave3-governance-registers`)
+- **Request / Changes / Result**: Marked Phase 6 Complete, added Phase 7 Wave 3 milestone and `ACT-137..142` in `docs/ACTION_LOGBOOK.md`, and logged `RCA-016..020`, `IMP-006`, `APP-007`, and `IDEA-006` in `docs/RCA_REGISTER.md` (100% 7-bit ASCII English, zero banned terms/paths); `make test` (`20/20` OK) and `make lint` (all 12 submodule stacks valid) verified in WSL2.
+
+### ACT-141 - Bump Submodule to v2.3.0, Extend Makefile & Update READMEs (Issues `#317`, `#319`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#317` (`chore/issue-317-submodule-v230-makefile-readmes`), `#319` (`docs/issue-319-readme-fr-wave3`)
+- **Request / Changes / Result**: Updated Git submodule `env/multi-db-docker-env` to `v2.3.0` (`8ea028b7c932af45bad7b6d19263fb0359ac9041`), extended `Makefile` (`PG_STACKS` with `pg18-streaming`, `pg18-logical`, `pg18-birep` for 12 Compose stacks, `popularity`, `bench-pg18`, and V3 `charts` target) and `stacks/README.md`, and updated `README.md` (`PR #318`, `10,387` B) and `README.fr.md` (`PR #320`, `7,306` B) with Chapters 11-12, Charts 08-10, and 15-topology / 274-row counts while preserving the 17-row Solutions Catalog and branding; `make test` (`20/20` OK) and `make lint` (12 stacks) verified.
+
+### ACT-140 - Publish Bilingual Chapters 11-12 and Cross-Chapter PG 18.6 Updates (Issues `#305`..`#315`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#305`/`#307`/`#309`/`#311`/`#313`/`#315` (`PRs #306..#316`)
+- **Request / Changes / Result**: Landed symmetric bilingual Chapter 11 (`docs/en/11_ecosystem_popularity_and_vitality.md`, `docs/fr/11_popularite_et_vitalite_ecosysteme.md`), Chapter 12 (`docs/en/12_postgresql_18_clustering_and_benchmarks.md`, `docs/fr/12_clustering_postgresql_18_et_benchmarks.md`), and targeted PG 18.6/Wave 3 cross-chapter updates across `docs/{en,fr}/{06,08,09,10}_*.md` across 6 atomic `< 14 KB` PRs; verified `make test` (`20/20` OK, LaTeX math, security, Tiers 1-5 E2E parity) and `make lint`.
+
+### ACT-139 - Upgrade Offline Dashboard V3 (15 Topologies + Popularity Tab) & Artifact Tests (Issues `#283`..`#303`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#283`..`#303` (`PRs #284..#304`)
+- **Request / Changes / Result**: Updated `scripts/build_dashboard.py`, regenerated `dashboard/data_bench.js`, added `data_bench_pg18.js` (87 rows), `data_matrix_pg18.js` (5 rows), `data_popularity.js` (21 rows), and `dashboard/popularity.js`, upgraded `dashboard/{charts.js,styles.css,index.html,app.js}` via atomic `< 14 KB` PRs (`node --check` PASS on all 11 JS files, zero CDN), and extended `tests/test_benchmark_artifacts.py` (`PR #304`) validating 10 charts, 15 topologies, PG 18.6 CSVs, and popularity bundles (`20/20` OK).
+
+### ACT-138 - Land PostgreSQL 18.6 Empirical Datasets, Benchmark Log & Charts 08-10 (Issues `#275`..`#281`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#275`/`#277`/`#279`/`#281` (`PRs #276..#282`)
+- **Request / Changes / Result**: Added `results/functional_limits_pg18.csv` (5 topologies x 26 probes), `results/benchmark_pg18.csv` (87 standardized rows across `pg18-standalone`, `pg18-async-streaming`, `pg18-sync-streaming`, `pg18-logical`, `pg18-birep`), `results/logs/pg18-benchmark.log`, `scripts/generate_charts_v3.py`, and 180-DPI Log10 PNG charts `chart_08..10`; all PRs strictly `< 14 KB` with `make test` (`20/20` OK) and `make lint`.
+
+### ACT-137 - Add Live GitHub Ecosystem Popularity Collector & Dataset (Issues `#273`, `#275`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#273` (`PR #274`), `#275` (`PR #276`)
+- **Request / Changes / Result**: Added `scripts/collect_popularity.py` (`11,875` B diff, stdlib Python querying GitHub REST/GraphQL pagination headers, `subscribers_count`, canonical redirects, and `TAG_COMMIT_DATE` fallback) and `results/project_popularity.csv` (21 rows: 18 public repos + 3 proprietary/managed engines, snapshot `2026-11-20T13:34:55Z`); verified `make test` (`20/20` OK) and `make lint`.
 
 ### ACT-136 - Add Tier 5 Adversarial E2E Suite for README Catalog, 4-CSV Row Parity, and EN/FR Tables (Issue `#271`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#271` (`test/issue-271-tier5-e2e-suite`)
