@@ -15,6 +15,8 @@ Ce chapitre analyse les solutions directement ancrées dans le noyau ou l'API C 
 | **#15a** | PG 17 Standalone (`pg17-standalone`) | [#15a — PG 17 Standalone](solutions/pg17_standalone.md) | Benchmarké (`N0` contrôle) |
 | **#15b** | PG 17 Streaming physique & Patroni HA (`pg17-async/sync-streaming`) | [#15b — PG 17 Streaming & Patroni](solutions/pg17_physical_streaming_patroni.md) | Benchmarké (`N1`/`N2`) |
 | **#16** | PG 17 Logique unidirectionnelle native (`pg17-logical`) | [#16 — PG 17 Logique unidirectionnelle](solutions/pg17_logical_unidirectional.md) | Benchmarké (`N3`) |
+| **#17** | PG 18.6 Clustering Natif (`pg18-standalone/streaming/logical/birep`) | [#17 — Clustering Natif PG 18.6](solutions/pg18_native_clustering.md) | Benchmarké (5 niveaux, 87 lignes) |
+| **#18** | YT Cluster & YT Cluster Lite (`yt-cluster`, `yt-cluster-async`) | [#18 — YT Cluster & YT Cluster Lite](solutions/yt_cluster_lite.md) | Benchmarké (3 nœuds 1.21.3, 22 lignes) |
 
 ---
 
@@ -127,3 +129,34 @@ Intégrée au noyau via `wal_level = logical` et le plugin `pgoutput`, la répli
 - **Filtrage et montées de version sans coupure** : prend en charge les sous-ensembles de tables, filtres `WHERE`, listes de colonnes et la réplication entre versions majeures distinctes (`PG 15 -> 17 -> 18`), contrairement au streaming physique par blocs.
 - **Absence de DDL automatique et tables sans PK** : les commandes DDL ne se propagent pas automatiquement ; les opérations `UPDATE` et `DELETE` sur une table sans clé primaire échouent côté éditeur (`SQLSTATE 55000`) sans `REPLICA IDENTITY FULL`.
 - **Piège des séquences (`SQLSTATE 23505`)** : l'état des séquences (`nextval()`) n'est pas répliqué nativement (`last_value` reste à `1|false` sur l'abonné en `T18`), provoquant une collision `23505` lors d'une bascule en écriture sans `setval()` ou clés UUID/Snowflake.
+
+---
+
+## #17 PostgreSQL 18.6 Clustering Natif (AIO, uuidv7, Streaming & Logique)
+
+**Fiche dédiée :** [#17 — Clustering Natif PostgreSQL 18.6](solutions/pg18_native_clustering.md) · **Benchmarks empiriques :** [Ch. 12 — Clustering PG 18.6](12_clustering_postgresql_18_et_benchmarks.md)
+
+### Évolution PG 16 -> PG 17 -> PG 18.6 et apports vérifiés
+Évalué en direct sur `PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)` sur les cinq niveaux natifs (`pg18-standalone`, `pg18-async-streaming`, `pg18-sync-streaming`, `pg18-logical`, `pg18-birep` ; `87` lignes dans `results/benchmark_pg18.csv`), PG 18.6 fait évoluer le noyau par rapport à PG 16 (`origin=none`, I/O `sync`, `checksums=off`) et PG 17 (`pg_createsubscriber`, `sync_replication_slots`, 6 compteurs `confl_*`) :
+- **AIO et intégrité par défaut :** Active `data_checksums=on` à `initdb` et `io_method=worker` (`io_workers=3`, `-18,5 %` sur scan froid `829,4 ms` vs `1 018,3 ms` `sync` ; `io_uring` rejeté `EPERM` sous seccomp Docker par défaut). Chemin Docker déplacé vers `PGDATA=/var/lib/postgresql/18/docker` (`VOLUME /var/lib/postgresql`).
+- **Clés actif-actif `uuidv7()` natives :** Les UUID RFC 9562 chronologiques convergent à `50/50` insertions concurrentes sur `pg18-birep` (`0` `23505`, `0` inversion B-tree) et portent `H_append_only_insert` à **`2 066,70 TPS`** (`3,30x` PG 17 `627,13 TPS`).
+- **7 compteurs `confl_*` et apply parallèle :** Étend `pg_stat_subscription_stats` à 7 compteurs (`+confl_multiple_unique_conflicts`), active `substream=p` par défaut et `publish_generated_columns=stored` (`s`), accélérant `pg18-logical` (`E` `1 027,84 TPS` `+72,5 %`, `H` `3 518,49 TPS` `+85,1 %`).
+
+### Limites natives persistantes (PG 18.6)
+- **Synchro séquences reportée (`SQLSTATE 42601`) :** `FOR ALL SEQUENCES` et `REFRESH SEQUENCES` échouent encore avec `SQLSTATE 42601` sous PG 18.6 (reporté à PG 19) ; les séquences abonnées restent à `1|false` en `T18` (`23505` sans `setval()` ou `uuidv7()`).
+- **Sans Auto-DDL, LWW ni CRDT :** `ALTER TABLE` ne se propage pas (`TRUNCATE` seul) ; `UPDATE`/`DELETE` sans PK lève toujours `SQLSTATE 55000` ; les écritures chevauchantes sur `pg18-birep` divergent (`B2` `-338`, `D` `-83 252`) ; course FK `T13` échoue `23503x8` (`2/10 ok`).
+
+---
+
+## #18 YT Cluster & YT Cluster Lite (Cœur MIT + ytserv)
+
+**Fiche dédiée :** [#18 — YT Cluster & YT Cluster Lite](solutions/yt_cluster_lite.md)
+
+### Architecture, dualité de licence et nuance Jepsen auto-exécuté
+- **Cœur MIT vs `ytserv` fermé :** `DBinvent/yt-cluster-lite` (MIT, 7 jours d'existence, `bus factor = 1`) publie `yt-core-proto`, l'extension C `ytpgc` et le nœud feuille mono-base `yt-lite`, alors que le coordinateur multi-maîtres complet **`ytserv`/`ytctl`** (`dbinvent/yt:1.21.3`, PG 18.7) est fermé sous double licence PolyForm Noncommercial 1.0.0 / Commerciale.
+- **Triggers + XA 2PC + checkin Leader :** Fonctionne sur PostgreSQL standard (`max_prepared_transactions >= 100`) via les triggers de ligne `yt_synchronize()` et `XACT_EVENT_PRE_COMMIT` XA 2PC (`PREPARE TRANSACTION` / `COMMIT PREPARED`). Tous les nœuds acceptent les écritures, mais un Leader élu arbitre l'ordre global et les conflits (`40001`/`55409`). Par défaut `cluster_commit=half` impose un 2PC majoritaire synchrone (`RPO=0`, dérive `0`), tandis que les lectures sur les pairs hors quorum restent éventuellement cohérentes (`NO_SC`).
+- **Nuance Jepsen Elle :** DBinvent a auto-exécuté Jepsen 0.3.14 + Elle (hors Jepsen LLC) en vérifiant uniquement **`cursor-stability`** (écritures fortes, lectures éventuellement cohérentes — pas de sérialisabilité stricte), corrigeant 51 anomalies sur 397 exécutions.
+
+### Réversibilité (`T_REVERT`) et réalité des benchmarks (`dbinvent/yt:1.21.3`, `PG_SCALE = 2`)
+- **Réversibilité et dérive zéro :** `DROP EXTENSION yt_cluster CASCADE` sur `yt3` laisse `ext=0`, `triggers=0` et `5/5` lignes intactes avec reprise en PG natif (`6/6`). `L3` (`+100/-30`) bloque le *Lost Update* via `55409` (dérive `0`), `L4` rejette les doublons `UNIQUE` (`40001`) et `T13` passe `10/10` FK inter-nœuds.
+- **Plafond 2PC vs lectures locales :** En défaut `cc=half`, `yt-cluster` plafonne à **`20,63 TPS`** (`A`), `10,69` (`B2`), `67,76` (`D`), `28,48` (`E`), `110,53` (`H`), `2,25` (`F_wan25`) et `86 lignes/s` (`T11`), contre `48 787,74 TPS` (`C`) et `165 472,75 TPS` (`E4`) en lecture locale. En asynchrone `cc=nodes>=0`, les écritures montent de `2,0x` à `5,1x` (`41,45` `A`, `55,03` `B2`, `163,01` `D`, `4,78` `F_wan25`, dérive `0`). Limites vérifiées : rollback `SAVEPOINT` sur écriture lève `SQLSTATE 0A000`, `ALTER TABLE` non propagé (`sge`), perte `2/3` bloque (`57P03`), `advisory_lock`/`LISTEN` locaux, et risque `YT-E1104` sur `.s.YT.5432.pid` après arrêt brutal.
