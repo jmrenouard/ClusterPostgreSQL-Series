@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-114 - Add French Architectural Reference Sheet for SymmetricDS (#10) (Issue `#227`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#227` (`docs/issue-227-symmetricds-fr`)
+- **Request / Changes / Result**: Created `docs/fr/solutions/symmetricds.md` mirroring `docs/en/solutions/symmetricds.md` section-for-section (`#10`, Architectural Reference, explicitly not live-benchmarked) with French Mermaid diagram, trigger/channel/HTTP batch modes, `sym_conflict` detection/resolution, strengths/weaknesses, verified `results/benchmark_summary.csv` and `results/extended_functional_matrix.csv` anchors (`#9 bucardo`, `#2 pgedge`, `#1 pg-birep`), and Ch. 03b/10 footer links; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-113 - Add English Architectural Reference Sheet for SymmetricDS (#10) (Issue `#225`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#225` (`docs/issue-225-symmetricds-en`)
 - **Request / Changes / Result**: Created `docs/en/solutions/symmetricds.md` (`#10`, Architectural Reference, explicitly not live-benchmarked) with Mermaid trigger/Java HTTP/HTTPS batch data-flow diagram, latency model, implementation modes (hub-and-edge, bidirectional mesh, heterogeneous cross-DB, `sym_conflict` detection/resolution, `symadmin`), strengths/weaknesses, verified `results/benchmark_summary.csv` and `results/extended_functional_matrix.csv` anchors (`#9 bucardo`, `#2 pgedge`, `#1 pg-birep`), and Ch. 03b/10 footer links; `make test` (`13/13` OK) and `make lint` verified.
