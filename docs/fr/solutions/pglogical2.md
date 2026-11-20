@@ -93,6 +93,18 @@ Partageant le même moteur heap PostgreSQL 17 (`wal_level = logical`, `track_com
 | **Réplica différé** | Paramètre natif `apply_delay` | PG 16+ `min_apply_delay` | PG 16+ `min_apply_delay` | PG 16+ `min_apply_delay` |
 | **Ancre empirique de réf.** | Non benchmarké (maintenance) | `532.38 TPS` (`A`), `1.68 ms` (`T15`) | `875.91 TPS` (`A`), `1.47 ms` (`T15`) | `556.06 TPS` (`A`), `1.16 ms` (`T15`) |
 
+## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
+
+Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
+
+| Projet | Présence / Rôle Git | Dépôt (`Compte / Dépôts`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Tag / Dernier Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **pglogical 2 (#3)** | `Yes` -- `Primary` | [`2ndQuadrant/pglogical`](https://github.com/2ndQuadrant/pglogical) (`Org / 46`) | 1243 / 180 / 75 | 876 / 15 | 52 / 191 | C / `NOASSERTION` | `REL2_4_8` / `2026-07-28T18:10:14Z` |
+
+- **Niveau de maintenance :** **Niveau C (Fragile / Maintenance)** -- `2ndQuadrant/pglogical` n'enregistre que `15` commits/12m (`876` total, `52` contributeurs, `1 243` stars, `191` issues).
+- **Fraîcheur / Actualité :** **Cadence faible** -- Dernier push `2026-07-28T18:10:14Z`, `15` commits/12m, dernière version `REL2_4_8`.
+- **Maintenabilité opérationnelle :** **Risque élevé** -- Extension C en maintenance (`PostgreSQL License` / SPDX `NOASSERTION`) ; dépassée par PG 17 logique natif et `pgEdge/spock`.
+
 ---
 
 **Navigation :** [Index](../../../README.fr.md) · [Ch. 03a — Solutions natives et extensions](../03a_catalogue_natif_et_extensions.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](../10_comparatif_streaming_logique_multimaster.md) · [English version](../../en/solutions/pglogical2.md)
