@@ -103,3 +103,12 @@ Eight edge-case probes (`results/extended_functional_matrix.csv`, `functional_li
 - **`T16` `SIGKILL` & RPO:** `20/20` (`RPO=0` LAN) + `21/21` recovery on 8 stacks; `citus` `worker2` raised **`08006`** then recovered `21/21`; `bucardo` `node1` metadata crash ended `20/21`.
 - **`T17` 3s Open TX:** `NO_DIRTY_READ` on `10/10`; `cockroach` blocked reader via intent wait (`serializable_intent_wait=2.1s`).
 - **`T18` Sequence Sync (50 inserts):** Streaming (`66|true`, `next=67`), `yugabyte` (`101`), `cockroach`/`citus` (`51`) failover-safe; all 4 logical/trigger stacks stuck at `1|false` -> **`23505`** (`pg17-logical` retained `27,320 B` offline WAL vs `3,088 B` streaming).
+
+---
+
+## 4. PostgreSQL 18.6 Limits Verification & Ecosystem Sustainability
+
+Live PG 18.6 re-verification ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv), [`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv); full analysis in [Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)) refines these limits:
+- **Resolved in PG 18.6:** Native `uuidv7()` converged **50/50 dual-node active-active inserts** (`0` `23505`, `0` B-tree inversions), `data_checksums=on` guards against silent corruption, and `pg_stat_subscription_stats` now exposes **7 `confl_*` counters** including **`confl_multiple_unique_conflicts=1`**.
+- **Still Open in PG 18.6:** `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` raise **`SQLSTATE 42601`** (deferred to PG 19; logical peers stay at `1|false` -> `23505`), `io_method=io_uring` fails with `EPERM` under default Docker seccomp, `pg18-birep` still suffers `T13` async FK races (`2/10 ok; 23503x8`) and overlapping Lost Updates (`-83,252` in Suite D), and Auto-DDL remains absent.
+- **Vitality & Charts:** Cross-check long-term maintenance risk (`pgEdge/spock` `621`/12m vs dormant `bucardo`/`slony`/`rubyrep` `0`/12m) in [Ch. 11](11_ecosystem_popularity_and_vitality.md) and [`chart_08`](../../assets/charts/chart_08_popularity_stars_forks_log.png) / [`chart_09`](../../assets/charts/chart_09_popularity_commits_activity_log.png) / [`chart_10`](../../assets/charts/chart_10_pg18_vs_pg17_log.png).

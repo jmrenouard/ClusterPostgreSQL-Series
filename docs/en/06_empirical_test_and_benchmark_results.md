@@ -106,3 +106,10 @@ Expanded 10-topology sweeps (`187` rows total; full methodology in [Chapter 09](
 ![Log10 Latency All Suites](../../assets/charts/chart_02_latency_log_all_suites.png)
 ![Log10 WAN Netem Sweep](../../assets/charts/chart_04_wan_netem_sweep_log.png)
 ![Integrity vs Throughput](../../assets/charts/chart_07_integrity_vs_throughput.png)
+
+---
+
+## 6. V3 Extension: PostgreSQL 18.6 Benchmarks & Ecosystem Vitality
+
+- **PostgreSQL 18.6 Head-to-Head ([Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)):** An additional **87 sequential rows** across all 5 native PG 18.6 stacks ([`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv), [`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv)) quantify AIO (`-18.5%` cold scan), default `data_checksums=on`, `substream=p`, and `uuidv7()`. Highlights: `pg18-birep` `H_append_only` hit **`2,066.70 TPS`** (`3.30x` vs PG 17 `627.13`), `pg18-logical` reached **`3,518.49 TPS`** (`+85.1%` vs `1,901.20`), `pg18-sync-streaming` gained `+21.6%` on `A` (`497.94`) and `3.20x` on `E3` (`1,184.57`), and `T11` peaked at **`87,903 rows/s`** (`pg18-async-streaming`).
+- **Ecosystem Vitality & V3 Log10 Charts ([Ch. 11](11_ecosystem_popularity_and_vitality.md)):** Pair empirical throughput with live GitHub engineering cadence (`21` rows) via [`chart_08_popularity_stars_forks_log.png`](../../assets/charts/chart_08_popularity_stars_forks_log.png), [`chart_09_popularity_commits_activity_log.png`](../../assets/charts/chart_09_popularity_commits_activity_log.png), and [`chart_10_pg18_vs_pg17_log.png`](../../assets/charts/chart_10_pg18_vs_pg17_log.png).

@@ -140,3 +140,11 @@ FROM pg_sequences WHERE schemaname = 'public';
 - **Choose Tier 3 (Native Logical)** for **cross-major-version upgrades**, **OS/glibc transitions**, or **filtered data feeds**—never as an automated HA standby without scripted DDL and sequence sync.
 - **Choose Tier 4 (`pgEdge Spock 5` / `EDB PGD`)** only when **multi-region local write latency (`PA/EL`)** is mandatory and counters use CRDTs (`spock.delta_apply`).
 - **Choose Tier 5 (`YugabyteDB`, `CockroachDB`, `Citus`)** only when **global `RPO = 0` ACID** or **horizontal multi-terabyte write sharding** justifies WAN latency and `40001` retry engineering.
+
+---
+
+## 6. PostgreSQL 18.6 Impact Across Tiers & Ecosystem Vitality
+
+- **Tiers 1-4 Under PG 18.6 ([Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)):** Tested live across `87` benchmark rows ([`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv)) and `5 x 26` probes ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv)), PG 18.6 adds default `data_checksums=on`, AIO `io_method=worker` (`-18.5%` cold scan), `substream=p`, `publish_generated_columns=stored`, 7 `confl_*` counters (+`confl_multiple_unique_conflicts`), and native `uuidv7()` (`pg18-birep` `H_append_only` **`2,066.70 TPS`**, `3.30x` vs PG 17; `pg18-logical` **`3,518.49 TPS`**, `+85.1%`).
+- **Unchanged Tier Boundaries:** `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` still raise **`SQLSTATE 42601`** in PG 18.6 (deferred to PG 19), so Tier 3 cutovers still require `setval()`, Tier 4 overlapping writes still require Spock/PGD CRDTs, and global `RPO=0` ACID remains Tier 5.
+- **Vitality & Charts:** Cross-reference ecosystem bus-factor and 12m commit velocity in [Ch. 11](11_ecosystem_popularity_and_vitality.md) and [`chart_08`](../../assets/charts/chart_08_popularity_stars_forks_log.png) / [`chart_09`](../../assets/charts/chart_09_popularity_commits_activity_log.png) / [`chart_10`](../../assets/charts/chart_10_pg18_vs_pg17_log.png).

@@ -113,3 +113,11 @@ Explore all 10 topologies and 187 rows interactively—with **default `log10` / 
 ### Chart 07 — Data Integrity vs Throughput (Suite D Hot-Row Contention)
 ![Suite D Integrity vs Throughput](../../assets/charts/chart_07_integrity_vs_throughput.png)
 *Exposes silent Lost Update drift (`-531,620` `bucardo`, `-278,698` `pgedge` LWW, `-71,063` `pg-birep`) versus **`0` drift** on `pgedge-delta-apply` (`1,837.64 TPS`), `pg17-async`/`logical` (`2,081`/`2,387`), `citus`, `yugabyte`, and `cockroach`.*
+
+---
+
+## 6. V3 Extensions: Ecosystem Telemetry (`chart_08`, `chart_09`) & PostgreSQL 18.6 (`chart_10`)
+
+The V3 benchmark and telemetry expansion adds two modular datasets under the same `log10` visualization standard:
+- **Ecosystem Popularity & Vitality ([Ch. 11](11_ecosystem_popularity_and_vitality.md)):** Live GitHub REST/GraphQL telemetry (`21` rows in [`results/project_popularity.csv`](../../results/project_popularity.csv), spanning `3+` decades) rendered in [`chart_08_popularity_stars_forks_log.png`](../../assets/charts/chart_08_popularity_stars_forks_log.png) and [`chart_09_popularity_commits_activity_log.png`](../../assets/charts/chart_09_popularity_commits_activity_log.png).
+- **PostgreSQL 18.6 Generational Benchmarks ([Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)):** **87 sequential rows** across all 5 native PG 18.6 topologies ([`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv)) plus **5 x 26 functional probes** ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv)) using identical `PG_SCALE=2` isolation and `uuidv7()` PKs on `pg18-birep`, compared directly against PG 17.11 in [`chart_10_pg18_vs_pg17_log.png`](../../assets/charts/chart_10_pg18_vs_pg17_log.png) and the interactive [`dashboard/index.html`](../../dashboard/index.html).
