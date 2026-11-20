@@ -90,3 +90,12 @@ Les huit tests avancés (`results/extended_functional_matrix.csv`, `functional_l
 - **`T16` Crash `SIGKILL` & `RPO` :** `20/20` (`RPO=0`) et `21/21` sur 8 piles ; `citus` `worker2` -> **`08006`** puis `21/21` ; `bucardo` `node1` -> `20/21`.
 - **`T17` TX ouverte 3 s :** `NO_DIRTY_READ` sur 10/10 ; `cockroach` bloque via intention (`serializable_intent_wait=2,1 s`).
 - **`T18` Séquences (50 inserts) :** Streaming (`66|true`), `yugabyte` (`101`), `cockroach`/`citus` (`51`) sûrs ; les 4 moteurs logiques/triggers restent à `1|false` -> **`23505`** (`pg17-logical` : `27 320 o` WAL vs `3 088 o` streaming).
+
+---
+
+## 5. Vérification des limites sur PostgreSQL 18.6 et pérennité
+
+La re-vérification en direct sous PG 18.6 ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv), [`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv) ; détail au [Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)) actualise ces limites :
+- **Résolu en PG 18.6 :** `uuidv7()` natif converge **50/50 insertions actif-actif** (`0` `23505`, `0` inversion B-tree), `data_checksums=on` protège contre les corruptions silencieuses, et `pg_stat_subscription_stats` expose **7 compteurs `confl_*`** dont **`confl_multiple_unique_conflicts=1`**.
+- **Toujours ouvert en PG 18.6 :** `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` lèvent **`SQLSTATE 42601`** (reporté PG 19 ; pairs bloqués à `1|false` -> `23505`), `io_method=io_uring` échoue (`EPERM`) sous seccomp Docker, `pg18-birep` subit encore des courses FK `T13` (`2/10 ok ; 23503x8`) et des *Lost Updates* (`-83 252` en Suite D), sans Auto-DDL.
+- **Vitalité et graphiques :** Évaluez le risque de maintenance (`pgEdge/spock` `621`/12m vs `bucardo`/`slony`/`rubyrep` `0`/12m) au [Ch. 11](11_popularite_et_vitalite_ecosysteme.md) et via [`chart_08`](../../assets/charts/chart_08_popularity_stars_forks_log.png) / [`chart_09`](../../assets/charts/chart_09_popularity_commits_activity_log.png) / [`chart_10`](../../assets/charts/chart_10_pg18_vs_pg17_log.png).
