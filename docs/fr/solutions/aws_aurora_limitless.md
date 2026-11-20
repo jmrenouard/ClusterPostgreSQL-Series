@@ -95,6 +95,18 @@ Limitless se positionne directement face aux références `T5` (`PC/EC`) et au t
 | **Ancre réf. (`A_single_rw`)** | Non benchmarké (`APP-005`) | `309.04 TPS` (`0` dérive) | `173.64 TPS` (`0` reprise) | `42.08 TPS` (`44` reprises) | `866.82 TPS` (`23.958 ms` `p95`) |
 | **Ancre réf. (`F_wan_netem_25ms`)** | Non benchmarké (multi-AZ régional) | `21.67 TPS` (`-93,0 %` 2PC WAN) | `5.78 TPS` (`-96,7 %` Raft WAN) | `10.06 TPS` (`-76,1 %` Raft WAN) | N/A |
 
+## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
+
+Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
+
+| Projet | Présence / Rôle Git | Dépôt (`Compte / Dépôts`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Tag / Dernier Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **AWS Aurora Limitless (#12)** | `No (Managed Cloud)` -- `Proprietary (Managed Cloud)` | N/A (Propriétaire) | N/A / N/A / N/A | N/A / N/A | N/A / N/A | N/A / Proprietary | N/A / N/A |
+
+- **Niveau de maintenance :** **Fermé / Cloud Managé** -- Service propriétaire managé AWS (`APP-005`) sans dépôt GitHub public (`N/A`).
+- **Fraîcheur / Actualité :** **Opaque (Géré par l'éditeur)** -- Dernier push `N/A`, `N/A` commits/12m, dernière version `N/A`.
+- **Maintenabilité opérationnelle :** **Verrouillage éditeur** -- Dépend des DB Shard Groups Aurora Limitless, du stockage/Time Sync AWS et d'une facturation cloud en ACU.
+
 ---
 
 **Navigation :** [Index](../../../README.fr.md) · [Ch. 03b — Distribué, triggers et cloud](../03b_catalogue_distribue_triggers_cloud.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](../10_comparatif_streaming_logique_multimaster.md) · [English version](../../en/solutions/aws_aurora_limitless.md)
