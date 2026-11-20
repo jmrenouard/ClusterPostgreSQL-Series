@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-112 - Add French Architectural Reference Sheet for PgPool-II (#11) (Issue `#223`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#223` (`docs/issue-223-pgpool-ii-fr`)
+- **Request / Changes / Result**: Created `docs/fr/solutions/pgpool_ii.md` mirroring `docs/en/solutions/pgpool_ii.md` section-for-section (`#11`, Architectural Reference, explicitly not live-benchmarked) with French Mermaid diagram, streaming vs broadcast/SI implementation modes, Watchdog quorum, strengths/weaknesses, verified `results/benchmark_summary.csv` anchors (`#15b`, `#1 pg-birep`), and Ch. 03b/10 footer links; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-111 - Add English Architectural Reference Sheet for PgPool-II (#11) (Issue `#221`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#221` (`docs/issue-221-pgpool-ii-en`)
 - **Request / Changes / Result**: Created `docs/en/solutions/pgpool_ii.md` (`#11`, Architectural Reference, explicitly not live-benchmarked) disambiguating `streaming_replication` (companion Docker PoC `pgpool/pgpool:4.6` with HAProxy `5100`/`5101`/`8406` and 3x `postgres:17` nodes `5611-5613`) from `replication` statement-broadcast, `snapshot_isolation`, `logical_replication`/`raw`, and `Watchdog` quorum modes, with Mermaid diagram, strengths/weaknesses, verified `results/benchmark_summary.csv` baselines (`#15b`, `#1 pg-birep`), and Ch. 03b/10 footer links; `make test` (`13/13` OK) and `make lint` verified.
