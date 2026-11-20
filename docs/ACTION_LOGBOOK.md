@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-132 - Integrate E2E Tiers 3-4 Parity and Navigation Test Suite (Issue `#263`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#263` (`test/issue-263-e2e-solution-sheets-parity`)
+- **Request / Changes / Result**: Added `tests/test_solution_sheets_parity.py` (`12,265` bytes LF, pure 7-bit ASCII) covering E2E Tiers 3-4 (CSV telemetry parity across `benchmark_summary.csv`, `functional_limits_matrix.csv`, and `extended_functional_matrix.csv`, `lat_p99_ms`/`p99` anti-fabrication guard, non-benchmarked reference disclaimers, navigation back-links/relative links, EN/FR symmetry, `#14`/`#16` collision guard, and Ch01 freshness); `make test-solution_sheets_parity` (`2/2` OK), `make test` (`18/18` OK), and `make lint` verified in WSL2.
+
 ### ACT-131 - Integrate E2E Tiers 1-2 Solution Sheets Test Suite (Issue `#261`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#261` (`test/issue-261-e2e-solution-sheets`)
 - **Request / Changes / Result**: Added `tests/test_solution_sheets.py` (`12,254` bytes LF, pure 7-bit ASCII) covering E2E Tiers 1-2 (17-slug parity, bilingual metadata/attribution headers, A4 density bounds, pure-stdlib Mermaid validator + self-tests, structural sections/tables, and math/governance/security compliance); `make test-solution_sheets` (`3/3` OK), `make test` (`16/16` OK), and `make lint` verified in WSL2.
