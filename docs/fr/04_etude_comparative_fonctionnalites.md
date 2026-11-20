@@ -2,7 +2,7 @@
 
 > **Auteur** : Jean-Marie Renouard (`jmrenouard`) - [LightPath](https://www.lightpath.fr) | **Licence** : MIT
 
-Les cinq matrices ci-dessous évaluent les **15 solutions** sur **36 critères techniques** regroupés en cinq axes. Les identifiants `#1` à `#15` renvoient au catalogue des chapitres 03a et 03b.
+Les cinq matrices ci-dessous évaluent les **16+ solutions** — incluant **[#17 PG 18.6 Natif](solutions/pg18_native_clustering.md)** ([Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)) et **[#18 YT Cluster](solutions/yt_cluster_lite.md)** — sur **36 critères techniques** regroupés en cinq axes. Les identifiants `#1` à `#18` renvoient aux chapitres 03a et 03b.
 
 ---
 
@@ -25,6 +25,8 @@ Les cinq matrices ci-dessous évaluent les **15 solutions** sur **36 critères t
 | **#13** | GCP Spanner PG | Spanner dist. | Paxos multi-régions | PC/EC | Multi-région dist. | 1-2 RTT Paxos | **TrueTime** | RPO=0 / RTO~0 |
 | **#14** | RubyRep/Slony/Lond. | PG Heap | Triggers SQL/C/Ruby | PA/EL | Multi (RR) / Mono | Local + trigger | NTP | RPO>0 / manuel |
 | **#15** | PG 17 / Patroni HA | PG Heap | WAL physique streaming | PC/EC (sync) | **Mono-primaire** | Local / 1 AZ RTT | Unique | RPO=0 / RTO 10-30s |
+| **#17** | PG 18.6 Native (AIO/uuidv7) | PG Heap (AIO+chk) | WAL stream / `substream=p` | PA/EL / PC/EC | Mono ou Mesh async | Local ou 1 AZ RTT | Locale / NTP | RPO=0 (sync) / >0 |
+| **#18** | YT Cluster 1.21 | PG Heap (ext.) | Triggers + Leader XA 2PC | CP(W)/EL(R) | Multi-maître 2PC | 4 RTT (`cc=half`) | Term/Subterm | RPO=0 / ~8s (`57P03`) |
 
 ---
 
@@ -47,6 +49,8 @@ Les cinq matrices ci-dessous évaluent les **15 solutions** sur **36 critères t
 | **#13** | GCP Spanner PG | 2PL + TrueTime | Retry / Aborted | **Protégé** | Bit-reversed / UUID | **Oui** | Oui | Paxos + 2PC | **Ext. Cons.** |
 | **#14** | Legacy triggers | Batch/diff | LWW / Source | **Exposé** | Pas décalé | Manuel | Manuel | Aucun | RC local |
 | **#15** | PG 17 / Patroni | Aucun conflit | Verrous PG natifs | **Protégé** (ACID) | `SERIAL` 100% natif | **Oui** (Tx) | **Oui** | Non requis | RC/RR/SSI |
+| **#17** | PG 18.6 Native (AIO/uuidv7) | 7 `confl_*` (`23505`) | Manuel (arrêt Birep) | **Sync:Oui / Birep:Non** | **`uuidv7()`** (`42601` seq) | Stream / Non (Log) | Oui | Aucun / SyncRep | RC/RR/SSI |
+| **#18** | YT Cluster 1.21 | Checkin Leader | Rejet `55409`/`40001` | **Protégé** (dérive `0`) | `uuidv7()` / Pas | Non (`sge`) | Oui | XA 2PC (`half`) | RC/RR/Ser* |
 
 ---
 
@@ -69,6 +73,8 @@ Les cinq matrices ci-dessous évaluent les **15 solutions** sur **36 critères t
 | **#13** | GCP Spanner PG | **PK obligatoire** | **Global garanti** | **Globale garantie** | Non | Limités | Non | **Non** (AlloyDB oui) | Spanner/ADB |
 | **#14** | Legacy triggers | **PK obligatoire** | Risque collision | Fragile async | Local | Oui | Non | **100 % oui** | N/A |
 | **#15** | PG 17 / Patroni | **100 % supporté** | **100 % natif** | **100 % natif** | **Natif** | **Natifs** | **Oui** | **100 % oui** | **100 % oui** |
+| **#17** | PG 18.6 Native (AIO/uuidv7) | Stream OK / `55000` | Sync OK / `23505` | Stream OK / `23503` | Local | Natifs (`REPLICA`) | Stream / Non | **100 % oui** | **100 % oui** |
+| **#18** | YT Cluster 1.21 | DML OK (copie PK) | Global (`40001`) | Global (`half` 10/10) | Local | Natifs+`yt_sync` | Non | **Oui** (cast) | **Oui** (cast) |
 
 ---
 
@@ -91,6 +97,8 @@ Les cinq matrices ci-dessous évaluent les **15 solutions** sur **36 critères t
 | **#13** | GCP Spanner PG | Dialecte PG | Non | Non | Non | Limité | **Quorum Paxos** | Tolère panne zone |
 | **#14** | Legacy triggers | 100 % PG | Local | Local | Local | Local | Aucun | Queue locale croît |
 | **#15** | PG 17 / Patroni | 100 % PG | **Global (unique)** | **100 % natif** | **Natif** | **Natif** | **Quorum etcd** (3+) | Bascule Patroni auto |
+| **#17** | PG 18.6 Native (AIO/uuidv7) | 100 % PG | Local (Global 1-Pri) | Local (1-Pri natif) | Natif | Natif (`25006` RO) | Patroni / Aucun (Birep) | Slot WAL / SyncRep |
+| **#18** | YT Cluster 1.21 | 100 % PG | **Local au nœud** | **Local au nœud** | **`0A000` rollback** | Natif | Leader (`min=2`) | Tolère 1/3 (`57P03` 2/3) |
 
 ---
 
@@ -113,3 +121,5 @@ Les cinq matrices ci-dessous évaluent les **15 solutions** sur **36 critères t
 | **#13** | GCP Spanner PG | Backup managé GCP | Managée | Faible (managée) | Active | Cloud GCP (Élevé) | **Très fort** |
 | **#14** | Legacy triggers | `pgBackRest` par nœud | **Élevée (trig.)** | Élevée | **Obsolète** | Open-Source | Nul |
 | **#15** | PG 17 / Patroni | `pgBackRest` + PITR natif | Minimale | Standard | Référence | Open-Source | Nul |
+| **#17** | PG 18.6 Native (AIO/uuidv7) | `pgBackRest` (1-Pri/nœud) | Faible (AIO+chk) | Standard / Moy. (Birep) | **Cible PG 18.6** | PG License (Gratuit) | Nul |
+| **#18** | YT Cluster 1.21 | `pgBackRest` (réversible) | Élevée (2PC+trig) | Moy.-élevée (`ytserv`) | Jeune (`v1.21`, bus=1) | MIT + PolyForm/Com. | Modéré (`DROP EXT`) |

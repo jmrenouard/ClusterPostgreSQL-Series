@@ -78,3 +78,20 @@ Dans une architecture **mono-primaire** (`#15`), `pgBackRest` fournit un **PITR 
 2. **Depuis PG Mono-Primaire $\rightarrow$ Citus (`#7`)** : Identifier la clé de *tenant*, ajouter la colonne de distribution à toutes les PK/`UNIQUE` (éviter `0A000`), convertir les petites tables de paramétrage en `reference tables`, puis basculer sans réécrire les pilotes `libpq`.
 3. **Depuis PG Mono-Primaire $\rightarrow$ pgEdge / Spock (`#2`)** : Vérifier que 100 % des tables possèdent une PK, remplacer les `SERIAL` par `snowflake` ou pas décalés, activer `Delta-Apply` sur les soldes/compteurs, puis basculer progressivement le routage applicatif par région géographique (*geo-sharding* applicatif) afin de minimiser les conflits croisés.
 4. **Depuis PG $\rightarrow$ YugabyteDB / CockroachDB (`#5`, `#6`)** : Auditer les extensions C non portables (`PostGIS`, verrous consultatifs, `LISTEN/NOTIFY`), implémenter la gestion des retries `40001` côté client, et revalider la latence de chaque requête multi-tables sur la topologie réseau cible avant mise en production.
+
+---
+
+## 5. Choix de version cible en production : PostgreSQL 16 -> 17 -> 18.6
+
+Pour arbitrer entre **[#17 Clustering Natif PostgreSQL 18.6](solutions/pg18_native_clustering.md)** ([données empiriques Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)), Patroni HA et les moteurs multi-maîtres spécialisés, appliquer la frontière vérifiée suivante :
+
+| Besoin de production | Architecture cible recommandée | Justification et frontière empirique vérifiée |
+| :--- | :--- | :--- |
+| **80 %+ OLTP HA (`RPO=0` métro, parité PG 100 %)** | **#15 Patroni + etcd sur PG 18.6 (ou PG 17)** | Zéro conflit d'écriture ; `pg18-sync-streaming` gagne `+21,6 %` en `A_single_rw` (`497,94` vs `409,48 TPS`), `+90,5 %` en bulk `T11` (`75 629 lignes/s`), avec `data_checksums=on` et `io_method=worker` (`-18,5 %` sur scans froids). |
+| **Upgrades majeurs sans coupure & flux filtrés** | **#17 PG 18.6 Logique natif (`pg18-logical`)** | `substream=p` par défaut et `publish_generated_columns=stored` accélèrent `E_sysbench_oltp_rw` (`1 027,84 TPS`, `+72,5 %`) et `H_append_only` (`3 518,49 TPS`, `+85,1 %`). Conserver le script `setval()` (`FOR ALL SEQUENCES` lève encore `SQLSTATE 42601` avant PG 19). |
+| **Actif-actif append-only / clés disjointes (`PA/EL`)** | **#17 PG 18.6 Birep (`origin=none`) + `uuidv7()`** | `uuidv7()` RFC 9562 élimine les collisions PK actif-actif (`50/50` convergées, `0` `23505`, `2 066,70 TPS` = `3,30x` PG 17) avec 7 compteurs `confl_*` (`+confl_multiple_unique_conflicts`) pour l'alerte. |
+| **Compteurs chevauchants, LWW, Auto-DDL, 3+ nœuds** | **#2 pgEdge Spock 5 (`delta_apply`)** ou **#4 EDB PGD** | PG 18.6 natif reste dépourvu de LWW/CRDT et d'Auto-DDL (`pg18-birep` dérive de `-338` en `B2` et `-83 252` en `D`). |
+| **ACID global `RPO=0`, `UNIQUE` global, FK inter-nœuds** | **#5 YugabyteDB** ou **#6 CockroachDB** | L'apply logique PG 18.6 s'arrête toujours sur `23505` et subit la course FK `T13` (`23503x8`) ; recourir au consensus Raft avec boucle de retry `40001`. |
+| **Extension PG 18 réversible dérive zéro (faible débit)** | **[#18 YT Cluster](solutions/yt_cluster_lite.md)** *(lab / niche)* | Pertinent sur PG 18 standard exigeant dérive `0` (`55409`/`40001`), fortes lectures locales (`48,8K`/`165,5K`) et réversibilité `DROP EXTENSION` (`T_REVERT`). **Inadapté** à l'OLTP intensif : plafond écriture 2PC `20,63`-`41,45 TPS` (`2,25` à `25ms` WAN, `86 lignes/s` bulk), rollback `SAVEPOINT` `0A000`, Jepsen interne limité à `cursor-stability`, `ytserv` fermé (PolyForm/Commercial) et `bus factor = 1`. |
+
+**Garde-fous d'upgrade (`PG 16/17 -> 18.6`) :** Monter les volumes Docker sur `/var/lib/postgresql` (`PGDATA=/var/lib/postgresql/18/docker`), activer les sommes de contrôle avant `pg_upgrade` (`pg_checksums --enable`), tester `io_method=sync` vs `worker` sur micro-OLTP chaud en RAM (`-10,3 %` IPC), et autoriser `io_uring` dans seccomp avant de l'activer.
