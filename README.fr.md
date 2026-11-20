@@ -6,7 +6,7 @@
 
 > **Auteur** : Jean-Marie Renouard (`jmrenouard`) | **Soutenu par** : [LightPath](https://www.lightpath.fr) | **Licence** : MIT | [English Version (`README.md`)](README.md)
 
-Étude d'ingénierie reproductible sur **15 solutions PostgreSQL** (7 familles) et **10 topologies Docker opérationnelles** (appuyées sur le sous-module [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env)), incluant **18 tests fonctionnels/limites (`L1–L8` + `T11–T18`)**, **187 mesures empiriques (`pgbench`, `sysbench`, `tc netem 10/25/50 ms`, `c=1..32`)** et l'[**Explorateur HTML interactif hors-ligne (`dashboard/index.html`)**](dashboard/index.html).
+Étude d'ingénierie reproductible sur **15 solutions PostgreSQL** (7 familles) et **15 topologies Docker opérationnelles** (`10` PG 17/distribuées + `5` PostgreSQL 18.6 via le sous-module [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.3.0`), incluant **18 tests fonctionnels/limites (`L1–L8` + `T11–T18`)** plus les sondes PG 18.6 AIO/`uuidv7()`/conflits, **274 mesures empiriques** (`187` V2 + `87` PG 18.6 : `pgbench`, `sysbench`, `tc netem 10/25/50 ms`, `c=1..32`), **21 entrées de télémétrie GitHub**, **10 graphiques `log10`** et l'[**Explorateur HTML interactif hors-ligne (`dashboard/index.html`)**](dashboard/index.html).
 
 ---
 
@@ -32,11 +32,14 @@ Tous les tests ont été exécutés séquentiellement sur hôte Docker WSL2 (20 
 
 ## 1b. Explorateur HTML interactif et graphiques logarithmiques (`log10`)
 
-Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne dans tout navigateur (sélecteur multi-solutions, bascule `log10`/linéaire, interface EN/FR, matrice `L1–L8` + `T11–T18`, export CSV) ou consultez les 7 graphiques dans le [Chapitre 09](docs/fr/09_methodologie_benchmarks_et_graphiques.md) :
+Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne dans tout navigateur (sélecteur 15 topologies PG 17 & PG 18.6, bascule `log10`/linéaire, interface EN/FR, matrices `L1–L8` / `T11–T18` / `PG 18.6`, onglet Popularité & Vitalité, export CSV) ou consultez les **10 graphiques** dans les [Chapitre 09](docs/fr/09_methodologie_benchmarks_et_graphiques.md) (`chart_01`–`07`), [Chapitre 11](docs/fr/11_popularite_et_vitalite_ecosysteme.md) (`chart_08`–`09`) et [Chapitre 12](docs/fr/12_clustering_postgresql_18_et_benchmarks.md) (`chart_10`) :
 
 ![Débit Log10 toutes suites](assets/charts/chart_01_tps_log_all_suites.png)
 ![Latence Log10 toutes suites](assets/charts/chart_02_latency_log_all_suites.png)
 ![Streaming vs Logique vs Multi-Maîtres Log10](assets/charts/chart_06_streaming_vs_logical_vs_mm.png)
+![Popularité Écosystème Étoiles et Forks Log10](assets/charts/chart_08_popularity_stars_forks_log.png)
+![Commits et Vitalité Écosystème Log10](assets/charts/chart_09_popularity_commits_activity_log.png)
+![Comparatif PostgreSQL 18.6 vs PostgreSQL 17.11 Log10](assets/charts/chart_10_pg18_vs_pg17_log.png)
 
 ### Trois conclusions clés
 1. **L'illusion de la performance asynchrone** : En écriture concurrente sur des clés partagées (`B2` et `D`), les solutions asynchrones LWW sans CRDT perdent silencieusement jusqu'à **50,8 %** des mises à jour (`bucardo`: `-531 620`) ou divergent (`pg-birep`: `-71 063`). Seul **`spock.delta_apply`** (`#2`) préserve une dérive `0` à 1 837,64 TPS sur compteurs numériques.
@@ -60,6 +63,8 @@ Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne dans tout n
 | **08** | [Limites empiriques et modes de défaillance](docs/fr/08_limites_et_modes_de_defaillance.md) | [Limits & Failure Modes](docs/en/08_limits_and_failure_modes.md) | Catalogue `L1`–`L8` + `T11`–`T18`, `SQLSTATE` vérifiés (`23505`, `55000`, `40001`, `25006`) |
 | **09** | [Méthodologie benchmarks et graphiques Log10](docs/fr/09_methodologie_benchmarks_et_graphiques.md) | [Benchmarks Methodology & Charts](docs/en/09_benchmarks_methodology_and_charts.md) | Protocole `pgbench`/`sysbench`/`netem`, échelles `log10`, 7 PNG et `dashboard/` |
 | **10** | [Streaming Physique vs Logique vs Multi-Maîtres](docs/fr/10_comparatif_streaming_logique_multimaster.md) | [Streaming vs Logical vs Multi-Master](docs/en/10_streaming_vs_logical_vs_multimaster.md) | 5 niveaux, matrice 25 critères, piège séquences `23505`, upgrades PG 15->17->18 |
+| **11** | [Popularité, Présence Git et Vitalité de l'Écosystème](docs/fr/11_popularite_et_vitalite_ecosysteme.md) | [Ecosystem Popularity & Vitality](docs/en/11_ecosystem_popularity_and_vitality.md) | Télémétrie GitHub API (21 entrées, 18 dépôts publics), étoiles, commits 12m, `chart_08`–`09` |
+| **12** | [Évolution du Clustering PostgreSQL 18.6 et Benchmarks](docs/fr/12_clustering_postgresql_18_et_benchmarks.md) | [PostgreSQL 18.6 Clustering & Benchmarks](docs/en/12_postgresql_18_clustering_and_benchmarks.md) | PG 16->17->18, AIO `worker`/`io_uring`, `uuidv7()`, 7 `confl_*`, 87 mesures PG 18.6, `chart_10` |
 
 ---
 
@@ -98,20 +103,21 @@ Les piles opérationnelles, la suite étendue (`T11–T18`) et les benchmarks V2
 ### Commandes `Makefile` essentielles
 
 ```bash
-make init-env        # Initialise le sous-module Git env/multi-db-docker-env
-make test && make lint  # Valide gouvernance, sécurité, LaTeX, artefacts, Bash et Compose
+make init-env        # Initialise le sous-module Git env/multi-db-docker-env (v2.3.0, 12 piles)
+make test && make lint  # Valide gouvernance, sécurité, LaTeX, 10 graphiques, Bash et 12 Compose
 cp .env.example .env
 make up-pgedge && make test-pgedge && make down-pgedge
-make bench-all && make charts && make dashboard  # Benchmarks, 7 PNG Log10 et dashboard HTML
+make bench-all && make bench-pg18 && make popularity && make charts && make dashboard
 ```
 
-### Piles Docker disponibles (`env/multi-db-docker-env` — voir [`stacks/README.md`](stacks/README.md))
+### Piles Docker disponibles (`env/multi-db-docker-env` `v2.3.0` — voir [`stacks/README.md`](stacks/README.md))
 
-- `pg17-baseline` / `pg-streaming` / `pg-logical` (Standalone, Streaming Async/Sync, Logique Uni)
+- `pg17-baseline` / `pg-streaming` / `pg-logical` (Standalone, Streaming Async/Sync, Logique Uni PG 17)
 - `pg-birep` (`#1` PG 17 natif `origin = none`), `pgedge-spock` (`#2` Spock 5 + Snowflake), `bucardo` (`#9` Bucardo 5.6)
 - `citus` (`#7` Citus 14.2), `yugabytedb` (`#5` YugabyteDB 2026.1.3 RF=3), `cockroachdb` (`#6` CockroachDB v24.3.0 RF=3)
+- `pg18-streaming` / `pg18-logical` / `pg18-birep` (PostgreSQL 18.6 : Standalone, Async/Sync, Logique Uni, BiRep `uuidv7()`)
 
-Les sorties brutes sont publiées dans `results/` (`benchmark_summary.csv`, `benchmark_extended_workloads.csv`, `benchmark_wan_sweep.csv`, `benchmark_concurrency_sweep.csv`, `functional_limits_matrix.csv`, `extended_functional_matrix.csv`).
+Les sorties brutes sont publiées dans `results/` (`benchmark_summary.csv`, `benchmark_extended_workloads.csv`, `benchmark_wan_sweep.csv`, `benchmark_concurrency_sweep.csv`, `benchmark_pg18.csv`, `functional_limits_matrix.csv`, `extended_functional_matrix.csv`, `functional_limits_pg18.csv`, `project_popularity.csv`).
 
 ---
 
