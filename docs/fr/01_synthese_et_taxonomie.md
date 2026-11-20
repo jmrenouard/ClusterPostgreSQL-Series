@@ -8,7 +8,9 @@ PostgreSQL s'est imposé comme le système de gestion de bases de données relat
 
 En revanche, l'exigence d'**écriture multi-nœuds** (*Active-Active* ou *Multi-Master*) - qu'elle vise la géo-distribution à faible latence, l'isolation de pannes multi-régions sans temps de bascule applicatif, ou le partitionnement horizontal des écritures - heurte frontalement les invariants internes du noyau PostgreSQL : identifiants de transaction locaux (`XID` 32 bits), verrous mémoire locaux (`LWLock`, verrous consultatifs), journal séquentiel unique (`LSN`) et séquences non distribuées.
 
-Cette étude technique compare **15 solutions** regroupées en **7 familles architecturales** afin de démystifier les compromis réels entre disponibilité en écriture, cohérence forte, compatibilité PostgreSQL et coût opérationnel (TCO).
+Cette étude technique évalue explicitement les cibles natives **PostgreSQL 16, 17 (`17.11`) et 18.6** aux côtés de **16+ solutions** regroupées en **7 familles architecturales** (**19 fiches techniques bilingues** et **296 mesures empiriques** : `187` V2 + `87` PG 18.6 + `22` YT Cluster 1.21.3) afin de démystifier les compromis réels entre disponibilité en écriture, cohérence forte, compatibilité PostgreSQL et coût opérationnel (TCO).
+
+**Saut générationnel PostgreSQL 18.6 (`#17`) :** Mesuré en direct sur `PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)` ([Fiche #17](solutions/pg18_native_clustering.md) | [Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)), PG 18.6 introduit les clés primaires actif-actif **`uuidv7()`** RFC 9562 (`50/50` convergence bi-nœuds, `0` collision `23505`, **`2 066,70 TPS`** = **`3,30x`** le débit BiRep append-only de PG 17 à `627,13 TPS`), les E/S asynchrones **`io_method=worker`** (`-18,5 %` sur scan froid) avec **`data_checksums=on`** par défaut, **7 compteurs `confl_*`** (`+confl_multiple_unique_conflicts`) et `substream=p` par défaut, tandis que `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` renvoie encore `SQLSTATE 42601` (reporté à PG 19) sans LWW/CRDT ni DDL automatique.
 
 > [!IMPORTANT]
 > **Thèse centrale de l'étude** : Il n'existe pas de réplication multi-maîtres magique sur PostgreSQL. Toute architecture multi-écrivains choisit explicitement entre **cohérence forte coordonnée par consensus** (soumise à la latence réseau WAN et aux annulations par sérialisation) et **réplication asynchrone optimiste** (exposée aux conflits Write-Write, à la dérive d'horloge et à la perte de mises à jour sans logique CRDT).
@@ -78,6 +80,8 @@ flowchart TD
 | **#13** | **GCP Spanner PG & AlloyDB** | Cloud managé | Paxos + TrueTime (Spanner) | Cohérence externe (Spanner) | Cloud Propriétaire (GCP) |
 | **#14** | **RubyRep / Slony-I / Londiste** | Triggers historiques | Asynchrone triggers | Éventuelle / Mono-maître historique | Open-Source (historique) |
 | **#15** | **PG 17 Standalone & Patroni HA** | Baseline contrôle | Mono-primaire WAL physique | Forte ACID (1 écrivain) | Open-Source |
+| **#17** | **[Clustering Natif PostgreSQL 18.6](solutions/pg18_native_clustering.md)** | Logique native & HA | AIO `worker`, `uuidv7()`, 7 `confl_*`, `substream=p` | `PA/EL` (Log/Async) ou `PC/EC` (Sync) | Open-Source (PG License) |
+| **#18** | **[YT Cluster / YT Cluster Lite](solutions/yt_cluster_lite.md)** | Extension / 2PC | Triggers PG 18 + daemon Rust `ytserv` XA 2PC (`cc=half`) | `CP`-écritures / `EL`-lectures (dérive `0`) | Cœur MIT + `ytserv` PolyForm/Commercial |
 
 ---
 
@@ -94,6 +98,7 @@ Pour exploiter cette étude selon votre rôle (architecte, DBA, SRE ou décideur
 7. **[Chapitre 06 — Résultats empiriques](06_resultats_tests_et_benchmarks.md)** et **[Chapitre 08 — Limites et modes de défaillance](08_limites_et_modes_de_defaillance.md)** : Résultats mesurés des PoCs reproductibles (`Suites A–F`), sondes `L1–L8` / `T11–T18` et codes `SQLSTATE` capturés.
 8. **[Chapitre 07 — Guide de choix et architecture cible](07_guide_de_choix_et_architecture_cible.md)** : Arbre de décision, matrice cas d'usage, anti-patterns critiques, dimensionnement, PITR et migration.
 9. **[Chapitre 09 — Méthodologie benchmarks et graphiques](09_methodologie_benchmarks_et_graphiques.md)** et **[Chapitre 10 — Streaming vs Logique vs Multi-Maîtres](10_comparatif_streaming_logique_multimaster.md)** : Balayages V2 (`187` lignes `results/*.csv`), graphiques `log10`, spectre `N1–N5` (`#16` `pg17-logical`) et fiches dédiées `solutions/`.
+10. **[Chapitre 11 — Popularité et vitalité](11_popularite_et_vitalite_ecosysteme.md)** et **[Chapitre 12 — Clustering PostgreSQL 18.6](12_clustering_postgresql_18_et_benchmarks.md)** : Télémétrie GitHub API (`21` entrées), évolution PG 16->17->18.6, AIO `worker`, `uuidv7()`, 7 `confl_*`, `87` mesures PG 18.6 et [Fiche #17](solutions/pg18_native_clustering.md).
 
 ---
 
