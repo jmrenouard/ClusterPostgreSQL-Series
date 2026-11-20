@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-102 - Add English Architecture Sheet for Citus (#7) (Issue `#203`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#203` (`docs/issue-203-citus-en`)
+- **Request / Changes / Result**: Created `docs/en/solutions/citus.md` (`#7`, `T5`, `citus` 14.2.0 on PG 17.10) with Mermaid coordinator/worker architecture diagram, implementation modes (Hash 1PC/2PC, Reference, Local, Citus MX, Patroni HA), strengths/weaknesses, all 19 CSV rows, `F1`/`L1-L8`/`T11-T18` probes (`0A000;40001;08006`), Ch. 03b footer links, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-101 - Polish pgedge_spock and bucardo Technical and EN/FR Parity (Issue `#201`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#201` (`docs/issue-201-spock-bucardo-polish`)
 - **Request / Changes / Result**: Clarified `ALTER TABLE` event-trigger vs native WAL `TRUNCATE` replication (line 62) and `sysbench` standalone Lua noise (`112` `E`/`192` `E3`, line 76) in `docs/{en,fr}/solutions/pgedge_spock.md`, aligned Bucardo 4 `dbgroup` wording (line 53) and French Mermaid delta-merge labels (lines 36-37) in `docs/fr/solutions/bucardo.md`, and verified `make test` (`13/13` OK) and `make lint`.
