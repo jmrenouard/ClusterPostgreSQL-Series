@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-095 - Add French Architecture Sheet for Bucardo 5 (`#9`) (Issue `#189`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#189` (`docs/issue-189-bucardo-fr`)
+- **Request / Changes / Result**: Created `docs/fr/solutions/bucardo.md` mirroring the English sheet section-for-section (`#9`, `T4`, `bucardo`) with Mermaid architecture diagram, implementation modes, strengths/weaknesses, all 18 CSV rows, `F1`/`L1-L8`/`T11-T18` probes (`23503;23505`), Ch. 03b link, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-094 - Add English Architecture Sheet for Bucardo 5 (`#9`) (Issue `#187`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#187` (`docs/issue-187-bucardo-en`)
 - **Request / Changes / Result**: Created `docs/en/solutions/bucardo.md` covering `#9` (`T4`, `bucardo`) with Mermaid architecture diagram, implementation modes (`source:source` vs `source:target` and conflict handlers), strengths/weaknesses, all 18 CSV rows, `F1`/`L1-L8`/`T11-T18` probes (`23503;23505`), Ch. 03b link, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
