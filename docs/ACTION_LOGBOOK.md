@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-107 - Add French Architecture Sheet for CockroachDB (#6) (Issue `#213`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#213` (`docs/issue-213-cockroachdb-fr`)
+- **Request / Changes / Result**: Created `docs/fr/solutions/cockroachdb.md` mirroring the English sheet section-for-section (`#6`, `T5`, `cockroach` v24.3.0 / PG-wire 13.0.0, 149 lines) with French Mermaid diagram, implementation modes, strengths/weaknesses, all 19 CSV rows (`44/87/96/685(E fail)/14/16/5` and `G` `0/5/26/64/88` retries), `F1`/`L1-L8`/`T11-T18` probes (`40001;23505;XCEXF;42601;57014`), Ch. 03b links, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-106 - Add English Architecture Sheet for CockroachDB (#6) (Issue `#211`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#211` (`docs/issue-211-cockroachdb-en`)
 - **Request / Changes / Result**: Created `docs/en/solutions/cockroachdb.md` (`#6`, `T5`, `cockroach` v24.3.0 / PG-wire 13.0.0) with Mermaid 3-node Multi-Raft diagram, implementation modes (`SERIALIZABLE` optimistic MVCC + `40001` retries, opt-in `READ COMMITTED`, Follower Reads, Multi-Region survival, `unique_rowid()` vs `CACHE 1`), strengths/weaknesses, all 19 CSV rows (`44/87/96/685(E fail)/14/16/5` and `G` `0/5/26/64/88` retries), `F1`/`L1-L8`/`T11-T18` probes (`40001;23505;XCEXF;42601;57014`), Ch. 03b links, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
