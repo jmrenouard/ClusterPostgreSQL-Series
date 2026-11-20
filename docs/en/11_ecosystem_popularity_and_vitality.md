@@ -8,7 +8,7 @@
 
 ## 1. Live Telemetry Methodology (`2026-11-20T13:34:55Z`)
 
-Architecture choices fail when teams mistake legacy brand awareness or cumulative GitHub stars for active engineering cadence. On **`2026-11-20T13:34:55Z`**, [`scripts/collect_popularity.py`](../../scripts/collect_popularity.py) queried live GitHub REST and GraphQL APIs across **21 catalog rows** (**18 public GitHub repos** plus **3 proprietary/managed engines**) into [`results/project_popularity.csv`](../../results/project_popularity.csv):
+Architecture choices fail when teams mistake legacy brand awareness or cumulative GitHub stars for active engineering cadence. On **`2026-11-20T17:26:02Z`**, [`scripts/collect_popularity.py`](../../scripts/collect_popularity.py) queried live GitHub REST and GraphQL APIs across **22 catalog rows** (**19 public GitHub repos** plus **3 proprietary/managed engines**) into [`results/project_popularity.csv`](../../results/project_popularity.csv):
 
 - **Exact Pagination (`total_commits`, `commits_12m`, `contributors`):** Calls `per_page=1` on each repo's `default_branch` (`since=2025-11-20T13:34:55Z` for 12m commits) and parses HTTP `Link: rel="last"` without cloning repositories.
 - **True Watchers & Canonical Targets:** Uses `subscribers_count` (true watchers, avoiding `watchers_count` which duplicates stars), follows canonical redirects (`JumpMind/symmetric-ds` -> `jumpmindinc/symmetric-ds`), and queries `GoogleCloudPlatform/pgadapter` directly for the Spanner proxy.
@@ -24,31 +24,34 @@ Live telemetry spans **three orders of magnitude**: Stars run from `26` (`pgq/lo
 
 ---
 
-## 2. Complete Ecosystem Telemetry Matrix (`21` Rows)
+## 2. Complete Ecosystem Telemetry Matrix (`22` Rows)
 
-| Solution (`#`) | Git Role | Repo & Account (`Type`/`Repos`) | Stars / Forks | Commits (`Tot`/`12m`) | Contrib | Lang / SPDX | Tag (`Last Push`) |
-| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
-| **PostgreSQL Core (`#1/#15/#16`)** | Mirror* | `postgres/postgres` (Org/6) | 22,893 / 6,122 | 66,089 / **3,449** | 58* | C / NOASSERTION | `REL_19_0` (2026-11-20) |
-| **Patroni HA (`#15b`)** | Primary | `patroni/patroni` (Org/1) | 8,845 / 1,048 | 2,712 / 141 | 246 | Py / MIT | `v4.1.5` (2026-11-20) |
-| **pgEdge Spock (`#2`)** | Primary | `pgEdge/spock` (Org/51) | 769 / 59 | 1,616 / **621** | 32 | C / NOASSERTION | `v6.0.0-beta.2` (2026-11-20) |
-| **pgEdge Snowflake (`#2b`)** | Companion | `pgEdge/snowflake` (Org/51) | 103 / 14 | 239 / 48 | 20 | PLpgSQL / PostgreSQL | `v2.6.1` (2026-11-18) |
-| **pgEdge LOLOR (`#2c`)** | Companion | `pgEdge/lolor` (Org/51) | 51 / 8 | 159 / 79 | 16 | C / PostgreSQL | `v1.2.3` (2026-11-20) |
-| **pglogical 2 (`#3`)** | Primary | `2ndQuadrant/pglogical` (Org/46) | 1,243 / 179 | 876 / **15** | 52 | C / NOASSERTION | `REL2_4_8` (2026-07-28) |
-| **YugabyteDB (`#5`)** | Primary | `yugabyte/yugabyte-db` (Org/314) | 10,670 / 1,481 | 41,469 / **5,342** | **1,217** | C / NOASSERTION | `v2026.1.3.0` (2026-11-20) |
-| **CockroachDB (`#6`)** | Primary | `cockroachdb/cockroach` (Org/227) | **32,638** / 4,239 | **118,999** / **7,581** | 1,123 | Go / NOASSERTION | `v25.2.29` (2026-11-18) |
-| **Citus (`#7`)** | Primary | `citusdata/citus` (Org/67) | 12,865 / 810 | 7,400 / 222 | 152 | C / AGPL-3.0 | `v14.3.0` (2026-11-20) |
-| **OpenTenBase (`#8`)** | Primary | `OpenTenBase/OpenTenBase` (Org/14) | 797 / 633 | 817 / **14** | 64 | C / NOASSERTION | `v5.0` (2026-11-09) |
-| **Bucardo 5 (`#9`)** | Primary | `bucardo/bucardo` (Org/15) | 807 / 110 | 2,535 / **0** | 30 | Perl / NOASSERTION | `5.6.0` (2025-05-31) |
-| **SymmetricDS (`#10`)** | Primary | `jumpmindinc/symmetric-ds` (Org/8) | 882 / 241 | 14,926 / **425** | 96 | Java / N/A | `3.18.4` (2026-11-19) |
-| **PgPool-II (`#11`)** | Mirror* | `pgpool/pgpool2` (Org/8) | 448 / 102 | 4,627 / 140 | 35* | C / NOASSERTION | `V4_7_3` (2026-11-18) |
-| **Slony-I (`#14a`)** | Maintainer | `ssinger/slony1-engine` (User/36) | 42 / 19 | 2,569 / **0** | 23 | C / NOASSERTION | `REL_2_2_11` (2024-03-11) |
-| **PGQ Queue (`#14b`)** | Primary | `pgq/pgq` (Org/13) | 427 / 23 | 89 / 8 | 7 | PLpgSQL / ISC | `v3.5.2` (2026-07-09) |
-| **Londiste (`#14c`)** | Primary | `pgq/londiste` (Org/13) | 26 / 8 | 195 / 8 | 5 | Py / ISC | `v3.12` (2026-07-22) |
-| **RubyRep (`#14d`)** | Dormant | `rubyrep/rubyrep` (User/2) | 179 / 74 | 556 / **0** | **2** | Ruby / MIT | `v2.0.0` (2023-07-10) |
-| **Spanner PGAdapter (`#13a`)** | Proxy Only | `GoogleCloudPlatform/pgadapter` (Org/1,545) | 94 / 36 | 4,040 / **934** | 22 | Java / Apache-2.0 | `v0.56.4` (2026-11-20) |
-| **EDB PGD / BDR (`#4`)** | Proprietary | N/A (`git_present = No (Proprietary)`) | N/A | N/A | N/A | N/A / Proprietary | N/A |
-| **AWS Aurora Limitless (`#12`)** | Managed | N/A (`git_present = No (Managed Cloud)`) | N/A | N/A | N/A | N/A / Proprietary | N/A |
-| **GCP Spanner & AlloyDB (`#13`)** | Partial | N/A (`PGAdapter only; engine proprietary`) | N/A | N/A | N/A | N/A / Proprietary | N/A |
+| Solution (`#`) | Git Present (`Yes/No`) | Git Account (`Org/User`, Repos) | Repository | Stars / Forks | Commits (`Tot`/`12m`) | Contrib | Lang / SPDX | Tag (`Push`) |
+| :--- | :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **PostgreSQL Core (`#1/#15/#16/#17`)** | Yes (Mirror*) | `postgres` (Org, 6) | `postgres/postgres` | 22,893 / 6,122 | 66,089 / **3,449** | 58* | C / NOASSERTION | `REL_19_0` (2026-11-20) |
+| **Patroni HA (`#15b`)** | Yes | `patroni` (Org, 1) | `patroni/patroni` | 8,845 / 1,048 | 2,712 / 141 | 246 | Py / MIT | `v4.1.5` (2026-11-20) |
+| **pgEdge Spock (`#2`)** | Yes | `pgEdge` (Org, 51) | `pgEdge/spock` | 769 / 59 | 1,616 / **621** | 32 | C / NOASSERTION | `v6.0.0-beta.2` (2026-11-20) |
+| **pgEdge Snowflake (`#2b`)** | Yes | `pgEdge` (Org, 51) | `pgEdge/snowflake` | 103 / 14 | 239 / 48 | 20 | PLpgSQL / PG | `v2.6.1` (2026-11-18) |
+| **pgEdge LOLOR (`#2c`)** | Yes | `pgEdge` (Org, 51) | `pgEdge/lolor` | 51 / 8 | 159 / 79 | 16 | C / PG | `v1.2.3` (2026-11-20) |
+| **pglogical 2 (`#3`)** | Yes | `2ndQuadrant` (Org, 46) | `2ndQuadrant/pglogical` | 1,243 / 179 | 876 / **15** | 52 | C / NOASSERTION | `REL2_4_8` (2026-07-28) |
+| **YugabyteDB (`#5`)** | Yes | `yugabyte` (Org, 314) | `yugabyte/yugabyte-db` | 10,670 / 1,481 | 41,469 / **5,342** | **1,217** | C / NOASSERTION | `v2026.1.3.0` (2026-11-20) |
+| **CockroachDB (`#6`)** | Yes | `cockroachdb` (Org, 227) | `cockroachdb/cockroach` | **32,638** / 4,239 | **118,999** / **7,581** | 1,123 | Go / NOASSERTION | `v25.2.29` (2026-11-18) |
+| **Citus (`#7`)** | Yes | `citusdata` (Org, 67) | `citusdata/citus` | 12,865 / 810 | 7,400 / 222 | 152 | C / AGPL-3.0 | `v14.3.0` (2026-11-20) |
+| **OpenTenBase (`#8`)** | Yes | `OpenTenBase` (Org, 14) | `OpenTenBase/OpenTenBase` | 797 / 633 | 817 / **14** | 64 | C / NOASSERTION | `v5.0` (2026-11-09) |
+| **Bucardo 5 (`#9`)** | Yes | `bucardo` (Org, 15) | `bucardo/bucardo` | 807 / 110 | 2,535 / **0** | 30 | Perl / NOASSERTION | `5.6.0` (2025-05-31) |
+| **SymmetricDS (`#10`)** | Yes | `jumpmindinc` (Org, 8) | `jumpmindinc/symmetric-ds` | 882 / 241 | 14,926 / **425** | 96 | Java / N/A | `3.18.4` (2026-11-19) |
+| **PgPool-II (`#11`)** | Yes (Mirror*) | `pgpool` (Org, 8) | `pgpool/pgpool2` | 448 / 102 | 4,627 / 140 | 35* | C / NOASSERTION | `V4_7_3` (2026-11-18) |
+| **Slony-I (`#14a`)** | Yes | `ssinger` (User, 36) | `ssinger/slony1-engine` | 42 / 19 | 2,569 / **0** | 23 | C / NOASSERTION | `REL_2_2_11` (2024-03-11) |
+| **PGQ Queue (`#14b`)** | Yes | `pgq` (Org, 13) | `pgq/pgq` | 427 / 23 | 89 / 8 | 7 | PLpgSQL / ISC | `v3.5.2` (2026-07-09) |
+| **Londiste (`#14c`)** | Yes | `pgq` (Org, 13) | `pgq/londiste` | 26 / 8 | 195 / 8 | 5 | Py / ISC | `v3.12` (2026-07-22) |
+| **RubyRep (`#14d`)** | Yes | `rubyrep` (User, 2) | `rubyrep/rubyrep` | 179 / 74 | 556 / **0** | **2** | Ruby / MIT | `v2.0.0` (2023-07-10) |
+| **Spanner PGAdapter (`#13a`)** | Partial (Proxy) | `GoogleCloudPlatform` (Org, 1,545) | `GoogleCloudPlatform/pgadapter` | 94 / 36 | 4,040 / **934** | 22 | Java / Apache-2.0 | `v0.56.4` (2026-11-20) |
+| **YT Cluster Lite (MIT Core) (`#18`)** | Yes (MIT Core; `ytserv` dual-lic.) | `DBinvent` (Org, 10) | `DBinvent/yt-cluster-lite` | 15 / 0 | 21 / **21** | **2** | Rust / MIT | `v1.21` (2026-11-20) |
+| **EDB PGD / BDR (`#4`)** | No (Proprietary) | N/A (Proprietary) | N/A | N/A | N/A | N/A | N/A / Proprietary | N/A |
+| **AWS Aurora Limitless (`#12`)** | No (Managed Cloud) | N/A (Proprietary) | N/A | N/A | N/A | N/A | N/A / Proprietary | N/A |
+| **GCP Spanner & AlloyDB (`#13`)** | Partial (Proxy only) | N/A (Engine closed) | N/A | N/A | N/A | N/A | N/A / Proprietary | N/A |
+
+**PostgreSQL 18.6 Core Vitality (`#17`):** [PostgreSQL 18.6 Native Clustering](solutions/pg18_native_clustering.md) ([Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)) inherits the `postgres/postgres` Tier **S** core vitality profile directly: **`66,089`** total commits, **`3,449`** commits/12m, **`22,893`** stars, **`6,122`** forks, `postgres` `Organization` (`6` public repos), official mirror of `git.postgresql.org`.
 
 *\*Notes: `postgres/postgres` (58) and `pgpool/pgpool2` (35) are official read-only mirrors of `git.postgresql.org`; contributor counts reflect trusted committers pushing mailing-list patches, not total authors. `NOASSERTION` indicates custom/dual licenses (PostgreSQL License on Core/Spock/pglogical; BSL/CSL on CockroachDB; Apache-2.0 + Polyform on YugabyteDB; BSD-like on PgPool/Bucardo/Slony). `cockroachdb` tags `v25.2.29` (LTS backport) beside `v26.2.12`; `pgEdge/spock` pairs `v6.0.0-beta.2` with stable `v5.0.14`.*
 
