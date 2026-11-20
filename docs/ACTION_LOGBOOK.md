@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-121 - Add Solutions Catalog Table and Fix #16 pg17-logical ID in README.md (Issue `#241`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#241` (`docs/issue-241-readme-en-catalog`)
+- **Request / Changes / Result**: Fixed `README.md:32` (`pg17-logical` `#14` -> `#16 Uni`) and inserted the 17-row `Solutions Catalog & Architecture Sheets` table with `#16` vs `#14` disambiguation blockquote, verified official Product/Docs links, GitHub repositories (or `Proprietary / N/A`), and 1-sentence descriptions linking all 17 `docs/en/solutions/*.md` sheets; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-120 - Add French Architectural Reference Sheet for Legacy Triggers (#14) (Issue `#239`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#239` (`docs/issue-239-legacy-triggers-fr`)
 - **Request / Changes / Result**: Created `docs/fr/solutions/legacy_triggers.md` mirroring `docs/en/solutions/legacy_triggers.md` section-for-section (`#14`, Architectural Reference, Historical / EOL) with French 3-subgraph Mermaid diagram, trigger write-amplification model, explicit `#14` vs `#16` (`pg17-logical`) disambiguation, strengths/weaknesses, verified `results/*.csv` baselines (`#9 bucardo`, `pg17-logical`, `#1 pg-birep`, `#15a pg17-standalone`), and Ch. 03b/10 footer links; `make test` (`13/13` OK) and `make lint` verified.
