@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-124 - Add 03a FR Solution Links, #16 Section, and EDB PGD Harmonization (Issue `#247`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#247` (`docs/issue-247-03a-fr-links-edb-sync`)
+- **Request / Changes / Result**: Updated `docs/fr/03a_catalogue_natif_et_extensions.md` intro (`L5`), inserted the 7-row `03a` dedicated sheets table and per-section `Fiche(s) dediee(s)` links, appended `## #16` (`pg17-logical`, `N3`) with zero `#14` mentions, and harmonized EDB PGD lines 69 and 73 (`bdr.crdt_*`, `bdr.conflict_history`, `snowflakeid`, `galloc`, `timeshard`); `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-123 - Add 03a EN Solution Links, #16 Section, and EDB PGD Harmonization (Issue `#245`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#245` (`docs/issue-245-03a-en-links-edb-sync`)
 - **Request / Changes / Result**: Updated `docs/en/03a_solutions_native_and_extensions.md` with the 7-row `03a` Dedicated Architecture Sheets index table (`pg17_bidirectional_logical`, `pgedge_spock`, `pglogical2`, `edb_pgd`, `pg17_standalone`, `pg17_physical_streaming_patroni`, `pg17_logical_unidirectional`), per-section `Dedicated Sheet(s)` links, a new `Solution #16` (`pg17-logical`, `T3`) subsection, and harmonized EDB PGD CRDT (`bdr.crdt_*`, `bdr.conflict_history`) and `bdr.global_sequences` (`snowflakeid`, Raft `galloc`, legacy `timeshard`) terminology; `make test` (`13/13` OK) and `make lint` verified.
