@@ -21,7 +21,7 @@
 
 **PostgreSQL 17 Standalone** (`pg17-standalone`) is a single-instance relational server with no physical standbys, logical subscribers, coordinators, or quorum consensus. In this study, it acts as the **zero-replication control baseline** for all multi-node benchmarks.
 
-By removing network round-trips, WAL shipping, logical decoding, and distributed lock coordination, `pg17-standalone` isolates the **hardware and engine ceiling**: local WAL `fsync` latency ($L_{\text{disk}}$) and MVCC row-lock throughput. Every replication overhead percentage reported later (e.g., `-52.8%` sync streaming in Suite A, `-86.1%` at `25 ms` WAN) is measured against this baseline.
+By removing network round-trips, WAL shipping, logical decoding, and distributed lock coordination, `pg17-standalone` isolates the **hardware and engine ceiling**: local WAL `fsync` latency ($L_{\text{disk}}$) and MVCC row-lock throughput. Suite A replication overhead percentages (e.g., `-52.8%` for sync streaming on LAN at `409.48 TPS`, or `-93.4%` for sync `25 ms` WAN at `57.0 TPS` vs standalone `866.82 TPS` — i.e., `-86.1%` relative to sync LAN `409.48 TPS`) are measured from this baseline.
 
 ---
 
@@ -80,7 +80,7 @@ Durability depends on `synchronous_commit` and `wal_sync_method` (Linux PG 17 de
 
 ## 5. Empirical Benchmark Results, Functional Limits & PoC Spec
 
-All tests ran at `pg_scale = 2` (`retries_40001 = 0`). Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` latencies are measured (`lat_p99_ms` is unmeasured). `F_wan_netem_*` is `N/A` (no remote peer).
+All tests ran at `pg_scale = 2` (`retries_40001 = 0`). Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` latencies are measured (p99 latency is unmeasured). `F_wan_netem_*` is `N/A` (no remote peer).
 
 ### Table A — Core & Extended Workloads (`results/benchmark_summary.csv`, `benchmark_extended_workloads.csv`)
 
@@ -140,8 +140,8 @@ All tests ran at `pg_scale = 2` (`retries_40001 = 0`). Only `Avg`, `Stddev` (`0`
 | **Image & Version** | `postgres:17` (`PostgreSQL 17.11 (Debian 17.11-1.pgdg13+2)`) |
 | **Port & Network** | `127.0.0.1:15431:5432`, bridge network `pg17_baseline_net` |
 | **Volume & Health** | `pg17_standalone_data:/var/lib/postgresql/data`; `pg_isready` (`3s` / `15` retries) |
-| **GUCs & Setup** | Flags: `shared_buffers=128MB`, `max_connections=100`, `log_error_verbosity=verbose`; defaults: `synchronous_commit=on`, `wal_sync_method=fdatasync`. Empty setup (`scripts/setup_pg17_baseline.sh` configures the sync pair). |
+| **GUCs & Setup** | Flags: `shared_buffers=128MB`, `max_connections=100`, `log_error_verbosity=verbose`; defaults: `synchronous_commit=on`, `wal_sync_method=fdatasync`. No setup script for `pg17_standalone` (sync pair uses submodule `scripts/bench_pg_v2_runner.sh` / `scripts/bench_pg_multimaster.sh` `ALTER SYSTEM`, or parent-repo `scripts/setup_pg17_baseline.sh`). |
 
 ---
 
-**Navigation:** [Index](../../README.md) · [Ch. 03a — Native & Extensions](../03a_solutions_native_and_extensions.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/pg17_standalone.md)
+**Navigation:** [Index](../../../README.md) · [Ch. 03a — Native & Extensions](../03a_solutions_native_and_extensions.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/pg17_standalone.md)
