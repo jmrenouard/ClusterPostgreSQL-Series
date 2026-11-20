@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-106 - Add English Architecture Sheet for CockroachDB (#6) (Issue `#211`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#211` (`docs/issue-211-cockroachdb-en`)
+- **Request / Changes / Result**: Created `docs/en/solutions/cockroachdb.md` (`#6`, `T5`, `cockroach` v24.3.0 / PG-wire 13.0.0) with Mermaid 3-node Multi-Raft diagram, implementation modes (`SERIALIZABLE` optimistic MVCC + `40001` retries, opt-in `READ COMMITTED`, Follower Reads, Multi-Region survival, `unique_rowid()` vs `CACHE 1`), strengths/weaknesses, all 19 CSV rows (`44/87/96/685(E fail)/14/16/5` and `G` `0/5/26/64/88` retries), `F1`/`L1-L8`/`T11-T18` probes (`40001;23505;XCEXF;42601;57014`), Ch. 03b links, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-105 - Add French Architecture Sheet for YugabyteDB (#5) (Issue `#209`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#209` (`docs/issue-209-yugabytedb-fr`)
 - **Request / Changes / Result**: Created `docs/fr/solutions/yugabytedb.md` mirroring the English sheet section-for-section (`#5`, `T5`, `yugabyte` 2026.1.3.0-b100 / YSQL 15.12, 146 lines) with French Mermaid diagram, implementation modes, strengths/weaknesses, all 19 CSV rows (`E3` `tx_failed=1`), `F1`/`L1-L8`/`T11-T18` probes (`40001;23505;0A000`, `T18` `next_id=101`), Ch. 03b links, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
