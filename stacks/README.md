@@ -10,7 +10,7 @@ Duplicate compose and setup copies previously kept under `stacks/<topology>/` ha
 # 1. Initialize the multi-db-docker-env Git submodule
 make init-env
 
-# 2. List all 12 PostgreSQL compose stacks (covering all 15 benchmarked topologies)
+# 2. List all 13 PostgreSQL compose stacks (covering all 17 benchmarked topologies)
 make stacks
 
 # 3. Start, initialize, test, and tear down any topology via Makefile
@@ -33,3 +33,4 @@ make up-pgedge && make setup-pgedge && make test-pgedge && make down-pgedge
 | `pg18-streaming` | `docker-compose-pg18-streaming.yml` | `pg18-standalone`, `pg18-async-streaming`, `pg18-sync-streaming` (PG 18.6) |
 | `pg18-logical` | `docker-compose-pg18-logical.yml` | `pg18-logical` (PG 18.6) |
 | `pg18-birep` | `docker-compose-pg18-birep.yml` | `pg18-birep` (PG 18.6 `origin=none` + `uuidv7()`) |
+| `yt-cluster` | `docker-compose-yt-cluster.yml` | `yt-cluster` (`cc=half`), `yt-cluster-async` (`cc=0`, YT Cluster `1.21.3`, `v2.4.0`) |
