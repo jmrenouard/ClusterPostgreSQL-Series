@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-131 - Integrate E2E Tiers 1-2 Solution Sheets Test Suite (Issue `#261`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#261` (`test/issue-261-e2e-solution-sheets`)
+- **Request / Changes / Result**: Added `tests/test_solution_sheets.py` (`12,254` bytes LF, pure 7-bit ASCII) covering E2E Tiers 1-2 (17-slug parity, bilingual metadata/attribution headers, A4 density bounds, pure-stdlib Mermaid validator + self-tests, structural sections/tables, and math/governance/security compliance); `make test-solution_sheets` (`3/3` OK), `make test` (`16/16` OK), and `make lint` verified in WSL2.
+
 ### ACT-130 - Fix AWS Aurora Limitless Deep-Link and Align ACT-124 Line References (Issue `#259`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#259` (`docs/issue-259-aws-limitless-url-and-logbook`)
 - **Request / Changes / Result**: Replaced stale `AuroraPostgreSQL.Limitless.html` redirect URL with canonical HTTP-200 `https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/limitless.html` in `README.md:90` and `README.fr.md:85`, and aligned `ACT-124` in `docs/ACTION_LOGBOOK.md` to post-edit lines `89 and 93` in `docs/fr/03a_catalogue_natif_et_extensions.md`; live HTTP `200` (zero redirects), `make test` (`13/13` OK), and `make lint` verified.
