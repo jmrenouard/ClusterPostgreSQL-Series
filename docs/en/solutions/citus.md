@@ -19,9 +19,9 @@
 
 ## 1. Technology Description & What It Does
 
-**Citus** is a pure PostgreSQL C extension (AGPLv3) that transforms standard PostgreSQL instances into a horizontally sharded **Coordinator + Workers** cluster (`citus_add_node`). Rather than modifying PostgreSQL storage internals or running Raft consensus, Citus intercepts SQL queries at the planner/executor hooks and routes operations across logical shards backed by ordinary PostgreSQL heap tables and `max_prepared_transactions > 0`.
+**Citus** is a PostgreSQL C extension (AGPLv3) turning standard instances into a sharded **Coordinator + Workers** cluster (`citus_add_node`). Without altering heap storage or adding Raft, it intercepts planner/executor hooks to route queries to logical shards with `max_prepared_transactions > 0`.
 
-Tables fall into three operational classes: **Hash-Distributed Tables** (`create_distributed_table`) partitioned across worker shards by a distribution column, **Reference Tables** (`create_reference_table`) replicated synchronously to every worker via Two-Phase Commit (2PC), and **Coordinator-Local Tables**. Unlike `#5 YugabyteDB` or `#6 CockroachDB`, Citus preserves 100% PostgreSQL 17 core execution semantics per shard, but does not provide inter-worker Raft replication by default.
+Tables span three classes: **Hash-Distributed** (`create_distributed_table`) sharded by key, **Reference** (`create_reference_table`) 2PC-replicated to all workers, and **Coordinator-Local**. Unlike `#5 YugabyteDB` or `#6 CockroachDB`, Citus keeps 100% PG 17 shard semantics without default inter-worker Raft.
 
 ---
 
@@ -42,14 +42,14 @@ In the PoC, **Citus MX** (`start_metadata_sync_to_node`) is not enabled (`B1`–
 
 ## 3. Operating Principles & Implementation Modes
 
-1. **Single-Shard 1PC vs. Cross-Shard 2PC Routing:** Queries filtering on a table's distribution column (such as `D_hot_conflict` updating `accounts(aid)` and inserting `history(aid)` colocated on `aid`, or `H_append_only_insert` on `payload`) push down in one round-trip (1PC). Standard TPC-B (`A`, `B1`, `B2`, `F`) touches `accounts(aid)`, `tellers(tid)`, and `branches(bid)` on unrelated hash keys, forcing coordinator **2PC (`PREPARE TRANSACTION` / `COMMIT PREPARED`)**.
+1. **1PC vs. 2PC Routing:** Queries filtered on the distribution key (`D_hot_conflict` colocated on `aid`, `H_append_only_insert`) push down in 1PC. Multi-key TPC-B (`A`, `B1`, `B2`, `F`) spans `accounts(aid)`, `tellers(tid)`, and `branches(bid)`, forcing **2PC (`PREPARE TRANSACTION` / `COMMIT PREPARED`)**.
 2. **Commit Latency Model:**
 
 $$
 L_{\text{T5-citus-1PC}} \approx L_{\text{disk}} + \text{RTT}_{\text{coord-worker}}, \qquad L_{\text{T5-citus-2PC}} \approx L_{\text{disk}} + 3 \cdot \text{RTT}_{\text{coord-worker}}
 $$
 
-3. **Schema Rules (`0A000`), Colocation & MX:** Every `PRIMARY KEY` or `UNIQUE` constraint on a distributed table must include the distribution column (`SQLSTATE 0A000` otherwise, `L2`/`L4`). Colocated tables sharing a distribution key type support distributed foreign keys (`T13`: `10/10`), while **Citus MX** optionally syncs metadata so workers also serve as SQL entry points.
+3. **Schema Rules (`0A000`), Colocation & MX:** `PRIMARY KEY`/`UNIQUE` on distributed tables must include the shard key (`0A000` otherwise, `L2`/`L4`). Colocated tables support distributed FKs (`T13`: `10/10`); **Citus MX** optionally syncs metadata to workers.
 
 | Mode / Table Type | Scope | Mechanics & Key Strategy | Conflict / Failover Impact | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
@@ -137,6 +137,18 @@ Ran at `pg_scale = 2` (`retries_40001 = 0`). Only `Avg`, `Stddev` (`0` for `sysb
 | **Nodes & Ports** | `citus_coord` (`127.0.0.1:15490:5432`), `citus_worker1` (`127.0.0.1:15491:5432`), `citus_worker2` (`127.0.0.1:15492:5432`) |
 | **Image & Resources** | `citusdata/citus:14.2.0-pg17` (`PG 17.10`), `mem_limit: 512m` per node, bridge `citus_net` |
 | **Key GUCs & Setup** | `shared_preload_libraries=citus`, `shared_buffers=128MB`, `max_connections=100`, `citus.shard_count=8`, `citus_set_coordinator_host('citus_coord', 5432)`, `citus_add_node('citus_worker1|2', 5432)`, `PRIMARY KEY(aid, hid)` on `pgbench_history`. |
+
+## 6. GitHub Popularity, Git Presence & Maintenance Vitality (`results/project_popularity.csv`)
+
+Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
+
+| Project | Git Presence / Role | Repo (`Account / Repos`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Release / Last Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **Citus (#7)** | `Yes` -- `Primary` | [`citusdata/citus`](https://github.com/citusdata/citus) (`Org / 67`) | 12865 / 810 / 212 | 7400 / 222 | 152 / 475 | C / `AGPL-3.0` | `v14.3.0` / `2026-11-20T12:28:36Z` |
+
+- **Maintenance Level:** **Tier A (Active OSS)** -- `citusdata/citus` logs `222` commits/12m (`7,400` total, `152` contributors, `12,865` stars, `475` open issues).
+- **Currency / Freshness:** **Current -- Active** -- Last push `2026-11-20T12:28:36Z`, `222` commits/12m, latest release `v14.3.0`.
+- **Operational Manageability:** **Moderate** -- Standard PG C extension (`AGPL-3.0`); requires distribution-key schema discipline (`0A000`) and external HA (`08006`).
 
 ---
 

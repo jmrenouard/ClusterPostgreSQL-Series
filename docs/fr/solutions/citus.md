@@ -19,9 +19,9 @@
 
 ## 1. Description de la technologie et rôle
 
-**Citus** est une extension C pure pour PostgreSQL (AGPLv3) transformant des instances standards en un cluster horizontalement partitionné **Coordinateur + Workers** (`citus_add_node`). Sans modifier le moteur de stockage heap ni ajouter de consensus Raft, Citus intercepte les requêtes SQL via les *hooks* du planificateur/exécuteur et les route vers des shards gérés comme des tables PostgreSQL natives avec `max_prepared_transactions > 0`.
+**Citus** est une extension C PostgreSQL (AGPLv3) créant un cluster **Coordinateur + Workers** (`citus_add_node`). Sans modifier le stockage heap ni ajouter Raft, elle intercepte les *hooks* SQL pour router vers des shards natifs avec `max_prepared_transactions > 0`.
 
-Les tables se répartissent en trois classes : **tables distribuées par hachage** (`create_distributed_table`) sur une colonne clé, **tables de référence** (`create_reference_table`) répliquées en synchrone sur chaque worker via validation en deux phases (2PC), et **tables locales** au coordinateur. Contrairement à `#5 YugabyteDB` ou `#6 CockroachDB`, Citus conserve 100 % de la sémantique cœur PG 17 par shard, sans réplication Raft inter-workers native.
+Trois classes existent : **distribuées par hachage** (`create_distributed_table`), **référence** (`create_reference_table`, répliquées en 2PC) et **locales** au coordinateur. Contrairement à `#5 YugabyteDB` ou `#6 CockroachDB`, Citus garde 100 % de PG 17 par shard, sans Raft natif.
 
 ---
 
@@ -42,14 +42,14 @@ Dans le PoC, **Citus MX** (`start_metadata_sync_to_node`) n'est pas activé (`B1
 
 ## 3. Principes de fonctionnement et modes d'implémentation
 
-1. **Routage 1PC mono-shard vs 2PC multi-shards :** Les requêtes filtrées sur la clé de distribution (`D_hot_conflict` colocalisé sur `aid`, ou `H_append_only_insert` sur `payload`) s'exécutent en un aller-retour (1PC). Le TPC-B standard (`A`, `B1`, `B2`, `F`) touche `accounts(aid)`, `tellers(tid)` et `branches(bid)` sur des clés distinctes, déclenchant le **2PC (`PREPARE TRANSACTION` / `COMMIT PREPARED`)**.
+1. **Routage 1PC vs 2PC :** Les requêtes ciblant la clé de distribution (`D_hot_conflict` sur `aid`, `H_append_only_insert`) passent en 1PC. Le TPC-B (`A`, `B1`, `B2`, `F`) touche `accounts(aid)`, `tellers(tid)` et `branches(bid)`, déclenchant **2PC (`PREPARE TRANSACTION` / `COMMIT PREPARED`)**.
 2. **Modèle de latence de commit :**
 
 $$
 L_{\text{N5-citus-1PC}} \approx L_{\text{disque}} + \text{RTT}_{\text{coord-worker}}, \qquad L_{\text{N5-citus-2PC}} \approx L_{\text{disque}} + 3 \cdot \text{RTT}_{\text{coord-worker}}
 $$
 
-3. **Règles de schéma (`0A000`), colocalisation et MX :** Toute contrainte `PRIMARY KEY` ou `UNIQUE` sur une table distribuée doit inclure la colonne de sharding (`SQLSTATE 0A000` sinon, `L2`/`L4`). Les tables colocalisées autorisent les clés étrangères distribuées (`T13` : `10/10`), tandis que **Citus MX** synchronise les métadonnées pour exposer aussi les workers en SQL.
+3. **Schéma (`0A000`), colocalisation et MX :** `PRIMARY KEY`/`UNIQUE` distribuées exigent la clé de sharding (`0A000` sinon, `L2`/`L4`). Les tables colocalisées gèrent les FK distribuées (`T13` : `10/10`) ; **Citus MX** synchronise les métadonnées vers les workers.
 
 | Mode / Type de table | Portée | Mécanique et stratégie de clés | Impact conflit / bascule | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
@@ -137,6 +137,18 @@ Tests à `pg_scale = 2` (`retries_40001 = 0`). Seules `Avg`, `Stddev` (`0` pour 
 | **Nœuds & Ports** | `citus_coord` (`127.0.0.1:15490:5432`), `citus_worker1` (`127.0.0.1:15491:5432`), `citus_worker2` (`127.0.0.1:15492:5432`) |
 | **Image & Ressources** | `citusdata/citus:14.2.0-pg17` (`PG 17.10`), `mem_limit: 512m` par nœud, pont `citus_net` |
 | **GUCs & Setup** | `shared_preload_libraries=citus`, `shared_buffers=128MB`, `max_connections=100`, `citus.shard_count=8`, `citus_set_coordinator_host('citus_coord', 5432)`, `citus_add_node('citus_worker1|2', 5432)`, `PRIMARY KEY(aid, hid)` sur `pgbench_history`. |
+
+## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
+
+Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
+
+| Projet | Présence / Rôle Git | Dépôt (`Compte / Dépôts`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Tag / Dernier Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **Citus (#7)** | `Yes` -- `Primary` | [`citusdata/citus`](https://github.com/citusdata/citus) (`Org / 67`) | 12865 / 810 / 212 | 7400 / 222 | 152 / 475 | C / `AGPL-3.0` | `v14.3.0` / `2026-11-20T12:28:36Z` |
+
+- **Niveau de maintenance :** **Niveau A (OSS Actif)** -- `citusdata/citus` totalise `222` commits/12m (`7 400` total, `152` contributeurs, `12 865` stars, `475` issues).
+- **Fraîcheur / Actualité :** **À jour -- Actif** -- Dernier push `2026-11-20T12:28:36Z`, `222` commits/12m, dernière version `v14.3.0`.
+- **Maintenabilité opérationnelle :** **Modéré** -- Extension C PG (`AGPL-3.0`) ; impose la clé de distribution (`0A000`) et une HA externe (`08006`).
 
 ---
 
