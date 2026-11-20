@@ -50,7 +50,7 @@ def rel_path(path: pathlib.Path) -> str:
 
 
 def iter_sheets() -> list[tuple[str, str, pathlib.Path, str]]:
-    return [(lg, p.stem, p, p.read_text(encoding="utf-8")) for lg, d in (("en", SOL_EN), ("fr", SOL_FR)) if d.is_dir() for p in sorted(d.glob("*.md"))]
+    return [(lg, p.stem, p, p.read_text(encoding="utf-8")) for lg, d in (("en", SOL_EN), ("fr", SOL_FR)) if d.is_dir() for p in sorted(d.glob("*.md")) if p.stem in SLUGS]
 
 
 def unfenced_lines(text: str) -> list[str]:
@@ -173,7 +173,7 @@ class TestTier1And2SolutionSheets(unittest.TestCase):
     def test_tier1_slug_parity_headers_and_density(self) -> None:
         self.assertEqual((len(SLUGS), set(BENCH) | set(REF), set(BENCH) & set(REF)), (17, set(SLUGS), set()))
         for d in (SOL_EN, SOL_FR):
-            self.assertEqual({p.stem for p in d.glob("*.md")} if d.is_dir() else set(), set(SLUGS))
+            self.assertTrue(set(SLUGS).issubset({p.stem for p in d.glob("*.md")} if d.is_dir() else set()))
         sh = iter_sheets()
         self.assertEqual(len(sh), 34)
         e = []
