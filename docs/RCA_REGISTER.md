@@ -110,6 +110,41 @@
 - **Applied Change / Fix**: Aligned Suite E denominators (`3,806` / `2,574` / `1,587`) in EN/FR Chapter 06, harmonized `03a`/`03b`/`pgedge_spock.md` EN/FR details (`ACT-133`), logged `RCA-015` (`ACT-134`), hardened `test_solution_sheets.py`, `test_solution_sheets_parity.py`, and `Makefile:75` (`ACT-135`), and added `tests/test_solution_sheets_tier5.py` covering README 4-column catalogs, headline parity, all 4 benchmark CSVs row-by-row, matrix metrics, and EN/FR table parity (`ACT-136`).
 - **Result & Non-Regression Test**: `0` denominator contradictions, `0` cross-chapter/sheet precision drifts, `100%` of injected Tier 5 failure probes caught with `0` false positives, and `make test && make lint` passing on `main`.
 
+### RCA-016 - PostgreSQL 18 Official Docker Image `PGDATA` Path & `VOLUME` Layout Change
+- **Date / Action**: `2026-11-20` (`ACT-138`, `ACT-141`)
+- **Observed Symptom**: Existing PostgreSQL 17 Docker Compose volume mounts targeting `/var/lib/postgresql/data` fail to persist or initialize cleanly under `postgres:18` (`18.6`).
+- **Root Cause Analysis**: Upstream `docker-library/postgres` changed `postgres:18` defaults to `PGDATA=/var/lib/postgresql/18/docker` with parent `VOLUME /var/lib/postgresql` to support major-version `pg_upgrade` side-by-side directories.
+- **Applied Change / Fix**: Mounted named volumes at `/var/lib/postgresql` and aligned `PGDATA` expectations across the 3 new PG 18.6 Compose stacks (`pg18-streaming`, `pg18-logical`, `pg18-birep`) in `env/multi-db-docker-env` `v2.3.0` (`8ea028b7`) and documented the breaking change in Chapter 12.
+- **Result & Non-Regression Test**: All 5 PostgreSQL 18.6 topologies initialize, crash-recover (`T16` `RPO=0`), and pass `make lint` across all 12 Compose stacks.
+
+### RCA-017 - PostgreSQL 18 `io_method=io_uring` Fails With `EPERM` Under Default Docker Seccomp
+- **Date / Action**: `2026-11-20` (`ACT-138`, `ACT-140`)
+- **Observed Symptom**: Starting `postgres:18` with `-c io_method=io_uring` aborts immediately with `EPERM` inside standard unprivileged Docker containers.
+- **Root Cause Analysis**: Docker's default seccomp profile blocks `io_uring_setup` syscalls for container security isolation, whereas PostgreSQL 18's default `io_method=worker` (`io_workers=3`) uses standard POSIX workers.
+- **Applied Change / Fix**: Standardized the PG 18.6 PoC stacks on default `io_method=worker`, executed controlled A/B probes (`worker` cut cold sequential scan latency `-18.5%` from `1,018.3 ms` to `829.4 ms`, while small `fsync` RW ran `290.75` vs `323.98 TPS` with `data_checksums=on`), and recorded `io_uring=EPERM` verbatim in `results/functional_limits_pg18.csv` and Chapter 12.
+- **Result & Non-Regression Test**: Deterministic AIO behavior verified across all 5 PG 18.6 topologies without requiring privileged containers.
+
+### RCA-018 - PostgreSQL 18.6 `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` Rejected (`SQLSTATE 42601`)
+- **Date / Action**: `2026-11-20` (`ACT-138`, `ACT-140`)
+- **Observed Symptom**: Executing `CREATE PUBLICATION ... FOR ALL SEQUENCES` or `ALTER SUBSCRIPTION ... REFRESH SEQUENCES` on PostgreSQL 18.6 fails with `SQLSTATE 42601` (`syntax error`), and `T18` subscriber sequences stay at `1|false` causing post-failover `SQLSTATE 23505`.
+- **Root Cause Analysis**: Native logical sequence synchronization was deferred from PostgreSQL 18 to PostgreSQL 19, leaving `SERIAL` non-sync unchanged from PG 17 (`RCA-009`), while PostgreSQL 18 added native RFC 9562 `uuidv7()` and the 7th conflict counter `confl_multiple_unique_conflicts`.
+- **Applied Change / Fix**: Recorded `SQLSTATE 42601` verbatim in `results/functional_limits_pg18.csv` and Chapter 12, and verified native `uuidv7()` active-active convergence on `pg18-birep` (`50/50` dual-node inserts, `0x 23505`, `H_append_only_insert = 2,066.70 TPS`, `3.30x` vs PG 17).
+- **Result & Non-Regression Test**: Honest PG 18.6 capability boundary verified across `pg18-logical` and `pg18-birep` and asserted by `tests/test_benchmark_artifacts.py`.
+
+### RCA-019 - Canonical GitHub Repository Redirects, True Watchers & Tag-Only Release Fallback
+- **Date / Action**: `2026-11-20` (`ACT-137`, `ACT-140`)
+- **Observed Symptom**: Naive GitHub REST queries misreported SymmetricDS via redirected slug `JumpMind/symmetric-ds`, omitted `GoogleCloudPlatform/pgadapter`, duplicated star counts via `watchers_count`, and returned HTTP 404 on `/releases/latest` for tag-only projects (`postgres/postgres`, `pgEdge/spock`, `cockroachdb/cockroach`, `pgpool/pgpool2`).
+- **Root Cause Analysis**: GitHub's REST `watchers_count` aliases `stargazers_count` (true watchers live in `subscribers_count`), organization renames redirect canonical slugs, and mature C/Go repositories publish Git tags without GitHub Release objects.
+- **Applied Change / Fix**: Implemented `scripts/collect_popularity.py` to target canonical `jumpmindinc/symmetric-ds` and `GoogleCloudPlatform/pgadapter` (marked client-proxy only), read `subscribers_count`, compute exact commit/contributor counts via `per_page=1` `Link: rel="last"` pagination without cloning, and fall back to GraphQL `TAG_COMMIT_DATE DESC`.
+- **Result & Non-Regression Test**: Verified 21 catalog rows (`18` public repos + `3` proprietary/managed engines) in `results/project_popularity.csv` and `tests/test_benchmark_artifacts.py`.
+
+### RCA-020 - WSL2 `/tmp` `tmpfs` Auto-Shutdown Wipe During Multi-PR Staging
+- **Date / Action**: `2026-11-20` (`ACT-139`, `ACT-140`)
+- **Observed Symptom**: Staging modified tracked files into WSL2 `/tmp/cps_v3_stage/` before `git checkout -- .` lost the staged copies when the WSL2 VM briefly idled and restarted between host commands.
+- **Root Cause Analysis**: WSL2 mounts `/tmp` as volatile RAM-backed `tmpfs`, which is purged automatically whenever the WSL2 distribution shuts down on idle timeout.
+- **Applied Change / Fix**: Relocated staging buffers strictly to persistent host scratch storage outside the repository, verified 100% byte-for-byte parity on all recovered Wave 3 dashboard and documentation files, and normalized LF line endings prior to every atomic commit.
+- **Result & Non-Regression Test**: All 24 atomic Wave 3 PRs landed cleanly with exact verified file sizes, `node --check` passing on all 11 JS bundles, and `make test` (`20/20` OK).
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters
@@ -136,6 +171,11 @@
 - **Date / Action**: `2026-11-20` (`ACT-077`, Issue `#153`)
 - **Rejected Approach**: Placing the LightPath corporate SVG logo alone in the top hero banner of `README.md`, `README.fr.md`, and the `.brand` slot of `dashboard/index.html`.
 - **Reason**: Conflated project identity with corporate sponsorship. Generated dedicated `ClusterPostgreSQL-Series` project branding (`assets/clusterpostgresql-series-logo.png` and `assets/clusterpostgresql-series-icon.png`) for primary headers, and repositioned LightPath SVG logos explicitly as `"Supported by"` / `"Soutenu par"` support branding.
+
+### IMP-006 - Monolithic Wave 3 Chart, Dashboard & Cross-Chapter PRs Exceeding `< 14 KB` / `< 15 KB` Caps
+- **Date / Action**: `2026-11-20` (`ACT-138`..`ACT-141`)
+- **Rejected Approach**: Appending Charts 08-10 into `scripts/generate_charts.py`, embedding Popularity UI into `dashboard/app.js`, or committing full `dashboard/index.html` (`21.6 KB` unified diff), `dashboard/app.js` (`17.6 KB` diff), EN+FR cross-chapters (`17.2 KB` diff), and both root READMEs (`17.7 KB` diff) in single PRs.
+- **Reason**: Violated both the `< 14,000`-byte per-file test cap and the `< 15,000`-byte PR diff cap. Split into modular `scripts/generate_charts_v3.py`, `dashboard/popularity.js`, dedicated `< 13.5 KB` JS data bundles (`data_bench_pg18.js`, `data_matrix_pg18.js`, `data_popularity.js`), and 24 sequential atomic PRs all strictly `< 14,000` bytes.
 
 ## 3. Current Approximations & Simplifying Assumptions (`APP-XXX`)
 
@@ -169,6 +209,11 @@
 - **Assumption**: V2 concurrency sweeps (`c=1, 4, 8, 16, 32`) and 3-point WAN sweeps (`10ms`, `25ms`, `50ms` egress `tc netem`) run sequentially on one Docker host (`20` vCPU / `16.4` GiB NVMe).
 - **Impact & Removal Condition**: Accurately exposes relative scaling knees, Raft/sync RTT amplification, and async decoupling across 10 topologies, while remaining bounded by shared host I/O; removable via multi-region bare-metal/cloud clusters.
 
+### APP-007 - Point-in-Time GitHub Popularity Snapshot & Shared-Host PG 18.6 AIO Benchmarks
+- **Date / Action**: `2026-11-20` (`ACT-137`, `ACT-138`)
+- **Assumption**: `results/project_popularity.csv` captures live GitHub REST/GraphQL telemetry at `2026-11-20T13:34:55Z` (mirror repos `postgres/postgres` and `pgpool/pgpool2` report trusted committer counts rather than total mailing-list authors), and PG 18.6 benchmarks (`results/benchmark_pg18.csv`) run sequentially on one local WSL2 Docker host under `io_method=worker`.
+- **Impact & Removal Condition**: Enables reproducible apples-to-apples PG 18.6 vs PG 17.11 comparisons and transparent maintenance vitality tracking; refreshable anytime via `make popularity` and `make bench-pg18`.
+
 ## 4. Unimplemented Ideas & Future Roadmap (`IDEA-XXX`)
 
 ### IDEA-001 - Automated Cross-Topology `pgbench` & `sysbench` Matrix
@@ -190,3 +235,7 @@
 ### IDEA-005 - Automated GitHub Pages Publishing & PostgreSQL 18+ Native Sequence Sync Study
 - **Date / Action**: `2026-11-19` (`ACT-076`)
 - **Proposal**: Publish `dashboard/index.html` and `assets/charts/` automatically via GitHub Pages once `workflow` OAuth scope is granted (`RCA-003`), and benchmark PostgreSQL 18/19 native logical sequence synchronization against `RCA-009`.
+
+### IDEA-006 - PostgreSQL 19 Native Sequence Sync & Bare-Metal `io_uring` AIO Benchmark Follow-Up
+- **Date / Action**: `2026-11-20` (`ACT-142`)
+- **Proposal**: Re-evaluate `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` (`RCA-018`) on PostgreSQL 19 once released and benchmark `io_method=io_uring` vs `worker` vs `sync` (`RCA-017`) on bare-metal Linux NVMe outside Docker's default seccomp sandbox.
