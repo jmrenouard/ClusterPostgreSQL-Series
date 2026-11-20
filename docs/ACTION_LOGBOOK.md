@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-134 - Log RCA-015 for Tier 5 Documentation Drift and E2E Blind Spots (Issue `#267`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#267` (`docs/issue-267-rca-015`)
+- **Request / Changes / Result**: Added `RCA-015` in `docs/RCA_REGISTER.md` (100% 7-bit ASCII English) documenting the Suite E attempted-vs-committed denominator contradiction, cross-chapter precision drift, and Tier 5 E2E test/Makefile blind spots; `make test` (`18/18` OK) and `make lint` verified in WSL2.
+
 ### ACT-133 - Align Suite E Denominators and Cross-Chapter Precision (Issue `#265`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#265` (`docs/issue-265-tier5-docs-precision`)
 - **Request / Changes / Result**: Fixed Suite E `tx_failed` denominators in `docs/en/06_empirical_test_and_benchmark_results.md:82-84` and `docs/fr/06_resultats_tests_et_benchmarks.md:71-73` to total attempts (`3,806` for `citus`, `2,574` for `yugabyte`, `1,587` for `cockroach`); aligned `#15a` Tier `T0`/`N0` and `snowflake.node` (`1..1023`) in `03a` EN/FR, OpenTenBase (`PG 10-11` fork + backports) in `03b` FR, and `BYTEA=65536B;` in `pgedge_spock.md:133` EN/FR; `make test` (`18/18` OK) and `make lint` verified in WSL2.
