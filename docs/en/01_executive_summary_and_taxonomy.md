@@ -98,8 +98,10 @@ This repository separates **verifiable architectural mechanics** from **live emp
 | **[03b — Distributed, Trigger & Cloud Solutions](03b_solutions_distributed_triggers_cloud.md)** | Deep dives on #5–#14 (Yugabyte, Cockroach, Citus, MPP, Triggers, PgPool, Cloud) | Complete |
 | **[04 — Comprehensive Feature Comparison](04_comprehensive_feature_comparison.md)** | 36-criterion comparison matrices across all 15 architectures | Complete |
 | **[05 — PoC Architectures & Test Protocol](05_poc_architectures_and_test_protocol.md)** | WSL2 Docker topology specs, 10-point functional & 8-point limits tests, Suites A–E | Complete |
-| **06 — Empirical Limits & Benchmark Results** | Observed `SQLSTATE` failure modes, `pgbench` & `sysbench` telemetry | Pending live runner execution |
+| **[06 — Empirical Test & Benchmark Results](06_empirical_test_and_benchmark_results.md)** | Observed `SQLSTATE` failure modes, `pgbench`, `sysbench` & `tc netem` telemetry | Complete |
 | **[07 — Decision Framework & Production Guide](07_decision_framework_and_production_guide.md)** | Decision tree, anti-patterns, sizing, cluster PITR, migration playbooks | Complete |
-| **08 — Synthesis & References** | Final executive synthesis, RFC/paper citations, reproducibility index | Pending Chapter 06 synthesis |
+| **[08 — Limits & Failure Modes](08_limits_and_failure_modes.md)** | Catalog of `L1–L8` & `T11–T18` failures, verified `SQLSTATE` exceptions | Complete |
+| **[09 — Benchmarks Methodology & Charts](09_benchmarks_methodology_and_charts.md)** | `PG_SCALE=2` harness, `E2–E4`/`H`/WAN sweeps, 7 `log10` charts | Complete |
+| **[10 — Streaming vs Logical vs Multi-Master](10_streaming_vs_logical_vs_multimaster.md)** | Five-tier replication spectrum (`T1–T5`), sequence trap `23505`, PG 15->18 | Complete |
 
-**Empirical Honesty Guarantee:** Theoretical chapters state only proven mechanics and explicit analytical formulas. No throughput, latency, or failure-rate benchmark numbers are published until measured directly against running Docker topologies in Chapter 06.
+**Empirical Honesty Guarantee:** Theoretical chapters state only proven mechanics and explicit analytical formulas. All throughput, latency, and failure-rate metrics published in Chapters 06, 08, 09, 10, and the dedicated `solutions/` sheets were measured directly against isolated Docker topologies (`results/*.csv`).

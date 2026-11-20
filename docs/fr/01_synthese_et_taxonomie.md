@@ -85,14 +85,15 @@ flowchart TD
 
 Pour exploiter cette étude selon votre rôle (architecte, DBA, SRE ou décideur technique), les chapitres s'enchaînent de la théorie vers la validation reproductible :
 
-1. **Chapitre 01 (ce document)** : Problématique du WAL unique et carte des 7 familles.
-2. **Chapitre 02 (`02_fondements_theoriques_cap_pacelc_conflits.md`)** : Modèles CAP/PACELC, anatomie des 4 classes de conflits et équations de latence WAN, dérive d'horloge et collisions.
-3. **Chapitre 03a (`03a_catalogue_natif_et_extensions.md`)** : Monographies détaillées des solutions proches du noyau PostgreSQL (`#1` à `#4` et `#15`).
-4. **Chapitre 03b (`03b_catalogue_distribue_triggers_cloud.md`)** : Monographies des moteurs SQL distribués, du sharding MPP, des systèmes à triggers, des proxys et des offres cloud (`#5` à `#14`).
-5. **Chapitre 04 (`04_etude_comparative_fonctionnalites.md`)** : Matrices comparatives exhaustives sur 36 critères couvrant les 15 solutions.
-6. **Chapitre 05 (`05_architectures_poc_et_protocole_de_test.md`)** : Protocole de test transparent en laboratoire Docker WSL2, tests fonctionnels (10 points), sondes de limites (8 points), suites `pgbench`/`sysbench` et limites de validité.
-7. **Chapitres 06 et 08 (phase empirique suivante)** : Résultats mesurés des PoCs reproductibles, SQLSTATEs capturés et benchmarks comparatifs après exécution complète.
-8. **Chapitre 07 (`07_guide_de_choix_et_architecture_cible.md`)** : Arbre de décision, matrice cas d'usage, anti-patterns critiques, dimensionnement, PITR et migration.
+1. **[Chapitre 01 — Synthèse exécutive et taxonomie](01_synthese_et_taxonomie.md)** *(ce document)* : Problématique du WAL unique et carte des 7 familles.
+2. **[Chapitre 02 — Fondements théoriques (CAP, PACELC, conflits)](02_fondements_theoriques_cap_pacelc_conflits.md)** : Modèles CAP/PACELC, anatomie des 4 classes de conflits et équations de latence WAN, dérive d'horloge et collisions.
+3. **[Chapitre 03a — Catalogue natif et extensions](03a_catalogue_natif_et_extensions.md)** : Monographies détaillées des solutions proches du noyau PostgreSQL (`#1` à `#4`, `#15` et `#16`).
+4. **[Chapitre 03b — Catalogue SQL distribué, triggers et Cloud](03b_catalogue_distribue_triggers_cloud.md)** : Monographies des moteurs SQL distribués, du sharding MPP, des systèmes à triggers, des proxys et des offres cloud (`#5` à `#14`).
+5. **[Chapitre 04 — Étude comparative fonctionnelle](04_etude_comparative_fonctionnalites.md)** : Matrices comparatives exhaustives sur 36 critères couvrant les 15 solutions.
+6. **[Chapitre 05 — Architectures PoC et protocole de test](05_architectures_poc_et_protocole_de_test.md)** : Protocole de test transparent en laboratoire Docker WSL2, tests fonctionnels (10 points), sondes de limites (8 points), suites `pgbench`/`sysbench` et limites de validité.
+7. **[Chapitre 06 — Résultats empiriques](06_resultats_tests_et_benchmarks.md)** et **[Chapitre 08 — Limites et modes de défaillance](08_limites_et_modes_de_defaillance.md)** : Résultats mesurés des PoCs reproductibles (`Suites A–F`), sondes `L1–L8` / `T11–T18` et codes `SQLSTATE` capturés.
+8. **[Chapitre 07 — Guide de choix et architecture cible](07_guide_de_choix_et_architecture_cible.md)** : Arbre de décision, matrice cas d'usage, anti-patterns critiques, dimensionnement, PITR et migration.
+9. **[Chapitre 09 — Méthodologie benchmarks et graphiques](09_methodologie_benchmarks_et_graphiques.md)** et **[Chapitre 10 — Streaming vs Logique vs Multi-Maîtres](10_comparatif_streaming_logique_multimaster.md)** : Balayages V2 (`187` lignes `results/*.csv`), graphiques `log10`, spectre `N1–N5` (`#16` `pg17-logical`) et fiches dédiées `solutions/`.
 
 ---
 
