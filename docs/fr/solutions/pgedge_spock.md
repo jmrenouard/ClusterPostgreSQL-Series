@@ -19,15 +19,15 @@
 
 ## 1. Description de la technologie et rôle
 
-**pgEdge Platform / Spock** est une architecture multi-maîtres open source pour PostgreSQL 15–17 (fork de `pglogical`) fondée sur des extensions C natives. Chaque nœud exécute `spock` (`5.0.14`) pour le maillage bidirectionnel, la résolution de conflits et le DDL auto-répliqué, associé à `snowflake` (`2.6.1`) pour générer des clés primaires globales K-triables sur 64 bits sans verrou.
+**pgEdge / Spock** (fork `pglogical`, PG 15–17) exécute `spock` (`5.0.14`) pour maillage, conflits et auto-DDL, plus `snowflake` (`2.6.1`) pour des PK 64 bits K-triables.
 
-Contrairement à `#1 pg-birep` qui gèle l'apply sur `23505`, Spock maintient tous les nœuds inscriptibles via `last_update_wins` (`transdiscard`) ou des colonnes CRDT `spock.delta_apply`. L'écosystème inclut aussi `lolor` pour `pg_largeobject` (`Ch. 03a`), mais `lolor` n'est ni chargé (`shared_preload_libraries=spock,snowflake`) ni testé dans le PoC.
+Contrairement à `#1 pg-birep` (gèle sur `23505`), Spock reste inscriptible via `last_update_wins` (`transdiscard`) ou CRDT `spock.delta_apply`. `lolor` (`Ch. 03a`) n'est ni chargé ni testé.
 
 ---
 
 ## 2. Architecture et flux de données
 
-Dans `env/multi-db-docker-env/docker-compose-pgedge.yml`, HAProxy répartit les connexions TCP en round-robin sur trois primaires (`pgedge_node1..3`) reliés en maillage complet à 6 souscriptions sur `pgedge_net` (`:8404/stats` reste interne au conteneur) :
+HAProxy répartit le TCP en round-robin sur `pgedge_node1..3` en maillage à 6 liens sur `pgedge_net` :
 
 ```mermaid
 flowchart TB
@@ -40,29 +40,29 @@ flowchart TB
     N1 <-->|"maillage spock_output"| N3
 ```
 
-Les tirs multi-flux (`B1`–`D`, `H`) sollicitent `node1` et `node2` tandis que `node3` réplique passivement (`conv_chk` vérifie les 3 nœuds ; `tc netem` retarde `node2` et `node3`).
+Les tirs (`B1`–`D`, `H`) ciblent `node1`/`node2` ; `node3` réplique passivement (`tc netem` retarde `node2`/`node3`).
 
 ---
 
 ## 3. Principes de fonctionnement et modes d'implémentation
 
-1. **Plugin WAL (`spock_output`) :** Six liens `spock.sub_create` (`2/2` actifs) décodent le WAL via `spock_output`. L'image Rocky UBI minimal impose `output_plugin_libraries=pgoutput,spock_output` + `host replication all all scram-sha-256` (correctif `42501`).
+1. **`spock_output` :** Six liens `spock.sub_create` (`2/2`) décodent le WAL ; UBI impose `output_plugin_libraries=pgoutput,spock_output` + `scram-sha-256` (`42501`).
 2. **Modèle de latence de commit :**
 
 $$
 L_{\text{N4-pgedge}} \approx L_{\text{disque}} \quad (\text{fsync WAL local ; apply et fusion } \Delta \text{ asynchrones})
 $$
 
-3. **LWW, CRDT & Auto-DDL :** Avec `track_commit_timestamp=on`, `last_update_wins` arbitre les écritures concurrentes (`spock.resolutions`) et `transdiscard` journalise les `23505` dans `spock.exception_log`. Les colonnes `log_old_value=true, delta_apply_function=spock.delta_apply` fusionnent $\Delta = v_{\text{new}} - v_{\text{old}}$ de façon commutative.
+3. **LWW, CRDT & DDL :** Avec `track_commit_timestamp=on`, `last_update_wins` arbitre (`spock.resolutions`), `transdiscard` logue `23505` (`spock.exception_log`), et `delta_apply` fusionne $\Delta = v_{\text{new}} - v_{\text{old}}$.
 
 | Mode / Option | Portée | Mécanique et stratégie de clés | Impact conflit / bascule | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
-| **`last_update_wins` + `transdiscard`** *(Défaut PoC)* | `spock.conflict_resolution` / `exception_behaviour` | Compare les timestamps de commit ; rejette la tx en échec dans `spock.exception_log` | Pairs toujours inscriptibles ; pertes (`B2`, `D`, `L3`) & divergence `23505` (`L4`) | Disponibilité au prix de la cohérence |
+| **`last_update_wins` + `transdiscard`** *(Défaut)* | `conflict_resolution` / `exception_behaviour` | LWW par timestamp ; tx en échec dans `exception_log` | Pairs inscriptibles ; pertes (`B2`/`D`/`L3`), dérive `23505` (`L4`) | AP vs cohérence |
 | **`spock.delta_apply` CRDT** *(`pgedge-delta-apply` PoC)* | Colonne (`log_old_value=true`) | Envoie $\Delta = v_{\text{new}} - v_{\text{old}}$ sur `accounts.balance` / `abalance` | **Dérive nulle (`0`)** (`D` : `1391780` exact ; `L3` : `1070.00` x3) | `-19,4 %` TPS (`2280.11 -> 1837.64`) ; numérique seul |
 | **Auto-DDL** *(PoC)* | `enable_ddl_replication=on`, `include_ddl_repset=on` | Event triggers sur `ALTER TABLE` ; `TRUNCATE` transmis nativement via WAL (`L5`) | Réplique le DDL sans wrapper manuel | Pas de verrou Raft global si DDL simultané |
 | **`snowflake.nextval`** *(PoC)* | Extension `snowflake` (`2.6.1`, `node=1..3`) | ID K-triable 64 bits (`ts + node + compteur`) | Évite les collisions PK `23505` (piège `T18`) | `snowflake.node` unique par serveur |
-| **`default_insert_only`** *(PoC Sans PK)* | `spock.tables` | Tables sans PK placées dans `default_insert_only` (`L2`) | `INSERT` répliqué ; `UPDATE`/`DELETE` **ignorés silencieusement** | Ajouter une PK pour DML complet |
-| **`lolor`** *(Écosystème — Hors PoC)* | `pg_largeobject` | Réplique les LOB (`Ch. 03a`) | **Non chargé** (`shared_preload_libraries=spock,snowflake`) | Installation explicite requise |
+| **`default_insert_only`** *(Sans PK)* | `spock.tables` | Tables sans PK (`L2`) | `INSERT` répliqué ; `UPDATE`/`DELETE` **ignorés** | Ajouter une PK pour DML |
+| **`lolor`** *(Hors PoC)* | `pg_largeobject` | Réplique les LOB (`Ch. 03a`) | **Non chargé** (`spock,snowflake`) | Setup requis |
 | **`discard` / `sub_disable`** *(Arch.)* | `spock.exception_behaviour` | Ignore la requête ou coupe la souscription | `sub_disable` gèle l'apply (`23505`) comme `pg-birep` | Plus sûr sur contrainte `UNIQUE` |
 
 ---

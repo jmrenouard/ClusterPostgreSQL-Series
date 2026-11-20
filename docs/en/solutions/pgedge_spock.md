@@ -19,15 +19,15 @@
 
 ## 1. Technology Description & What It Does
 
-**pgEdge Platform / Spock** is an open-source PostgreSQL multi-master architecture (forked from `pglogical`) built from C extensions inside PostgreSQL 15–17. Each node runs `spock` (`5.0.14`) for bidirectional mesh replication, conflict resolution, and event-trigger DDL propagation, plus `snowflake` (`2.6.1`) for lock-free 64-bit K-sortable global primary keys.
+**pgEdge / Spock** (`pglogical` fork, PG 15–17) runs `spock` (`5.0.14`) for mesh replication, conflicts, and auto-DDL, plus `snowflake` (`2.6.1`) for 64-bit K-sortable PKs.
 
-Unlike native bidirectional logical replication (`#1 pg-birep`), which halts on `23505`, Spock keeps peers writable via `last_update_wins` (`transdiscard`) or commutative `spock.delta_apply` CRDT columns. The pgEdge ecosystem also includes `lolor` for `pg_largeobject` (`Ch. 03a`), though `lolor` is NOT loaded (`shared_preload_libraries=spock,snowflake`) or tested in the PoC.
+Unlike `#1 pg-birep` (halts on `23505`), Spock stays writable via `last_update_wins` (`transdiscard`) or `spock.delta_apply` CRDT. Ecosystem `lolor` (`Ch. 03a`) is unloaded and untested.
 
 ---
 
 ## 2. Architecture & Data Flow
 
-In `env/multi-db-docker-env/docker-compose-pgedge.yml`, HAProxy balances TCP connections round-robin across three primaries (`pgedge_node1..3`) in a 6-subscription mesh on `pgedge_net` (`:8404/stats` is container-internal only):
+HAProxy balances TCP round-robin across `pgedge_node1..3` in a 6-sub mesh on `pgedge_net`:
 
 ```mermaid
 flowchart TB
@@ -40,24 +40,24 @@ flowchart TB
     N1 <-->|"spock_output mesh"| N3
 ```
 
-Multi-stream runs (`B1`–`D`, `H`) drive `node1` and `node2` while `node3` replicates passively (`conv_chk` checks all 3; `tc netem` delays `node2` & `node3`).
+Runs (`B1`–`D`, `H`) hit `node1`/`node2`; `node3` replicates passively (`tc netem` delays `node2`/`node3`).
 
 ---
 
 ## 3. Operating Principles & Implementation Modes
 
-1. **WAL Output Plugin (`spock_output`):** Six `spock.sub_create` links (`2/2` replicating) decode WAL via `spock_output`. Rocky UBI minimal images require `output_plugin_libraries=pgoutput,spock_output` + `host replication all all scram-sha-256` (`42501` fix).
+1. **`spock_output`:** Six `spock.sub_create` links (`2/2`) decode WAL; UBI requires `output_plugin_libraries=pgoutput,spock_output` + `scram-sha-256` (`42501` fix).
 2. **Commit Latency Model:**
 
 $$
 L_{\text{T4-pgedge}} \approx L_{\text{disk}} \quad (\text{local WAL fsync; peer apply and } \Delta\text{-merge are async})
 $$
 
-3. **LWW, CRDT & Auto-DDL:** With `track_commit_timestamp=on`, `last_update_wins` arbitrates row updates (`spock.resolutions`) while `transdiscard` logs `23505` into `spock.exception_log`. Columns with `log_old_value=true, delta_apply_function=spock.delta_apply` merge $\Delta = v_{\text{new}} - v_{\text{old}}$ commutatively.
+3. **LWW, CRDT & DDL:** With `track_commit_timestamp=on`, `last_update_wins` arbitrates (`spock.resolutions`), `transdiscard` logs `23505` (`spock.exception_log`), and `delta_apply` merges $\Delta = v_{\text{new}} - v_{\text{old}}$.
 
 | Mode / Option | Scope | Mechanics & Key Strategy | Conflict / Failover Impact | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
-| **`last_update_wins` + `transdiscard`** *(PoC Default)* | `spock.conflict_resolution` / `exception_behaviour` | Compares commit timestamps; drops failing TX to `spock.exception_log` | Keeps peers writable; lost updates (`B2`, `D`, `L3`) & `23505` divergence (`L4`) | Availability over write consistency |
+| **`last_update_wins` + `transdiscard`** *(Default)* | `conflict_resolution` / `exception_behaviour` | Commit-ts LWW; failed TX to `exception_log` | Peers writable; lost updates (`B2`/`D`/`L3`), `23505` drift (`L4`) | AP over consistency |
 | **`spock.delta_apply` CRDT** *(`pgedge-delta-apply` PoC)* | Column (`log_old_value=true`) | Ships $\Delta = v_{\text{new}} - v_{\text{old}}$ on `accounts.balance` / `abalance` | **Zero drift (`0`)** (`D`: `1,391,780` exact; `L3`: `1070.00` x3) | `-19.4%` TPS (`2,280.11 -> 1,837.64`); numeric only |
 | **Auto-DDL** *(PoC)* | `enable_ddl_replication=on`, `include_ddl_repset=on` | Event triggers capture `ALTER TABLE`; `TRUNCATE` streams natively via WAL (`L5`) | Replicates DDL without manual wrappers | No Raft global lock on concurrent DDL |
 | **`snowflake.nextval`** *(PoC)* | Extension `snowflake` (`2.6.1`, `node=1..3`) | 64-bit K-sortable ID (`ts + node + counter`) | Avoids `23505` PK collisions (`T18` seq trap) | Unique `snowflake.node` per peer |
