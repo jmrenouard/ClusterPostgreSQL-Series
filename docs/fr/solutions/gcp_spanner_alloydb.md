@@ -98,6 +98,19 @@ Dans notre base empirique (`results/benchmark_summary.csv`, `results/functional_
 | **Ancre réf. (`A_single_rw`)** | Non benchmarké (`APP-005`) | Non benchmarké (`APP-005`) | `42.08 TPS` (`44` reprises `40001`) | `173.64 TPS` (`0` reprise) | `409.48 TPS` (`50.307 ms` `p95`) |
 | **Ancre réf. (`F_wan_netem_25ms`)** | Non benchmarké (`2*eps` + RTT Paxos) | Non benchmarké (1 primaire) | `10.06 TPS` (`-76,1 %` Raft WAN) | `5.78 TPS` (`-96,7 %` Raft WAN) | `57.00 TPS` (`-86,1 %` WAL WAN) |
 
+## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
+
+Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
+
+| Projet | Présence / Rôle Git | Dépôt (`Compte / Dépôts`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Tag / Dernier Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **Google Cloud Spanner & AlloyDB (#13)** | `Partial (PGAdapter only; engine proprietary)` -- `Proprietary (Managed Cloud)` | N/A (Propriétaire) | N/A / N/A / N/A | N/A / N/A | N/A / N/A | N/A / Proprietary | N/A / N/A |
+| **Cloud Spanner PGAdapter (#13a)** | `Partial (Proxy only)` -- `Primary (Client Proxy; Engine Proprietary)` | [`GoogleCloudPlatform/pgadapter`](https://github.com/GoogleCloudPlatform/pgadapter) (`Org / 1545`) | 94 / 36 / 26 | 4040 / 934 | 22 / 74 | Java / `Apache-2.0` | `v0.56.4` / `2026-11-20T11:30:29Z` |
+
+- **Niveau de maintenance :** **Fermé / Cloud Managé (+ Proxy OSS)** -- Les moteurs Spanner et AlloyDB sont fermés (`N/A`) ; le proxy OSS `GoogleCloudPlatform/pgadapter` totalise `934` commits/12m (`4 040` au total, `22` contributeurs, `94` stars, `74` issues ouvertes).
+- **Fraîcheur / Actualité :** **Moteur opaque + Proxy actif** -- Push moteur `N/A` ; PGAdapter dernier push `2026-11-20T11:30:29Z`, `934` commits/12m, dernière version `v0.56.4`.
+- **Maintenabilité opérationnelle :** **Verrouillage éditeur** -- Dépend des services managés GCP Spanner/AlloyDB (ou licence `AlloyDB Omni`), du sidecar `PGAdapter` et des limites du dialecte Spanner.
+
 ---
 
 **Navigation :** [Index](../../../README.fr.md) · [Ch. 03b — Distribué, triggers et cloud](../03b_catalogue_distribue_triggers_cloud.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](../10_comparatif_streaming_logique_multimaster.md) · [English version](../../en/solutions/gcp_spanner_alloydb.md)

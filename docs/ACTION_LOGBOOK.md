@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-162 - Enrich AWS Aurora Limitless (#12) and GCP Spanner/AlloyDB (#13) EN/FR Sheets With Popularity Telemetry (Issue `#405`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#405` (`docs/issue-405-cloud-popularity`)
+- **Request / Changes / Result**: Added standardized Section 6 Git/telemetry status, `pushed_at` freshness, and Manageability synthesis (`aurora-limitless` `N/A`, `gcp-spanner-alloydb` `N/A`, and `spanner-pgadapter` `GoogleCloudPlatform/pgadapter` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`, zero invented counts on closed engines) to `docs/{en,fr}/solutions/aws_aurora_limitless.md` and `docs/{en,fr}/solutions/gcp_spanner_alloydb.md`, plus `docs/ACTION_LOGBOOK.md`; verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
+
 ### ACT-161 - Enrich EDB PGD (#4) Proprietary EN/FR Sheets With Popularity Telemetry and M3 Split Record (Issue `#403`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#403` (`docs/issue-403-edb-pgd-popularity`)
 - **Request / Changes / Result**: Added standardized Section 6 proprietary Git/telemetry status and Manageability synthesis (`edb-pgd` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`, zero invented GitHub counts) to `docs/en/solutions/edb_pgd.md` and `docs/fr/solutions/edb_pgd.md`, plus `docs/ACTION_LOGBOOK.md` and `docs/RCA_REGISTER.md` (`IMP-010`); verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.

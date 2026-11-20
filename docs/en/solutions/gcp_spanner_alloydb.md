@@ -98,6 +98,19 @@ In our empirical baseline (`results/benchmark_summary.csv`, `results/functional_
 | **Reference Anchor (`A_single_rw`)** | Not benchmarked (`APP-005`) | Not benchmarked (`APP-005`) | `42.08 TPS` (`44` `40001` retries) | `173.64 TPS` (`0` retries) | `409.48 TPS` (`50.307 ms` `p95`) |
 | **Reference Anchor (`F_wan_netem_25ms`)** | Not benchmarked (2*eps + Paxos RTT) | Not benchmarked (1 primary) | `10.06 TPS` (`-76.1%` WAN Raft) | `5.78 TPS` (`-96.7%` WAN Raft) | `57.00 TPS` (`-86.1%` WAN WAL) |
 
+## 6. GitHub Popularity, Git Presence & Maintenance Vitality (`results/project_popularity.csv`)
+
+Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
+
+| Project | Git Presence / Role | Repo (`Account / Repos`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Release / Last Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **Google Cloud Spanner & AlloyDB (#13)** | `Partial (PGAdapter only; engine proprietary)` -- `Proprietary (Managed Cloud)` | N/A (Proprietary) | N/A / N/A / N/A | N/A / N/A | N/A / N/A | N/A / Proprietary | N/A / N/A |
+| **Cloud Spanner PGAdapter (#13a)** | `Partial (Proxy only)` -- `Primary (Client Proxy; Engine Proprietary)` | [`GoogleCloudPlatform/pgadapter`](https://github.com/GoogleCloudPlatform/pgadapter) (`Org / 1545`) | 94 / 36 / 26 | 4040 / 934 | 22 / 74 | Java / `Apache-2.0` | `v0.56.4` / `2026-11-20T11:30:29Z` |
+
+- **Maintenance Level:** **Closed / Managed Cloud (+ OSS Proxy)** -- Core Spanner and AlloyDB engines are closed GCP services (`N/A`); open-source `GoogleCloudPlatform/pgadapter` logs `934` commits/12m (`4,040` total, `22` contributors, `94` stars, `74` open issues).
+- **Currency / Freshness:** **Opaque Engine + Active Proxy** -- Engine push `N/A`; PGAdapter last push `2026-11-20T11:30:29Z`, `934` commits/12m, latest release `v0.56.4`.
+- **Operational Manageability:** **Vendor Lock-In** -- Requires managed GCP Spanner/AlloyDB services (or commercial `AlloyDB Omni`), `PGAdapter` sidecar ops, and Spanner dialect constraints.
+
 ---
 
 **Navigation:** [Index](../../../README.md) · [Ch. 03b — Distributed, Triggers & Cloud](../03b_solutions_distributed_triggers_cloud.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/gcp_spanner_alloydb.md)
