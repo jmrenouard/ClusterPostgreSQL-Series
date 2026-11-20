@@ -24,7 +24,7 @@ def _load_base():
 BASE = _load_base()
 ROOT, RESULTS = BASE.ROOT, BASE.ROOT / "results"
 DOCS_EN, DOCS_FR, SOL_EN, SOL_FR = BASE.DOCS_EN, BASE.DOCS_FR, BASE.SOL_EN, BASE.SOL_FR
-BENCH, REF, SLUGS, NAV_03A = BASE.BENCH, BASE.REF, BASE.SLUGS, BASE.NAV_03A
+BENCH, EXTRA_BENCH, EXTRA_SPECS, REF, SLUGS, NAV_03A = BASE.BENCH, BASE.EXTRA_BENCH, BASE.EXTRA_SPECS, BASE.REF, BASE.SLUGS, BASE.NAV_03A
 
 
 def _g(d: pathlib.Path, pat: str) -> pathlib.Path:
@@ -65,23 +65,26 @@ class TestTier3And4ParityAndNavigation(unittest.TestCase):
     """Tier 3 (CSV parity, anti-p99, reference status) and Tier 4 (links, symmetry, #14/#16, Ch01)."""
 
     summary_rows: list[dict[str, str]]
+    extra_data: dict[str, tuple[list[dict[str, str]], list[dict[str, str]]]]
     sqlstates: dict[str, set[str]]
 
     @classmethod
     def setUpClass(cls) -> None:
-        with (RESULTS / "benchmark_summary.csv").open(encoding="utf-8", newline="") as fh:
-            cls.summary_rows = list(csv.DictReader(fh))
-        cls.sqlstates = {}
-        for fn in ("functional_limits_matrix.csv", "extended_functional_matrix.csv"):
+        def _rd(fn: str) -> list[dict[str, str]]:
             with (RESULTS / fn).open(encoding="utf-8", newline="") as fh:
-                for row in csv.DictReader(fh):
-                    cls.sqlstates.setdefault(row["topology"].strip(), set()).update(
-                        s.strip() for s in row["verified_sqlstates"].split(";") if s.strip() and s.strip() != "NONE"
-                    )
+                return list(csv.DictReader(fh))
+        cls.summary_rows = _rd("benchmark_summary.csv")
+        cls.extra_data = {s: (_rd(bf), _rd(lf)) for s, bf, lf, *_ in EXTRA_SPECS}
+        cls.sqlstates = {}
+        for fn in ("functional_limits_matrix.csv", "extended_functional_matrix.csv", *(lf for _, _, lf, *_ in EXTRA_SPECS)):
+            for row in _rd(fn):
+                cls.sqlstates.setdefault(row["topology"].strip(), set()).update(
+                    s.strip() for s in row["verified_sqlstates"].split(";") if s.strip() and s.strip() != "NONE"
+                )
 
     def test_tier3_csv_parity_p99_and_reference(self) -> None:
         topos = {r["topology"].strip() for r in self.summary_rows}
-        self.assertEqual((len(BENCH) + len(REF), {k for ks in BENCH.values() for k in ks}, len(topos)), (17, topos, 11))
+        self.assertEqual((len(BENCH) + len(EXTRA_BENCH) + len(REF), {k for ks in BENCH.values() for k in ks}, len(topos)), (19, topos, 11))
         by_t: dict[str, list[dict[str, str]]] = {}
         for r in self.summary_rows:
             by_t.setdefault(r["topology"].strip(), []).append(r)
@@ -113,6 +116,17 @@ class TestTier3And4ParityAndNavigation(unittest.TestCase):
                             tb = ln.lstrip().startswith("|")
                             if (tb and rs(r"\|\s*[*`]*\d+[.,]\d+(?:\s*TPS)?[*`]*\s*\|", ln, re.I)) or (not tb and not na.search(ln) and rs(r"\d+[.,]\d+\s*TPS", ln, re.I)):
                                 e.append(f"{rel}: F_wan_netem TPS")
+        for slug, _, _, n_b, n_l, t11_col, suites in EXTRA_SPECS:
+            b_rows, l_rows = self.extra_data[slug]
+            self.assertEqual((len(b_rows), len(l_rows), {r["topology"].strip() for r in b_rows}), (n_b, n_l, set(EXTRA_BENCH[slug])))
+            codes = sorted(set().union(*(self.sqlstates.get(k, set()) for k in EXTRA_BENCH[slug])))
+            for p in (SOL_EN / f"{slug}.md", SOL_FR / f"{slug}.md"):
+                rel, txt = BASE.rel_path(p), p.read_text(encoding="utf-8")
+                norm = txt.translate(tr).replace(r"\\,", " ").replace(r"\,", " ")
+                e.extend(f"{rel}: miss {r['topology']}/{r['suite']} tps" for r in b_rows if r["suite"].strip() in suites and not has_csv_number(norm, r["tps"]))
+                e.extend(f"{rel}: miss {r['topology']} drift" for r in b_rows if int(r["balance_drift"]) and not has_csv_number(norm, r["balance_drift"]))
+                e.extend(f"{rel}: miss {r['topology']} T11" for r in l_rows if (m := rs(r"(\d+)\s*rows/s", r[t11_col])) and not has_csv_number(norm, m.group(1)))
+                e.extend(f"{rel}: miss {slug} {c}" for c in codes if not rs(rf"\b{re.escape(c)}\b", txt))
         neg = rc(r"not\s+measured|unmeasured|not\s+recorded|non\s+mesur|pas\s+mesur|absent|n/a|never", re.I)
         p99 = rc(r"\b(?:lat_)?p99(?:_ms)?\b", re.I)
         p99n = rc(r"(?:lat_)?p99(?:_ms)?[^.\n;|]{0,20}?\d+(?:[.,]\d+)?\s*ms|(?:lat_)?p99(?:_ms)?\s*[:=]\s*\d", re.I)

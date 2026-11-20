@@ -25,7 +25,7 @@ BASE = _load_sibling("test_solution_sheets")
 PARITY = _load_sibling("test_solution_sheets_parity")
 ROOT, RESULTS = BASE.ROOT, PARITY.RESULTS
 DOCS_EN, DOCS_FR, SOL_EN, SOL_FR = BASE.DOCS_EN, BASE.DOCS_FR, BASE.SOL_EN, BASE.SOL_FR
-BENCH, SLUGS = BASE.BENCH, BASE.SLUGS
+BENCH, EXTRA_BENCH, SLUGS = BASE.BENCH, BASE.EXTRA_BENCH, BASE.SLUGS
 
 BENCH_CSVS = (
     "benchmark_summary.csv",
@@ -55,7 +55,7 @@ class TestTier5AdversarialCoverage(unittest.TestCase):
     """Tier 5 checks covering README 4-column catalog, headline parity, 4-CSV row parity, and EN/FR tables."""
 
     def test_tier5_readme_catalog_and_headline_parity(self) -> None:
-        """Verify 17-row 4-col Solutions Catalog in README*.md and headline CSV accuracy in README*/06*."""
+        """Verify 19-row 4-col Solutions Catalog in README*.md and headline CSV accuracy in README*/06*."""
         e: list[str] = []
         for rm, sd, prop_ok in (
             (ROOT / "README.md", SOL_EN, rc(r"^Proprietary\s*/\s*N/A$", re.I)),
@@ -66,18 +66,18 @@ class TestTier5AdversarialCoverage(unittest.TestCase):
             rel_rm = BASE.rel_path(rm)
             cat_rows = None
             for _, hd, rows in tables:
-                if len(hd) == 4 and len(rows) in (17, 19):
+                if len(hd) == 4 and len(rows) == len(SLUGS):
                     hits = set()
                     for rw in rows:
                         for m in re.finditer(r"\[[^\]]+\]\(([^)]+)\)", rw[0]):
                             tgt = (rm.parent / m.group(1).split("#", 1)[0]).resolve()
                             if tgt.parent == sd.resolve() and tgt.is_file():
                                 hits.add(tgt.stem)
-                    if set(SLUGS).issubset(hits):
+                    if hits == set(SLUGS):
                         cat_rows = rows
                         break
             if cat_rows is None:
-                e.append(f"{rel_rm}: missing 17-row 4-col Solutions Catalog covering all 17 slugs")
+                e.append(f"{rel_rm}: missing {len(SLUGS)}-row 4-col Solutions Catalog covering all {len(SLUGS)} slugs")
                 continue
             for idx, rw in enumerate(cat_rows, 1):
                 if not rs(r"https://[^\s)>\]]+", rw[1]):
@@ -206,6 +206,27 @@ class TestTier5AdversarialCoverage(unittest.TestCase):
                             if ms := rs(rf"{stat}=(\d+(?:\.\d+)?)ms", er["t15_raw_visibility_lag_ms"]):
                                 if not any(PARITY.has_csv_number(rn, ms.group(1), True) for rn in t15_rows):
                                     e.append(f"{rel}: T15 miss {k} {stat}={ms.group(1)}")
+
+        with (RESULTS / "project_popularity.csv").open(encoding="utf-8", newline="") as fh:
+            pop = {r["solution_id"].strip(): r for r in csv.DictReader(fh)}
+        pop_map = {"pg18_native_clustering": ("postgres-core", "patroni"), "yt_cluster_lite": ("yt-cluster-lite",)}
+        for slug, bf, _, _, _, _, suites in PARITY.EXTRA_SPECS:
+            with (RESULTS / bf).open(encoding="utf-8", newline="") as fh:
+                ex_rows = list(csv.DictReader(fh))
+            for d in (SOL_EN, SOL_FR):
+                p = d / f"{slug}.md"
+                rel = BASE.rel_path(p)
+                txt = p.read_text(encoding="utf-8")
+                norm_doc = _norm(txt)
+                _, tables = BASE.extract_sections_and_tables(txt)
+                tab_norm = "\n".join(_norm(" | ".join(rw)) for _, _, rows in tables for rw in rows if rw)
+                for r in ex_rows:
+                    if r["suite"].strip() in suites and not PARITY.has_csv_number(tab_norm, r["tps"]):
+                        e.append(f"{rel}: table miss {r['topology']}/{r['suite']} tps={r['tps']}")
+                for sid in pop_map[slug]:
+                    for col in ("stars", "forks", "total_commits", "commits_12m"):
+                        if not PARITY.has_csv_number(norm_doc, pop[sid][col]):
+                            e.append(f"{rel}: miss popularity {sid}/{col}={pop[sid][col]}")
 
         for slug in SLUGS:
             en_tb = BASE.extract_sections_and_tables((SOL_EN / f"{slug}.md").read_text(encoding="utf-8"))[1]
