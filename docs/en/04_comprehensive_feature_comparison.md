@@ -6,7 +6,7 @@
 
 ---
 
-All **15 architectures** from Chapter 01 are evaluated across **36 technical and operational criteria** grouped into five matrices. Abbreviations: **Ext** (Extension), **RI** (`REPLICA IDENTITY`), **LWW** (Last-Write-Wins), **CRDT** (Conflict-Free Replicated Data Type), **2PC** (Two-Phase Commit), **HLC** (Hybrid Logical Clock), **OSS** (Open Source), **Std PG** (Standard PostgreSQL heap/B-tree).
+All **16+ architectures** from Chapter 01 -- including **[#17 PG 18.6 Native](solutions/pg18_native_clustering.md)** ([Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)) and **[#18 YT Cluster](solutions/yt_cluster_lite.md)** -- are evaluated across **36 technical and operational criteria** grouped into five matrices. Abbreviations: **Ext** (Extension), **RI** (`REPLICA IDENTITY`), **LWW** (Last-Write-Wins), **CRDT** (Conflict-Free Replicated Data Type), **2PC** (Two-Phase Commit), **HLC** (Hybrid Logical Clock), **OSS** (Open Source), **Std PG** (Standard PostgreSQL heap/B-tree).
 
 ## Matrix A — Core Engine, Replication & CAP/PACELC (Criteria 1–8)
 
@@ -27,6 +27,8 @@ All **15 architectures** from Chapter 01 are evaluated across **36 technical and
 | #13 | GCP Spanner PG | Spanner PG Int | Colossus LSM | Paxos + TrueTime | CP | PC/EC | Multi-Region | Managed | Paxos Majority |
 | #14 | Legacy Triggers | PG + Ruby/C/Py | Std PG | Trigger / PgQ | AP | PA/EL | Single/Mesh | 2+ | None |
 | #15 | Patroni + etcd | Core PG 17 | Std PG | WAL + etcd Raft | CP/AP | PC/EC or PA/EL | Single Primary | 3 (etcd) | etcd Raft |
+| #17 | PG 18.6 Native (AIO/uuidv7) | Core PG 18.6 | Std PG (AIO+chk) | Stream/Log `substream=p` | AP/CP | PA/EL or PC/EC | 1-Pri or Mesh | 2-3 | None / SyncRep |
+| #18 | YT Cluster 1.21 | Unmod PG 18+Ext | Std PG | Trig + Leader XA 2PC | CP(W)/AP(R) | PC(W)/EL(R) | Active-Active | 3 | Leader (`min=2`) |
 
 ## Matrix B — Conflict Management, Identity & Commit Semantics (Criteria 9–16)
 
@@ -47,6 +49,8 @@ All **15 architectures** from Chapter 01 are evaluated across **36 technical and
 | #13 | GCP Spanner PG | Wound-Wait | Wait / Abort | N/A | 2PC+Paxos+TrueTime | Possible | TrueTime HW | Bit-rev Seq | **Yes** |
 | #14 | Legacy Triggers | Diff / None | Latest / Manual | No | Local only | No | High | Manual | **No** |
 | #15 | Patroni + etcd | Single-Writer | None Needed | N/A | Local / Sync WAL | No | None | Native `SERIAL` | **Yes** |
+| #17 | PG 18.6 Native (AIO/uuidv7) | 7 `confl_*` (`23505`) | Manual (Birep halts) | No | Local / SyncRep | No | Low (Birep) | Native `uuidv7()` | **Sync:Yes/Birep:No** |
+| #18 | YT Cluster 1.21 | Leader checkin | Abort (`55409`/`40001`) | Opt-in merge | XA 2PC (`cc=half`) | **Yes (`40001`/`55409`)** | Low (term) | `uuidv7()`/Step | **Yes (`0` drift)** |
 
 ## Matrix C — PostgreSQL Wire/Driver Compatibility, DDL & Data Model (Criteria 17–25)
 
@@ -67,6 +71,8 @@ All **15 architectures** from Chapter 01 are evaluated across **36 technical and
 | #13 | GCP Spanner PG | ~65% (PGAdapter) | **PK Required** | Global | Interleaved | **Yes** | **Minimal** (no trig) | **No** | Change Streams | **None** |
 | #14 | Legacy Triggers | 100% (`libpq`/JDBC) | Rejected | Async collision | Cycle risk | **No** | Local | **No** | Node-Local | **100%** |
 | #15 | Patroni + etcd | **100%** | **100%** | **100%** | **100%** | **100%** | **100%** | **100%** | **100% (Global)** | **100%** |
+| #17 | PG 18.6 Native (AIO/uuidv7) | 100% (`libpq`/JDBC) | Stream/Log `55000` | Birep `23505` | Stream/Birep `23503` | Stream/**No (Log)** | Full (local) | Stream/**No (Log)** | Node-Local | **100%** |
+| #18 | YT Cluster 1.21 | 100% (`libpq`/JDBC) | DML OK (copy PK) | Global (`40001`) | Global (`half` 10/10) | **No** (`sge`) | Full+`yt_sync` | **No** | Node-Local | **High** (cast) |
 
 ## Matrix D — Resilience, Failover & Operations (Criteria 26–31)
 
@@ -87,6 +93,8 @@ All **15 architectures** from Chapter 01 are evaluated across **36 technical and
 | #13 | GCP Spanner PG | **`0`** | `< 1–5 s` | **None** | Medium (commit-wait) | Managed PITR | Low (Cloud Managed) |
 | #14 | Legacy Triggers | `> 0` | Manual | **High** | Low | Per-node | High (Legacy debt) |
 | #15 | Patroni + etcd | `0` (Sync) / `> 0` | `10–30 s` | **Low** (Watchdog) | High if Sync WAN | `pgBackRest` | **Low-Medium (Standard)** |
+| #17 | PG 18.6 Native (AIO/uuidv7) | `0` (Sync) / `> 0` | `< 5 s` / `10-30 s` | Low (HA) / High (Birep) | Low (Log) / High (Sync) | `pgBackRest`/Node | Low-Med (Stream) / Med (Birep) |
+| #18 | YT Cluster 1.21 | **`0`** (`cc=half`) | `~8 s` (`57P03`) | Low (Leader term) | **Very High** (`2.25` 25ms) | Per-node (rev.) | Med-High (`ytserv`+2PC) |
 
 ## Matrix E — Licensing, TCO & Optimal Fit (Criteria 32–36)
 
@@ -107,3 +115,5 @@ All **15 architectures** from Chapter 01 are evaluated across **36 technical and
 | #13 | GCP Spanner PG | GCP Proprietary | **Very High** (Spanner nodes + net) | PG Wire Subset | Mature Cloud | Global ledgers needing TrueTime ACID |
 | #14 | Legacy Triggers | OSS (BSD/GPL) | High maintenance debt | Legacy PG | **Deprecated/EOL** | Migration away from legacy triggers |
 | #15 | Patroni + etcd | MIT / PostgreSQL | **Lowest TCO** for `RPO=0` HA | Core PG 17 | **Industry Std** | 80%+ OLTP workloads needing single-writer HA |
+| #17 | PG 18.6 Native (AIO/uuidv7) | PostgreSQL (OSS) | Lowest SW; AIO+checksums | Core PG 18.6 | **Current Target** | PG 18 HA, upgrades (`substream=p`), `uuidv7()` mesh |
+| #18 | YT Cluster 1.21 | MIT + PolyForm/Com | Closed `ytserv`; bus=1 | Core PG 18.7 | Young (`v1.21`) | Low-TPS zero-drift reversible PG 18 mesh |
