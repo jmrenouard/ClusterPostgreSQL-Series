@@ -91,6 +91,18 @@ Instead, `#8` maps cleanly onto the live-benchmarked `T5` (`CP / PC-EC`) and sin
 | **Reference Anchor (`A_single_rw`)** | Not benchmarked | `309.04 TPS` (`0` drift) | `173.64 TPS` (`0` retries) | `42.08 TPS` (`44` retries) | `866.82 TPS` (`23.958 ms` `p95`) |
 | **Reference Anchor (`D` / `25 ms` WAN)** | Not benchmarked (GTM + 2PC WAN penalty) | `1,691.45` (`D`) / `21.67 TPS` (`-93.0%`) | `832.65` (`D`) / `5.78 TPS` (`-96.7%`) | `471.61` (`D`) / `10.06 TPS` (`-76.1%`) | `3,128.63 TPS` (`D`) / N/A |
 
+## 6. GitHub Popularity, Git Presence & Maintenance Vitality (`results/project_popularity.csv`)
+
+Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
+
+| Project | Git Presence / Role | Repo (`Account / Repos`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Release / Last Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **OpenTenBase (#8)** | `Yes` -- `Primary (PG-XL/XC Successor)` | [`OpenTenBase/OpenTenBase`](https://github.com/OpenTenBase/OpenTenBase) (`Org / 14`) | 816 / 636 / 112 | 817 / 14 | 64 / 421 | C / `NOASSERTION` | `v5.0` / `2026-11-09T13:23:30Z` |
+
+- **Maintenance Level:** **Tier C (Fragile / Maintenance)** -- `OpenTenBase/OpenTenBase` records only `14` commits/12m (`817` total, `64` contributors, `816` stars, `421` open issues); Postgres-XC is retired and Postgres-XL is frozen on EOL PG 10.
+- **Currency / Freshness:** **Low Cadence** -- Last push `2026-11-09T13:23:30Z`, `14` commits/12m, latest release `v5.0`.
+- **Operational Manageability:** **High Risk** -- Forked `PG 10-11` kernel (`MulanPSL-2.0` / `NOASSERTION` SPDX) and 4-role GTM/CN/DN stack impose heavy SRE burden vs. `#7 Citus`.
+
 ---
 
 **Navigation:** [Index](../../../README.md) · [Ch. 03b — Distributed, Triggers & Cloud](../03b_solutions_distributed_triggers_cloud.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/opentenbase_pgxl.md)
