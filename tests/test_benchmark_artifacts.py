@@ -37,6 +37,11 @@ PG18_TOPOLOGIES = {
     "pg18-birep",
 }
 
+YT_TOPOLOGIES = {
+    "yt-cluster",
+    "yt-cluster-async",
+}
+
 BENCH_CSVS = (
     "benchmark_summary.csv",
     "benchmark_extended_workloads.csv",
@@ -72,6 +77,7 @@ EXPECTED_DASH_FILES = (
     "data_bench_2.js",
     "data_bench_3.js",
     "data_bench_pg18.js",
+    "data_bench_yt.js",
     "data_matrix.js",
     "data_matrix_ext.js",
     "data_matrix_pg18.js",
@@ -139,6 +145,7 @@ class TestBenchmarkArtifacts(unittest.TestCase):
             'data-preset="stream_logical"',
             'data-preset="pg18_vs_pg17"',
             'data-mtab="pg18"',
+            'data-mtab="yt"',
             'data-tab="popularity"',
             'data-lang="en"',
             'data-lang="fr"',
@@ -147,6 +154,7 @@ class TestBenchmarkArtifacts(unittest.TestCase):
             "data_bench_2.js",
             "data_bench_3.js",
             "data_bench_pg18.js",
+            "data_bench_yt.js",
             "data_matrix.js",
             "data_matrix_ext.js",
             "data_matrix_pg18.js",
@@ -178,6 +186,14 @@ class TestBenchmarkArtifacts(unittest.TestCase):
         m18 = re.search(r"window\.LP_BENCH_ROWS_PG18=(\[.*\]);", pg18_js)
         self.assertIsNotNone(m18, "Missing LP_BENCH_ROWS_PG18 in data_bench_pg18.js")
         self.assertEqual(len(json.loads(m18.group(1))), 87)
+
+        yt_js = (DASH / "data_bench_yt.js").read_text(encoding="utf-8")
+        myt_b = re.search(r"window\.LP_BENCH_ROWS_YT=(\[.*?\]);", yt_js)
+        self.assertIsNotNone(myt_b, "Missing LP_BENCH_ROWS_YT in data_bench_yt.js")
+        self.assertEqual(len(json.loads(myt_b.group(1))), 22)
+        myt_m = re.search(r"window\.LP_MATRIX_YT=(\{.*?\});", yt_js)
+        self.assertIsNotNone(myt_m, "Missing LP_MATRIX_YT in data_bench_yt.js")
+        self.assertEqual(len(json.loads(myt_m.group(1))["rows"]), 1)
 
         for fname, var, exp_len in (
             ("data_matrix.js", "LP_MATRIX_CORE", 10),
@@ -236,6 +252,23 @@ class TestBenchmarkArtifacts(unittest.TestCase):
             m18_rows = list(csv.DictReader(fh))
         self.assertEqual(len(m18_rows), 5)
         self.assertEqual({r["topology"].strip() for r in m18_rows}, PG18_TOPOLOGIES)
+
+        yt_b = RESULTS / "benchmark_yt_cluster.csv"
+        self.assertTrue(yt_b.is_file(), "Missing benchmark_yt_cluster.csv")
+        with yt_b.open(encoding="utf-8", newline="") as fh:
+            yt_rows = list(csv.DictReader(fh))
+        self.assertEqual(len(yt_rows), 22)
+        self.assertTrue(required.issubset(yt_rows[0].keys()))
+        self.assertEqual({r["topology"].strip() for r in yt_rows}, YT_TOPOLOGIES)
+        for r in yt_rows:
+            self.assertGreater(float(r["tps"]), 0.0)
+
+        yt_m = RESULTS / "functional_limits_yt_cluster.csv"
+        self.assertTrue(yt_m.is_file(), "Missing functional_limits_yt_cluster.csv")
+        with yt_m.open(encoding="utf-8", newline="") as fh:
+            yt_m_rows = list(csv.DictReader(fh))
+        self.assertEqual(len(yt_m_rows), 1)
+        self.assertEqual(yt_m_rows[0]["topology"].strip(), "yt-cluster")
 
         pop_p = RESULTS / "project_popularity.csv"
         self.assertTrue(pop_p.is_file(), "Missing project_popularity.csv")
