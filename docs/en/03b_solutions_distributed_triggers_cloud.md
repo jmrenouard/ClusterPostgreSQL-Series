@@ -6,7 +6,26 @@
 
 ---
 
+## Dedicated Architecture Sheets (`03b` Scope)
+
+| Catalog ID | Solution / Topology | Dedicated EN Sheet | Scope |
+| :---: | :--- | :--- | :--- |
+| **#5** | YugabyteDB (`yugabyte`, YSQL + DocDB Raft) | [Solution #5 — YugabyteDB](solutions/yugabytedb.md) | Live-benchmarked (`T5`) |
+| **#6** | CockroachDB (`cockroach`, PG-Wire + Pebble Multi-Raft) | [Solution #6 — CockroachDB](solutions/cockroachdb.md) | Live-benchmarked (`T5`) |
+| **#7** | Citus (`citus`, Coordinator + Workers + 2PC) | [Solution #7 — Citus](solutions/citus.md) | Live-benchmarked (`T5`) |
+| **#8** | OpenTenBase / Postgres-XL / Postgres-XC | [Solution #8 — OpenTenBase / PG-XL](solutions/opentenbase_pgxl.md) | Architectural Reference |
+| **#9** | Bucardo 5 (`bucardo`, PL/PerlU Trigger Daemon) | [Solution #9 — Bucardo 5](solutions/bucardo.md) | Live-benchmarked (`T4`) |
+| **#10** | SymmetricDS (`sym_data` Java HTTP Batch Sync) | [Solution #10 — SymmetricDS](solutions/symmetricds.md) | Architectural Reference |
+| **#11** | PgPool-II (Streaming LB/HA vs Native Replication/SI) | [Solution #11 — PgPool-II](solutions/pgpool_ii.md) | Architectural Reference |
+| **#12** | AWS Aurora PostgreSQL Limitless (& MM v1) | [Solution #12 — AWS Aurora Limitless](solutions/aws_aurora_limitless.md) | Architectural Reference |
+| **#13** | Google Cloud Spanner (PG Interface) & AlloyDB | [Solution #13 — GCP Spanner & AlloyDB](solutions/gcp_spanner_alloydb.md) | Architectural Reference |
+| **#14** | Legacy Trigger Systems (Slony-I, Londiste, RubyRep) | [Solution #14 — Legacy Triggers (EOL)](solutions/legacy_triggers.md) | Architectural Reference |
+
+---
+
 ## Solution #5: YugabyteDB
+
+**Dedicated Sheet:** [Solution #5 — YugabyteDB (`yugabyte`)](solutions/yugabytedb.md)
 
 **Family:** 3 — Distributed Consensus (PG-Wire) | **License:** Open Source (Apache 2.0)
 
@@ -24,6 +43,8 @@ YugabyteDB pairs a **forked PostgreSQL C query layer (`YSQL`)** with a C++ distr
 
 ## Solution #6: CockroachDB
 
+**Dedicated Sheet:** [Solution #6 — CockroachDB (`cockroach`)](solutions/cockroachdb.md)
+
 **Family:** 3 — Distributed Consensus (PG-Wire) | **License:** Open Source / BSL (Enterprise features licensed)
 
 ### Architecture & Internals
@@ -39,6 +60,8 @@ CockroachDB implements a **clean-room Go SQL engine** speaking the PostgreSQL wi
 ---
 
 ## Solution #7: Citus
+
+**Dedicated Sheet:** [Solution #7 — Citus (`citus`)](solutions/citus.md)
 
 **Family:** 4 — Sharded MPP / 2PC | **License:** Open Source (AGPLv3)
 
@@ -56,6 +79,8 @@ Citus is a pure PostgreSQL extension transforming standard PostgreSQL 17 instanc
 
 ## Solution #8: OpenTenBase / Postgres-XL / Postgres-XC
 
+**Dedicated Sheet:** [Solution #8 — OpenTenBase / Postgres-XL / XC (Architectural Reference)](solutions/opentenbase_pgxl.md)
+
 **Family:** 4 — Sharded MPP / 2PC | **License:** Open Source (PostgreSQL / Tencent Apache-style)
 
 ### Architecture & Internals
@@ -70,6 +95,8 @@ Derived from NTT's **Postgres-XC**, this lineage splits PostgreSQL into stateles
 ---
 
 ## Solution #9: Bucardo 5
+
+**Dedicated Sheet:** [Solution #9 — Bucardo 5 (`bucardo`)](solutions/bucardo.md)
 
 **Family:** 5 — Trigger-Based Async Daemons | **License:** Open Source (BSD)
 
@@ -87,6 +114,8 @@ Derived from NTT's **Postgres-XC**, this lineage splits PostgreSQL into stateles
 
 ## Solution #10: SymmetricDS
 
+**Dedicated Sheet:** [Solution #10 — SymmetricDS (Architectural Reference)](solutions/symmetricds.md)
+
 **Family:** 5 — Trigger-Based Async Daemons | **License:** Open Source (LGPL) / Pro (Commercial)
 
 ### Architecture & Internals
@@ -101,6 +130,8 @@ Written in Java, **SymmetricDS** captures row mutations via database triggers in
 ---
 
 ## Solution #11: PgPool-II (Replication & Snapshot Isolation Modes)
+
+**Dedicated Sheet:** [Solution #11 — PgPool-II (Architectural Reference / Streaming PoC)](solutions/pgpool_ii.md)
 
 **Family:** 6 — Statement-Broadcast Middleware | **License:** Open Source (BSD)
 
@@ -118,6 +149,8 @@ Statement broadcast breaks silently whenever SQL produces different values acros
 
 ## Solution #12: AWS Aurora PostgreSQL Limitless Database (& Multi-Master v1)
 
+**Dedicated Sheet:** [Solution #12 — AWS Aurora PostgreSQL Limitless (& MM v1)](solutions/aws_aurora_limitless.md)
+
 **Family:** 7 — Cloud-Managed Distributed Engines | **License:** Proprietary (AWS Managed)
 
 ### History & Architecture
@@ -127,6 +160,8 @@ AWS previously launched **Aurora Multi-Master (v1)** on MySQL (never GA on Auror
 ---
 
 ## Solution #13: Google Cloud Spanner (PG Interface) & AlloyDB
+
+**Dedicated Sheet:** [Solution #13 — GCP Spanner (PG Interface) & AlloyDB](solutions/gcp_spanner_alloydb.md)
 
 **Family:** 7 — Cloud-Managed Distributed Engines | **License:** Proprietary (GCP Managed)
 
@@ -138,6 +173,8 @@ AWS previously launched **Aurora Multi-Master (v1)** on MySQL (never GA on Auror
 ---
 
 ## Solution #14: Legacy Trigger Systems (RubyRep, Slony-I, Londiste)
+
+**Dedicated Sheet:** [Solution #14 — Legacy Trigger Systems (EOL)](solutions/legacy_triggers.md)
 
 **Family:** 5 — Trigger-Based Async Daemons | **License:** Open Source (Historical / EOL)
 

@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-125 - Add 03b EN Solution Navigation Table and Section Links (Issue `#249`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#249` (`docs/issue-249-03b-en-links`)
+- **Request / Changes / Result**: Updated `docs/en/03b_solutions_distributed_triggers_cloud.md` with the 10-row `Dedicated Architecture Sheets (03b Scope)` index table (`#5`..`#14`) and per-section `Dedicated Sheet` links to all 10 `docs/en/solutions/*.md` sheets (`yugabytedb`, `cockroachdb`, `citus`, `opentenbase_pgxl`, `bucardo`, `symmetricds`, `pgpool_ii`, `aws_aurora_limitless`, `gcp_spanner_alloydb`, `legacy_triggers`), keeping `#14` solely on `legacy_triggers` with zero `#16` mentions; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-124 - Add 03a FR Solution Links, #16 Section, and EDB PGD Harmonization (Issue `#247`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#247` (`docs/issue-247-03a-fr-links-edb-sync`)
 - **Request / Changes / Result**: Updated `docs/fr/03a_catalogue_natif_et_extensions.md` intro (`L5`), inserted the 7-row `03a` dedicated sheets table and per-section `Fiche(s) dediee(s)` links, appended `## #16` (`pg17-logical`, `N3`) with zero `#14` mentions, and harmonized EDB PGD lines 69 and 73 (`bdr.crdt_*`, `bdr.conflict_history`, `snowflakeid`, `galloc`, `timeshard`); `make test` (`13/13` OK) and `make lint` verified.
