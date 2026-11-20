@@ -1,4 +1,4 @@
-/* Offline Benchmark Explorer controller (15 topologies PG17/PG18, Matrix, Popularity). */
+/* Offline Benchmark Explorer controller (17 topologies PG17/PG18/YT, Matrix, Popularity). */
 (function () {
   "use strict";
 
@@ -14,13 +14,13 @@
     matAll: ["Showing all matrix rows (toggle matching pills above to filter).", "Affichage complet (activez les pilules pour filtrer)."],
   };
 
-  const upk = (cols, raw) => (raw || []).map((a) => Object.fromEntries(cols.map((c, i) => [c, a[i] ?? ""])));
-  const BCOLS = (window.LP_BENCH_META || {}).cols || [];
-  const BENCH = upk(BCOLS, [].concat(window.LP_BENCH_ROWS_1 || [], window.LP_BENCH_ROWS_2 || [], window.LP_BENCH_ROWS_3 || [], window.LP_BENCH_ROWS_PG18 || []));
+  const W = window, upk = (cols, raw) => (raw || []).map((a) => Object.fromEntries(cols.map((c, i) => [c, a[i] ?? ""])));
+  const BCOLS = (W.LP_BENCH_META || {}).cols || [];
+  const BENCH = upk(BCOLS, [].concat(W.LP_BENCH_ROWS_1 || [], W.LP_BENCH_ROWS_2 || [], W.LP_BENCH_ROWS_3 || [], W.LP_BENCH_ROWS_PG18 || [], W.LP_BENCH_ROWS_YT || []));
   const pMat = (p) => (p && p.cols ? { cols: p.cols, rows: upk(p.cols, p.rows) } : { cols: [], rows: [] });
-  const MAT = { core: pMat(window.LP_MATRIX_CORE), ext: pMat(window.LP_MATRIX_EXT), pg18: pMat(window.LP_MATRIX_PG18) };
+  const MAT = { core: pMat(W.LP_MATRIX_CORE), ext: pMat(W.LP_MATRIX_EXT), pg18: pMat(W.LP_MATRIX_PG18), yt: pMat(W.LP_MATRIX_YT) };
   const ALL_T = (() => {
-    const s = new Set([...BENCH, ...MAT.core.rows, ...MAT.pg18.rows].map((r) => r.topology));
+    const s = new Set([...BENCH, ...MAT.core.rows, ...MAT.pg18.rows, ...MAT.yt.rows].map((r) => r.topology));
     return [...TO.filter((t) => s.has(t)), ...[...s].filter((t) => !TO.includes(t)).sort()];
   })();
   const ALL_S = [...new Set(BENCH.map((r) => r.suite))];
@@ -147,7 +147,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    const P = { all: ALL_T, clear: [], pg18_vs_pg17: TO.slice(0, 10), stream_logical: TO.slice(0, 5), active_active: ["pg-birep", "pg18-birep", "pgedge", "pgedge-delta-apply", "bucardo", "yugabyte", "cockroach"], raft_async: ["pg-birep", "pgedge", "bucardo", "yugabyte", "cockroach"] };
+    const P = { all: ALL_T, clear: [], pg18_vs_pg17: TO.slice(0, 10), stream_logical: TO.slice(0, 5), active_active: ["pg-birep", "pg18-birep", "pgedge", "pgedge-delta-apply", "bucardo", "yugabyte", "cockroach", "yt-cluster", "yt-cluster-async"], raft_async: ["pg-birep", "pgedge", "bucardo", "yugabyte", "cockroach"] };
     const wire = (a, k, cb) => $$(`[${a}]`).forEach((b) => { b.onclick = () => { st[k] = b.getAttribute(a); $$(`[${a}]`).forEach((x) => x.classList.toggle("active", x.getAttribute(a) === st[k])); cb(); }; });
     [["data-lang", "lang", renderAll], ["data-tab", "tab", renderAll], ["data-mtab", "mtab", renderMatrix], ["data-scale", "scale", renderCharts], ["data-lat", "lat", renderCharts]].forEach((x) => wire(...x));
     $$("[data-preset]").forEach((b) => { b.onclick = () => { st.sel = new Set((P[b.dataset.preset] || []).filter((t) => ALL_T.includes(t))); renderAll(); }; });

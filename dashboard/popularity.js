@@ -18,11 +18,12 @@
     return o;
   });
 
+  const PUB_N = ROWS.filter((r) => r.vitality !== "Proprietary").length;
   const VIT_CLS = { Active: "badge-ok", Low: "badge-warn", Dormant: "badge-err", Proprietary: "badge-na" };
   const VIT_COL = { Active: "#16a34a", Low: "#d97706", Dormant: "#dc2626", Proprietary: "#64748b" };
   const MET_LBL = {
-    stars: ["GitHub Stars (18 Public Repos)", "\u00c9toiles GitHub (18 d\u00e9p\u00f4ts publics)", "#1d4ed8"],
-    forks: ["GitHub Forks (18 Public Repos)", "Forks GitHub (18 d\u00e9p\u00f4ts publics)", "#0ea5e9"],
+    stars: [`GitHub Stars (${PUB_N} Public Repos)`, `\u00c9toiles GitHub (${PUB_N} d\u00e9p\u00f4ts publics)`, "#1d4ed8"],
+    forks: [`GitHub Forks (${PUB_N} Public Repos)`, `Forks GitHub (${PUB_N} d\u00e9p\u00f4ts publics)`, "#0ea5e9"],
     commits_12m: ["12-Month Commit Velocity", "V\u00e9locit\u00e9 Commits (12 mois)", "#059669"],
     total_commits: ["All-Time Total Commits", "Commits totaux (historique)", "#334155"],
     contributors: ["Repository Contributors", "Contributeurs du d\u00e9p\u00f4t", "#7c3aed"],
@@ -89,7 +90,9 @@
         svg.appendChild(rect);
         svg.appendChild(el("text", { x: M.l + bw + 5, y: y + bh / 2 + 3.5, fill: "#1e293b", "font-size": 9.8, "font-weight": 700 }, v >= 1000 ? v.toLocaleString() : String(v)));
       } else {
-        const z = el("text", { x: M.l + 6, y: y + bh / 2 + 3.5, fill: "#b91c1c", "font-size": 9.6, "font-weight": 700 }, "0 (Dormant)");
+        const zLbl = metric === "commits_12m" ? "0 (Dormant)" : `0 ${metric}`;
+        const zCol = metric === "commits_12m" ? "#b91c1c" : "#0369a1";
+        const z = el("text", { x: M.l + 6, y: y + bh / 2 + 3.5, fill: zCol, "font-size": 9.6, "font-weight": 700 }, zLbl);
         attachHover(z, popTip(r));
         svg.appendChild(z);
       }
