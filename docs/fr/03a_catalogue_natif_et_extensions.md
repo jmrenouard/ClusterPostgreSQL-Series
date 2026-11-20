@@ -2,11 +2,25 @@
 
 > **Auteur** : Jean-Marie Renouard (`jmrenouard`) - [LightPath](https://www.lightpath.fr) | **Licence** : MIT
 
-Ce chapitre analyse les quatre solutions directement ancrées dans le noyau ou l'API C d'extension PostgreSQL (`#1` à `#4`) ainsi que la référence de contrôle mono-primaire (`#15`).
+Ce chapitre analyse les solutions directement ancrées dans le noyau ou l'API C d'extension PostgreSQL (`#1` à `#4`, `#16` logique unidirectionnelle) ainsi que les références de contrôle mono-primaire (`#15a` et `#15b`).
+
+## Fiches d'architecture détaillées (périmètre `03a`)
+
+| ID | Solution / Topologie | Fiche FR dédiée | Périmètre |
+| :---: | :--- | :--- | :--- |
+| **#1** | PG 17 Logique bidirectionnelle native (`pg-birep`) | [#1 — PG 17 Logique bidirectionnelle](solutions/pg17_bidirectional_logical.md) | Benchmarké (`N4`) |
+| **#2** | pgEdge Platform / Spock v5 (`pgedge`, `pgedge-delta-apply`) | [#2 — pgEdge / Spock v5](solutions/pgedge_spock.md) | Benchmarké (`N4`, CRDT) |
+| **#3** | pglogical 2 | [#3 — pglogical 2](solutions/pglogical2.md) | Référence architecturale |
+| **#4** | EDB Postgres Distributed (PGD / BDR) | [#4 — EDB PGD](solutions/edb_pgd.md) | Référence architecturale |
+| **#15a** | PG 17 Standalone (`pg17-standalone`) | [#15a — PG 17 Standalone](solutions/pg17_standalone.md) | Benchmarké (`N1` contrôle) |
+| **#15b** | PG 17 Streaming physique & Patroni HA (`pg17-async/sync-streaming`) | [#15b — PG 17 Streaming & Patroni](solutions/pg17_physical_streaming_patroni.md) | Benchmarké (`N1`/`N2`) |
+| **#16** | PG 17 Logique unidirectionnelle native (`pg17-logical`) | [#16 — PG 17 Logique unidirectionnelle](solutions/pg17_logical_unidirectional.md) | Benchmarké (`N3`) |
 
 ---
 
 ## #1 PostgreSQL 16/17/18 Réplication logique bidirectionnelle native
+
+**Fiche dédiée :** [#1 — PG 17 Réplication logique bidirectionnelle native (`pg-birep`)](solutions/pg17_bidirectional_logical.md)
 
 ### Architecture et mécanismes internes
 Depuis PostgreSQL 16, le cœur natif permet de créer une réplication logique bidirectionnelle sans boucle infinie grâce au paramètre de souscription `origin = none`. Lorsqu'un éditeur décode son WAL (`wal_level = logical` via le plugin `pgoutput`), chaque transaction reçue d'un pair porte un identifiant d'origine dans `pg_replication_origin`. En configurant `CREATE SUBSCRIPTION ... WITH (origin = none)`, l'*apply worker* du destinataire n'émet vers ses propres abonnés que les transactions générées localement (`origin IS NULL`). L'activation de `track_commit_timestamp = on` permet de tracer l'horodatage de validation des tuples.
@@ -23,6 +37,8 @@ Depuis PostgreSQL 16, le cœur natif permet de créer une réplication logique b
 ---
 
 ## #2 pgEdge Platform / Spock v5 (Open-Source)
+
+**Fiche dédiée :** [#2 — pgEdge Platform / Spock v5 (`pgedge`, `pgedge-delta-apply`)](solutions/pgedge_spock.md)
 
 ### Architecture et mécanismes internes
 **pgEdge** assemble un écosystème open-source (licence PostgreSQL) conçu pour le multi-maîtres géo-distribué sur PG 16/17 autour de trois extensions C :
@@ -43,6 +59,8 @@ Depuis PostgreSQL 16, le cœur natif permet de créer une réplication logique b
 
 ## #3 pglogical 2 (Open-Source)
 
+**Fiche dédiée :** [#3 — pglogical 2 (Référence architecturale)](solutions/pglogical2.md)
+
 ### Architecture et mécanismes internes
 Développé historiquement par 2ndQuadrant, **pglogical 2** a préfiguré la réplication logique intégrée à PostgreSQL 10. L'extension s'appuie sur des *replication sets* (`default`, `default_insert_only`, `ddl_sql`) et un protocole binaire personnalisé transitant par `wal_level = logical` et des *output plugins* C dédiés.
 
@@ -58,6 +76,8 @@ Développé historiquement par 2ndQuadrant, **pglogical 2** a préfiguré la ré
 
 ## #4 EDB Postgres Distributed / PGD v5-v6 (Commercial / Propriétaire)
 
+**Fiche dédiée :** [#4 — EDB Postgres Distributed / BDR (Référence architecturale)](solutions/edb_pgd.md)
+
 > [!NOTE]
 > **Statut commercial** : EDB Postgres Distributed (PGD, anciennement **BDR** - *Bi-Directional Replication*) est une solution **propriétaire et commerciale** soumise à licence EnterpriseDB.
 
@@ -66,11 +86,11 @@ PGD étend le noyau PostgreSQL (ou *EDB Postgres Extended*) par une couche de co
 
 ### Conflits, modes de commit et DDL
 - **Modèles configurables** :
-  - *Asynchrone optimiste* avec types **CRDT** intégrés (compteurs incrémentaux/décrémentaux convergents sans perte de mise à jour) et résolution LWW configurable par table.
+  - *Asynchrone optimiste* avec types **CRDT** intégrés (`bdr.crdt_gcounter`, `bdr.crdt_pncounter`, `bdr.crdt_delta_counter`, `bdr.crdt_delta_sum`) et résolution LWW auditée dans `bdr.conflict_history`.
   - **Write-Lead** : toutes les écritures d'une table ou d'un groupe convergent vers un leader Raft élu, éliminant les conflits Write-Write tout en assurant une reprise automatisée.
   - **Eager All-Node** : validation synchrone globale garantissant l'absence totale de conflit au prix de la latence RTT multi-nœuds.
   - **CAMO (*Commit At Most Once*)** : protège les transactions contre le double envoi client lors d'une coupure en cours de commit.
-- **DDL et séquences** : Propagation DDL automatique coordonnée par verrous distribués Raft (nécessitant l'atteinte du quorum pour valider un `ALTER TABLE`), et `bdr.global_sequences` (`timeshard`, `snowflakeid`, `galloc` par lots alloués via Raft).
+- **DDL et séquences** : Propagation DDL automatique coordonnée par verrous distribués Raft (nécessitant l'atteinte du quorum pour valider un `ALTER TABLE`), et `bdr.global_sequences` (`snowflakeid` recommandé, `galloc` par lots alloués via Raft et `timeshard` hérité).
 
 ### Bilan (#4)
 - **Avantages** : Plateforme multi-maîtres PostgreSQL la plus complète du marché sur le plan fonctionnel (Raft + CRDT + CAMO + Auto-DDL + proxy intégré).
@@ -79,6 +99,8 @@ PGD étend le noyau PostgreSQL (ou *EDB Postgres Extended*) par une couche de co
 ---
 
 ## #15 Baselines de contrôle : PG 17 Standalone & Patroni HA Mono-Primaire
+
+**Fiches dédiées :** [#15a — PG 17 Standalone](solutions/pg17_standalone.md) · [#15b — PG 17 Streaming physique & Patroni HA](solutions/pg17_physical_streaming_patroni.md)
 
 ### Architecture de référence
 Pour juger objectivement l'apport ou le coût d'une architecture multi-maîtres, deux références mono-écrivains servent d'étalon :
@@ -93,3 +115,15 @@ Dans une grappe Patroni avec `synchronous_commit = on` (ou `remote_apply`), un s
 ### Bilan (#15)
 - **Avantages** : Simplicité opérationnelle, zéro anomalie de convergence, `RPO = 0` en mode synchrone intra-région, compatibilité totale avec l'écosystème PostgreSQL.
 - **Limites** : Plafond de montée en charge vertical sur un unique écrivain et latence d'écriture intercontinentale incompressible vers le nœud primaire.
+
+---
+
+## #16 PostgreSQL 17 Réplication logique native unidirectionnelle (Pub/Sub)
+
+**Fiche dédiée :** [#16 — PG 17 Réplication logique native unidirectionnelle (`pg17-logical`)](solutions/pg17_logical_unidirectional.md)
+
+### Architecture et limites (`N3`)
+Intégrée au noyau via `wal_level = logical` et le plugin `pgoutput`, la réplication unidirectionnelle `PUBLICATION` / `SUBSCRIPTION` diffuse les mutations de lignes (`INSERT`/`UPDATE`/`DELETE`) d'un éditeur unique vers un ou plusieurs abonnés accessibles en écriture (`PA/EL`, niveau `N3`) :
+- **Filtrage et montées de version sans coupure** : prend en charge les sous-ensembles de tables, filtres `WHERE`, listes de colonnes et la réplication entre versions majeures distinctes (`PG 15 -> 17 -> 18`), contrairement au streaming physique par blocs.
+- **Absence de DDL automatique et tables sans PK** : les commandes DDL ne se propagent pas automatiquement ; les opérations `UPDATE` et `DELETE` sur une table sans clé primaire échouent côté éditeur (`SQLSTATE 55000`) sans `REPLICA IDENTITY FULL`.
+- **Piège des séquences (`SQLSTATE 23505`)** : l'état des séquences (`nextval()`) n'est pas répliqué nativement (`last_value` reste à `1|false` sur l'abonné en `T18`), provoquant une collision `23505` lors d'une bascule en écriture sans `setval()` ou clés UUID/Snowflake.
