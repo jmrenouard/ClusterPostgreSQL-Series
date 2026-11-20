@@ -4,9 +4,26 @@
 
 Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le sharding MPP (`#7`–`#8`), la capture par triggers et proxys (`#9`–`#11`, `#14`) et les services cloud managés (`#12`–`#13`).
 
+## Fiches d'architecture détaillées (périmètre `03b`)
+
+| ID | Solution / Topologie | Fiche FR dédiée | Périmètre |
+| :---: | :--- | :--- | :--- |
+| **#5** | YugabyteDB (`yugabyte`, YSQL + DocDB Raft) | [#5 — YugabyteDB](solutions/yugabytedb.md) | Benchmarké (`N5`) |
+| **#6** | CockroachDB (`cockroach`, PG-wire + Pebble Multi-Raft) | [#6 — CockroachDB](solutions/cockroachdb.md) | Benchmarké (`N5`) |
+| **#7** | Citus (`citus`, Coordinateur + Workers + 2PC) | [#7 — Citus](solutions/citus.md) | Benchmarké (`N5`) |
+| **#8** | OpenTenBase / Postgres-XL / Postgres-XC | [#8 — OpenTenBase / PG-XL](solutions/opentenbase_pgxl.md) | Référence architecturale |
+| **#9** | Bucardo 5 (`bucardo`, Daemon PL/PerlU) | [#9 — Bucardo 5](solutions/bucardo.md) | Benchmarké (`N4`) |
+| **#10** | SymmetricDS (`sym_data` lots HTTP Java) | [#10 — SymmetricDS](solutions/symmetricds.md) | Référence architecturale |
+| **#11** | PgPool-II (Streaming LB/HA vs Native Replication/SI) | [#11 — PgPool-II](solutions/pgpool_ii.md) | Référence architecturale |
+| **#12** | AWS Aurora PostgreSQL Limitless (& MM v1) | [#12 — AWS Aurora Limitless](solutions/aws_aurora_limitless.md) | Référence architecturale |
+| **#13** | Google Cloud Spanner (PG Interface) & AlloyDB | [#13 — GCP Spanner & AlloyDB](solutions/gcp_spanner_alloydb.md) | Référence architecturale |
+| **#14** | Systèmes historiques à triggers (Slony-I, Londiste, RubyRep) | [#14 — Triggers historiques (EOL)](solutions/legacy_triggers.md) | Référence architecturale |
+
 ---
 
 ## #5 YugabyteDB (YSQL + DocDB Raft)
+
+**Fiche dédiée :** [#5 — YugabyteDB (`yugabyte`)](solutions/yugabytedb.md)
 
 **Architecture** : YugabyteDB réutilise directement les couches supérieures de PostgreSQL en C (parseur, optimiseur et exécuteur SQL) au sein du moteur **YSQL**, adossé au système de stockage distribué **DocDB** (C++, basé sur RocksDB/LSM). Chaque table est fragmentée en *tablets* répliqués de façon synchrone par **Raft** (facteur de réplication `RF = 3` standard) avec horloges hybrides **HLC** (*Hybrid Logical Clocks*).
 
@@ -16,6 +33,8 @@ Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le
 
 ## #6 CockroachDB (PG-wire + Pebble Raft)
 
+**Fiche dédiée :** [#6 — CockroachDB (`cockroach`)](solutions/cockroachdb.md)
+
 **Architecture** : Écrit en Go, CockroachDB implémente le protocole filaire PostgreSQL v3 par-dessus un moteur clé-valeur ordonné **Pebble**. Les données sont découpées en *ranges* contigus (64 à 512 Mio) répliqués par **Raft**, avec un *leaseholder* chargé des lectures locales cohérentes et de la coordination des écritures.
 
 **Concurrence et limites** : Par défaut en isolation stricte `SERIALIZABLE` (avec option `READ COMMITTED` en v24.x), CockroachDB assure une linéarisabilité multi-régions via HLC et écritures d'intentions 2PC. Toute contention concurrente ou ambiguïté d'horloge déclenche `SQLSTATE 40001`, imposant des ré-essais applicatifs explicites. Des clauses natives (`SURVIVAL GOAL = ZONE | REGION`, `REGIONAL BY ROW`) optimisent le placement des *leaseholders*. En contrepartie, **aucune extension C PostgreSQL n'est compatible** (`PostGIS` absent, seul un module spatial Go partiel est fourni), `LISTEN/NOTIFY` est remplacé par des `CHANGEFEED` Kafka/webhook, et l'absence de stockage WAL classique rompt la compatibilité avec les outils de sauvegarde PG (`pgBackRest`).
@@ -23,6 +42,8 @@ Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le
 ---
 
 ## #7 Citus (Sharding MPP sur PostgreSQL)
+
+**Fiche dédiée :** [#7 — Citus (`citus`)](solutions/citus.md)
 
 **Architecture** : Extension C open-source (AGPLv3) pour PostgreSQL 17 distribuant les requêtes entre un **coordinateur** et des nœuds **workers**. Les tables se classent en trois catégories :
 1. **Tables distribuées** : partitionnées par hachage sur une colonne clé (`create_distributed_table`) ; les requêtes filtrant sur cette clé ciblent un shard unique sans 2PC.
@@ -35,6 +56,8 @@ Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le
 
 ## #8 OpenTenBase / Postgres-XL / Postgres-XC
 
+**Fiche dédiée :** [#8 — OpenTenBase / Postgres-XL / XC (Référence architecturale)](solutions/opentenbase_pgxl.md)
+
 **Architecture** : Famille MPP *shared-nothing* composée de coordinateurs sans état, de *datanodes* PostgreSQL et d'un **GTM (*Global Transaction Manager*)** centralisant l'attribution des `GXID` et des instantanés MVCC globaux pour maintenir une cohérence ACID distribuée par 2PC.
 
 **Statut et limites** : Le GTM introduit un point de contention critique sous fort taux de transactions courtes (chaque `BEGIN`/`COMMIT` sollicitant le GTM par réseau). **Postgres-XC** et **Postgres-XL** sont aujourd'hui considérés comme abandonnés/gelés sur d'anciens noyaux PG 9.x/10. **OpenTenBase** (maintenu par la communauté sur PG 10/14) demeure pertinent pour l'entreposage analytique HTAP/MPP massif, mais peu adapté à l'OLTP géo-distribué léger.
@@ -42,6 +65,8 @@ Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le
 ---
 
 ## #9 Bucardo 5 (Daemon Perl asynchrone)
+
+**Fiche dédiée :** [#9 — Bucardo 5 (`bucardo`)](solutions/bucardo.md)
 
 **Architecture** : Daemon Perl externe pilotant une réplication asynchrone par lots via des déclencheurs `PL/pgSQL` générés automatiquement sur chaque table surveillée. Chaque modification alimente une table tampon `bucardo_delta` sur la base source, tandis qu'une base de contrôle requiert `PL/Perl`.
 
@@ -51,6 +76,8 @@ Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le
 
 ## #10 SymmetricDS (Agent Java hétérogène)
 
+**Fiche dédiée :** [#10 — SymmetricDS (Référence architecturale)](solutions/symmetricds.md)
+
 **Architecture** : Plateforme Java asynchrone capturant les changements via triggers SQL vers une table `sym_data`, encapsulés en lots compressés transmis par HTTP/HTTPS.
 
 **Cas d'usage et limites** : Référence incontournable lorsque l'architecture exige une synchronisation **hétérogène** (PostgreSQL vers MySQL, Oracle, SQL Server ou SQLite) ou une connectivité intermittente de type *Edge / Retail* avec résilience hors-ligne prolongée. En revanche, la double écriture par triggers et la sérialisation HTTP créent une latence et un surcoût CPU prohibitifs pour un cœur OLTP homogène PostgreSQL à fort débit.
@@ -58,6 +85,8 @@ Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le
 ---
 
 ## #11 PgPool-II (Mode Native Replication / Snapshot Isolation)
+
+**Fiche dédiée :** [#11 — PgPool-II (Référence architecturale / PoC Streaming)](solutions/pgpool_ii.md)
 
 **Architecture** : Proxy middleware placé devant les instances PostgreSQL. Historiquement doté d'un mode *Native Replication* (diffusion de chaque requête SQL d'écriture à tous les nœuds) complété par le mode *Snapshot Isolation* (SI) pour ordonner la visibilité transactionnelle.
 
@@ -67,17 +96,23 @@ Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le
 
 ## #12 AWS Aurora PostgreSQL Limitless (& historique Multi-Master)
 
+**Fiche dédiée :** [#12 — AWS Aurora PostgreSQL Limitless (& MM v1)](solutions/aws_aurora_limitless.md)
+
 **Distinction architecturale** : L'ancien service **Aurora Multi-Master** (historiquement limité à MySQL 5.6 et désormais retiré par AWS) n'a jamais proposé de multi-écrivains symétrique sur PostgreSQL. Pour la mise à l'échelle horizontale des écritures PostgreSQL, AWS propose **Aurora PostgreSQL Limitless Database** : des routeurs sans état distribuent les transactions vers des *shards* PostgreSQL synchronisés par une horloge distribuée AWS et stockés sur le stockage distribué multi-AZ Aurora. En scénario multi-régions, **Aurora Global Database** repose sur un unique écrivain primaire complété par le *Write Forwarding* (acheminant les écritures depuis une région secondaire vers le primaire via réseau privé AWS). Architecture propriétaire strictement liée au cloud AWS.
 
 ---
 
 ## #13 Google Cloud Spanner (PG Interface) & AlloyDB
 
+**Fiche dédiée :** [#13 — GCP Spanner (PG Interface) & AlloyDB](solutions/gcp_spanner_alloydb.md)
+
 **Google Cloud Spanner** associe consensus **Paxos** synchrone et horloges atomiques/GPS **TrueTime** ($\epsilon_{\text{clock}} < 7\text{ ms}$) pour garantir une **cohérence externe** globale sans anomalie de lecture périmée ni conflit silencieux. Son interface **PostgreSQL dialect** expose le protocole filaire et une syntaxe SQL proche de PostgreSQL, mais sans compatibilité avec les extensions C PostgreSQL (`PostGIS`, `pg_trgm` natif), les triggers avancés ou PL/pgSQL complet, et à un coût managé élevé. **AlloyDB for PostgreSQL** accélère quant à lui l'architecture mono-primaire grâce à un stockage désagrégé optimisé (*log-processing storage*) et des pools de lecture élastiques (plus *AlloyDB Omni* en conteneur), sans offrir d'écriture multi-maîtres symétrique.
 
 ---
 
 ## #14 Systèmes historiques à triggers : RubyRep, Slony-I, Londiste
+
+**Fiche dédiée :** [#14 — Systèmes historiques à triggers (EOL)](solutions/legacy_triggers.md)
 
 Ces trois outils illustrent la génération antérieure à PostgreSQL 9.4 (avant l'arrivée des *logical decoding plugins*) :
 - **RubyRep** : outil Ruby open-source de comparaison et réplication bidirectionnelle asynchrone par triggers ; projet abandonné, limité par le coût de l'interpréteur et les verrous de table lors du rattrapage.

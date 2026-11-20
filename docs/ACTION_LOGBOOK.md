@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-126 - Add 03b FR Solution Navigation Table and Section Links (Issue `#251`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#251` (`docs/issue-251-03b-fr-links`)
+- **Request / Changes / Result**: Updated `docs/fr/03b_catalogue_distribue_triggers_cloud.md` with the 10-row `Fiches d'architecture detaillees (perimetre 03b)` index table (`#5`..`#14`) and 10 per-section `Fiche dediee` links to all 10 `docs/fr/solutions/*.md` sheets (`yugabytedb`, `cockroachdb`, `citus`, `opentenbase_pgxl`, `bucardo`, `symmetricds`, `pgpool_ii`, `aws_aurora_limitless`, `gcp_spanner_alloydb`, `legacy_triggers`), keeping `#14` solely on `legacy_triggers` and line 5 with zero `#16` mentions; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-125 - Add 03b EN Solution Navigation Table and Section Links (Issue `#249`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#249` (`docs/issue-249-03b-en-links`)
 - **Request / Changes / Result**: Updated `docs/en/03b_solutions_distributed_triggers_cloud.md` with the 10-row `Dedicated Architecture Sheets (03b Scope)` index table (`#5`..`#14`) and per-section `Dedicated Sheet` links to all 10 `docs/en/solutions/*.md` sheets (`yugabytedb`, `cockroachdb`, `citus`, `opentenbase_pgxl`, `bucardo`, `symmetricds`, `pgpool_ii`, `aws_aurora_limitless`, `gcp_spanner_alloydb`, `legacy_triggers`), keeping `#14` solely on `legacy_triggers` with zero `#16` mentions; `make test` (`13/13` OK) and `make lint` verified.
