@@ -127,6 +127,8 @@ body {
   cursor: pointer;
 }
 .preset-btn:hover { background: #e0f2fe; border-color: var(--cyan); color: #0369a1; }
+.preset-pg18 { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+.preset-pg18:hover { background: #d1fae5; border-color: #10b981; color: #064e3b; }
 .preset-clear:hover { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
 
 .pill-grid { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -335,3 +337,10 @@ body {
 }
 .footer a { color: #0369a1; text-decoration: none; font-weight: 600; }
 .footer a:hover { text-decoration: underline; }
+
+.pop-chart-box { min-height: 410px; }
+.repo-link { color: #0369a1; text-decoration: none; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.74rem; display: block; margin-top: 2px; }
+.repo-link:hover { text-decoration: underline; }
+.org-pill { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 999px; background: #e2e8f0; color: #334155; font-size: 0.69rem; font-weight: 600; }
+.date-cell { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; font-size: 0.77rem; }
+.pop-controls { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; }

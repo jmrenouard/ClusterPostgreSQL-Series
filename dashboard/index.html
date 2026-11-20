@@ -1,80 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ClusterPostgreSQL-Series | PostgreSQL Clustering &amp; Multi-Master Benchmark Explorer</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClusterPostgreSQL-Series | PostgreSQL Clustering &amp; Multi-Master Benchmark Explorer</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <div class="brand">
-        <img src="../assets/clusterpostgresql-series-icon.png" alt="ClusterPostgreSQL-Series Project Logo" class="brand-logo" height="46">
-        <div class="brand-text">
-          <h1 data-fr="ClusterPostgreSQL-Series &mdash; Explorateur de Benchmarks Multi-Master">ClusterPostgreSQL-Series &mdash; PostgreSQL Multi-Master Benchmark Explorer</h1>
-          <p class="subtitle" data-fr="Benchmarks empiriques Docker PoC, &#233;chelles Log10 &amp; Matrice CAP/PACELC">Empirical Docker PoC Benchmarks, Log10 Scaling &amp; CAP/PACELC Limits Matrix</p>
-        </div>
-      </div>
-      <div class="topbar-actions">
-        <a href="https://www.lightpath.fr" target="_blank" rel="noopener" class="support-badge" title="Supported by LightPath">
-          <span class="support-label" data-fr="Soutenu par">Supported by</span>
-          <img src="../assets/lightpath-logo-dark.svg" alt="Supported by LightPath" class="support-logo" height="20">
-        </a>
-        <div class="seg" role="group" aria-label="Language switch">
-          <button type="button" class="seg-btn active" data-lang="en">EN</button>
-          <button type="button" class="seg-btn" data-lang="fr">FR</button>
-        </div>
-        <button type="button" id="btn-export" class="btn-export" data-fr="Exporter CSV filtr&#233;">Export Filtered CSV</button>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <img src="../assets/clusterpostgresql-series-icon.png" alt="ClusterPostgreSQL-Series Project Logo" class="brand-logo" height="46">
+      <div class="brand-text">
+        <h1 data-fr="ClusterPostgreSQL-Series &mdash; Explorateur de Benchmarks Multi-Master">ClusterPostgreSQL-Series &mdash; PostgreSQL Multi-Master Benchmark Explorer</h1>
+        <p class="subtitle" data-fr="Benchmarks PG 17 &amp; PG 18.6, &#233;chelles Log10, Matrice CAP/PACELC &amp; Popularit&#233;">Empirical PG 17 &amp; PG 18.6 Benchmarks, Log10 Scaling, CAP/PACELC Matrix &amp; Ecosystem Popularity</p>
       </div>
     </div>
-    <div class="accent-bar"></div>
-  </header>
-
-  <main class="container">
-    <nav class="tabs" role="tablist">
-      <button type="button" class="tab-btn active" data-tab="bench" data-fr="Benchmarks &amp; Graphiques Log10">Benchmarks &amp; Log10 Charts</button>
-      <button type="button" class="tab-btn" data-tab="matrix" data-fr="Matrice Fonctionnelle &amp; Limites (L1-L8 / T11-T18)">Functional &amp; Limits Matrix (L1-L8 / T11-T18)</button>
-      <span id="meta-stamp" class="meta-stamp"></span>
-    </nav>
-
-    <section class="card controls">
-      <div class="ctrl-row">
-        <div class="ctrl-head">
-          <span class="ctrl-label" data-fr="Solutions">Solutions</span>
-          <div class="presets">
-            <button type="button" class="preset-btn" data-preset="all" data-fr="Toutes (10)">All 10</button>
-            <button type="button" class="preset-btn" data-preset="stream_logical" data-fr="Streaming vs Logique vs BiRep">Streaming vs Logical vs BiRep</button>
-            <button type="button" class="preset-btn" data-preset="active_active" data-fr="Actif-Actif">Active-Active Only</button>
-            <button type="button" class="preset-btn" data-preset="raft_async" data-fr="Raft vs Asynchrone">Raft vs Async</button>
-            <button type="button" class="preset-btn preset-clear" data-preset="clear" data-fr="Effacer">Clear</button>
-          </div>
-        </div>
-        <div id="topo-pills" class="pill-grid"></div>
+    <div class="topbar-actions">
+      <a href="https://www.lightpath.fr" target="_blank" rel="noopener" class="support-badge" title="Supported by LightPath">
+        <span class="support-label" data-fr="Soutenu par">Supported by</span>
+        <img src="../assets/lightpath-logo-dark.svg" alt="Supported by LightPath" class="support-logo" height="20">
+      </a>
+      <div class="seg" role="group" aria-label="Language">
+        <button type="button" class="seg-btn active" data-lang="en">EN</button>
+        <button type="button" class="seg-btn" data-lang="fr">FR</button>
       </div>
+      <button type="button" id="btn-export" class="btn-export" data-fr="Exporter CSV filtr&#233;">Export Filtered CSV</button>
+    </div>
+  </div>
+  <div class="accent-bar"></div>
+</header>
 
-      <div id="bench-controls" class="ctrl-row ctrl-split">
-        <div class="ctrl-group">
-          <span class="ctrl-label" data-fr="Suite de charge / Vue courbe">Workload Suite / View</span>
-          <select id="suite-select" class="select-input"></select>
-        </div>
-        <div class="ctrl-group">
-          <span class="ctrl-label" data-fr="&#201;chelle axe Y">Y-Axis Scale</span>
-          <div class="seg" role="group" aria-label="Scale toggle">
-            <button type="button" class="seg-btn active" id="scale-log" data-scale="log" data-fr="Logarithmique (log10)">Logarithmic (log10)</button>
-            <button type="button" class="seg-btn" id="scale-linear" data-scale="linear" data-fr="Lin&#233;aire">Linear</button>
-          </div>
-        </div>
-        <div class="ctrl-group">
-          <span class="ctrl-label" data-fr="M&#233;trique latence">Latency Metric</span>
-          <div class="seg" role="group" aria-label="Latency metric">
-            <button type="button" class="seg-btn active" data-lat="both" data-fr="Moy + p95">Avg + p95</button>
-            <button type="button" class="seg-btn" data-lat="avg" data-fr="Moy ms">Avg ms</button>
-            <button type="button" class="seg-btn" data-lat="p95" data-fr="p95 ms">p95 ms</button>
-          </div>
+<main class="container">
+  <nav class="tabs" role="tablist">
+    <button type="button" class="tab-btn active" data-tab="bench" data-fr="Benchmarks &amp; Graphiques Log10">Benchmarks &amp; Log10 Charts</button>
+    <button type="button" class="tab-btn" data-tab="matrix" data-fr="Matrice Fonctionnelle &amp; Limites (L1-L8 / T11-T18 / PG 18.6)">Functional &amp; Limits Matrix (L1-L8 / T11-T18 / PG 18.6)</button>
+    <button type="button" class="tab-btn" data-tab="popularity" data-fr="Popularit&#233; &amp; Vitalit&#233; &#201;cosyst&#232;me">Ecosystem Popularity &amp; Vitality</button>
+    <span id="meta-stamp" class="meta-stamp"></span>
+  </nav>
+
+  <section id="main-controls" class="card controls">
+    <div class="ctrl-row">
+      <div class="ctrl-head">
+        <span class="ctrl-label" data-fr="Solutions (15 topologies)">Solutions (15 Topologies)</span>
+        <div class="presets">
+          <button type="button" class="preset-btn" data-preset="all" data-fr="Toutes (15)">All 15</button>
+          <button type="button" class="preset-btn preset-pg18" data-preset="pg18_vs_pg17" data-fr="PG 18 vs PG 17">PG 18 vs PG 17</button>
+          <button type="button" class="preset-btn" data-preset="stream_logical" data-fr="Streaming vs Logique vs BiRep">Streaming vs Logical vs BiRep</button>
+          <button type="button" class="preset-btn" data-preset="active_active" data-fr="Actif-Actif">Active-Active Only</button>
+          <button type="button" class="preset-btn" data-preset="raft_async" data-fr="Raft vs Asynchrone">Raft vs Async</button>
+          <button type="button" class="preset-btn preset-clear" data-preset="clear" data-fr="Effacer">Clear</button>
         </div>
       </div>
-    </section>
+      <div id="topo-pills" class="pill-grid"></div>
+    </div>
+
+    <div id="bench-controls" class="ctrl-row ctrl-split">
+      <div class="ctrl-group">
+        <span class="ctrl-label" data-fr="Suite de charge / Vue courbe">Workload Suite / View</span>
+        <select id="suite-select" class="select-input"></select>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label" data-fr="&#201;chelle axe Y">Y-Axis Scale</span>
+        <div class="seg" role="group">
+          <button type="button" class="seg-btn active" id="scale-log" data-scale="log" data-fr="Logarithmique (log10)">Logarithmic (log10)</button>
+          <button type="button" class="seg-btn" id="scale-linear" data-scale="linear" data-fr="Lin&#233;aire">Linear</button>
+        </div>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label" data-fr="M&#233;trique latence">Latency Metric</span>
+        <div class="seg" role="group">
+          <button type="button" class="seg-btn active" data-lat="both" data-fr="Moy + p95">Avg + p95</button>
+          <button type="button" class="seg-btn" data-lat="avg" data-fr="Moy ms">Avg ms</button>
+          <button type="button" class="seg-btn" data-lat="p95" data-fr="p95 ms">p95 ms</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
     <section id="panel-bench">
       <div id="kpi-grid" class="kpi-grid"></div>
