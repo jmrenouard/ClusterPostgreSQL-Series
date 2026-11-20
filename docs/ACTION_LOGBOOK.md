@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-149 - Compact FR PG 17 Streaming/Patroni (#15b) Sheet & Log M1 Governance (Issue `#379`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#379` (`docs/issue-379-fr-patroni-compact`)
+- **Request / Changes / Result**: Compacted prose and Table D notes in `docs/fr/solutions/pg17_physical_streaming_patroni.md` (`13,205` B -> `12,361` B, preserving all benchmark/probe numbers and table shapes) for Section 6 popularity headroom, and updated `docs/ACTION_LOGBOOK.md` + `docs/RCA_REGISTER.md` (`IMP-008`, `APP-009`); verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
+
 ### ACT-148 - Finalize Wave 4 Governance Registers (ACTION_LOGBOOK & RCA_REGISTER) (Issue `#375`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#375` (`docs/issue-375-wave4-governance-registers`)
 - **Request / Changes / Result**: Added Phase 8 Wave 4 milestone and `ACT-143..148` in `docs/ACTION_LOGBOOK.md`, and logged `RCA-021..023`, `IMP-007`, `APP-008`, and `IDEA-007` in `docs/RCA_REGISTER.md` (100% 7-bit ASCII English, zero banned terms/paths); `make test` (`20/20` OK), `make lint` (all 13 submodule Compose files valid), and `node --check` on all `dashboard/*.js` verified in WSL2.
