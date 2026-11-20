@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-164 - Align PG 18 Native Clustering (#17) EN/FR Section 6 With R1 Popularity Telemetry Schema (Issue `#409`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#409` (`docs/issue-409-pg18-popularity-align`)
+- **Request / Changes / Result**: Replaced Section 6 in `docs/{en,fr}/solutions/pg18_native_clustering.md` with the canonical 8-column / 3-bullet R1 schema (`postgres-core` + `patroni` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`, clickable GitHub URLs, `watchers`, `open_issues`, SPDX, full ISO `pushed_at`, preserving `58*`/`APP-007` mirror note and `PGDATA`/seccomp/`setval()` guidance while staying `< 13,800` B), plus `docs/ACTION_LOGBOOK.md`; verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
+
 ### ACT-163 - Enrich Legacy Triggers (#14) EN/FR Sheets With 4-Repo Popularity Telemetry and Scrub #16 (Issue `#407`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#407` (`docs/issue-407-legacy-triggers-popularity`)
 - **Request / Changes / Result**: Split M4 PR 8 into atomic 8a/8b/8c PRs to stay strictly under `< 15,000` diff chars; removed `#16` from line 88 of `docs/{en,fr}/solutions/legacy_triggers.md`, added 4-row Section 6 (`slony1`, `pgq`, `londiste`, `rubyrep` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`) and `Tier D (EOL / Dormant)` synthesis, plus `docs/ACTION_LOGBOOK.md`; verified zero `#16`, `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
