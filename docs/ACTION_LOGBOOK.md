@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-122 - Add Solutions Catalog Table and Fix #16 pg17-logical ID in README.fr.md (Issue `#243`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#243` (`docs/issue-243-readme-fr-catalog`)
+- **Request / Changes / Result**: Fixed `README.fr.md:22` (`Logique Uni (#14)` -> `Logique Uni (#16)`) and inserted section `2b. Catalogue des solutions et fiches techniques` with the 17-row French table, `#16` vs `#14` disambiguation blockquote, verified Product/Docs URLs, GitHub repositories (or `Proprietaire / N/A`), and 1-sentence descriptions linking all 17 `docs/fr/solutions/*.md` sheets; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-121 - Add Solutions Catalog Table and Fix #16 pg17-logical ID in README.md (Issue `#241`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#241` (`docs/issue-241-readme-en-catalog`)
 - **Request / Changes / Result**: Fixed `README.md:32` (`pg17-logical` `#14` -> `#16 Uni`) and inserted the 17-row `Solutions Catalog & Architecture Sheets` table with `#16` vs `#14` disambiguation blockquote, verified official Product/Docs links, GitHub repositories (or `Proprietary / N/A`), and 1-sentence descriptions linking all 17 `docs/en/solutions/*.md` sheets; `make test` (`13/13` OK) and `make lint` verified.
