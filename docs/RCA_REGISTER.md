@@ -145,6 +145,27 @@
 - **Applied Change / Fix**: Relocated staging buffers strictly to persistent host scratch storage outside the repository, verified 100% byte-for-byte parity on all recovered Wave 3 dashboard and documentation files, and normalized LF line endings prior to every atomic commit.
 - **Result & Non-Regression Test**: All 24 atomic Wave 3 PRs landed cleanly with exact verified file sizes, `node --check` passing on all 11 JS bundles, and `make test` (`20/20` OK).
 
+### RCA-021 - YT Cluster `1.21.3` Default `cc=half` Synchronous 2PC vs Async `cc=0` Behavior
+- **Date / Action**: `2026-11-20` (`ACT-143`, `ACT-146`)
+- **Observed Symptom**: Default YT Cluster `1.21.3` (PostgreSQL `18.7` + `yt_cluster 1.21` / `ytserv`) write transactions exhibited quorum synchronous 2PC latency and cross-node commit coordination overhead (`A_single_rw = 20.63 TPS`, `p95 = 1,330.433 ms`, `B2_overlap_rw = 10.69 TPS`, `F_wan_netem_25ms = 2.25 TPS`, `p95 = 5,557.313 ms`), contrasting with async mode (`cc=nodes>=0`, `yt-cluster-async`, `A_single_rw = 41.45 TPS`, `B2_overlap_rw = 55.03 TPS`, `D_hot_conflict = 163.01 TPS`, `F_wan_netem_25ms = 4.78 TPS`) while read-only local queries reached `C_multinode_ro = 48,787.74 TPS` and `E4_sysbench_point_select = 165,472.75 TPS`.
+- **Root Cause Analysis**: YT Cluster defaults `def_cluster_commit` to `{"at_least":0,"mode":1}` (`half` synchronous 2PC across `ytserv` nodes with `sequential_consistency=0`), enforcing zero-drift multi-master consistency (`0` drift across all suites, emitting `55409` / `40001` conflict retries) at the cost of write-path 2PC RTT amplification, whereas explicit `cc=nodes>=0` switches to asynchronous commit dispatch.
+- **Applied Change / Fix**: Benchmarked and documented both modes side-by-side (`yt-cluster` sync `cc=half` and `yt-cluster-async` `cc=0`, `22` rows total) in `results/benchmark_yt_cluster.csv`, `dashboard/data_bench_yt.js`, and `docs/{en,fr}/solutions/yt_cluster_lite.md`.
+- **Result & Non-Regression Test**: Both modes verified end-to-end with `0` balance drift in `results/benchmark_yt_cluster.csv` and enforced by `tests/test_benchmark_artifacts.py` and `tests/test_solution_sheets_parity.py`.
+
+### RCA-022 - YT Cluster `SAVEPOINT` Rollback Rejection (`SQLSTATE 0A000`) & `min_cluster_size=2` Halt (`SQLSTATE 57P03`)
+- **Date / Action**: `2026-11-20` (`ACT-143`, `ACT-146`)
+- **Observed Symptom**: Executing `SAVEPOINT` rollback failed with `SQLSTATE 0A000` (`rows=0`), and stopping 2 of 3 cluster nodes blocked client writes with `SQLSTATE 57P03` (`yt_synchronize: Network: YT-E1852`) under `min_cluster_size=2` (while single-node SIGKILL also briefly returned `57P03` during the 8 s party failover window before recovering `20/20` with `RPO=0`).
+- **Root Cause Analysis**: YT Cluster's distributed 2PC coordinator does not support subtransaction savepoint rollback across coordinated PostgreSQL nodes, and quorum safety blocks writes once active nodes drop below `min_cluster_size=2` to prevent split-brain divergence.
+- **Applied Change / Fix**: Recorded `0A000`, `40001`, `55409`, and `57P03` verbatim in `results/functional_limits_yt_cluster.csv`, `results/logs/yt-cluster-benchmark.log`, and `docs/{en,fr}/solutions/yt_cluster_lite.md`, and asserted all four SQLSTATEs in `tests/test_solution_sheets_parity.py`.
+- **Result & Non-Regression Test**: All four SQLSTATE boundaries are reproducibly tested and verified in `make test` (`20/20` OK).
+
+### RCA-023 - Stale `.s.YT.5432.pid` Lock File Triggers `YT-E1104` on Unclean Container Restart
+- **Date / Action**: `2026-11-20` (`ACT-143`, `ACT-147`)
+- **Observed Symptom**: Restarting a SIGKILL-terminated `ytserv` container failed startup with `YT-E1104` on PID reuse due to a lingering `.s.YT.5432.pid` lock file.
+- **Root Cause Analysis**: Unclean container termination skips graceful `ytserv` shutdown hooks, leaving `.s.YT.5432.pid` on the persisted socket/data path and preventing `ytserv` from binding cleanly on container restart.
+- **Applied Change / Fix**: Added deterministic stale PID cleanup during container startup in `env/multi-db-docker-env` `v2.4.0` (`e130508f89bf9c9c61cad3f7aa8d9299e4bcca93`, `docker-compose-yt-cluster.yml`) and documented the `YT-E1104` risk in `results/functional_limits_yt_cluster.csv` and `docs/{en,fr}/solutions/yt_cluster_lite.md`.
+- **Result & Non-Regression Test**: Verified clean crash-recovery (`T16`, `20/20`, `RPO=0`) and deterministic `make lint` validation across all 13 submodule Compose stacks.
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters
@@ -176,6 +197,11 @@
 - **Date / Action**: `2026-11-20` (`ACT-138`..`ACT-141`)
 - **Rejected Approach**: Appending Charts 08-10 into `scripts/generate_charts.py`, embedding Popularity UI into `dashboard/app.js`, or committing full `dashboard/index.html` (`21.6 KB` unified diff), `dashboard/app.js` (`17.6 KB` diff), EN+FR cross-chapters (`17.2 KB` diff), and both root READMEs (`17.7 KB` diff) in single PRs.
 - **Reason**: Violated both the `< 14,000`-byte per-file test cap and the `< 15,000`-byte PR diff cap. Split into modular `scripts/generate_charts_v3.py`, `dashboard/popularity.js`, dedicated `< 13.5 KB` JS data bundles (`data_bench_pg18.js`, `data_matrix_pg18.js`, `data_popularity.js`), and 24 sequential atomic PRs all strictly `< 14,000` bytes.
+
+### IMP-007 - Monolithic Wave 4 `generate_charts_v3.py` (`15.3 KB`) & Chapter 11 (`14.9 KB`) Diffs
+- **Date / Action**: `2026-11-20` (`ACT-144`, `ACT-146`)
+- **Rejected Approach**: Landing all Wave 4 `scripts/generate_charts_v3.py` edits (`15,328` B unified diff) or full Chapter 11 EN/FR rewrites (`14,746` B / `14,904` B) in single PRs, or staging new solution sheets without intermediate test synchronization.
+- **Reason**: Exceeded or breached the strict `< 14,800`-byte PR diff cap and would break strict `len(SLUGS)` assertions mid-wave. Split `generate_charts_v3.py` into typography compaction (`7,301` B) + 19-repo Charts 08-09 (`8,909` B), split EN/FR Chapter 11 into matrix (`~9.9 KB`) + insights (`~5.2 KB`), and maintained `20/20` OK on every single Wave 4 PR.
 
 ## 3. Current Approximations & Simplifying Assumptions (`APP-XXX`)
 
@@ -214,6 +240,11 @@
 - **Assumption**: `results/project_popularity.csv` captures live GitHub REST/GraphQL telemetry at `2026-11-20T13:34:55Z` (mirror repos `postgres/postgres` and `pgpool/pgpool2` report trusted committer counts rather than total mailing-list authors), and PG 18.6 benchmarks (`results/benchmark_pg18.csv`) run sequentially on one local WSL2 Docker host under `io_method=worker`.
 - **Impact & Removal Condition**: Enables reproducible apples-to-apples PG 18.6 vs PG 17.11 comparisons and transparent maintenance vitality tracking; refreshable anytime via `make popularity` and `make bench-pg18`.
 
+### APP-008 - YT Cluster Licensing Split (MIT Leaf Core vs Closed `ytserv`) & Vendor Self-Run Jepsen Scope
+- **Date / Action**: `2026-11-20` (`ACT-143`, `ACT-146`)
+- **Assumption**: `results/project_popularity.csv` tracks the public MIT-licensed `DBinvent/yt-cluster-lite` Rust leaf repository (`15` stars, `21` commits, `2` contributors), while the benchmarked `ytserv` cluster server binary (`1.21.3`) is closed/dual-licensed; additionally, published Jepsen consistency claims come from DBinvent's own self-run test suite targeting `cursor-stability` rather than an independent third-party serializability audit.
+- **Impact & Removal Condition**: Documented explicitly across `docs/{en,fr}/solutions/yt_cluster_lite.md` and Chapters `03a`/`04`/`07`/`11` so production evaluators distinguish MIT leaf telemetry from closed server licensing and verify isolation guarantees independently; removable if `ytserv` is open-sourced and independently Jepsen-audited.
+
 ## 4. Unimplemented Ideas & Future Roadmap (`IDEA-XXX`)
 
 ### IDEA-001 - Automated Cross-Topology `pgbench` & `sysbench` Matrix
@@ -239,3 +270,7 @@
 ### IDEA-006 - PostgreSQL 19 Native Sequence Sync & Bare-Metal `io_uring` AIO Benchmark Follow-Up
 - **Date / Action**: `2026-11-20` (`ACT-142`)
 - **Proposal**: Re-evaluate `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` (`RCA-018`) on PostgreSQL 19 once released and benchmark `io_method=io_uring` vs `worker` vs `sync` (`RCA-017`) on bare-metal Linux NVMe outside Docker's default seccomp sandbox.
+
+### IDEA-007 - Independent Jepsen Fault-Injection & Multi-Region WAN Audit for YT Cluster 1.21+
+- **Date / Action**: `2026-11-20` (`ACT-148`)
+- **Proposal**: Run an independent multi-host Jepsen-style nemesis suite (network partitions, clock skew, asymmetric packet loss) against YT Cluster `1.21+` under `cc=half` and `cc=0` beyond vendor self-run `cursor-stability` tests (`APP-008`), and re-test `SAVEPOINT` (`RCA-022`) if supported in future releases.
