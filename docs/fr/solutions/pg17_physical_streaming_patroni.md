@@ -84,7 +84,7 @@ $$
 
 Tests à `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` sont mesurées (la latence p99 n'est pas mesurée).
 
-### Tableau A — Charges principales et étendues (`benchmark_summary.csv`, `benchmark_extended_workloads.csv`)
+### Tableau A — Charges (`benchmark_summary.csv`, `benchmark_extended_workloads.csv`)
 
 | Suite (Cl/Dur) | Async TPS | Async Avg/Std/p95 (ms) | Async Comm(Fail) | Sync TPS | Sync Avg/Std/p95 (ms) | Sync Comm(Fail) | Statut (Les deux) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
@@ -113,7 +113,7 @@ Tests à `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Seules `Avg`
 | `F_wan_netem_25ms` (15s) | 25 ms | 599.61 | 13.317/10.473/34.381 | 8991 | 57.0 | 139.564/98.831/353.493 | 866 | `PASS_NETEM_25MS` |
 | `F_wan_netem_50ms` (12s) | 50 ms | 619.37 | 12.897/9.903/33.368 | 7421 | 25.79 | 302.966/255.796/779.848 | 323 | `PASS_NETEM_50MS` |
 
-### Tableau C — Limites fonctionnelles (`F1`, `L1–L8`) et sondes étendues (`T11–T18`)
+### Tableau C — Limites (`F1`, `L1–L8`) & sondes (`T11–T18`)
 
 | Sonde | Async (`pg17-async-streaming`) | Sync (`pg17-sync-streaming`) |
 | :--- | :--- | :--- |
@@ -143,6 +143,19 @@ Tests à `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Seules `Avg`
 | **Streaming** | `docker-compose-pg-streaming.yml` + `scripts/pg_streaming/setup_pg_streaming.sh` | `pg_stream_primary` (`15434:5432`), `pg_stream_standby` (`15435:5432`), `postgres:17` | `wal_level=replica`, `wal_keep_size=64MB`, slot `slot_stream_standby`, `hot_standby=on` |
 | **Paire Sync** | `docker-compose-pg17-baseline.yml` + `scripts/bench_pg_v2_runner.sh` (`ALTER SYSTEM`; `scripts/setup_pg17_baseline.sh`) | `pg17_sync_primary` (`15432:5432`), `pg17_sync_standby` (`15433:5432`), `postgres:17` | `synchronous_standby_names='pg17_sync_standby'`, `synchronous_commit='on'` |
 | **Patroni HA** | `docker-compose-patroni.yml` + `conf/haproxy-patroni.cfg` | `etcd1..3` (`2379:2379`), `node1..3` (`5432`/`8008`), `haproxy-patroni` (`5000/5001/7000`), `patroni-rhel8-*` | mTLS `etcd`, `hostssl`/`verify-ca` ; `/etc/patroni.yml` (`ttl=30/loop_wait=10/retry_timeout=10`). PgBouncer `:6432` absent du compose. |
+
+## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
+
+Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
+
+| Projet | Présence / Rôle Git | Dépôt (`Compte / Dépôts`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Tag / Dernier Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **PostgreSQL Core** | `Yes (Mirror)` -- Miroir (`git.postgresql.org`) | [`postgres/postgres`](https://github.com/postgres/postgres) (`Org / 6`) | 22894 / 6123 / 589 | 66091 / 3446 | 58 / 0 | C / `NOASSERTION` | `REL_19_0` / `2026-11-20T16:52:40Z` |
+| **Patroni HA** | `Yes` -- Primaire | [`patroni/patroni`](https://github.com/patroni/patroni) (`Org / 1`) | 8847 / 1049 / 124 | 2713 / 142 | 246 / 68 | Python / `MIT` | `v4.1.5` / `2026-11-20T17:03:56Z` |
+
+- **Niveau de maintenance :** **Niveau S (Cœur)** -- `postgres/postgres` (`3446` commits/12m) & `patroni/patroni` (**Niveau A (OSS Actif)**, `142` commits/12m, `246` contributeurs).
+- **Fraîcheur / Actualité :** **Actuel -- Actif au quotidien** -- Dernier push `2026-11-20T16:52:40Z` / `2026-11-20T17:03:56Z`, `3446` / `142` commits/12m, dernière version `REL_19_0` / `v4.1.5`.
+- **Maintenabilité opérationnelle :** **Risque faible** -- Cœur multi-éditeurs + HA MIT ; surveiller `max_slot_wal_keep_size` et quorum `etcd`.
 
 ---
 
