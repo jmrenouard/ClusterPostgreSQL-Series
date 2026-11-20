@@ -89,6 +89,18 @@ Les profils Streaming vs écriture multi-nœuds de PgPool-II s'ancrent directeme
 | **Ancre réf. (`A_single_rw`)** | Non benchmarké (`25/25` contrôles d'exécution ; `24` documentés) | `610.15 TPS` (`p95=33.928 ms`) | `409.48 TPS` (`p95=50.307 ms`) | `875.91 TPS` (`0` dérive sur `A`) |
 | **Ancre réf. (`F_wan_netem_25ms`)** | Non benchmarké (diffusion sync sensible WAN) | `599.61 TPS` (`-1,7 %` vs LAN) | `57.0 TPS` (`-86,1 %`, `p95=353.493 ms`) | `824.04 TPS` (`-5,9 %` vs LAN) |
 
+## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
+
+Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
+
+| Projet | Présence / Rôle Git | Dépôt (`Compte / Dépôts`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Tag / Dernier Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **PgPool-II (#11)** | `Yes (Mirror)` -- `Mirror (canonical: git.postgresql.org)` | [`pgpool/pgpool2`](https://github.com/pgpool/pgpool2) (`Org / 8`) | 448 / 102 / 25 | 4627 / 140 | 35 / 89 | C / `NOASSERTION` | `V4_7_3` / `2026-11-18T04:00:10Z` |
+
+- **Niveau de maintenance :** **Niveau B (Niche)** -- Le miroir `pgpool/pgpool2` enregistre `140` commits/12m (`4 627` total, `35` committeurs miroir selon `APP-007`, `448` stars, `89` issues).
+- **Fraîcheur / Actualité :** **À jour -- Régulier** -- Dernier push `2026-11-18T04:00:10Z`, `140` commits/12m, dernière version `V4_7_3`.
+- **Maintenabilité opérationnelle :** **Modéré** -- Proxy C régulier (licence Pgpool / SPDX `NOASSERTION`) ; privilégier le mode streaming avec Watchdog et proscrire la diffusion SQL.
+
 ---
 
 **Navigation :** [Index](../../../README.fr.md) · [Ch. 03b — Distribué, triggers et cloud](../03b_catalogue_distribue_triggers_cloud.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](../10_comparatif_streaming_logique_multimaster.md) · [English version](../../en/solutions/pgpool_ii.md)
