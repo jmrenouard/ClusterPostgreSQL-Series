@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-153 - Enrich pgEdge Spock (#2) EN/FR Sheets With Popularity Telemetry (Issue `#387`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#387` (`docs/issue-387-pgedge-spock-popularity`)
+- **Request / Changes / Result**: Added standardized 3-repo Section 6 GitHub popularity, git presence, `pushed_at` freshness, and Manageability synthesis (`pgedge-spock`, `pgedge-snowflake`, `pgedge-lolor`) from `results/project_popularity.csv` (`2026-11-20T17:26:02Z`) to `docs/en/solutions/pgedge_spock.md` (`13,714` B / `165` L) and `docs/fr/solutions/pgedge_spock.md` (`13,718` B / `165` L), plus `docs/ACTION_LOGBOOK.md`; verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
+
 ### ACT-152 - Compact pgEdge Spock (#2) EN/FR Sheets for Popularity Telemetry Headroom (Issue `#385`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#385` (`docs/issue-385-pgedge-spock-compact`)
 - **Request / Changes / Result**: Compacted non-numeric descriptive prose in `docs/en/solutions/pgedge_spock.md` (`12,973` B -> `12,146` B) and `docs/fr/solutions/pgedge_spock.md` (`13,158` B -> `12,118` B) while preserving all benchmark CSV metrics, functional probes, SQLSTATEs, and EN/FR table shapes for Section 6 popularity headroom, and updated `docs/ACTION_LOGBOOK.md`; verified `make test`, `make lint`, and PR diff `< 15,000` chars.
