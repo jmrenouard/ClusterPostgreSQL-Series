@@ -1,0 +1,27 @@
+=== YT Cluster 1.21.3 Empirical Benchmark (3-Node PG 18, PG_SCALE=2) ===
+engine: PostgreSQL 18.7 (Debian 18.7-1.pgdg13+5) + yt_cluster 1.21 | default_cc={"at_least":0,"mode":1} (half/sync-2pc) | sc=0 (NO_SC)
+=== [yt-cluster] Start (cc=half sc=NO_SC) ===
+  [yt-cluster] A_single_rw: tps=20.63 qps=N/A avg=384.867ms p95=1330.433ms ok=312 fl=0 rt=185 PASS_CONVERGED drift=0 | cc=half sc=NO_SC d=30509 acc=30509/30509/30509 h=312/312/312
+  [yt-cluster] B1_disjoint_rw: tps=36.14 qps=N/A avg=220.597ms p95=663.403ms ok=545 fl=0 rt=197 PASS_CONVERGED drift=0 | cc=half sc=NO_SC d=49898 acc=49898/49898/49898 h=545/545/545
+  [yt-cluster] C_multinode_ro: tps=48787.74 qps=N/A avg=0.305ms p95=0.504ms ok=730903 fl=0 rt=0 PASS drift=0 | cc=half sc=NO_SC select_only 16c
+  [yt-cluster] B2_overlap_rw: tps=10.69 qps=N/A avg=565.791ms p95=1741.838ms ok=165 fl=14 rt=284 PASS_CONVERGED drift=0 | cc=half sc=NO_SC r40001=33 r55409=251 d=-2113 acc=-2113/-2113/-2113 h=165/165/165
+  [yt-cluster] D_hot_conflict: tps=67.76 qps=N/A avg=117.401ms p95=249.196ms ok=820 fl=0 rt=32 PASS_CONVERGED drift=0 | cc=half sc=NO_SC r40001=0 r55409=32 d=39865 acc=39865/39865/39865 h=820/820/820
+  [yt-cluster] E_sysbench_oltp_rw: tps=28.48 qps=582.89 avg=280.34ms p95=530.08ms ok=432 fl=12 rt=0 PASS drift=0 | cc=half sc=NO_SC oltp_read_write 4x10k
+  [yt-cluster] E2_sysbench_oltp_ro: tps=2122.68 qps=33962.93 avg=3.76ms p95=4.33ms ok=25486 fl=0 rt=0 PASS drift=0 | cc=half sc=NO_SC oltp_read_only 4x10k
+  [yt-cluster] E3_sysbench_oltp_wo: tps=26.43 qps=160.95 avg=301.54ms p95=846.57ms ok=320 fl=8 rt=0 PASS drift=0 | cc=half sc=NO_SC oltp_write_only 4x10k
+  [yt-cluster] E4_sysbench_point_select: tps=165472.75 qps=165472.75 avg=0.1ms p95=0.24ms ok=1987008 fl=0 rt=0 PASS drift=0 | cc=half sc=NO_SC oltp_point_select 4x10k
+  [yt-cluster] H_append_only_insert: tps=110.53 qps=N/A avg=72.217ms p95=135.582ms ok=1331 fl=0 rt=0 PASS_CONVERGED drift=0 | cc=half sc=NO_SC uuidv7 2n rows=1331/1331/1331
+  [yt-cluster] G_conc_c1: tps=28.07 qps=N/A avg=35.61ms p95=45.144ms ok=225 fl=0 rt=0 PASS drift=0 | cc=half sc=NO_SC c=1 j=1
+  [yt-cluster] G_conc_c4: tps=27.47 qps=N/A avg=143.859ms p95=432.936ms ok=222 fl=0 rt=31 PASS drift=0 | cc=half sc=NO_SC c=4 j=2
+  [yt-cluster] G_conc_c8: tps=19.16 qps=N/A avg=407.418ms p95=1708.56ms ok=155 fl=0 rt=87 PASS drift=0 | cc=half sc=NO_SC c=8 j=4
+  [yt-cluster] G_conc_c16: tps=17.32 qps=N/A avg=564.52ms p95=1940.483ms ok=142 fl=0 rt=91 PASS drift=0 | cc=half sc=NO_SC c=16 j=4
+  [yt-cluster] G_conc_c32: tps=4.6 qps=N/A avg=3542.782ms p95=8154.425ms ok=38 fl=0 rt=29 PASS drift=0 | cc=half sc=NO_SC c=32 j=4
+  [yt-cluster] F_wan_netem_10ms: tps=4.81 qps=N/A avg=1344.844ms p95=3791.008ms ok=60 fl=0 rt=22 PASS_NETEM_10MS drift=0 | cc=half sc=NO_SC netem 10ms
+  [yt-cluster] F_wan_netem_25ms: tps=2.25 qps=N/A avg=2708.087ms p95=5557.313ms ok=30 fl=0 rt=7 PASS_NETEM_25MS drift=0 | cc=half sc=NO_SC netem 25ms
+  [yt-cluster] F_wan_netem_50ms: tps=1.41 qps=N/A avg=3357.322ms p95=6152.524ms ok=20 fl=0 rt=0 PASS_NETEM_50MS drift=0 | cc=half sc=NO_SC netem 50ms
+=== [yt-cluster-async] Start (cc=nodes>=0 sc=NO_SC) ===
+  [yt-cluster-async] A_single_rw: tps=41.45 qps=N/A avg=185.733ms p95=758.357ms ok=629 fl=0 rt=381 PASS_CONVERGED drift=0 | cc=nodes>=0 sc=NO_SC d=-1631 acc=-1631/-1631/-1631 h=629/629/629
+  [yt-cluster-async] B2_overlap_rw: tps=55.03 qps=N/A avg=130.887ms p95=538.021ms ok=827 fl=4 rt=2173 PASS_CONVERGED drift=0 | cc=nodes>=0 sc=NO_SC r40001=86 r55409=2087 d=-44471 acc=-44471/-44471/-44471 h=827/827/827
+  [yt-cluster-async] D_hot_conflict: tps=163.01 qps=N/A avg=48.819ms p95=152.9ms ok=1959 fl=0 rt=2111 PASS_CONVERGED drift=0 | cc=nodes>=0 sc=NO_SC r40001=0 r55409=2111 d=100723 acc=100723/100723/100723 h=1959/1959/1959
+  [yt-cluster-async] F_wan_netem_25ms: tps=4.78 qps=N/A avg=1356.434ms p95=4136.144ms ok=59 fl=0 rt=33 PASS_NETEM_25MS drift=0 | cc=nodes>=0 sc=NO_SC netem 25ms
+=== [yt-cluster] Down (0 residual containers) ===
