@@ -60,7 +60,7 @@ $$
 | Mode / Parameter | Scope | Commit Path | RPO / Stall Behavior | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
 | **`pg17-async-streaming`** (`T1`, PoC) | `synchronous_standby_names=''` | Local WAL flush; ships async | `RPO > 0`; zero primary stall | `610.15 TPS` (`A`); immune to `25ms` WAN (`599.61`) |
-| **`pg17-sync-streaming`** (`T2`, PoC) | `synchronous_commit=on` | Primary + standby disk flush | **`RPO = 0`**; sole standby loss **stalls primary** | `409.48 TPS` (`-52.8%`); `57.0 TPS` at `25ms` WAN |
+| **`pg17-sync-streaming`** (`T2`, PoC) | `synchronous_commit=on` | Primary + standby disk flush | **`RPO = 0`**; sole standby loss **stalls primary** | `409.48 TPS` (`-52.8%` vs standalone); `57.0 TPS` at `25ms` WAN |
 | **`remote_write`** | Session / global *(Arch.)* | Standby OS `write()` (no `fsync`) | Survives PG crash; `RPO > 0` on power loss | Lower latency than `on` |
 | **`remote_apply`** | Session / global *(Arch.)* | Standby replays WAL before `COMMIT` | **`RPO = 0`** + strict RO read-after-write | Highest sync latency |
 | **`off` / `local`** | Session *(Arch.)* | `off`: async local; `local`: local flush only | Relaxes remote sync per tx | Non-critical write fast-path |
@@ -73,7 +73,7 @@ $$
 
 | Strengths | Weaknesses & Operational Traps |
 | :--- | :--- |
-| **100% PG & Sequence Parity:** Replicates keyless DML (`L2`), DDL/`SAVEPOINT` (`L5`), sequences (`T18`: `66\|true`, `next_id=67`), `pg_largeobject`, extensions (`L6`). | **Sync WAN & Stall Coupling (`T2`):** `25ms` WAN drops `F` to `57.0 TPS` (`-86.1%`), `50ms` to `25.79`; sole sync standby loss stalls primary (`L7`/`L8`). |
+| **100% PG & Sequence Parity:** Replicates keyless DML (`L2`), DDL/`SAVEPOINT` (`L5`), sequences (`T18`: `66\|true`, `next_id=67`), `pg_largeobject`, extensions (`L6`). | **Sync WAN & Stall Coupling (`T2`):** `25ms` WAN drops `F` to `57.0 TPS` (`-86.1%` vs sync LAN), `50ms` to `25.79`; sole sync standby loss stalls primary (`L7`/`L8`). |
 | **Zero Drift (`0`):** No conflicts across `A`–`D`; zero `40001` retries; `RPO = 0` on `SIGKILL` (`T16`: `20/20`). | **No Multi-Master Writes:** Standby writes fail (`25006`, `T12`, `T13`); horizontal write scale needs sharding (`#7`) or MM. |
 | **High Read Scale:** `45358.52` (async) / `54483.07 TPS` (sync) on `C`; `148022.41` / `124105.25 TPS` on `E4`. | **Binary Lockstep:** Requires identical major PG version, CPU arch, and `glibc` (cannot cross PG 15 -> 17). |
 | **Fenced HA (Patroni):** Automatic `etcd` Raft election + HAProxy session drop without app conflict logic. | **Slot WAL Bloat (`L7`):** Offline physical slots retain WAL (`3088B` in test) unless `max_slot_wal_keep_size` is capped. |
@@ -82,7 +82,7 @@ $$
 
 ## 5. Empirical Benchmark Results, Functional Limits & PoC Spec
 
-Ran at `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` exist (`lat_p99_ms` unmeasured).
+Ran at `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` exist (p99 latency is unmeasured).
 
 ### Table A — Core & Extended Workloads (`benchmark_summary.csv`, `benchmark_extended_workloads.csv`)
 
@@ -102,30 +102,30 @@ Ran at `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Only `Avg`, `S
 
 ### Table B — Concurrency & WAN Sweeps (`benchmark_concurrency_sweep.csv`, `benchmark_wan_sweep.csv`)
 
-| Suite | Param | Async TPS | Async Avg/Std/p95 (ms) | Async Comm | Sync TPS | Sync Avg/Std/p95 (ms) | Sync Comm |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `G_conc_c1` (8s) | 1 cl | 336.82 | 2.959/0.99/4.256 | 2692 | 89.89 | 11.106/23.784/22.605 | 719 |
-| `G_conc_c4` (8s) | 4 cl | 545.91 | 7.309/3.136/12.943 | 4357 | 238.15 | 16.768/22.183/49.238 | 1901 |
-| `G_conc_c8` (8s) | 8 cl | 577.65 | 13.824/10.732/35.125 | 4599 | 410.8 | 19.428/15.823/51.894 | 3290 |
-| `G_conc_c16` (8s) | 16 cl | 624.75 | 25.54/24.679/77.071 | 4993 | 424.67 | 37.536/35.542/106.896 | 3387 |
-| `G_conc_c32` (8s) | 32 cl | 571.58 | 55.682/55.256/167.031 | 4573 | 424.98 | 74.902/89.331/227.512 | 3390 |
-| `F_wan_netem_10ms` (12s) | 10 ms | 587.16 | 13.603/10.678/35.753 | 7044 | 121.75 | 65.492/47.958/162.898 | 1466 |
-| `F_wan_netem_25ms` (15s) | 25 ms | 599.61 | 13.317/10.473/34.381 | 8991 | 57.0 | 139.564/98.831/353.493 | 866 |
-| `F_wan_netem_50ms` (12s) | 50 ms | 619.37 | 12.897/9.903/33.368 | 7421 | 25.79 | 302.966/255.796/779.848 | 323 |
+| Suite | Param | Async TPS | Async Avg/Std/p95 (ms) | Async Comm | Sync TPS | Sync Avg/Std/p95 (ms) | Sync Comm | Status (Both) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| `G_conc_c1` (8s) | 1 cl | 336.82 | 2.959/0.99/4.256 | 2692 | 89.89 | 11.106/23.784/22.605 | 719 | `PASS` |
+| `G_conc_c4` (8s) | 4 cl | 545.91 | 7.309/3.136/12.943 | 4357 | 238.15 | 16.768/22.183/49.238 | 1901 | `PASS` |
+| `G_conc_c8` (8s) | 8 cl | 577.65 | 13.824/10.732/35.125 | 4599 | 410.8 | 19.428/15.823/51.894 | 3290 | `PASS` |
+| `G_conc_c16` (8s) | 16 cl | 624.75 | 25.54/24.679/77.071 | 4993 | 424.67 | 37.536/35.542/106.896 | 3387 | `PASS` |
+| `G_conc_c32` (8s) | 32 cl | 571.58 | 55.682/55.256/167.031 | 4573 | 424.98 | 74.902/89.331/227.512 | 3390 | `PASS` |
+| `F_wan_netem_10ms` (12s) | 10 ms | 587.16 | 13.603/10.678/35.753 | 7044 | 121.75 | 65.492/47.958/162.898 | 1466 | `PASS_NETEM_10MS` |
+| `F_wan_netem_25ms` (15s) | 25 ms | 599.61 | 13.317/10.473/34.381 | 8991 | 57.0 | 139.564/98.831/353.493 | 866 | `PASS_NETEM_25MS` |
+| `F_wan_netem_50ms` (12s) | 50 ms | 619.37 | 12.897/9.903/33.368 | 7421 | 25.79 | 302.966/255.796/779.848 | 323 | `PASS_NETEM_50MS` |
 
 ### Table C — Functional Limits (`F1`, `L1–L8`) & Extended Probes (`T11–T18`)
 
 | Probe | Async (`pg17-async-streaming`) | Sync (`pg17-sync-streaming`) |
 | :--- | :--- | :--- |
 | `F1` Health | `PASS`: `wal_level=replica sync_state=async slot_active=t rec=f/t` | `PASS`: `sync_state=sync synchronous_commit=on` |
-| `L1` Serial PK | `PASS`: WAL preserves seq across `pg_promote` (`pri=50 stb=66 next=67`; 0 `23505`) | `N/A`: single primary sequence |
+| `L1` Serial PK | `PASS`: WAL preserves seq across `pg_promote` (`pri_lv=50 stb_lv=66 next_id=67`; 0 `23505`) | `N/A`: single primary sequence |
 | `L2` Keyless | `PASS`: physical WAL replicates keyless `UPDATE`/`DELETE` atomically | `PASS`: physical WAL replicates all heap changes |
 | `L3` Lost Upd | `PASS`: primary row locks (0 drift); standby rejects writes (`25006`) | `PASS`: row locks on primary (0 drift) |
 | `L4` Unique | `PASS`: `23505` enforced on primary; standby RO (`25006`) | `PASS`: `23505` enforced on primary |
 | `L5` DDL/Svp | `PASS`: replicates `ALTER TABLE ADD COLUMN` & `SAVEPOINT` atomically | `PASS`: replicates DDL & `SAVEPOINT` |
 | `L6` PG Feat | `EXPECTED_LIMITATION`: `adv_lock`/`LISTEN` local; standby rejects `TEMP` (`25006`) | `PASS`: `adv_lock`/`LISTEN` local; standby RO |
 | `L7` Outage | `PASS`: primary writable; slot `active=false`, WAL `3088B`; catchup `10/10` | `EXPECTED_LIMITATION`: primary commits block if sync standby offline (`RPO=0`) |
-| `L8` Quorum | `N/A`: `AP` async continues (`RPO > 0` risk on primary crash) | `EXPECTED_LIMITATION`: `1/2` sync standby loss stalls writes |
+| `L8` Quorum | `N/A`: `AP` async continues (`RPO > 0` risk on primary crash) | `EXPECTED_LIMITATION`: `1/2` sync standby loss stalls writes unless relaxed |
 | `T11` Bulk10k | `PASS`: `28693 rows/s` (`349ms`); `peer_catchup=105.2ms` | `PASS`: `39697 rows/s` (`252ms`); `peer_catchup=114.6ms` |
 | `T12` Upd/Del | `PASS`: standby `DELETE` rejected (`25006`); primary serialized (`DELETED`) | `PASS`: standby `DELETE` rejected (`25006`); primary serialized (`DELETED`) |
 | `T13` FK Race | `EXPECTED_LIMITATION`: `0/10` ok; `failures=25006x10` | `EXPECTED_LIMITATION`: `0/10` ok; `failures=25006x10` |
@@ -140,10 +140,10 @@ Ran at `pg_scale = 2` (`retries_40001 = 0`, `balance_drift = 0`). Only `Avg`, `S
 
 | Stack | Compose & Setup | Containers, Ports & Images | Key GUCs / Config Notes |
 | :--- | :--- | :--- | :--- |
-| **Streaming** | `docker-compose-pg-streaming.yml` + `setup_pg_streaming.sh` | `pg_stream_primary` (`15434:5432`), `pg_stream_standby` (`15435:5432`), `postgres:17` | `wal_level=replica`, `wal_keep_size=64MB`, slot `slot_stream_standby`, `hot_standby=on` |
-| **Sync Pair** | `docker-compose-pg17-baseline.yml` + `setup_pg17_baseline.sh` | `pg17_sync_primary` (`15432:5432`), `pg17_sync_standby` (`15433:5432`), `postgres:17` | `synchronous_standby_names='pg17_sync_standby'`, `synchronous_commit='on'` |
-| **Patroni HA** | `docker-compose-patroni.yml` + `conf/haproxy-patroni.cfg` | `etcd1..3` (`2379:2379` `etcd1`), `node1..3` (`5432`/`8008`), `haproxy-patroni` (`5000`/`5001`/`7000`), `patroni-rhel8-*` | mTLS `etcd`, `hostssl`/`verify-ca`; `/etc/patroni.yml` baked in image (defaults `ttl=30/loop_wait=10/retry_timeout=10`). `patroni_cluster.md` cites PgBouncer `:6432`, absent in compose. |
+| **Streaming** | `docker-compose-pg-streaming.yml` + `scripts/pg_streaming/setup_pg_streaming.sh` | `pg_stream_primary` (`15434:5432`), `pg_stream_standby` (`15435:5432`), `postgres:17` | `wal_level=replica`, `wal_keep_size=64MB`, slot `slot_stream_standby`, `hot_standby=on` |
+| **Sync Pair** | `docker-compose-pg17-baseline.yml` + `scripts/bench_pg_v2_runner.sh` (`ALTER SYSTEM`; parent-repo `scripts/setup_pg17_baseline.sh`) | `pg17_sync_primary` (`15432:5432`), `pg17_sync_standby` (`15433:5432`), `postgres:17` | `synchronous_standby_names='pg17_sync_standby'`, `synchronous_commit='on'` |
+| **Patroni HA** | `docker-compose-patroni.yml` + `conf/haproxy-patroni.cfg` | `etcd1..3` (`2379:2379` `etcd1`), `node1..3` (`5432`/`8008`), `haproxy-patroni` (`5000`/`5001`/`7000`), `patroni-rhel8-*` | mTLS `etcd`, `hostssl`/`verify-ca`; `/etc/patroni.yml` baked in image (defaults `ttl=30/loop_wait=10/retry_timeout=10`). `documentation/patroni_cluster.md` cites PgBouncer `:6432`, absent in compose. |
 
 ---
 
-**Navigation:** [Index](../../README.md) · [Ch. 03a — Native & Extensions](../03a_solutions_native_and_extensions.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/pg17_physical_streaming_patroni.md)
+**Navigation:** [Index](../../../README.md) · [Ch. 03a — Native & Extensions](../03a_solutions_native_and_extensions.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/pg17_physical_streaming_patroni.md)
