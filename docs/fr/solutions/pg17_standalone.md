@@ -142,6 +142,18 @@ Tests exécutés à `pg_scale = 2` (`retries_40001 = 0`). Seules les latences `A
 | **Volume & Santé** | `pg17_standalone_data:/var/lib/postgresql/data` ; `pg_isready` (`3s` / `15` essais) |
 | **GUCs & Initialisation** | Flags : `shared_buffers=128MB`, `max_connections=100`, `log_error_verbosity=verbose` ; défauts : `synchronous_commit=on`, `wal_sync_method=fdatasync`. Aucun script setup pour `pg17_standalone` (la paire sync utilise `ALTER SYSTEM` dans `scripts/bench_pg_v2_runner.sh` / `scripts/bench_pg_multimaster.sh`, ou `scripts/setup_pg17_baseline.sh` du dépôt parent). |
 
+## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
+
+Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
+
+| Projet | Présence / Rôle Git | Dépôt (`Compte / Dépôts`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Tag / Dernier Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **PostgreSQL Core** | `Yes (Mirror)` -- Miroir (`git.postgresql.org`) | [`postgres/postgres`](https://github.com/postgres/postgres) (`Org / 6`) | 22894 / 6123 / 589 | 66091 / 3446 | 58 / 0 | C / `NOASSERTION` | `REL_19_0` / `2026-11-20T16:52:40Z` |
+
+- **Niveau de maintenance :** **Niveau S (Cœur)** -- `postgres/postgres` (`3446` commits/12m, `22894` stars, `6123` forks, `58` committeurs miroir).
+- **Fraîcheur / Actualité :** **Actuel -- Actif au quotidien** -- Dernier push `2026-11-20T16:52:40Z`, `3446` commits/12m, dernière version `REL_19_0`.
+- **Maintenabilité opérationnelle :** **Risque faible** -- Gouvernance cœur multi-éditeurs ; le `SPOF` mono-nœud reste structurel.
+
 ---
 
 **Navigation :** [Index](../../../README.fr.md) · [Ch. 03a — Solutions natives et extensions](../03a_catalogue_natif_et_extensions.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](../10_comparatif_streaming_logique_multimaster.md) · [English version](../../en/solutions/pg17_standalone.md)
