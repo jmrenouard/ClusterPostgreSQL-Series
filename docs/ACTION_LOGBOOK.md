@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-093 - Add French Architecture Sheet for pgEdge and Spock v5 (`#2`) (Issue `#185`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#185` (`docs/issue-185-pgedge-spock-fr`)
+- **Request / Changes / Result**: Created `docs/fr/solutions/pgedge_spock.md` mirroring the English sheet section-for-section (`#2`, `T4`, `pgedge` LWW and `pgedge-delta-apply` CRDT) with Mermaid 3-node mesh diagram, implementation modes, strengths/weaknesses, all 19+1 CSV rows, `F1`/`L1-L8`/`T11-T18` probes (`23505;54000`), and Docker/HAProxy PoC spec; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-092 - Add English Architecture Sheet for pgEdge and Spock v5 (`#2`) (Issue `#183`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#183` (`docs/issue-183-pgedge-spock-en`)
 - **Request / Changes / Result**: Created `docs/en/solutions/pgedge_spock.md` covering `#2` (`T4`, `pgedge` LWW and `pgedge-delta-apply` CRDT) with Mermaid 3-node mesh diagram, implementation modes, strengths/weaknesses, all 19 `pgedge` + `pgedge-delta-apply` CSV rows, `F1`/`L1-L8`/`T11-T18` probes (`23505;54000`), and Docker/HAProxy PoC spec; `make test` (`13/13` OK) and `make lint` verified.
