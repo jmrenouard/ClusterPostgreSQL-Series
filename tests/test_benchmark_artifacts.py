@@ -183,7 +183,7 @@ class TestBenchmarkArtifacts(unittest.TestCase):
             ("data_matrix.js", "LP_MATRIX_CORE", 10),
             ("data_matrix_ext.js", "LP_MATRIX_EXT", 10),
             ("data_matrix_pg18.js", "LP_MATRIX_PG18", 5),
-            ("data_popularity.js", "LP_POPULARITY", 21),
+            ("data_popularity.js", "LP_POPULARITY", 22),
         ):
             txt = (DASH / fname).read_text(encoding="utf-8")
             m = re.search(rf"window\.{var}=(\{{.*\}});", txt)
