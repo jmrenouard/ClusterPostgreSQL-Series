@@ -100,14 +100,15 @@ All 22 rows ran sequentially at `pg_scale = 2` on 3-node `dbinvent/yt:1.21.3` (`
 
 ## 6. GitHub Popularity, Git Presence & Maintenance Vitality (`results/project_popularity.csv`)
 
-Live GitHub REST/GraphQL telemetry captured `2026-11-20T17:26:02Z` (`results/project_popularity.csv`):
+Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 
-| Project | Git Presence / Role | Repo (Account / Public Repos) | Stars / Forks / Watchers | Commits (Total / 12m) | Contributors | Lang / SPDX | Tag (Created / Last Push) |
+| Project | Git Presence / Role | Repo (`Account / Repos`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Release / Last Push |
 | :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
-| **YT Cluster Lite (MIT Core) (`#18`)** | Yes (MIT Core; `ytserv` dual-licensed) | `DBinvent/yt-cluster-lite` (`Org / 10`) | 15 / 0 / 1 | 21 / 21 | 2 | Rust / MIT | `v1.21` (`2026-11-13` / `2026-11-20`) |
+| **YT Cluster Lite (MIT Core) (`#18`)** | `Yes (MIT Core; ytserv dual-licensed)` -- `Primary (MIT leaf/ext; ytserv PolyForm Noncommercial/Commercial)` | [`DBinvent/yt-cluster-lite`](https://github.com/DBinvent/yt-cluster-lite) (`Org / 10`) | 15 / 0 / 1 | 21 / 21 | 2 / 0 | Rust / `MIT` | `v1.21` / `2026-11-20T00:05:13Z` |
 
-- **Maintenance Level & Freshness:** **Tier C (Emerging / Bus Factor = 1 + Closed Coordinator)** -- Repo created `2026-11-13` (`15` stars, `0` forks, `21` commits total / `21` in 12m, `v1.21`, last push `2026-11-20`), authored by a single core developer (`vkrinitsyn` + Dependabot).
-- **Operational Manageability:** Reversible extension install lowers lab exit cost, but closed-source `ytserv` licensing, single-maintainer bus factor, `20.6-41.5 TPS` write ceiling, and `0A000` savepoint constraint restrict production adoption to low-write evaluation or specialized commercial engagements.
+- **Maintenance Level:** **Tier C (Fragile / Young)** -- Repo created `2026-11-13` (`15` stars, `0` forks, `21` total / `21` 12m commits, `0` open issues, `2` contributors: single core author `vkrinitsyn` + bot).
+- **Currency / Freshness:** **Current -- Young** -- Last push `2026-11-20T00:05:13Z`, `21` commits/12m, latest release `v1.21`.
+- **Operational Manageability:** **High Risk** -- Reversible extension install, but closed `ytserv` dual-licensing, bus factor = 1, `20.6-41.5 TPS` write ceiling, and `0A000` savepoint limit restrict production adoption.
 
 ---
 

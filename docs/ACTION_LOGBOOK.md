@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-165 - Align YT Cluster Lite (#18) EN/FR Section 6 With R1 Popularity Telemetry Schema and M4 Split Record (Issue `#411`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#411` (`docs/issue-411-yt-cluster-lite-popularity-align`)
+- **Request / Changes / Result**: Replaced Section 6 in `docs/{en,fr}/solutions/yt_cluster_lite.md` with the canonical 8-column / 3-bullet R1 schema (`yt-cluster-lite` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`, clickable GitHub URL, `open_issues=0`, full `git_role`, full ISO `pushed_at`, `Tier C (Fragile / Young)` | `Current -- Young` | `High Risk` preserving `2026-11-13`, `vkrinitsyn`, `ytserv`, `20.6-41.5 TPS`, and `0A000` context), plus `docs/ACTION_LOGBOOK.md` and `docs/RCA_REGISTER.md` (`IMP-011`); verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
+
 ### ACT-164 - Align PG 18 Native Clustering (#17) EN/FR Section 6 With R1 Popularity Telemetry Schema (Issue `#409`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#409` (`docs/issue-409-pg18-popularity-align`)
 - **Request / Changes / Result**: Replaced Section 6 in `docs/{en,fr}/solutions/pg18_native_clustering.md` with the canonical 8-column / 3-bullet R1 schema (`postgres-core` + `patroni` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`, clickable GitHub URLs, `watchers`, `open_issues`, SPDX, full ISO `pushed_at`, preserving `58*`/`APP-007` mirror note and `PGDATA`/seccomp/`setval()` guidance while staying `< 13,800` B), plus `docs/ACTION_LOGBOOK.md`; verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.

@@ -100,14 +100,15 @@ Les 22 lignes ont été mesurées séquentiellement à `pg_scale = 2` sur 3 nœu
 
 ## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
 
-Télémétrie REST/GraphQL GitHub capturée en direct le `2026-11-20T17:26:02Z` (`results/project_popularity.csv`) :
+Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
 
-| Projet | Présence / Rôle Git | Dépôt (Compte / Dépôts publics) | Stars / Forks / Watchers | Commits (Total / 12m) | Contributeurs | Lang / SPDX | Tag (Création / Dernier Push) |
+| Projet | Présence / Rôle Git | Dépôt (`Compte / Dépôts`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Tag / Dernier Push |
 | :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
-| **YT Cluster Lite (MIT Core) (`#18`)** | Oui (MIT Core ; `ytserv` double licence) | `DBinvent/yt-cluster-lite` (`Org / 10`) | 15 / 0 / 1 | 21 / 21 | 2 | Rust / MIT | `v1.21` (`2026-11-13` / `2026-11-20`) |
+| **YT Cluster Lite (MIT Core) (`#18`)** | `Yes (MIT Core; ytserv dual-licensed)` -- `Primary (MIT leaf/ext; ytserv PolyForm Noncommercial/Commercial)` | [`DBinvent/yt-cluster-lite`](https://github.com/DBinvent/yt-cluster-lite) (`Org / 10`) | 15 / 0 / 1 | 21 / 21 | 2 / 0 | Rust / `MIT` | `v1.21` / `2026-11-20T00:05:13Z` |
 
-- **Maintenance et fraîcheur :** **Niveau C (Émergent / Bus Factor = 1 + Coordinateur fermé)** — Dépôt créé le `2026-11-13` (`15` stars, `0` fork, `21` commits total / `21` sur 12m, `v1.21`, push `2026-11-20`), porté par un développeur unique (`vkrinitsyn` + Dependabot).
-- **Maintenabilité opérationnelle :** La réversibilité réduit le coût de sortie en labo, mais la licence fermée de `ytserv`, le bus factor unique, le plafond `20,6–41,5 TPS` et la limite `0A000` cantonnent la solution aux évaluations à faible débit d'écriture.
+- **Niveau de maintenance :** **Niveau C (Fragile / Jeune)** -- Dépôt créé le `2026-11-13` (`15` stars, `0` fork, `21` commits total / `21` sur 12m, `0` issue ouverte, `2` contributeurs : auteur unique `vkrinitsyn` + bot).
+- **Fraîcheur / Actualité :** **À jour -- Jeune** -- Dernier push `2026-11-20T00:05:13Z`, `21` commits/12m, dernière version `v1.21`.
+- **Maintenabilité opérationnelle :** **Risque élevé** -- Extension réversible, mais double licence fermée `ytserv`, bus factor = 1, plafond `20,6-41,5 TPS` et limite `0A000` restreignent l'adoption en production.
 
 ---
 
