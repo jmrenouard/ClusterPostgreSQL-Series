@@ -21,7 +21,7 @@
 
 **pglogical 2** est l'extension C fondatrice de réplication logique développée par 2ndQuadrant avant l'arrivée de `pgoutput` dans PostgreSQL 10. Chargée via `shared_preload_libraries = 'pglogical'`, elle exécute un plugin de sortie WAL dédié et des workers superviseurs/d'application pour diffuser sélectivement les lignes sur des clusters homogènes ou hétérogènes en version majeure (`PG 9.4` à `PG 16/17`).
 
-Elle a introduit les **Replication Sets** (`default`, `default_insert_only`, `ddl_sql`), les réplicas différés (`apply_delay`), la résolution de conflits (`pglogical.conflict_resolution`) et les migrations sans coupure depuis PG 9.x. Historiquement, 2ndQuadrant a contribué `pgoutput` au cœur PG 10+, **pgEdge (`#2 Spock`)** a forké `pglogical` vers un moteur CRDT/Auto-DDL open source, et **EDB (`#4 PGD`)** a poursuivi la lignée commerciale BDR.
+Elle a introduit les **Replication Sets** (`default`, `default_insert_only`, `ddl_sql`), les réplicas différés (`apply_delay`), la résolution de conflits (`pglogical.conflict_resolution`) et les migrations sans coupure depuis des instances pré-PG-10. Historiquement, 2ndQuadrant a contribué `pgoutput` au cœur PG 10+, **pgEdge (`#2 Spock`)** a forké `pglogical` vers un moteur CRDT/Auto-DDL open source, et **EDB (`#4 PGD`)** a poursuivi la lignée commerciale BDR.
 
 ---
 
@@ -55,7 +55,7 @@ $$
 
 | Mode / Option | Portée | Mécanique et stratégie de clés | Impact conflit / bascule | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
-| **Fournisseur -> Souscripteur Async** *(Principal)* | `create_subscription(forward_origins='{}')` | Diffuse tables/lignes filtrées (`PG 9.4–16/17`) | Écrivain unique sans conflit (`RPO > 0` async) | Pont de montée de version sans coupure (`PG 9.x -> 17`) |
+| **Fournisseur -> Souscripteur Async** *(Principal)* | `pglogical.create_subscription(forward_origins='{all}')` | Diffuse tables/lignes filtrées (`PG 9.4–16/17`) | Écrivain unique sans conflit (`RPO > 0` async) | Pont de montée de version sans coupure (`PG 9.x -> 17`) |
 | **Bidirectionnel / Maillage** *(Multi-maîtres)* | Souscriptions croisées (`forward_origins='{}'`) | Filtre les origines relayées contre les boucles `A -> B -> A` | Exposé aux *Lost Updates* (`LWW`) et dérive d'horloge | Impose séquences à pas ou UUID ; zéro CRDT |
 | **Commit synchrone** *(Option `PC/EC`)* | `synchronous_commit=on` + `synchronous_standby_names` | Cible le slot `pglogical` pour flush synchrone | Garantit `RPO = 0` ; bloque l'écrivain si pair coupé | Paie le `RTT` par commit ; rare en multi-maîtres |
 | **Réplica différé** *(`apply_delay`)* | `create_subscription(apply_delay := '1 hour')` | Retient l'application des changements décodés | Protège contre un `DROP`/`DELETE` accidentel | Retard volontaire de la fenêtre `RPO` |
@@ -82,16 +82,16 @@ $$
 2. **Rôle bidirectionnel sans extension :** Remplacé par `origin = none` natif PG 16+ (`#1 pg-birep`).
 3. **Rôle multi-maîtres avancé :** Remplacé par son fork open source direct **`#2 pgEdge / Spock 5`** (`pgedge` / `pgedge-delta-apply`), ajoutant les CRDT `spock.delta_apply` (`0` dérive vs `-278698` en Suite D), les IDs `snowflake` 64 bits et l'Auto-DDL.
 
-Partageant le même moteur PostgreSQL (`wal_level = logical`, `track_commit_timestamp = on`), son comportement se projette directement sur les références N3/N4 benchmarkées ci-dessous (aucun chiffre synthétique n'est inventé pour `pglogical 2`) :
+Partageant le même moteur heap PostgreSQL 17 (`wal_level = logical`, `track_commit_timestamp = on`), son profil de performance et de limites se projette directement sur les références N3/N4 benchmarkées ci-dessous (aucun chiffre synthétique n'est inventé pour `pglogical 2`) :
 
 | Capacité / Référence | `#3 pglogical 2` *(Réf. Arch.)* | `#16 pg17-logical` *(PoC)* | `#1 pg-birep` *(PoC)* | `#2 pgEdge / Spock 5` *(Fork PoC)* |
 | :--- | :--- | :--- | :--- | :--- |
 | **Versions PG supportées** | `PG 9.4–16/17` (pont upgrade) | `PG 10–18` (`17.11` PoC) | `PG 16–18` (`17.11` PoC) | `PG 15–17` (`17.12`, Spock `5.0.14`) |
 | **Gestion des conflits** | `error` / `apply_remote` / `keep_local` / `LWW` / `FUW` | Arrêt apply (`23505` / `55000`) | Arrêt apply (`23505`, `L1`/`L4`) | `LWW` + `transdiscard` \| **CRDT `spock.delta_apply`** |
 | **Protection *Lost Update*** | Aucune (risque de dérive LWW) | Écrivain unique (`0` dérive) | Aucune (`-71063` dérive en `D`) | **`0` dérive en `D` (`1837.64 TPS`)** |
-| **Réplication DDL** | Manuel `replicate_ddl_command()` | Aucune (`L5` échoue) | Aucune (`L5` échoue) | **Automatique (`enable_ddl_replication=on`)** |
+| **Réplication DDL** | Manuel `replicate_ddl_command()` | Aucune (`L5` échoue sur `ALTER TABLE`) | Aucune (`L5` échoue sur `ALTER TABLE`) | **Automatique (`enable_ddl_replication=on`)** |
 | **Réplica différé** | Paramètre natif `apply_delay` | PG 16+ `min_apply_delay` | PG 16+ `min_apply_delay` | PG 16+ `min_apply_delay` |
-| **Ancre empirique de réf.** | Non benchmarké (maintenance) | `917.28 TPS` (`A`), `1.39 ms` (`T15`) | `875.91 TPS` (`A`), `1.47 ms` (`T15`) | `556.06 TPS` (`A`), `1.16 ms` (`T15`) |
+| **Ancre empirique de réf.** | Non benchmarké (maintenance) | `532.38 TPS` (`A`), `1.68 ms` (`T15`) | `875.91 TPS` (`A`), `1.47 ms` (`T15`) | `556.06 TPS` (`A`), `1.16 ms` (`T15`) |
 
 ---
 
