@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-097 - Add French Architectural Reference Sheet for pglogical 2 (`#3`) (Issue `#193`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#193` (`docs/issue-193-pglogical2-fr`)
+- **Request / Changes / Result**: Created `docs/fr/solutions/pglogical2.md` mirroring the English sheet section-for-section (`#3`, Architectural Reference, not live-benchmarked) with Mermaid diagram, implementation modes, strengths/weaknesses, and apples-to-apples exclusion/baseline comparison against `#16`, `#1`, and `#2`; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-096 - Add English Architectural Reference Sheet for pglogical 2 (`#3`) (Issue `#191`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#191` (`docs/issue-191-pglogical2-en`)
 - **Request / Changes / Result**: Created `docs/en/solutions/pglogical2.md` covering `#3` (Architectural Reference, not live-benchmarked) with Mermaid diagram, implementation modes (async, `forward_origins` mesh, sync commit, `apply_delay`, `pglogical.conflict_resolution`, `replicate_ddl_command`, `synchronize_sequence`), strengths/weaknesses, and apples-to-apples exclusion/baseline comparison against `#16`, `#1`, and `#2`; `make test` (`13/13` OK) and `make lint` verified.
