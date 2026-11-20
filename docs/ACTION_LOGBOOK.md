@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-091 - Remediate pg17_bidirectional_logical EN/FR Sheets and Log RCA-011 (Issue `#181`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#181` (`docs/issue-181-m1-r2-birep-rca011`)
+- **Request / Changes / Result**: Remediated `docs/{en,fr}/solutions/pg17_bidirectional_logical.md` (`../../../README*.md` footers, L57/L58/L139 `scripts/pg_birep/setup_birep.sh`, L79 p99 latency wording) and added `RCA-011` in `docs/RCA_REGISTER.md` covering M1 footer depth, Table D script path scope, Table B Status omission, and 7-bit ASCII governance gap; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-090 - Remediate pg17_logical_unidirectional EN and FR Sheets (Issue `#179`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#179` (`docs/issue-179-m1-r2-logical-uni`)
 - **Request / Changes / Result**: Remediated `docs/{en,fr}/solutions/pg17_logical_unidirectional.md` (`../../../README*.md` footers, FR L15 `(logique unidirectionnel)`, L18 Ch. 10 path replacing non-repo `PROJECT.md`, L53 stray `\|` removal, p99 latency wording); `make test` (`13/13` OK) and `make lint` verified.

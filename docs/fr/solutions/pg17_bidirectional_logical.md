@@ -54,8 +54,8 @@ $$
 | Mode / Option | Portée | Mécanique et stratégie de clés | Impact conflit / bascule | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
 | **`origin = none`** *(Obligatoire PoC)* | `CREATE SUBSCRIPTION` | Réplique uniquement les lignes locales (`origin = NULL`) | Empêche les boucles `A -> B -> A` | Requis sur chaque lien du maillage |
-| **`copy_data = true` vs `false`** | Subscription / `REFRESH` | `true` sur schéma vide (`setup_birep.sh`) ; `false` si pré-peuplé | `true` sur tables peuplées provoque `23505` | Initialiser à vide ou utiliser `false` |
-| **Séquences à pas (`INCREMENT BY 2`)** *(PoC)* | DDL (`START WITH 1` / `2`) | Partitionne IDs pairs/impairs sur 2 nœuds (`setup_birep.sh`) | Évite les collisions PK `23505` à l'insertion | Pas fixe ; rééquilibrage manuel si ajout nœud |
+| **`copy_data = true` vs `false`** | Subscription / `REFRESH` | `true` sur schéma vide (`scripts/pg_birep/setup_birep.sh`) ; `false` si pré-peuplé | `true` sur tables peuplées provoque `23505` | Initialiser à vide ou utiliser `false` |
+| **Séquences à pas (`INCREMENT BY 2`)** *(PoC)* | DDL (`START WITH 1` / `2`) | Partitionne IDs pairs/impairs sur 2 nœuds (`scripts/pg_birep/setup_birep.sh`) | Évite les collisions PK `23505` à l'insertion | Pas fixe ; rééquilibrage manuel si ajout nœud |
 | **`UUIDv7` / IDs globaux** | Stratégie PK *(Arch.)* | UUID 128 bits ordonné dans le temps (`uuidv7()` PG 18 ; fonction SQL PG 17) | Zéro coordination sur `N` nœuds actifs | Index PK 16 octets vs `BIGINT` 8 octets |
 | **`SERIAL` non coordonné** *(Anti-pattern)* | DDL défaut | Les deux pairs partent de `1` (`T18` `1\|false`) | Déclenche aussitôt `23505` et gèle l'apply (`L1`) | Dangereux sans pas ou UUIDv7 |
 | **Arrêt + `SKIP (lsn=...)`** *(PG 16–18)* | Reprise erreur | Le worker s'arrête (`apply_error_count`) ; `SKIP` saute la tx | Préserve l'intégrité vs LWW silencieux ; runbook requis | PG 18 ajoute `pg_stat_subscription_stats` |
@@ -76,7 +76,7 @@ $$
 
 ## 5. Résultats empiriques, limites fonctionnelles et spec PoC
 
-Tests à `pg_scale = 2` (`retries_40001 = 0`). Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` sont mesurées (`lat_p99_ms` non mesurée).
+Tests à `pg_scale = 2` (`retries_40001 = 0`). Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` sont mesurées (la latence p99 n'est pas mesurée).
 
 ### Tableau A — Charges principales et étendues (`benchmark_summary.csv`, `benchmark_extended_workloads.csv`)
 
@@ -136,11 +136,11 @@ Tests à `pg_scale = 2` (`retries_40001 = 0`). Seules `Avg`, `Stddev` (`0` pour 
 
 | Paramètre | Configuration / Observation PoC |
 | :--- | :--- |
-| **Compose & Scripts** | `docker-compose-pg-birep.yml` + `scripts/setup_birep.sh` + `scripts/pg_birep/haproxy.cfg` |
+| **Compose & Scripts** | `docker-compose-pg-birep.yml` + `scripts/pg_birep/setup_birep.sh` + `scripts/pg_birep/haproxy.cfg` |
 | **Nœuds & Images** | `pg_birep_node1` (`127.0.0.1:15441:5432`), `pg_birep_node2` (`127.0.0.1:15442:5432`), `postgres:17` (`17.11`) |
 | **HAProxy LB** | `haproxy_pg_birep` (`haproxy:2.9-alpine`), `127.0.0.1:15440:5432` (TCP RR `inter 2s fall 2 rise 2`), `127.0.0.1:15449:8404` (`/stats`) |
 | **GUCs & Maillage** | `wal_level=logical`, `track_commit_timestamp=on`, `max_logical_replication_workers=8`, `wal_keep_size=128MB` ; `pub_birep FOR ALL TABLES` + `sub_from_node1`/`sub_from_node2` (`origin=none`, `copy_data=true`, `INCREMENT BY 2 START WITH 1/2`). |
 
 ---
 
-**Navigation :** [Index](../../README.fr.md) · [Ch. 03a — Solutions natives et extensions](../03a_catalogue_natif_et_extensions.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](../10_comparatif_streaming_logique_multimaster.md) · [English version](../../en/solutions/pg17_bidirectional_logical.md)
+**Navigation :** [Index](../../../README.fr.md) · [Ch. 03a — Solutions natives et extensions](../03a_catalogue_natif_et_extensions.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](../10_comparatif_streaming_logique_multimaster.md) · [English version](../../en/solutions/pg17_bidirectional_logical.md)
