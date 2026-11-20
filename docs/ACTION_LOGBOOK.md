@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-086 - Add French Architecture Sheet for PG 17 Bidirectional Logical Replication (`#1`) (Issue `#171`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#171` (`docs/issue-171-pg17-birep-fr`)
+- **Request / Changes / Result**: Created `docs/fr/solutions/pg17_bidirectional_logical.md` covering `#1` (`T4`, `pg-birep`) mirroring the English sheet section-for-section with Mermaid diagram, implementation modes, strengths/weaknesses, verbatim CSV benchmarks, `F1`/`L1-L8`/`T11-T18` probes, and Docker/HAProxy PoC spec; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-085 - Add English Architecture Sheet for PG 17 Bidirectional Logical Replication (`#1`) (Issue `#169`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#169` (`docs/issue-169-pg17-birep-en`)
 - **Request / Changes / Result**: Created `docs/en/solutions/pg17_bidirectional_logical.md` covering `#1` (`T4`, `pg-birep`) with Mermaid diagram, implementation modes (`origin=none`, stepped sequences vs UUIDv7, `SKIP (lsn=...)` halt semantics), strengths/weaknesses, verbatim CSV benchmarks, `F1`/`L1-L8`/`T11-T18` probes, and Docker/HAProxy PoC spec; `make test` (`13/13` OK) and `make lint` verified.
