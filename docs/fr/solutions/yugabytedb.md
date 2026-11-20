@@ -141,6 +141,18 @@ Tests à `pg_scale = 2` (`retries_40001 = 0` sur tous les CSV). Seules `Avg`, `S
 | **Image & Ressources** | `yugabytedb/yugabyte:2026.1.3.0-b100`, `mem_limit: 2048m`, master `320 MiB`, tserver `1024 MiB`, pont `yb_net` |
 | **Options & Setup** | `yugabyted start --insecure --fault_tolerance=zone`, `yb_num_shards_per_tserver=1`, `ysql_num_shards_per_tserver=1`, `yb_servers() == 3`, `hid BIGSERIAL PRIMARY KEY` sur `pgbench_history`. |
 
+## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
+
+Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
+
+| Projet | Présence / Rôle Git | Dépôt (`Compte / Dépôts`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Tag / Dernier Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **YugabyteDB (#5)** | `Yes` -- `Primary` | [`yugabyte/yugabyte-db`](https://github.com/yugabyte/yugabyte-db) (`Org / 314`) | 10670 / 1483 / 222 | 41479 / 5350 | 1217 / 9765 | C / `NOASSERTION` | `v2026.1.3.0` / `2026-11-20T17:22:06Z` |
+
+- **Niveau de maintenance :** **Niveau A (OSS Actif)** -- `yugabyte/yugabyte-db` totalise `5 350` commits/12m (`41 479` total, `1 217` contributeurs, `10 670` stars, `9 765` issues).
+- **Fraîcheur / Actualité :** **À jour -- Actif au quotidien** -- Dernier push `2026-11-20T17:22:06Z`, `5 350` commits/12m, dernière version `v2026.1.3.0`.
+- **Maintenabilité opérationnelle :** **Modéré** -- Vélocité élevée (Apache 2.0 ; SPDX `NOASSERTION`) ; le plancher `2 GiB`/nœud et la sensibilité WAN restent exigeants.
+
 ---
 
 **Navigation :** [Index](../../../README.fr.md) · [Ch. 03b — Distribué, triggers et cloud](../03b_catalogue_distribue_triggers_cloud.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](../10_comparatif_streaming_logique_multimaster.md) · [English version](../../en/solutions/yugabytedb.md)
