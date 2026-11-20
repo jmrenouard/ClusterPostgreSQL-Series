@@ -237,11 +237,11 @@ class TestBenchmarkArtifacts(unittest.TestCase):
         self.assertTrue(pop_p.is_file(), "Missing project_popularity.csv")
         with pop_p.open(encoding="utf-8", newline="") as fh:
             pop_rows = list(csv.DictReader(fh))
-        self.assertEqual(len(pop_rows), 21)
+        self.assertEqual(len(pop_rows), 22)
         pop_cols = {"solution_id", "project_name", "git_present", "github_repo", "stars", "forks", "total_commits", "commits_12m", "contributors", "pushed_at"}
         self.assertTrue(pop_cols.issubset(pop_rows[0].keys()))
         public = [r for r in pop_rows if r["stars"].strip().upper() != "N/A"]
-        self.assertEqual(len(public), 18)
+        self.assertEqual(len(public), 19)
 
     def test_dashboard_and_scripts_file_size_cap(self) -> None:
         """Enforce < 14,000 byte limit on every text file in dashboard/ and scripts/."""

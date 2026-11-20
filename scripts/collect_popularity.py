@@ -104,6 +104,13 @@ CATALOG: list[tuple[str, str, str, str, str | None]] = [
         "GoogleCloudPlatform/pgadapter",
     ),
     (
+        "yt-cluster-lite",
+        "YT Cluster Lite (MIT Core) (#18)",
+        "Yes (MIT Core; ytserv dual-licensed)",
+        "Primary (MIT leaf/ext; ytserv PolyForm Noncommercial/Commercial)",
+        "DBinvent/yt-cluster-lite",
+    ),
+    (
         "edb-pgd",
         "EDB Postgres Distributed (PGD/BDR) (#4)",
         "No (Proprietary)",
