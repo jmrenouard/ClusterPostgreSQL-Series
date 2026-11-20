@@ -3,9 +3,9 @@ SHELL := /usr/bin/env bash
 export PYTHONDONTWRITEBYTECODE := 1
 
 MDB_DIR ?= env/multi-db-docker-env
-PG_STACKS := pg17-baseline pg-streaming pg-logical pg-birep pgedge bucardo citus cockroach yugabyte
+PG_STACKS := pg17-baseline pg-streaming pg-logical pg-birep pgedge bucardo citus cockroach yugabyte pg18-streaming pg18-logical pg18-birep
 
-.PHONY: help init-env stacks test check-math check-security lint charts dashboard test-pg-extended bench-all clean
+.PHONY: help init-env stacks test check-math check-security lint charts popularity dashboard test-pg-extended bench-all bench-pg18 clean
 
 help: ## Show targets
 	@awk 'BEGIN {FS = ":.*##"; printf "\nTargets:\n"} /^[a-zA-Z0-9_%-]+:.*##/ { printf "  %-18s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -25,13 +25,17 @@ check-math: ## Validate Markdown LaTeX math rules
 check-security: ## Validate governance and security rules
 	python3 -m unittest tests/test_governance_and_security.py -v
 
-charts: ## Regenerate all 7 Log10 PNG charts in assets/charts/
+charts: ## Regenerate all 10 Log10 PNG charts in assets/charts/
 	python3 scripts/generate_charts.py
+	python3 scripts/generate_charts_v3.py
+
+popularity: ## Collect live GitHub ecosystem popularity telemetry into results/project_popularity.csv
+	python3 scripts/collect_popularity.py
 
 dashboard: ## Rebuild offline HTML benchmark explorer bundles in dashboard/
 	python3 scripts/build_dashboard.py
 
-lint: ## Lint repo Bash scripts and all 9 submodule PostgreSQL Compose files
+lint: ## Lint repo Bash scripts and all 12 submodule PostgreSQL Compose files
 	@find . \( -path './.git' -o -path './env' \) -prune -o -name '*.sh' -type f -print0 | xargs -0 -r bash -n
 	@ef=(); [ ! -f .env ] && [ -f .env.example ] && ef=(--env-file .env.example); \
 	while IFS= read -r -d '' cfg; do docker compose "$${ef[@]}" -f "$$cfg" config -q; done < <(find . -maxdepth 3 \( -path './.git' -o -path './env' \) -prune -o -name 'docker-compose-*.yml' -type f -print0)
@@ -80,6 +84,11 @@ bench-all: ## Run V1 + V2 PostgreSQL benchmark suites via $(MDB_DIR) and rebuild
 	@test -d "$(MDB_DIR)" || { echo "Submodule missing; run 'make init-env' first."; exit 1; }
 	BENCH_OUT_DIR="$(CURDIR)/results" bash "$(MDB_DIR)/scripts/bench_pg_multimaster.sh"
 	BENCH_OUT_DIR="$(CURDIR)/results" bash "$(MDB_DIR)/scripts/bench_pg_v2_runner.sh"
+	$(MAKE) charts dashboard
+
+bench-pg18: ## Run PostgreSQL 18.6 benchmark suite via $(MDB_DIR) and rebuild charts & dashboard
+	@test -d "$(MDB_DIR)" || { echo "Submodule missing; run 'make init-env' first."; exit 1; }
+	BENCH_OUT_DIR="$(CURDIR)/results" bash "$(MDB_DIR)/scripts/bench_pg18_runner.sh"
 	$(MAKE) charts dashboard
 
 clean: ## Clean caches, logs, and generated reports

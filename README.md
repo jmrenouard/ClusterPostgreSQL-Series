@@ -6,7 +6,7 @@
 
 **Author:** Jean-Marie Renouard (`jmrenouard`) | **Supported by:** [LightPath](https://www.lightpath.fr) | **License:** [MIT](LICENSE) | **Version française :** [README.fr.md](README.fr.md)
 
-A rigorous engineering study, 36-criterion comparative matrix, reproducible Docker Compose labs (powered by [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env)), 18-test empirical failure-mode catalog (`L1–L8` + `T11–T18`), **187 standardized `pgbench` / `sysbench` / `tc netem` benchmark rows** across **10 live PostgreSQL topologies**, and an offline-capable [**Interactive HTML Benchmark Explorer (`dashboard/index.html`)**](dashboard/index.html).
+A rigorous engineering study, 36-criterion comparative matrix, reproducible Docker Compose labs (powered by [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.3.0`), 18-test empirical failure-mode catalog (`L1–L8` + `T11–T18`) plus PostgreSQL 18.6 AIO/`uuidv7()`/conflict probes, **274 standardized `pgbench` / `sysbench` / `tc netem` benchmark rows** (`187` V2 + `87` PostgreSQL 18.6) across **15 live PostgreSQL topologies**, **21 GitHub ecosystem popularity telemetry rows**, **10 `log10` charts**, and an offline-capable [**Interactive HTML Benchmark Explorer (`dashboard/index.html`)**](dashboard/index.html).
 
 ---
 
@@ -42,11 +42,14 @@ Executed sequentially inside isolated Docker bridge networks on a 20-vCPU / 16.4
 
 ## Interactive Benchmark Explorer & Logarithmic Charts (`log10`)
 
-Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser (zero CDN, offline-ready, EN/FR switcher, multi-solution pills, default `log10` / linear toggle, `L1–L8` + `T11–T18` matrix tab, and CSV export) or browse the full 7-chart gallery in [Chapter 09](docs/en/09_benchmarks_methodology_and_charts.md):
+Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser (zero CDN, offline-ready, EN/FR switcher, 15-topology PG 17 & PG 18.6 presets, default `log10` / linear toggle, `L1–L8` / `T11–T18` / `PG 18.6` matrix tabs, Ecosystem Popularity tab, and CSV export) or browse the full **10-chart gallery** across [Chapter 09](docs/en/09_benchmarks_methodology_and_charts.md) (`chart_01`–`07`), [Chapter 11](docs/en/11_ecosystem_popularity_and_vitality.md) (`chart_08`–`09`), and [Chapter 12](docs/en/12_postgresql_18_clustering_and_benchmarks.md) (`chart_10`):
 
 ![Log10 Throughput All Suites](assets/charts/chart_01_tps_log_all_suites.png)
 ![Log10 Latency All Suites](assets/charts/chart_02_latency_log_all_suites.png)
 ![Streaming vs Logical vs Multi-Master Log10](assets/charts/chart_06_streaming_vs_logical_vs_mm.png)
+![Ecosystem Popularity Stars and Forks Log10](assets/charts/chart_08_popularity_stars_forks_log.png)
+![Ecosystem Commits and Maintenance Vitality Log10](assets/charts/chart_09_popularity_commits_activity_log.png)
+![PostgreSQL 18.6 vs PostgreSQL 17.11 Head-to-Head Log10](assets/charts/chart_10_pg18_vs_pg17_log.png)
 
 ---
 
@@ -65,6 +68,8 @@ Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser 
 | **08 — Limits** | [08 — Limits & Failure Modes Catalog](docs/en/08_limits_and_failure_modes.md) | [08 — Limites & modes de défaillance](docs/fr/08_limites_et_modes_de_defaillance.md) |
 | **09 — Charts** | [09 — Benchmarks Methodology & Log10 Charts](docs/en/09_benchmarks_methodology_and_charts.md) | [09 — Méthodologie benchmarks & graphiques](docs/fr/09_methodologie_benchmarks_et_graphiques.md) |
 | **10 — 5-Tier** | [10 — Streaming vs Logical vs Multi-Master](docs/en/10_streaming_vs_logical_vs_multimaster.md) | [10 — Streaming vs Logique vs Multi-Maîtres](docs/fr/10_comparatif_streaming_logique_multimaster.md) |
+| **11 — Popularity** | [11 — Ecosystem Popularity & Engineering Vitality](docs/en/11_ecosystem_popularity_and_vitality.md) | [11 — Popularité et vitalité de l'écosystème](docs/fr/11_popularite_et_vitalite_ecosysteme.md) |
+| **12 — PG 18.6** | [12 — PostgreSQL 18.6 Clustering & Benchmarks](docs/en/12_postgresql_18_clustering_and_benchmarks.md) | [12 — Clustering PostgreSQL 18.6 et benchmarks](docs/fr/12_clustering_postgresql_18_et_benchmarks.md) |
 
 ---
 
@@ -110,21 +115,24 @@ The operational PoC topologies, extended test runners (`T11–T18`), and V2 benc
 | `docker-compose-citus.yml` | Citus `14.2.0` (1 Coordinator + 2 Workers) | `citusdata/citus:14.2.0-pg17` |
 | `docker-compose-yugabyte.yml` | 3-Node YugabyteDB RF=3 YSQL + DocDB | `yugabytedb/yugabyte:2026.1.3.0-b100` |
 | `docker-compose-cockroach.yml` | 3-Node CockroachDB RF=3 Multi-Raft | `cockroachdb/cockroach:v24.3.0` |
+| `docker-compose-pg18-streaming.yml` | PG 18.6 Standalone, Async & Sync Streaming (`AIO worker`) | `postgres:18` (`18.6`) |
+| `docker-compose-pg18-logical.yml` | PG 18.6 Uni-Directional Logical (`substream=p`, `pubgencols=s`) | `postgres:18` (`18.6`) |
+| `docker-compose-pg18-birep.yml` | PG 18.6 Bidirectional Logical (`origin=none`, `uuidv7()`) + HAProxy | `postgres:18` (`18.6`), `haproxy:2.9-alpine` |
 
 ### Common Commands
 
 ```bash
-# Initialize the multi-db-docker-env Git submodule and inspect all Makefile targets
+# Initialize the multi-db-docker-env Git submodule (v2.3.0, 12 Compose stacks)
 make init-env
 make help
 
-# Run unit tests (security, math, chart/dashboard artifacts) and Compose/Bash lint
+# Run unit tests (security, math, 10 charts, 15-topology dashboard) and Compose/Bash lint
 make test && make lint
 
-# Run topology lifecycle, functional tests, benchmarks, Log10 charts, and HTML dashboard
+# Run topology lifecycle, benchmarks (V1/V2 + PG 18.6), popularity telemetry, charts, and dashboard
 cp .env.example .env
 make up-pgedge && make test-pgedge && make down-pgedge
-make bench-all && make charts && make dashboard
+make bench-all && make bench-pg18 && make popularity && make charts && make dashboard
 ```
 
 ---
