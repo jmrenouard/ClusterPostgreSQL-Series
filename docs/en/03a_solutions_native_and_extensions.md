@@ -6,7 +6,23 @@
 
 ---
 
+## Dedicated Architecture Sheets (`03a` Scope)
+
+| Catalog ID | Solution / Topology | Dedicated EN Sheet | Scope |
+| :---: | :--- | :--- | :--- |
+| **#1** | PG 17 Native Bidirectional Logical (`pg-birep`) | [Solution #1 — PG 17 Bidirectional Logical](solutions/pg17_bidirectional_logical.md) | Live-benchmarked (`T4`) |
+| **#2** | pgEdge Platform / Spock v5 (`pgedge`, `pgedge-delta-apply`) | [Solution #2 — pgEdge / Spock v5](solutions/pgedge_spock.md) | Live-benchmarked (`T4`, CRDT) |
+| **#3** | pglogical 2 | [Solution #3 — pglogical 2](solutions/pglogical2.md) | Architectural Reference |
+| **#4** | EDB Postgres Distributed (PGD / BDR) | [Solution #4 — EDB PGD](solutions/edb_pgd.md) | Architectural Reference |
+| **#15a** | PG 17 Standalone (`pg17-standalone`) | [Solution #15a — PG 17 Standalone](solutions/pg17_standalone.md) | Live-benchmarked (`T1` Control) |
+| **#15b** | PG 17 Physical Streaming & Patroni HA (`pg17-async/sync-streaming`) | [Solution #15b — PG 17 Streaming & Patroni](solutions/pg17_physical_streaming_patroni.md) | Live-benchmarked (`T1`/`T2`) |
+| **#16** | PG 17 Native Uni-Directional Logical (`pg17-logical`) | [Solution #16 — PG 17 Uni-Directional Logical](solutions/pg17_logical_unidirectional.md) | Live-benchmarked (`T3`) |
+
+---
+
 ## Solution #1: PostgreSQL 16/17/18 Native Bidirectional Logical Replication
+
+**Dedicated Sheet:** [Solution #1 — PG 17 Native Bidirectional Logical (`pg-birep`)](solutions/pg17_bidirectional_logical.md)
 
 **Family:** 1 — Native Core PostgreSQL | **License:** Open Source (PostgreSQL License)
 
@@ -38,6 +54,8 @@ Setting `origin = none` instructs the logical decoding `walsender` to emit **onl
 
 ## Solution #2: pgEdge Platform / Spock v5
 
+**Dedicated Sheet:** [Solution #2 — pgEdge / Spock v5 (`pgedge`, `pgedge-delta-apply`)](solutions/pgedge_spock.md)
+
 **Family:** 2 — Logical Replication Extensions | **License:** Open Source (PostgreSQL License)
 
 ### Architecture & Internals
@@ -59,6 +77,8 @@ Developed by pgEdge for PostgreSQL 15–17, **Spock v5** modernizes the open-sou
 
 ## Solution #3: pglogical 2
 
+**Dedicated Sheet:** [Solution #3 — pglogical 2 (Architectural Reference)](solutions/pglogical2.md)
+
 **Family:** 2 — Logical Replication Extensions | **License:** Open Source (PostgreSQL License)
 
 ### Architecture & Internals
@@ -79,6 +99,8 @@ Created by 2ndQuadrant prior to PostgreSQL 10's built-in logical replication, **
 
 ## Solution #4: EDB Postgres Distributed (PGD v5/v6, formerly BDR)
 
+**Dedicated Sheet:** [Solution #4 — EDB Postgres Distributed / BDR (Architectural Reference)](solutions/edb_pgd.md)
+
 **Family:** 2 — Logical Replication Extensions | **License:** **Commercial / Proprietary** (EnterpriseDB)
 
 ### Architecture & Internals
@@ -88,11 +110,11 @@ Created by 2ndQuadrant prior to PostgreSQL 10's built-in logical replication, **
 ### Conflict Resolution, DDL & Sequences
 
 - **Multi-Mode Consistency:** Supports:
-  - **Async Logical + CRDTs:** Built-in CRDT types (`pncounter`, `gcounter`, `lww_element`) and LWW conflict resolution.
+  - **Async Logical + CRDTs:** Built-in CRDT column types (`bdr.crdt_gcounter`, `bdr.crdt_pncounter`, `bdr.crdt_delta_counter`, `bdr.crdt_delta_sum`) and `bdr.conflict_history` LWW conflict resolution.
   - **CAMO (Commit At Most Once):** Pairs nodes so a client verifies commit status against a partner node if a primary dies mid-commit, preventing duplicate payment/order retries.
   - **Eager All-Node Replication:** Raft-backed global transaction synchronization across participating nodes (zero conflicts, high WAN RTT cost).
   - **Write-Lead:** PGD Proxy directs all writes to one Raft-elected Lead Master while keeping peer masters hot for sub-second failover.
-- **DDL & Global Sequences:** Global DDL locks acquired via Raft consensus prevent divergent concurrent schema mutations; Raft-backed `timeshard` and `galloc` sequences issue conflict-free global IDs.
+- **DDL & Global Sequences:** Global DDL locks acquired via Raft consensus prevent divergent concurrent schema mutations; `bdr.global_sequences` (`snowflakeid`, Raft-backed `galloc`, and legacy `timeshard`) issue conflict-free global IDs.
 
 ### Strengths & Limits
 
@@ -102,6 +124,8 @@ Created by 2ndQuadrant prior to PostgreSQL 10's built-in logical replication, **
 ---
 
 ## Solution #15: Control Baselines — Standalone PG 17 & Patroni HA
+
+**Dedicated Sheets:** [Solution #15a — PG 17 Standalone](solutions/pg17_standalone.md) · [Solution #15b — PG 17 Physical Streaming & Patroni HA](solutions/pg17_physical_streaming_patroni.md)
 
 **Family:** 7 — Single-Primary Reference Baselines | **License:** Open Source (PostgreSQL / MIT)
 
@@ -117,3 +141,19 @@ Any credible multi-master evaluation requires two single-primary baselines to qu
 - **Zero Write Conflicts:** All DML, `SERIAL` sequences, `pg_largeobject`, `pg_advisory_lock`, `LISTEN/NOTIFY`, keyless tables, and arbitrary DDL execute with 100% PostgreSQL fidelity on one primary.
 - **Configurable `RPO`/`RTO`:** Setting `synchronous_standby_names = 'FIRST 1 (*)'` with `synchronous_commit = remote_apply` guarantees `RPO = 0` (`PC/EC`), while async streaming (`PA/EL`) keeps write latency local with millisecond `RPO` and `RTO ~ 10-30 s`.
 - **Limit:** Does not scale write throughput beyond one primary node's CPU/IOPS ceiling and incurs WAN latency for distant writers. Nevertheless, for **over 80% of enterprise OLTP workloads**, Patroni HA beats multi-master complexity decisively.
+
+---
+
+## Solution #16: PostgreSQL 17 Native Uni-Directional Logical Replication (Pub/Sub)
+
+**Dedicated Sheet:** [Solution #16 — PG 17 Native Uni-Directional Logical (`pg17-logical`)](solutions/pg17_logical_unidirectional.md)
+
+**Family:** 1 — Native Core PostgreSQL | **License:** Open Source (PostgreSQL License)
+
+### Architecture & Limits (`T3`)
+
+Built into core PostgreSQL via `wal_level = logical` and the `pgoutput` plugin, uni-directional `PUBLICATION` / `SUBSCRIPTION` streams decoded row changes (`INSERT`/`UPDATE`/`DELETE`) from one active publisher to one or more writable subscribers (`PA/EL`, `T3` tier):
+
+- **Selective Replication & Zero-Downtime Upgrades:** Supports table subsets, `WHERE` row filters, column lists, and replication across different PostgreSQL major versions (`PG 15 -> 17 -> 18`), unlike block-level physical streaming.
+- **No Automatic DDL & Keyless Rejection:** DDL statements are not replicated automatically; `UPDATE` and `DELETE` on keyless tables fail on the publisher with `SQLSTATE 55000` unless `REPLICA IDENTITY FULL` is configured.
+- **Sequence Trap (`SQLSTATE 23505`):** Sequence state (`nextval()`) does not replicate automatically (`last_value` remains `1|false` on subscribers during `T18`), causing immediate `23505` primary-key collisions after subscriber promotion unless synchronized via `setval()` or UUID/Snowflake keys.
