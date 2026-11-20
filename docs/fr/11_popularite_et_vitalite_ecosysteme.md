@@ -59,11 +59,11 @@ Les 18 dépôts couvrent **trois ordres de grandeur** : étoiles de `26` (`pgq/l
 
 ## 3. Graphiques logarithmiques et Explorateur interactif
 
-Filtrez les 21 entrées, basculez `log10` / linéaire et croisez vitalité Git et débits empiriques via l'[**Explorateur interactif hors-ligne (`dashboard/index.html`)**](../../dashboard/index.html).
+Filtrez les 22 entrées (19 dépôts publics + 3 fermés), basculez `log10` / linéaire et croisez vitalité Git et débits empiriques via l'[**Explorateur interactif hors-ligne (`dashboard/index.html`)**](../../dashboard/index.html).
 
 ### Graphique 08 — Portée communautaire : Étoiles et Forks (`log10`)
 ![Étoiles et Forks Log10 sur l'écosystème PostgreSQL](../../assets/charts/chart_08_popularity_stars_forks_log.png)
-*Compare la notoriété cumulée (`26` à `32 638` étoiles ; `8` à `6 122` forks) sur 18 dépôts face aux moteurs fermés/managés.*
+*Compare la notoriété cumulée (`15` à `32 638` étoiles ; `0` à `6 122` forks) sur 19 dépôts face aux moteurs fermés/managés.*
 
 ### Graphique 09 — Vitalité d'ingénierie : Commits, Vélocité 12m et Contributeurs (`log10`)
 ![Commits totaux, vélocité 12 mois et contributeurs Log10](../../assets/charts/chart_09_popularity_commits_activity_log.png)
@@ -75,7 +75,7 @@ Filtrez les 21 entrées, basculez `log10` / linéaire et croisez vitalité Git e
 
 ```mermaid
 flowchart LR
-    M["Télémétrie GitHub (18 Dépôts + 3 Fermés)"] --> Q1["Moteurs Hyper-Véloces<br/>Cockroach 7 581/an | Yugabyte 5 342/an | PG Core 3 449/an"]
+    M["Télémétrie GitHub (19 Dépôts + 3 Fermés)"] --> Q1["Moteurs Hyper-Véloces<br/>Cockroach 7 581/an | Yugabyte 5 342/an | PG Core 3 449/an"]
     M --> Q2["Spécialistes Dynamiques<br/>PGAdapter 934/an | Suite pgEdge 748/an | SymmetricDS 425/an"]
     M --> Q3["Infra Mature et Stable<br/>Citus 222/an | Patroni 141/an | PgPool-II 140/an"]
     M --> Q4["Maintenance / Inertie<br/>pglogical 15/an | OpenTenBase 14/an | PGQ+Londiste 16/an"]
@@ -94,13 +94,15 @@ flowchart LR
 
 | Niveau | Projets (`#`) | Vélocité 12m | Bus-Factor & Gouvernance | Verdict Production |
 | :---: | :--- | :---: | :--- | :--- |
-| **S — Cœur** | `PostgreSQL Core` (`#1/#15/#16`), `Patroni` (`#15b`) | 141-3 449 | Communauté multi-éditeurs ; licences PostgreSQL / MIT | **Risque minimal.** Socle par défaut pour 80 %+ des OLTP. |
+| **S — Cœur** | `PostgreSQL Core` (`#1/#15/#16/#17`), `Patroni` (`#15b`) | 141-3 449 | Communauté multi-éditeurs ; licences PostgreSQL / MIT | **Risque minimal.** Socle par défaut pour 80 %+ des OLTP. |
 | **A — OSS Actif** | `CockroachDB` (`#6`), `YugabyteDB` (`#5`), `Citus` (`#7`), `pgEdge` (`#2`) | 222-7 581 | Équipes financées (32-1 217 contribs) ; surveiller BSL/AGPL | **Viable.** Auditer licence, roadmap et coût WAN. |
 | **B — Niche** | `SymmetricDS` (`#10`), `PgPool-II` (`#11`) | 140-425 | Mainteneurs dédiés (35-96 contribs) | **Usage ciblé.** Sync hétérogène (`#10`) ou pooling (`#11`). |
-| **C — Fragile** | `pglogical 2` (`#3`), `OpenTenBase` (`#8`), `PGQ`/`Londiste` (`#14b/c`) | 8-15 | Cadence faible ; noyau réduit (5-64 contributeurs) | **Éviter en neuf.** Migrer vers PG 17/18 logique ou Spock. |
+| **C — Fragile / Jeune** | `pglogical 2` (`#3`), `OpenTenBase` (`#8`), `PGQ`/`Londiste` (`#14b/c`), `YT Cluster Lite` (`#18`) | 8-21 | Noyau réduit (2-64 contribs) ; `#18` bus-factor `1` + `ytserv` fermé | **Éviter en cœur neuf.** Migrer l'ancien ; suivre `#18`. |
 | **D — EOL** | `Bucardo 5` (`#9`), `Slony-I` (`#14a`), `RubyRep` (`#14d`) | **0** | Zéro commit 12m ; dépôts `User` (`#14a/d`), bus-factor 1-2 | **Ne pas déployer.** Décommissionner les parcs existants. |
 | **Fermé / Cloud** | `EDB PGD` (`#4`), `Aurora Limitless` (`#12`), `Spanner`/`AlloyDB` (`#13`) | Opaque (934 proxy) | Zéro télémétrie Git moteur ; SLA éditeur et verrouillage | **Audit contractuel.** Évaluer réversibilité, `PGAdapter`, TCO. |
 
+**Nuance vitalité YT Cluster Lite (`#18`) :** [YT Cluster Lite](solutions/yt_cluster_lite.md) (`DBinvent/yt-cluster-lite`, `15` étoiles, `0` fork, `21` commits totaux/`21` sur 12m, `v1.21`) est un dépôt MIT âgé de 7 jours comptant `2` contributeurs (`1` humain + `dependabot`, **bus-factor = 1**) ; le coordinateur multi-maîtres `ytserv` reste fermé sous licence PolyForm Noncommercial/Commerciale.
+
 ---
 
-**Navigation :** [Index](../../README.fr.md) · [Ch. 09 — Méthodologie & Graphiques Log10](09_methodologie_benchmarks_et_graphiques.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](10_comparatif_streaming_logique_multimaster.md) · [English version](../en/11_ecosystem_popularity_and_vitality.md)
+**Navigation :** [Index](../../README.fr.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](10_comparatif_streaming_logique_multimaster.md) · [Ch. 12 — Benchmarks PG 18.6](12_clustering_postgresql_18_et_benchmarks.md) · [English version](../en/11_ecosystem_popularity_and_vitality.md)
