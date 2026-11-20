@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-081 - Add English Architecture Sheet for PG 17 Physical Streaming and Patroni HA (`#15b`) (Issue `#161`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#161` (`docs/issue-161-pg17-streaming-patroni-en`)
+- **Request / Changes / Result**: Created `docs/en/solutions/pg17_physical_streaming_patroni.md` covering `#15b` (`pg17-async-streaming`, `pg17-sync-streaming`, Patroni/etcd/HAProxy) with Mermaid diagram, implementation modes (`async`, `sync` `on`/`remote_write`/`remote_apply`/`off`/`local`, `FIRST 1`/`ANY k`), side-by-side CSV metrics, `F1`/`L1-L8`/`T11-T18` probes, and PoC specs; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-080 - Add French Architecture Sheet for PostgreSQL 17 Standalone (`#15a`) (Issue `#159`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#159` (`docs/issue-159-pg17-standalone-fr`)
 - **Request / Changes / Result**: Created `docs/fr/solutions/pg17_standalone.md` covering `#15a` (`pg17-standalone`) mirroring the English sheet section-for-section with Mermaid diagram, implementation modes, strengths/weaknesses, verbatim CSV metrics, `F1`/`L1-L8`/`T11-T18` probes, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
