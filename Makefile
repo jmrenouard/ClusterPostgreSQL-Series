@@ -72,6 +72,7 @@ test-%: ## Run functional/limit test suite for topology <name> via $(MDB_DIR)
 	@u="$$(echo '$*' | tr '-' '_')"; \
 	if [ -f "$(MDB_DIR)/tests/test_$${u}.sh" ]; then (cd "$(MDB_DIR)" && bash "tests/test_$${u}.sh"); \
 	elif [ -f "scripts/test_$${u}.sh" ]; then bash "scripts/test_$${u}.sh"; \
+	elif [ -f "tests/test_$${u}.py" ]; then python3 -m unittest "tests/test_$${u}.py" -v; \
 	elif [ -f "tests/test_$*.py" ]; then python3 -m unittest "tests/test_$*.py" -v; \
 	else echo "No test runner for '$*'"; exit 1; fi
 

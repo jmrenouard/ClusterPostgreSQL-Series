@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-135 - Harden E2E Tiers 1-4 Validators and Fix Makefile test-% Resolution (Issue `#269`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#269` (`test/issue-269-harden-e2e-and-makefile`)
+- **Request / Changes / Result**: Tightened `tests/test_solution_sheets.py` (`DHDR_RE` valid direction anchor, bracketed node-label inner-quote check + self-tests, strict `ma AND mb` Modes header check) and `tests/test_solution_sheets_parity.py` (unconditional `p99` pipe-table rejection, `[A-H]\d?_[a-z0-9_]+` `REF` row check with `*`/`\`` numeric wrappers, `*`/`\`` wrapper support on `pg17_standalone` `F_wan_netem`); fixed `Makefile:75` to resolve `tests/test_$${u}.py`; verified `make test` (`18/18` OK), `make lint`, `make test-solution-sheets`, and `make test-solution_sheets` in WSL2.
+
 ### ACT-134 - Log RCA-015 for Tier 5 Documentation Drift and E2E Blind Spots (Issue `#267`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#267` (`docs/issue-267-rca-015`)
 - **Request / Changes / Result**: Added `RCA-015` in `docs/RCA_REGISTER.md` (100% 7-bit ASCII English) documenting the Suite E attempted-vs-committed denominator contradiction, cross-chapter precision drift, and Tier 5 E2E test/Makefile blind spots; `make test` (`18/18` OK) and `make lint` verified in WSL2.
