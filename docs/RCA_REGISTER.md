@@ -89,6 +89,13 @@
 - **Fix**: Replaced the erroneous `#16 pg17-logical` anchor values on line 94 of `docs/{en,fr}/solutions/pglogical2.md` with verified `532.38 TPS` (`A`) and `1.68 ms` (`T15`) under `Issue #199` alongside `forward_origins='{all}'` (`L58`) and FR prose alignment (`L24`, `L85`, `L92`). Non-regression rule: cross-check every comparison-table baseline number programmatically against `results/*.csv` before opening any documentation PR.
 - **Result**: `0` unverified anchor metrics across `pglogical2` EN/FR sheets, 100% `results/*.csv` parity, 7-bit ASCII compliance (`ord(c) <= 127`) in governance registers, and `make test` (`13/13` OK) + `make lint` passing on `main`.
 
+### RCA-013 - Sysbench `tx_committed` vs. `tx_failed` Denominator Conflation in `cockroachdb.md`
+- **Date / Action**: `2026-11-20` (`ACT-110`, Issue `#219`)
+- **Symptom**: M3 adversarial verification (`teamwork_challenger_m3_1`) reproduced an arithmetic misstatement on line 71 of `docs/en/solutions/cockroachdb.md` (`685 of 902`) and `docs/fr/solutions/cockroachdb.md` (equivalent `685 / 902`), which implied a `75.9%` abort rate instead of the true `43.2%` (`685 / 1,587`).
+- **Root Cause**: In `scripts/bench_pg_lib.py:225-226` and `results/logs/cockroach.log:184-191`, `sysbench` `transactions` (`902`) records committed transactions (`tx_committed`) separately from `ignored errors` (`685`, captured as `tx_failed`), so total attempted transactions equal `tx_committed + tx_failed = 902 + 685 = 1,587`.
+- **Fix**: Updated line 71 in both `docs/en/solutions/cockroachdb.md` (`685` failed with `902` committed / `1,587` attempted) and `docs/fr/solutions/cockroachdb.md` (matching French wording for `685` failed, `902` committed / `1 587` attempted), and audited all 8 M3 sheets (`citus`, `yugabytedb`, `cockroachdb`, `opentenbase_pgxl` EN/FR) confirming no other sheet conflates `tx_committed` with total attempted transactions.
+- **Result**: Exact parity restored with `results/benchmark_summary.csv` and `results/logs/cockroach.log:184-191`, 149-line EN/FR parity preserved, 7-bit ASCII compliance (`ord(c) <= 127`) verified in governance registers, and `make test` (`13/13` OK) + `make lint` passing.
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters
