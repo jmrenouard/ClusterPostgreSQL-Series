@@ -92,3 +92,20 @@ Organizations migrating from a single primary should adopt a staged progression 
    - If tenant-isolated OLTP scaling is the bottleneck -> shard onto **#7 Citus**.
    - If zero-RPO cross-AZ/region active writes are mandatory -> adopt **#5 YugabyteDB**, **#6 CockroachDB**, or **#4 EDB PGD** with automated `40001` retry middleware.
    - If sub-millisecond regional writes on standard PG 17 are mandatory -> cut over cleanly via logical sync to **#2 pgEdge / Spock v5** with `delta_apply` CRDTs on numeric counters and strict `chrony` alerting.
+
+---
+
+## 6. PostgreSQL 16 -> 17 -> 18.6 Production Target Selection
+
+When greenfield or upgrading teams evaluate **[#17 PostgreSQL 18.6 Native Clustering](solutions/pg18_native_clustering.md)** ([Ch. 12 empirical data](12_postgresql_18_clustering_and_benchmarks.md)), apply these concrete boundaries:
+
+| Production Target | Recommended Stack | Why / Verified Empirical Boundary |
+| :--- | :--- | :--- |
+| **80%+ OLTP HA (`RPO=0` metro, 100% PG parity)** | **#15 Patroni + etcd on PG 18.6 (or PG 17)** | Zero write conflicts; `pg18-sync-streaming` gains `+21.6%` `A_single_rw` (`497.94` vs `409.48 TPS`), `+90.5%` `T11` bulk (`75,629 rows/s`), and default `data_checksums=on` + `io_method=worker` (`-18.5%` cold scans). |
+| **Zero-downtime major upgrades & filtered feeds** | **#17 PG 18.6 Native Logical (`pg18-logical`)** | Default `substream=p` and `publish_generated_columns=stored` lift `E_sysbench_oltp_rw` (`1,027.84 TPS`, `+72.5%`) and `H_append_only` (`3,518.49 TPS`, `+85.1%`). Still run manual `setval()` on cutover (`FOR ALL SEQUENCES` raises `SQLSTATE 42601` until PG 19). |
+| **Disjoint / append-only active-active (`PA/EL`)** | **#17 PG 18.6 Birep (`origin=none`) + `uuidv7()`** | Native RFC 9562 `uuidv7()` eliminates active-active PK collisions (`50/50` converged, `0` `23505`, `2,066.70 TPS` = `3.30x` PG 17) with 7 `confl_*` counters (`+confl_multiple_unique_conflicts`) for conflict alerting. |
+| **Overlapping counters, LWW, Auto-DDL, 3+ mesh** | **#2 pgEdge Spock 5 (`delta_apply`)** or **#4 EDB PGD** | Native PG 18.6 still has no auto-LWW, CRDT, or DDL replication (`pg18-birep` drifted `-338` in `B2` and `-83,252` in `D`). |
+| **Global `RPO=0` ACID, global `UNIQUE`, cross-node FK** | **#5 YugabyteDB** or **#6 CockroachDB** | Native PG 18.6 logical apply still halts on `UNIQUE` `23505` and hits `T13` async FK races (`23503x8`); use Raft consensus with `40001` retry loops. |
+| **Low-TPS reversible zero-drift PG 18 extension** | **[#18 YT Cluster](solutions/yt_cluster_lite.md)** *(lab / niche)* | Fits unmodified PG 18 needing zero-drift active-active (`0` drift via `55409`/`40001`), high local reads (`48.8K`/`165.5K`), and `DROP EXTENSION` reversibility (`T_REVERT`). **Not** for high-TPS OLTP: `20.63`-`41.45 TPS` 2PC write ceiling (`2.25` @ `25ms` WAN, `86 rows/s` bulk), `SAVEPOINT` rollback `0A000`, `cursor-stability`-only self-run Jepsen, closed `ytserv` (PolyForm/Commercial), and `bus factor = 1`. |
+
+**Upgrade Guardrails (`PG 16/17 -> 18.6`):** Mount Docker volumes at `/var/lib/postgresql` (`PGDATA=/var/lib/postgresql/18/docker`), enable checksums before `pg_upgrade` (`pg_checksums --enable`), benchmark `io_method=sync` vs `worker` on pure hot-RAM micro-OLTP (`-10.3%` IPC trade-off), and whitelist `io_uring` in container seccomp before enabling it.
