@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-167 - Link Official dbinvent/yt Docker Hub Image and agent.md Reference in YT Cluster Sheets and READMEs (Issue `#415`)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#415` (`docs/issue-415-yt-cluster-docker-agent-refs`)
+- **Request / Changes / Result**: Added direct links to `https://hub.docker.com/r/dbinvent/yt` and `https://dbinvent.com/agent.md` across `docs/en/solutions/yt_cluster_lite.md`, `docs/fr/solutions/yt_cluster_lite.md`, `README.md`, and `README.fr.md`, explicitly clarifying that `DBinvent/yt-cluster-lite` (MIT) is designed to be embedded and connected to a real `dbinvent/yt` cluster node (matching our live 3-node `dbinvent/yt:1.21.3` PoC); verified `make test` (`21/21` OK), `make lint`, and diff `< 15,000` chars.
+
 ### ACT-166 - Extend Tier 5 Popularity, Vitality and Freshness Parity Tests Across All 38 Sheets and 22 CSV Rows (Issue `#413`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#413` (`test/issue-413-tier5-popularity-parity`)
 - **Request / Changes / Result**: Replaced the partial 4-column popularity loop in `tests/test_solution_sheets_tier5.py` with `test_tier5_popularity_vitality_and_freshness_parity(self)` enforcing Section 6 headings, 8-column headers, `2026-11-20T17:26:02Z` / `archived = false` intro, 3 synthesis bullets, positional sub-cell splitting (`\s+/\s+` on `rw[3..7]`), `N/A` zero-digit proprietary opacity (`edb-pgd`, `aurora-limitless`, `gcp-spanner-alloydb` + `pgadapter`), and dormant grounding across all 19 slugs (38 sheets) and 22 rows of `results/project_popularity.csv`; verified 7-bit ASCII, `make test` (`21/21` OK, `3/3` tier5), `make lint`, `make check-math`, `make check-security`, and diff `< 15,000` chars.

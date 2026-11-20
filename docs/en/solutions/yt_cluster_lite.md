@@ -11,11 +11,11 @@
 | :--- | :--- |
 | **Catalog ID** | `#18` (`YT Cluster & YT Cluster Lite` - DBinvent, formerly YaXAHA) |
 | **Benchmark Topologies** | `yt-cluster` (default `cc=half`, `sc=NO_SC`), `yt-cluster-async` (`cc=nodes>=0`, `sc=NO_SC`) (`results/benchmark_yt_cluster.csv`, 22 rows) |
-| **Engine Version** | `PostgreSQL 18.7 (Debian 18.7-1.pgdg13+5) + yt_cluster 1.21` (`dbinvent/yt:1.21.3`) |
+| **Engine Version** | `PostgreSQL 18.7 (Debian 18.7-1.pgdg13+5) + yt_cluster 1.21` ([`dbinvent/yt:1.21.3`](https://hub.docker.com/r/dbinvent/yt)) |
 | **CAP / PACELC Profile** | `PC/EC` writes (default `cc=half` 2-of-3 sync XA 2PC, `RPO=0`) + `EL` eventual reads (`NO_SC`); `PA/EL` async option (`cc=nodes>=0`) |
 | **Mechanism** | Per-table `yt_synchronize` row triggers + `yt_cluster.c` `XACT_EVENT_PRE_COMMIT` hook -> Unix-socket gRPC -> Rust `ytserv` Leader `checkin` + XA `PREPARE`/`COMMIT PREPARED` (`max_prepared_transactions >= 100`) |
-| **License Split** | **MIT** open core (`DBinvent/yt-cluster-lite`: `ytpgc` extension + Protobuf + single-DB `yt-lite` leaf) vs **PolyForm Noncommercial 1.0.0 / Commercial** closed-source `ytserv` + `ytctl` |
-| **Docker PoC Stack** | `docker-compose-yt-cluster.yml` (3 active-active nodes `yt1`/`yt2`/`yt3`, ports `5491-5493`, `min_cluster_size=2`) |
+| **License Split** | **MIT** embedded core (`DBinvent/yt-cluster-lite`: `ytpgc` extension + Protobuf + single-DB `yt-lite` leaf) vs **PolyForm Noncommercial 1.0.0 / Commercial** closed-source `ytserv` + `ytctl` ([`agent.md`](https://dbinvent.com/agent.md)) |
+| **Docker PoC Stack** | `docker-compose-yt-cluster.yml` (3 active-active [`dbinvent/yt:1.21.3`](https://hub.docker.com/r/dbinvent/yt) nodes `yt1`/`yt2`/`yt3`, ports `5491-5493`, `min_cluster_size=2`) |
 
 ---
 
@@ -27,7 +27,7 @@ $$
 L_{\text{YT-half}} \approx L_{\text{trig}} + \text{RTT}_{\text{leader}} + 2 \cdot L_{\text{2PC-fsync}}, \qquad L_{\text{YT-async}} \approx L_{\text{trig}} + \text{RTT}_{\text{leader}} + L_{\text{disk}}
 $$
 
-- **CRITICAL MIT vs Dual-License Split:** `DBinvent/yt-cluster-lite` (**MIT**) ships only `yt-core-proto`, the `ytpgc` C extension, and `yt-lite` (a single-DB leaf node connecting upstream to `ytserv >= 1.21` over TLS 1.3; rejects multi-DB with `0A000` and **cannot form a standalone peer-to-peer multi-master cluster alone**). The full multi-master `ytserv` + `ytctl` engine (`dbinvent/yt:1.21.3`) is closed-source under **PolyForm Noncommercial 1.0.0** (free for labs/evaluation) and **DBinvent Commercial License**.
+- **CRITICAL MIT vs Dual-License Split:** `DBinvent/yt-cluster-lite` (**MIT**) is designed to be embedded and connected to a real cluster node: it ships `yt-core-proto`, the `ytpgc` C extension, and `yt-lite` (a single-DB leaf node connecting upstream to `ytserv >= 1.21` over TLS 1.3; rejects multi-DB with `0A000` and **cannot form a standalone peer-to-peer multi-master cluster alone**). Building a real cluster requires the full `ytserv` + `ytctl` image ([`dbinvent/yt:1.21.3`](https://hub.docker.com/r/dbinvent/yt), documented in [`dbinvent.com/agent.md`](https://dbinvent.com/agent.md)), which is closed-source under **PolyForm Noncommercial 1.0.0** (free for labs/evaluation) and **DBinvent Commercial License** and is the exact image deployed by our 3-node Docker PoC.
 - **Jepsen Chaos Test Nuance (`https://dbinvent.com/cluster/articles/jepsen`):** **Self-run by DBinvent** (not an independent Jepsen LLC / Kyle Kingsbury audit) on 5-node `1.20.1` (`Jepsen 0.3.14` + Elle), verified against **Elle `cursor-stability` only** (eventually consistent reads allowed, not strict serializability). Initial `1.20.1` failed every run, exposing **51 findings** (**24 severe** incl. dual-leader `#42`, duplicate insert `#1`, surviving failed write `#40`, stuck 2PC locks; **21 warnings**; **6 low**; **0 rated "critical"** under DBinvent's custom rubric). All 51 were reported fixed and retested green (**49/49** passing).
 - **Verified `T_REVERT` Reversibility:** Live testing proved `DROP EXTENSION yt_cluster CASCADE;` on `yt3` removed extension and triggers (`ext=0`, `triggers=0`) while preserving `5/5` committed user rows and accepting plain PostgreSQL writes (`6/6`).
 
