@@ -95,6 +95,18 @@ Instead, each PGD mode maps apples-to-apples onto live-benchmarked baselines in 
 | **Horizontal Sharding** | No (full copy per node) | No (full copy per node) | No (full copy per node) | **Yes (automatic tablet/range sharding)** |
 | **Reference Empirical Anchor** | Not benchmarked (`APP-005`) | `1,837.64 TPS` CRDT (`D`), `646.77 TPS` (`25 ms`) | `875.91 TPS` (`A`), `824.04 TPS` (`25 ms`) | `5.78` / `10.06 TPS` at `25 ms` WAN (`PC/EC`) |
 
+## 6. GitHub Popularity, Git Presence & Maintenance Vitality (`results/project_popularity.csv`)
+
+Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
+
+| Project | Git Presence / Role | Repo (`Account / Repos`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Release / Last Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **EDB Postgres Distributed (PGD/BDR) (#4)** | `No (Proprietary)` -- `Proprietary (Closed Source)` | N/A (Proprietary) | N/A / N/A / N/A | N/A / N/A | N/A / N/A | N/A / Proprietary | N/A / N/A |
+
+- **Maintenance Level:** **Closed / Proprietary** -- Commercial EnterpriseDB binary distribution (`APP-005`) with no public GitHub source repository (`N/A`).
+- **Currency / Freshness:** **Opaque (Vendor-Managed)** -- Last push `N/A`, `N/A` commits/12m, latest release `N/A`.
+- **Operational Manageability:** **Vendor Lock-In** -- Requires paid EDB subscription, private package registries, and vendor-supported lifecycle upgrades.
+
 ---
 
 **Navigation:** [Index](../../../README.md) · [Ch. 03a — Native & Extensions](../03a_solutions_native_and_extensions.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/edb_pgd.md)
