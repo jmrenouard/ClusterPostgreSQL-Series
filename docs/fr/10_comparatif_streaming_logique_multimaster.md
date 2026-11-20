@@ -140,3 +140,11 @@ FROM pg_sequences WHERE schemaname = 'public';
 - **Choisir le Niveau 3 (Logique Natif)** pour **montées de version majeure**, **migrations OS/glibc** ou **flux filtrés** — jamais en HA sans automatisation DDL et `setval()`.
 - **Choisir le Niveau 4 (`pgEdge Spock 5` / `EDB PGD`)** si la **latence locale multi-régions (`PA/EL`)** prime et les compteurs emploient des CRDTs (`spock.delta_apply`).
 - **Choisir le Niveau 5 (`YugabyteDB`, `CockroachDB`, `Citus`)** si **`RPO = 0` global ACID** ou **sharding horizontal multi-To** justifient le coût WAN et les retries `40001`.
+
+---
+
+## 6. Apports de PostgreSQL 18.6 par niveau et vitalité de l'écosystème
+
+- **Niveaux 1 à 4 sous PG 18.6 ([Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)) :** Validé sur `87` lignes de benchmarks ([`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv)) et `5 x 26` sondes ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv)), PG 18.6 apporte `data_checksums=on`, l'AIO `io_method=worker` (`-18,5 %` sur scan froid), `substream=p`, `publish_generated_columns=stored`, 7 compteurs `confl_*` (+`confl_multiple_unique_conflicts`) et `uuidv7()` natif (`pg18-birep` `H_append_only` **`2 066,70 TPS`**, `3,30x` vs PG 17 ; `pg18-logical` **`3 518,49 TPS`**, `+85,1 %`).
+- **Frontières inchangées :** `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` lèvent encore **`SQLSTATE 42601`** en PG 18.6 (reporté PG 19) ; le Niveau 3 exige toujours `setval()`, les écritures chevauchantes de Niveau 4 exigent Spock/PGD CRDT, et l'ACID `RPO=0` global reste au Niveau 5.
+- **Vitalité et graphiques :** Croisez le *bus-factor* et la vélocité 12m au [Ch. 11](11_popularite_et_vitalite_ecosysteme.md) et dans [`chart_08`](../../assets/charts/chart_08_popularity_stars_forks_log.png) / [`chart_09`](../../assets/charts/chart_09_popularity_commits_activity_log.png) / [`chart_10`](../../assets/charts/chart_10_pg18_vs_pg17_log.png).

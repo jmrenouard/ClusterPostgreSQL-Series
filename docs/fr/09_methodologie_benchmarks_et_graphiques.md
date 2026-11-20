@@ -113,3 +113,11 @@ Explorez les 10 topologies et 187 lignes — avec **bascule `log10` (défaut) / 
 ### Graphique 07 — Intégrité des données vs Débit (Suite D Lignes Chaudes)
 ![Intégrité vs Débit Suite D](../../assets/charts/chart_07_integrity_vs_throughput.png)
 *Met en regard débit Suite D et `balance_drift` absolu : pertes `-531 620` (`bucardo`), `-278 698` (`pgedge` LWW) et `-71 063` (`pg-birep`) face à **`0` dérive** sur `pgedge-delta-apply` (`1 837,64 TPS`), `pg17-async`/`logical` (`2 081`/`2 387`), `citus`, `yugabyte` et `cockroach`.*
+
+---
+
+## 6. Extensions V3 : Télémétrie Écosystème (`chart_08`, `chart_09`) et PostgreSQL 18.6 (`chart_10`)
+
+L'extension V3 ajoute deux jeux de données modulaires sous le même standard logarithmique `log10` :
+- **Popularité et vitalité ([Ch. 11](11_popularite_et_vitalite_ecosysteme.md)) :** Télémétrie GitHub REST/GraphQL (`21` lignes dans [`results/project_popularity.csv`](../../results/project_popularity.csv), couvrant `3+` décades) illustrée par [`chart_08_popularity_stars_forks_log.png`](../../assets/charts/chart_08_popularity_stars_forks_log.png) et [`chart_09_popularity_commits_activity_log.png`](../../assets/charts/chart_09_popularity_commits_activity_log.png).
+- **Benchmarks générationnels PostgreSQL 18.6 ([Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)) :** **87 mesures séquentielles** sur les 5 piles natives PG 18.6 ([`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv)) et **5 x 26 sondes** ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv)) à `PG_SCALE=2` avec clés `uuidv7()` sur `pg18-birep`, comparées à PG 17.11 dans [`chart_10_pg18_vs_pg17_log.png`](../../assets/charts/chart_10_pg18_vs_pg17_log.png) et [`dashboard/index.html`](../../dashboard/index.html).
