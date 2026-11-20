@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-136 - Add Tier 5 Adversarial E2E Suite for README Catalog, 4-CSV Row Parity, and EN/FR Tables (Issue `#271`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#271` (`test/issue-271-tier5-e2e-suite`)
+- **Request / Changes / Result**: Added `tests/test_solution_sheets_tier5.py` (`10,815` bytes LF, pure 7-bit ASCII, `CLUSTER_PG_REPO_ROOT`-aware with zero duplicate `TestCase` discovery) verifying the 17-row 4-column Solutions Catalogs in `README.md` / `README.fr.md`, headline CSV numbers across `README*` / `06*`, row-scoped metrics across all 4 benchmark CSVs (`187` rows), `L1-L8`/`T11-T18` matrix metrics (`T11` `rows/s`, `T15` `p50/p95/max`), and EN/FR table shape parity across all 17 pairs; `make test` (`20/20` OK), `make lint`, and `make test-solution-sheets-tier5` verified in WSL2.
+
 ### ACT-135 - Harden E2E Tiers 1-4 Validators and Fix Makefile test-% Resolution (Issue `#269`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#269` (`test/issue-269-harden-e2e-and-makefile`)
 - **Request / Changes / Result**: Tightened `tests/test_solution_sheets.py` (`DHDR_RE` valid direction anchor, bracketed node-label inner-quote check + self-tests, strict `ma AND mb` Modes header check) and `tests/test_solution_sheets_parity.py` (unconditional `p99` pipe-table rejection, `[A-H]\d?_[a-z0-9_]+` `REF` row check with `*`/`\`` numeric wrappers, `*`/`\`` wrapper support on `pg17_standalone` `F_wan_netem`); fixed `Makefile:75` to resolve `tests/test_$${u}.py`; verified `make test` (`18/18` OK), `make lint`, `make test-solution-sheets`, and `make test-solution_sheets` in WSL2.
