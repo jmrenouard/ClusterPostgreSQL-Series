@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-080 - Add French Architecture Sheet for PostgreSQL 17 Standalone (`#15a`) (Issue `#159`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#159` (`docs/issue-159-pg17-standalone-fr`)
+- **Request / Changes / Result**: Created `docs/fr/solutions/pg17_standalone.md` covering `#15a` (`pg17-standalone`) mirroring the English sheet section-for-section with Mermaid diagram, implementation modes, strengths/weaknesses, verbatim CSV metrics, `F1`/`L1-L8`/`T11-T18` probes, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-079 - Add English Architecture Sheet for PostgreSQL 17 Standalone (`#15a`) (Issue `#157`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#157` (`docs/issue-157-pg17-standalone-en`)
 - **Request / Changes / Result**: Created `docs/en/solutions/pg17_standalone.md` covering `#15a` (`pg17-standalone`) with Mermaid architecture diagram, `synchronous_commit`/`wal_sync_method` implementation modes table, strengths/weaknesses, verbatim CSV benchmark metrics (`A`–`E`, `E2`–`E4`, `H`, `G_conc_c1..c32`), `F1`/`L1–L8`/`T11–T18` probes, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
