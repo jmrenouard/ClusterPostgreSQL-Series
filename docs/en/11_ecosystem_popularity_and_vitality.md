@@ -59,11 +59,11 @@ Live telemetry spans **three orders of magnitude**: Stars run from `26` (`pgq/lo
 
 ## 3. Logarithmic Charts & Interactive Explorer
 
-Filter all 21 entries, toggle `log10` vs. linear axes, and cross-reference ecosystem vitality with empirical TPS/latency in the offline [**Interactive Benchmark Explorer (`dashboard/index.html`)**](../../dashboard/index.html).
+Filter all 22 entries (19 public GitHub repos + 3 closed), toggle `log10` vs. linear axes, and cross-reference ecosystem vitality with empirical TPS/latency in the offline [**Interactive Benchmark Explorer (`dashboard/index.html`)**](../../dashboard/index.html).
 
 ### Chart 08 — Community Reach: Stars & Forks (`log10`)
 ![Log10 Stars and Forks Across PostgreSQL Solutions](../../assets/charts/chart_08_popularity_stars_forks_log.png)
-*Contrasts cumulative reach (`26` to `32,638` stars; `8` to `6,122` forks) across 18 GitHub repos beside proprietary/managed engines.*
+*Contrasts cumulative reach (`15` to `32,638` stars; `0` to `6,122` forks) across 19 GitHub repos beside proprietary/managed engines.*
 
 ### Chart 09 — Engineering Vitality: Commits, 12m Velocity & Contributors (`log10`)
 ![Log10 Total Commits, 12m Velocity and Contributors](../../assets/charts/chart_09_popularity_commits_activity_log.png)
@@ -75,7 +75,7 @@ Filter all 21 entries, toggle `log10` vs. linear axes, and cross-reference ecosy
 
 ```mermaid
 flowchart LR
-    M["Live GitHub Telemetry (18 Repos + 3 Closed)"] --> Q1["Hyper-Velocity Engines<br/>Cockroach 7,581/yr | Yugabyte 5,342/yr | PG Core 3,449/yr"]
+    M["Live GitHub Telemetry (19 Repos + 3 Closed)"] --> Q1["Hyper-Velocity Engines<br/>Cockroach 7,581/yr | Yugabyte 5,342/yr | PG Core 3,449/yr"]
     M --> Q2["High-Momentum Specialists<br/>PGAdapter 934/yr | pgEdge Suite 748/yr | SymmetricDS 425/yr"]
     M --> Q3["Mature Steady Infra<br/>Citus 222/yr | Patroni 141/yr | PgPool-II 140/yr"]
     M --> Q4["Maintenance / Star Inertia<br/>pglogical 15/yr | OpenTenBase 14/yr | PGQ+Londiste 16/yr"]
@@ -94,13 +94,15 @@ flowchart LR
 
 | Tier | Projects (`#`) | 12m Velocity | Bus Factor & Governance | Production Verdict |
 | :---: | :--- | :---: | :--- | :--- |
-| **S — Core** | `PostgreSQL Core` (`#1/#15/#16`), `Patroni` (`#15b`) | 141-3,449 | Multi-vendor community; PostgreSQL / MIT licenses | **Lowest risk.** Default for 80%+ of OLTP clusters. |
+| **S — Core** | `PostgreSQL Core` (`#1/#15/#16/#17`), `Patroni` (`#15b`) | 141-3,449 | Multi-vendor community; PostgreSQL / MIT licenses | **Lowest risk.** Default for 80%+ of OLTP clusters. |
 | **A — Active OSS** | `CockroachDB` (`#6`), `YugabyteDB` (`#5`), `Citus` (`#7`), `pgEdge` (`#2`) | 222-7,581 | Funded teams (32-1,217 contribs); watch BSL/AGPL | **Production-viable.** Audit license and WAN limits. |
 | **B — Niche** | `SymmetricDS` (`#10`), `PgPool-II` (`#11`) | 140-425 | Dedicated maintainers (35-96 contribs) | **Targeted use.** Heterogeneous sync (`#10`) or pooling (`#11`). |
-| **C — Fragile** | `pglogical 2` (`#3`), `OpenTenBase` (`#8`), `PGQ`/`Londiste` (`#14b/c`) | 8-15 | Minimal cadence; small core (5-64 contribs) | **Avoid greenfield.** Migrate to PG 17/18 logical or Spock. |
+| **C — Fragile / Young** | `pglogical 2` (`#3`), `OpenTenBase` (`#8`), `PGQ`/`Londiste` (`#14b/c`), `YT Cluster Lite` (`#18`) | 8-21 | Small core (2-64 contribs); `#18` bus-factor `1` + closed `ytserv` | **Avoid greenfield core.** Migrate legacy; track `#18` maturity. |
 | **D — EOL** | `Bucardo 5` (`#9`), `Slony-I` (`#14a`), `RubyRep` (`#14d`) | **0** | Zero 12m commits; `User` repos (`#14a/d`), bus factor 1-2 | **Do not deploy.** Decommission legacy estates. |
 | **Closed / Cloud** | `EDB PGD` (`#4`), `Aurora Limitless` (`#12`), `Spanner`/`AlloyDB` (`#13`) | Opaque (934 proxy) | Zero engine Git telemetry; commercial SLA & lock-in | **Contract audit.** Assess exit cost, `PGAdapter`, TCO. |
 
+**YT Cluster Lite (`#18`) Vitality Nuance:** [YT Cluster Lite](solutions/yt_cluster_lite.md) (`DBinvent/yt-cluster-lite`, `15` stars, `0` forks, `21` total/`21` 12m commits, `v1.21`) is a 7-day-old MIT repo with `2` contributors (`1` human + `dependabot`, **bus factor = 1**); its full multi-master `ytserv` coordinator remains closed under PolyForm Noncommercial/Commercial licensing.
+
 ---
 
-**Navigation:** [Index](../../README.md) · [Ch. 09 — Benchmarks & Log10 Charts](09_benchmarks_methodology_and_charts.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](10_streaming_vs_logical_vs_multimaster.md) · [Version française](../fr/11_popularite_et_vitalite_ecosysteme.md)
+**Navigation:** [Index](../../README.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](10_streaming_vs_logical_vs_multimaster.md) · [Ch. 12 - PG 18.6 Benchmarks](12_postgresql_18_clustering_and_benchmarks.md) · [Version française](../fr/11_popularite_et_vitalite_ecosysteme.md)
