@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-103 - Add French Architecture Sheet for Citus (#7) (Issue `#205`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#205` (`docs/issue-205-citus-fr`)
+- **Request / Changes / Result**: Created `docs/fr/solutions/citus.md` mirroring the English sheet section-for-section (`#7`, `T5`, `citus` 14.2.0 on PG 17.10, 143 lines) with French Mermaid diagram, implementation modes, strengths/weaknesses, all 19 CSV rows, `F1`/`L1-L8`/`T11-T18` probes (`0A000;40001;08006`), Ch. 03b footer links, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-102 - Add English Architecture Sheet for Citus (#7) (Issue `#203`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#203` (`docs/issue-203-citus-en`)
 - **Request / Changes / Result**: Created `docs/en/solutions/citus.md` (`#7`, `T5`, `citus` 14.2.0 on PG 17.10) with Mermaid coordinator/worker architecture diagram, implementation modes (Hash 1PC/2PC, Reference, Local, Citus MX, Patroni HA), strengths/weaknesses, all 19 CSV rows, `F1`/`L1-L8`/`T11-T18` probes (`0A000;40001;08006`), Ch. 03b footer links, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
