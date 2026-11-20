@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-104 - Add English Architecture Sheet for YugabyteDB (#5) (Issue `#207`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#207` (`docs/issue-207-yugabytedb-en`)
+- **Request / Changes / Result**: Created `docs/en/solutions/yugabytedb.md` (`#5`, `T5`, `yugabyte` 2026.1.3.0-b100 / YSQL 15.12) with Mermaid 3-node Raft diagram, implementation modes (`READ COMMITTED` Wait-on-Conflict vs `RR`/`SSI`, colocation, `CACHE 100` vs `1`, xCluster, Geo-Partitioning), strengths/weaknesses, all 19 CSV rows (`E3` `tx_failed=1`), `F1`/`L1-L8`/`T11-T18` probes (`40001;23505;0A000`, `T18` `next_id=101`), Ch. 03b links, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-103 - Add French Architecture Sheet for Citus (#7) (Issue `#205`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#205` (`docs/issue-205-citus-fr`)
 - **Request / Changes / Result**: Created `docs/fr/solutions/citus.md` mirroring the English sheet section-for-section (`#7`, `T5`, `citus` 14.2.0 on PG 17.10, 143 lines) with French Mermaid diagram, implementation modes, strengths/weaknesses, all 19 CSV rows, `F1`/`L1-L8`/`T11-T18` probes (`0A000;40001;08006`), Ch. 03b footer links, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
