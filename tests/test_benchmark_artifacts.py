@@ -68,7 +68,7 @@ class TestBenchmarkArtifacts(unittest.TestCase):
     """Verify LightPath SVG branding, 7 Log10 PNG charts, offline dashboard, and CSVs."""
 
     def test_lightpath_svg_logos(self) -> None:
-        """Validate official dark and light LightPath SVG logos exist and parse."""
+        """Validate official dark and light LightPath supporter SVG logos exist and parse."""
         for fname in ("lightpath-logo-dark.svg", "lightpath-logo-light.svg"):
             path = ASSETS / fname
             self.assertTrue(path.is_file(), f"Missing logo: {path.relative_to(ROOT)}")
@@ -77,6 +77,24 @@ class TestBenchmarkArtifacts(unittest.TestCase):
             self.assertLess(size, 12000, f"Logo exceeds 12 KB cap: {fname} ({size} B)")
             root = ET.fromstring(path.read_text(encoding="utf-8"))
             self.assertTrue(root.tag.endswith("svg"), f"Invalid SVG root in {fname}")
+
+    def test_project_logo_and_supporter_positioning(self) -> None:
+        """Verify dedicated ClusterPostgreSQL-Series PNG logos and LightPath supporter labels."""
+        png_magic = b"\x89PNG\r\n\x1a\n"
+        for fname in ("clusterpostgresql-series-logo.png", "clusterpostgresql-series-icon.png"):
+            path = ASSETS / fname
+            self.assertTrue(path.is_file(), f"Missing project logo: {path.relative_to(ROOT)}")
+            raw = path.read_bytes()
+            self.assertTrue(raw.startswith(png_magic), f"Invalid PNG header: {fname}")
+            self.assertGreater(len(raw), 10000, f"Project logo unexpectedly small: {fname}")
+
+        readme_en = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("assets/clusterpostgresql-series-logo.png", readme_en[:400])
+        self.assertIn("Supported by", readme_en)
+
+        readme_fr = (ROOT / "README.fr.md").read_text(encoding="utf-8")
+        self.assertIn("assets/clusterpostgresql-series-logo.png", readme_fr[:400])
+        self.assertIn("Soutenu par", readme_fr)
 
     def test_seven_png_charts_valid(self) -> None:
         """Verify all 7 generated PNG charts exist with valid PNG headers."""
@@ -96,7 +114,10 @@ class TestBenchmarkArtifacts(unittest.TestCase):
 
         html = (DASH / "index.html").read_text(encoding="utf-8")
         for token in (
+            "../assets/clusterpostgresql-series-icon.png",
             "../assets/lightpath-logo-dark.svg",
+            "Supported by",
+            "Soutenu par",
             'data-scale="log"',
             'data-scale="linear"',
             'id="topo-pills"',
