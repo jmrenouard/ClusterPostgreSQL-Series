@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-092 - Add English Architecture Sheet for pgEdge and Spock v5 (`#2`) (Issue `#183`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#183` (`docs/issue-183-pgedge-spock-en`)
+- **Request / Changes / Result**: Created `docs/en/solutions/pgedge_spock.md` covering `#2` (`T4`, `pgedge` LWW and `pgedge-delta-apply` CRDT) with Mermaid 3-node mesh diagram, implementation modes, strengths/weaknesses, all 19 `pgedge` + `pgedge-delta-apply` CSV rows, `F1`/`L1-L8`/`T11-T18` probes (`23505;54000`), and Docker/HAProxy PoC spec; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-091 - Remediate pg17_bidirectional_logical EN/FR Sheets and Log RCA-011 (Issue `#181`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#181` (`docs/issue-181-m1-r2-birep-rca011`)
 - **Request / Changes / Result**: Remediated `docs/{en,fr}/solutions/pg17_bidirectional_logical.md` (`../../../README*.md` footers, L57/L58/L139 `scripts/pg_birep/setup_birep.sh`, L79 p99 latency wording) and added `RCA-011` in `docs/RCA_REGISTER.md` covering M1 footer depth, Table D script path scope, Table B Status omission, and 7-bit ASCII governance gap; `make test` (`13/13` OK) and `make lint` verified.
