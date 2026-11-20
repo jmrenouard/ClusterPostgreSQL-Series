@@ -26,7 +26,7 @@ REF = tuple(k for k, v in SPEC.items() if not v)
 NAV_03A = frozenset(SLUGS[:5] + ("pglogical2", "edb_pgd"))
 
 FENCE_RE = rc(r"^\s*(```+|~~~+)(.*)$")
-DHDR_RE = rc(r"^(?:(?:flowchart|graph)(?:\s+(?:TB|TD|BT|RL|LR))?|sequenceDiagram|stateDiagram(?:-v2)?|classDiagram|erDiagram)\b")
+DHDR_RE = rc(r"^(?:(?:flowchart|graph)(?:\s+(?:TB|TD|BT|RL|LR))?|sequenceDiagram|stateDiagram(?:-v2)?|classDiagram|erDiagram)(?:\s*%%.*)?$")
 ERE = {
     "f": rc(r"<-+>|--+>|---|-\.+->|-\.-|==+>|===|--x|--o|o--o|x--x"),
     "s": rc(r"<<-->>|<<->>|-->>|->>|-->|->|--x|-x|--\)|-\)"),
@@ -124,6 +124,9 @@ def validate_mermaid_markdown(text: str, label: str) -> tuple[int, list[str]]:
                     e.append(f"{bl}: unclosed pipe")
                     continue
                 s = ERE["f"].sub(" ", re.sub(r"--\s+.+?\s+-->|-\.\s+.+?\s+\.->|==\s+.+?\s+==>|\|[^|]*\|", " ", s))
+                if any(m.group(1).strip(" /\\(){}[]") != '"_"' for m in re.finditer(r'(?:\[|\(|\{)([^\]\)\}\n]*"_"[^\]\)\}\n]*)(?:\]|\)|\})', s)):
+                    e.append(f"{bl}: nested quotes")
+                    continue
                 s = re.sub(r"\[[/\\]|[/\\]\]", lambda m: m.group(0).strip("/\\"), re.sub(r"\b([A-Za-z0-9_-]+)>([^\]\n]+)\]", r"\1[\2]", s))
                 if ">" in s:
                     e.append(f"{bl}: unclosed flag")
@@ -204,6 +207,8 @@ class TestTier1And2SolutionSheets(unittest.TestCase):
             "flowchart LR\nsubgraph X\nA-->B\n```", "flowchart LR\nend\nA-->B\n```",
             "flowchart LR\nA[1]\nB[2]\n```", "flowchart LR\nA>Flag --> B\n```",
             'flowchart LR\nA["Hello "World""] --> B\n```',
+            "flowchart XX\nA[1]-->B[2]\n```",
+            'flowchart LR\nA[bad "q" txt] --> B\n```',
         ):
             self.assertTrue(validate_mermaid_markdown("```mermaid\n" + bad, "bad.md")[1], bad)
 
@@ -223,11 +228,11 @@ class TestTier1And2SolutionSheets(unittest.TestCase):
                 e.append(f"{rel}: no mermaid")
             e.extend(me)
             pr, tb = extract_sections_and_tables(txt)
-            dp, pp, mh, sa, sb = lre[lg]
+            dp, pp, _, sa, sb = lre[lg]
             dh, ph = [h for h in pr if rs(dp, h, re.I)], [h for h in pr if rs(pp, h, re.I)]
             if not (dh and ph) or sum(len(pr[h].strip()) for h in dict.fromkeys(dh + ph)) < 80:
                 e.append(f"{rel}: short desc/principles")
-            if not any(len(r) >= 2 and ((rs(ma, hs, re.I) or rs(mb, hs, re.I)) if rs(mh, h, re.I) else (rs(ma, hs, re.I) and rs(mb, hs, re.I))) for h, c, r in tb for hs in (" ".join(c),)):
+            if not any(len(r) >= 2 and rs(ma, hs, re.I) and rs(mb, hs, re.I) for _, c, r in tb for hs in (" ".join(c),)):
                 e.append(f"{rel}: Modes table")
             if not any(len(r) >= 2 and rs(sa, s := f"{h} {' '.join(c)}", re.I) and rs(sb, s, re.I) for h, c, r in tb):
                 e.append(f"{rel}: SW table")

@@ -111,17 +111,17 @@ class TestTier3And4ParityAndNavigation(unittest.TestCase):
                     for ln in txt.splitlines():
                         if rs(r"F_wan_netem", ln, re.I):
                             tb = ln.lstrip().startswith("|")
-                            if (tb and rs(r"\|\s*\d+[.,]\d+(?:\s*TPS)?\s*\|", ln, re.I)) or (not tb and not na.search(ln) and rs(r"\d+[.,]\d+\s*TPS", ln, re.I)):
+                            if (tb and rs(r"\|\s*[*`]*\d+[.,]\d+(?:\s*TPS)?[*`]*\s*\|", ln, re.I)) or (not tb and not na.search(ln) and rs(r"\d+[.,]\d+\s*TPS", ln, re.I)):
                                 e.append(f"{rel}: F_wan_netem TPS")
         neg = rc(r"not\s+measured|unmeasured|not\s+recorded|non\s+mesur|pas\s+mesur|absent|n/a|never", re.I)
         p99 = rc(r"\b(?:lat_)?p99(?:_ms)?\b", re.I)
         p99n = rc(r"(?:lat_)?p99(?:_ms)?[^.\n;|]{0,20}?\d+(?:[.,]\d+)?\s*ms|(?:lat_)?p99(?:_ms)?\s*[:=]\s*\d", re.I)
         for _, _, p, txt in BASE.iter_sheets():
             rel = BASE.rel_path(p)
-            e.extend(f"{rel}:{i}: bad p99" for i, ln in enumerate(txt.splitlines(), 1) if p99.search(ln) and (not neg.search(ln) or p99n.search(ln)))
+            e.extend(f"{rel}:{i}: bad p99" for i, ln in enumerate(txt.splitlines(), 1) if p99.search(ln) and (ln.lstrip().startswith("|") or not neg.search(ln) or p99n.search(ln)))
         hdr = rc(r"not\s+(?:live[- ])?benchmarked|non\s+benchmark|architectural\s+reference|r\u00e9f\u00e9rence\s+architecturale|\bN/A\b", re.I)
         bdy = {"en": rc(r"not\s+(?:live[- ])?benchmarked|unbenchmarked|architectural\s+reference|excluded\s+from\s+(?:live\s+)?benchmarks?", re.I), "fr": rc(r"non\s+benchmark|pas\s+benchmark|r\u00e9f\u00e9rence\s+architecturale|hors\s+benchmark|exclusion\s+du\s+benchmark", re.I)}
-        rst, rrw, oth = rc(r"\b(?:PASS_CONVERGED|PASS_SINGLE_PRIMARY|PASS_NETEM(?:_\w+)?)\b"), rc(r"^\s*\|?\s*`?(?:A_single_rw|B1_disjoint_rw|B2_overlap_rw)`?\s*\|"), rc(r"\b(?:pg17-|pg-birep|pgedge|bucardo|citus|yugabyte|cockroach|standalone|patroni)\b", re.I)
+        rst, rrw, oth = rc(r"\b(?:PASS_CONVERGED|PASS_SINGLE_PRIMARY|PASS_NETEM(?:_\w+)?)\b"), rc(r"^\s*\|?\s*`?(?:[A-H]\d?_[a-z0-9_]+)`?\s*\|"), rc(r"\b(?:pg17-|pg-birep|pgedge|bucardo|citus|yugabyte|cockroach|standalone|patroni)\b", re.I)
         for slug in REF:
             for lg, d in (("en", SOL_EN), ("fr", SOL_FR)):
                 p = d / f"{slug}.md"
@@ -132,7 +132,7 @@ class TestTier3And4ParityAndNavigation(unittest.TestCase):
                 txt = p.read_text(encoding="utf-8")
                 if not hdr.search("\n".join(txt.splitlines()[:45])) or not bdy[lg].search(txt):
                     e.append(f"{rel}: no ref disclaimer")
-                if any(rst.search(ln) or (rrw.search(ln) and rs(r"\|\s*\d+[.,]\d+", ln) and not oth.search(ln)) for ln in txt.splitlines()):
+                if any(rst.search(ln) or (rrw.search(ln) and rs(r"\|\s*[*`]*\d+[.,]\d+", ln) and not oth.search(ln)) for ln in txt.splitlines()):
                     e.append(f"{rel}: REF claims results")
         self.assertEqual(e, [], "\n".join(e))
 
