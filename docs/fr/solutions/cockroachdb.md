@@ -19,9 +19,9 @@
 
 ## 1. Description de la technologie et rôle
 
-**CockroachDB** est une base SQL distribuée écrite en Go implémentant le protocole filaire PostgreSQL v3 (`pgwire` `13.0.0`) au-dessus de **Pebble** (moteur LSM ordonné) et du consensus **Multi-Raft** par *range* de `64 MiB` (`RF = 3`). Chaque range élit un **Leaseholder** servant les lectures cohérentes localement sans tour disque Raft tout en répliquant les écritures sur le quorum.
+**CockroachDB** est une base SQL distribuée en Go exposant `pgwire` `13.0.0` sur **Pebble** (LSM ordonné) et **Multi-Raft** par *range* de `64 MiB` (`RF = 3`). Chaque *Leaseholder* sert les lectures localement sans tour Raft et réplique les écritures sur le quorum.
 
-Contrairement à `#5 YugabyteDB` (fork C PG 15 avec `READ COMMITTED` pessimiste par défaut), CockroachDB n'est **pas** un fork PostgreSQL : il impose par défaut l'isolation stricte **`SERIALIZABLE`** optimiste MVCC, ne supporte aucune extension C PostgreSQL et exige des boucles de reprise applicatives sur `SQLSTATE 40001`.
+Contrairement à `#5 YugabyteDB` (fork C PG 15), CockroachDB n'est **pas** un fork PostgreSQL : il impose **`SERIALIZABLE`** optimiste MVCC par défaut, exclut toute extension C PG et exige des reprises applicatives `SQLSTATE 40001`.
 
 ---
 
@@ -45,7 +45,7 @@ Les tirs multi-écrivains (`B1`–`D`, `H`) sollicitent `crdb_node1` et `crdb_no
 
 ## 3. Principes de fonctionnement et modes d'implémentation
 
-1. **Ranges Multi-Raft, Leaseholders & commits parallèles :** Les ranges contigus (`64 MiB`) répliquent par Raft (`RF = 3`) avec horloges HLC. Les écritures posent les intentions MVCC en parallèle de la réplication Raft, économisant un RTT face au 2PC séquentiel.
+1. **Ranges Multi-Raft & commits parallèles :** Les ranges (`64 MiB`) répliquent par Raft (`RF = 3`) avec HLC, posant les intentions MVCC en parallèle du quorum pour économiser un RTT face au 2PC séquentiel.
 2. **Modèle de latence de commit :**
 
 $$
@@ -143,6 +143,18 @@ Tests à `pg_scale = 2`. Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` s
 | **Nœuds & Ports** | `crdb_node1` (`127.0.0.1:15481:26257`, UI `18081:8080`), `crdb_node2` (`15482:26257`), `crdb_node3` (`15483:26257`) |
 | **Image & Ressources** | `cockroachdb/cockroach:v24.3.0`, `mem_limit: 1280m`, `--cache=256MiB`, `--max-sql-memory=256MiB`, pont `crdb_net` |
 | **Options & Setup** | `start --insecure --join=crdb_node1..3:26257`, `cockroach init`, `SHOW ZONE CONFIGURATION` (`num_replicas=3`), `hid INT8 DEFAULT unique_rowid() PRIMARY KEY` sur `pgbench_history`. |
+
+## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
+
+Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
+
+| Projet | Présence / Rôle Git | Dépôt (`Compte / Dépôts`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Tag / Dernier Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **CockroachDB (#6)** | `Yes` -- `Primary` | [`cockroachdb/cockroach`](https://github.com/cockroachdb/cockroach) (`Org / 227`) | 32639 / 4240 / 664 | 118999 / 7574 | 1123 / 8029 | Go / `NOASSERTION` | `v25.2.29` / `2026-11-18T18:29:46Z` |
+
+- **Niveau de maintenance :** **Niveau A (OSS Actif)** -- `cockroachdb/cockroach` totalise `7 574` commits/12m (`118 999` total, `1 123` contributeurs, `32 639` stars, `8 029` issues).
+- **Fraîcheur / Actualité :** **À jour -- Vélocité élevée** -- Dernier push `2026-11-18T18:29:46Z`, `7 574` commits/12m, dernière version `v25.2.29`.
+- **Maintenabilité opérationnelle :** **Modéré** -- Forte vélocité Go (`BSL 1.1` ; SPDX `NOASSERTION`) ; impose des reprises `40001` et exclut les extensions C PG.
 
 ---
 

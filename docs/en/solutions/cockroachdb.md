@@ -144,6 +144,18 @@ Ran at `pg_scale = 2`. Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` are 
 | **Image & Resources** | `cockroachdb/cockroach:v24.3.0`, `mem_limit: 1280m`, `--cache=256MiB`, `--max-sql-memory=256MiB`, bridge `crdb_net` |
 | **Key Flags & Setup** | `start --insecure --join=crdb_node1..3:26257`, `cockroach init`, `SHOW ZONE CONFIGURATION` (`num_replicas=3`), `hid INT8 DEFAULT unique_rowid() PRIMARY KEY` on `pgbench_history`. |
 
+## 6. GitHub Popularity, Git Presence & Maintenance Vitality (`results/project_popularity.csv`)
+
+Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
+
+| Project | Git Presence / Role | Repo (`Account / Repos`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Release / Last Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **CockroachDB (#6)** | `Yes` -- `Primary` | [`cockroachdb/cockroach`](https://github.com/cockroachdb/cockroach) (`Org / 227`) | 32639 / 4240 / 664 | 118999 / 7574 | 1123 / 8029 | Go / `NOASSERTION` | `v25.2.29` / `2026-11-18T18:29:46Z` |
+
+- **Maintenance Level:** **Tier A (Active OSS)** -- `cockroachdb/cockroach` logs `7,574` commits/12m (`118,999` total, `1,123` contributors, `32,639` stars, `8,029` open issues).
+- **Currency / Freshness:** **Current -- High Velocity** -- Last push `2026-11-18T18:29:46Z`, `7,574` commits/12m, latest release `v25.2.29`.
+- **Operational Manageability:** **Moderate** -- High Go engineering velocity (`BSL 1.1`; `NOASSERTION` SPDX); requires `40001` retry logic and lacks PG C extensions.
+
 ---
 
 **Navigation:** [Index](../../../README.md) · [Ch. 03b — Distributed, Triggers & Cloud](../03b_solutions_distributed_triggers_cloud.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/cockroachdb.md)

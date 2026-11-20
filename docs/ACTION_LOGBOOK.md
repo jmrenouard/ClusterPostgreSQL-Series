@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-156 - Compact FR and Enrich CockroachDB (#6) EN/FR Sheets With Popularity Telemetry (Issue `#393`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#393` (`docs/issue-393-cockroachdb-popularity`)
+- **Request / Changes / Result**: Compacted 3 non-numeric FR prose lines (`L22`, `L24`, `L48`) in `docs/fr/solutions/cockroachdb.md` (`13,587` B / `161` L) and appended standardized Section 6 (`cockroachdb` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`) to `docs/en/solutions/cockroachdb.md` (`13,606` B / `161` L) and `docs/fr/solutions/cockroachdb.md`, plus `docs/ACTION_LOGBOOK.md`; verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
+
 ### ACT-155 - Compact and Enrich Citus (#7) EN/FR Sheets With Popularity Telemetry (Issue `#391`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#391` (`docs/issue-391-citus-popularity`)
 - **Request / Changes / Result**: Split M2 PR 3 into PR 3a (`citus`) and PR 3b (`cockroachdb`) to stay under the `< 15,000`-char diff limit; compacted 4 non-numeric prose lines (`L22`, `L24`, `L45`, `L52`) and added standardized Section 6 (`citus` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`) to `docs/en/solutions/citus.md` (`13,325` B / `155` L) and `docs/fr/solutions/citus.md` (`13,375` B / `155` L), plus `docs/ACTION_LOGBOOK.md` and `docs/RCA_REGISTER.md` (`IMP-009`); verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
