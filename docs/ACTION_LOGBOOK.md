@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-084 - Add French Architecture Sheet for PG 17 Uni-Directional Logical Replication (`#16`) (Issue `#167`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#167` (`docs/issue-167-pg17-logical-uni-fr`)
+- **Request / Changes / Result**: Created `docs/fr/solutions/pg17_logical_unidirectional.md` covering `#16` (`T3`, `pg17-logical`) mirroring the English sheet section-for-section with Mermaid diagram, implementation modes, sequence non-sync trap, `#14`/`#16` disambiguation, verbatim CSV benchmarks, `F1`/`L1-L8`/`T11-T18` probes, and PoC spec; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-083 - Add English Architecture Sheet for PG 17 Uni-Directional Logical Replication (`#16`) (Issue `#165`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#165` (`docs/issue-165-pg17-logical-uni-en`)
 - **Request / Changes / Result**: Created `docs/en/solutions/pg17_logical_unidirectional.md` covering `#16` (`T3`, `pg17-logical`) with Mermaid diagram, implementation modes (`pgoutput`, `FOR ALL TABLES` vs filters, `copy_data`, PG 17 failover slots, `REPLICA IDENTITY`), sequence non-sync trap, `#14`/`#16` disambiguation, verbatim CSV benchmarks, `F1`/`L1-L8`/`T11-T18` probes, and PoC spec; `make test` (`13/13` OK) and `make lint` verified.
