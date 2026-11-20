@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-123 - Add 03a EN Solution Links, #16 Section, and EDB PGD Harmonization (Issue `#245`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#245` (`docs/issue-245-03a-en-links-edb-sync`)
+- **Request / Changes / Result**: Updated `docs/en/03a_solutions_native_and_extensions.md` with the 7-row `03a` Dedicated Architecture Sheets index table (`pg17_bidirectional_logical`, `pgedge_spock`, `pglogical2`, `edb_pgd`, `pg17_standalone`, `pg17_physical_streaming_patroni`, `pg17_logical_unidirectional`), per-section `Dedicated Sheet(s)` links, a new `Solution #16` (`pg17-logical`, `T3`) subsection, and harmonized EDB PGD CRDT (`bdr.crdt_*`, `bdr.conflict_history`) and `bdr.global_sequences` (`snowflakeid`, Raft `galloc`, legacy `timeshard`) terminology; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-122 - Add Solutions Catalog Table and Fix #16 pg17-logical ID in README.fr.md (Issue `#243`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#243` (`docs/issue-243-readme-fr-catalog`)
 - **Request / Changes / Result**: Fixed `README.fr.md:22` (`Logique Uni (#14)` -> `Logique Uni (#16)`) and inserted section `2b. Catalogue des solutions et fiches techniques` with the 17-row French table, `#16` vs `#14` disambiguation blockquote, verified Product/Docs URLs, GitHub repositories (or `Proprietaire / N/A`), and 1-sentence descriptions linking all 17 `docs/fr/solutions/*.md` sheets; `make test` (`13/13` OK) and `make lint` verified.
