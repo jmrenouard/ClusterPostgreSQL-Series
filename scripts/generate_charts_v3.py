@@ -28,7 +28,8 @@ OFF = {
     "symmetricds": (10, 8, "l"), "opentenbase": (-10, 10, "r"), "bucardo": (12, -5, "l"),
     "pgedge-spock": (10, -10, "l"), "pgpool2": (-10, 10, "r"), "pgq": (10, -4, "l"),
     "rubyrep": (-10, 10, "r"), "pgedge-snowflake": (10, -4, "l"), "spanner-pgadapter": (-10, 10, "r"),
-    "pgedge-lolor": (10, -6, "l"), "slony1": (-10, 8, "r"), "londiste": (0, -16, "c"),
+    "pgedge-lolor": (10, -6, "l"), "slony1": (-10, 8, "r"), "londiste": (0, -15, "c"),
+    "yt-cluster-lite": (10, 0, "l"),
 }
 PAIRS = [
     ("Stand-\nalone", "pg17-standalone", "pg18-standalone"), ("Async\nStream", "pg17-async-streaming", "pg18-async-streaming"),
@@ -61,15 +62,15 @@ def glog(ax: plt.Axes, axis: str) -> None:
 
 
 def top(ax: plt.Axes, ti: str, pad: int, hnd: list | None = None, nc: int = 2, fs: float = 7.6) -> None:
-    ax.set_title(ti, fontsize=9.8, pad=pad)
+    ax.set_title(ti, size=9.8, pad=pad)
     kw = {"loc": "lower center", "bbox_to_anchor": (0.5, 1.012), "ncol": nc, "fontsize": fs}
     ax.legend(handles=hnd, **kw) if hnd else ax.legend(**kw)
 
 
 def save(fig: plt.Figure, fn: str, ti: str, sub: str, foot: str = FOOT) -> None:
-    fig.suptitle(ti, fontsize=12.6, weight="bold", color="#0f172a", y=0.985)
-    fig.text(0.5, 0.942, sub, ha="center", va="top", fontsize=8.4, color="#475569")
-    fig.text(0.99, 0.008, foot, ha="right", va="bottom", fontsize=7.3, color="#64748b", style="italic")
+    fig.suptitle(ti, size=12.6, weight="bold", color="#0f172a", y=0.985)
+    fig.text(0.5, 0.942, sub, ha="center", va="top", size=8.4, color="#475569")
+    fig.text(0.99, 0.008, foot, ha="right", va="bottom", size=7.3, color="#64748b", style="italic")
     OUT.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT / fn, dpi=180, bbox_inches="tight", facecolor="#fff")
     plt.close(fig)
@@ -82,54 +83,66 @@ def load_pop() -> list[dict]:
             s = inum(r.get("stars"))
             if s is None:
                 continue
-            m, p = inum(r.get("commits_12m")) or 0, r.get("pushed_at", "").strip()
+            g = lambda k: inum(r.get(k)) or 0
+            m, p = g("commits_12m"), r.get("pushed_at", "").strip()
             gp, gr, sid = r.get("git_present", ""), r.get("git_role", ""), r["solution_id"].strip()
             c = ("Proxy Only" if "Partial" in gp else "Mirror (pg.org)" if "Mirror" in gp
                  else "Dormant (0/12m)" if m == 0 else "Primary (Companion)" if "Companion" in gr else "Primary (Active)")
             v = "Active" if m >= 30 else ("Maintenance" if m > 0 else ("Dormant" if p >= "2024-01-01" else "Archived-like"))
             rows.append({"id": sid, "nm": OVR.get(sid, r["project_name"].split(" (")[0].strip()),
-                         "s": s, "f": inum(r.get("forks")) or 0, "t": inum(r.get("total_commits")) or 0,
-                         "m": m, "n": inum(r.get("contributors")) or 0, "p": p[:7] if len(p) >= 7 else "N/A", "c": c, "v": v})
+                         "s": s, "f": g("forks"), "t": g("total_commits"),
+                         "m": m, "n": g("contributors"), "p": p[:7] if len(p) >= 7 else "N/A", "c": c, "v": v})
     return rows
 
 
 def h_setup(ax: plt.Axes, ys: list[int], nms: list[str], xlim: tuple[float, float], xl: str) -> None:
     glog(ax, "x")
     ax.set(xlim=xlim, yticks=ys, xlabel=xl)
-    ax.set_yticklabels(nms, fontsize=8.2, weight="semibold")
+    ax.set_yticklabels(nms, size=8.2, weight="semibold")
     ax.invert_yaxis()
 
 
 def chart_08(rows: list[dict]) -> None:
-    rr = sorted(rows, key=lambda r: int(r["s"]), reverse=True)
-    ys, h = list(range(len(rr))), 0.38
-    fig, (a1, a2) = plt.subplots(1, 2, figsize=(16.8, 8.8), gridspec_kw={"width_ratios": [1.16, 1.0]})
+    rr = sorted(rows, key=lambda r: r["s"], reverse=True)
+    ys, h, hh = list(range(len(rr))), 0.38, 0.19
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(16.8, 9.1), gridspec_kw={"width_ratios": [1.16, 1.0]})
 
-    a1.barh([y - h / 2 for y in ys], [int(r["s"]) for r in rr], h, color="#1d4ed8", label="GitHub Stars", **BKW)
-    a1.barh([y + h / 2 for y in ys], [int(r["f"]) for r in rr], h, color="#0ea5e9", label="GitHub Forks", **BKW)
+    a1.barh([y - hh for y in ys], [r["s"] for r in rr], h, color="#1d4ed8", label="GitHub Stars", **BKW)
+    a1.barh([y + hh for y in ys], [r["f"] or NAN for r in rr], h, color="#0ea5e9", label="GitHub Forks", **BKW)
     for y, r in zip(ys, rr):
-        a1.text(int(r["s"]) * 1.12, y - h / 2, f"{int(r['s']):,}", va="center", fontsize=6.9, color="#1e3a8a", weight="bold")
-        a1.text(int(r["f"]) * 1.12, y + h / 2, f"{int(r['f']):,}", va="center", fontsize=6.6, color="#0369a1")
-    h_setup(a1, ys, [str(r["nm"]) for r in rr], (4, 350000), "Count (Log10 Scale)")
-    top(a1, "(a) GitHub Stars & Forks Across 18 Public Repos", 40, nc=2, fs=8.0)
+        s, f = r["s"], r["f"]
+        a1.text(s * 1.12, y - hh, f"{s:,}", va="center", size=6.9, c="#1e3a8a", weight="bold")
+        if f > 0:
+            a1.text(f * 1.12, y + hh, f"{f:,}", va="center", size=6.6, c="#0369a1")
+        else:
+            a1.plot(4.7, y + hh, "x", c="#0369a1", ms=4.8, mew=1.4)
+            a1.text(5.7, y + hh, "0 forks", va="center", size=6.5, c="#0369a1", style="italic", weight="semibold")
+    h_setup(a1, ys, [r["nm"] for r in rr], (4, 350000), "Count (Log10 Scale)")
+    top(a1, f"(a) GitHub Stars & Forks Across {len(rr)} Public Repos", 40, nc=2, fs=8.0)
 
+    fl = 2.2
+    if any(r["f"] == 0 for r in rr):
+        a2.axhline(fl, ls=":", lw=0.85, c="#94a3b8", zorder=1)
+        a2.text(85000, fl * 1.08, "0-fork floor (exact forks = 0)", ha="right", va="bottom", size=6.6, c="#64748b", style="italic")
     for rt, lb, rx in ((0.5, "50% F/S", 2400), (0.2, "20% F/S", 54000), (0.1, "10% F/S", 54000)):
-        a2.plot([15.0, 75000.0], [15.0 * rt, 75000.0 * rt], ls="--", lw=0.8, color="#cbd5e1", zorder=1)
-        a2.text(rx, rx * rt * 1.15, lb, fontsize=6.9, color="#64748b", rotation=32, ha="right")
+        x0 = max(10.0, 2.7 / rt)
+        a2.plot([x0, 75000.0], [x0 * rt, 75000.0 * rt], ls="--", lw=0.8, c="#cbd5e1", zorder=1)
+        a2.text(rx, rx * rt * 1.15, lb, size=6.9, c="#64748b", rotation=32, ha="right")
     arw = {"arrowstyle": "-", "color": "#94a3b8", "lw": 0.65, "shrinkA": 2, "shrinkB": 3}
     for r in rr:
-        col, mk = CAT[str(r["c"])]
-        s, f = int(r["s"]), int(r["f"])
-        a2.scatter(s, f, s=62, color=col, marker=mk, ec="#fff", lw=0.9, zorder=4)
-        dx, dy, hc = OFF.get(str(r["id"]), (8, 6, "l"))
-        a2.annotate(str(r["nm"]), (s, f), (dx, dy), textcoords="offset points", fontsize=7.2, weight="semibold", ha=HA[hc], va="center", arrowprops=arw, zorder=5)
+        col, mk = CAT[r["c"]]
+        s, f = r["s"], r["f"]
+        yp, lbl = (f, r["nm"]) if f > 0 else (fl, f"{r['nm']} (0 forks)")
+        a2.scatter(s, yp, s=62, color=col if f else "#fff", marker=mk, ec="#fff" if f else col, lw=0.9 if f else 1.6, zorder=4)
+        dx, dy, hc = OFF.get(r["id"], (8, 6, "l"))
+        a2.annotate(lbl, (s, yp), (dx, dy), textcoords="offset points", size=7.2, weight="semibold", ha=HA[hc], va="center", arrowprops=arw, zorder=5)
     glog(a2, "both")
-    a2.set(xlim=(14, 95000), ylim=(4, 16000), xlabel="GitHub Stars (Log10)", ylabel="GitHub Forks (Log10)")
+    a2.set(xlim=(8, 95000), ylim=(1.5, 16000), xlabel="GitHub Stars (Log10)", ylabel="GitHub Forks (Log10)")
     top(a2, "(b) Stars vs Forks by Git Presence Category", 40, [Line2D([0], [0], marker=m, color="w", label=k, markerfacecolor=c, markersize=7.0) for k, (c, m) in CAT.items()], 3, 7.2)
 
     fig.subplots_adjust(top=0.81, bottom=0.10, wspace=0.20)
     save(fig, "chart_08_popularity_stars_forks_log.png", "PostgreSQL Clustering Ecosystem Popularity: Stars & Forks (Log10)",
-         "18 public GitHub repos (* = mirror of git.postgresql.org); 3 proprietary engines (EDB PGD, Aurora Limitless, Spanner/AlloyDB) excluded")
+         f"{len(rr)} public GitHub repos (* = mirror of git.postgresql.org; forks=0 on floor); 3 proprietary engines (EDB PGD, Aurora Limitless, Spanner/AlloyDB) excluded")
 
 
 def chart_09(rows: list[dict]) -> None:
