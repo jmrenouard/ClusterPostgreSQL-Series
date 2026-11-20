@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-100 - Remediate pglogical2 Reference Anchors, Alignment and Log RCA-012 (Issue `#199`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#199` (`docs/issue-199-pglogical2-remediation`)
+- **Request / Changes / Result**: Remediated `docs/{en,fr}/solutions/pglogical2.md` line 94 `#16 pg17-logical` anchor (replaced unverified TPS and `T15` lag figures with verified `532.38 TPS` (`A`) and `1.68 ms` `p50` (`T15`) per `results/benchmark_summary.csv:65` and `results/extended_functional_matrix.csv:5`), updated line 58 uni-directional `pglogical.create_subscription(forward_origins='{all}')` across EN/FR, aligned `docs/fr/solutions/pglogical2.md` (`L24`, `L85`, `L92`), and recorded `RCA-012` in `docs/RCA_REGISTER.md`; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-099 - Add French Architectural Reference Sheet for EDB Postgres Distributed (`#4`) (Issue `#197`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#197` (`docs/issue-197-edb-pgd-fr`)
 - **Request / Changes / Result**: Created `docs/fr/solutions/edb_pgd.md` mirroring the English sheet section-for-section (`#4`, Architectural Reference, `APP-005` commercial exclusion) with Mermaid embedded-Raft and `pgd-proxy` diagram, all 5 consistency/routing modes, `snowflakeid`/`galloc`/`timeshard` sequences, strengths/weaknesses, and baseline comparison against `#2`, `#1`, `#5`, and `#6`; `make test` (`13/13` OK) and `make lint` verified.

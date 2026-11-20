@@ -55,7 +55,7 @@ $$
 
 | Mode / Option | Scope | Mechanics & Key Strategy | Conflict / Failover Impact | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
-| **Async Provider -> Subscriber** *(Primary Role)* | `create_subscription(forward_origins='{}')` | Streams selected tables/rows (`PG 9.4–16/17`) to target | Single writer avoids conflicts (`RPO > 0` async) | Zero-downtime major upgrade bridge (`PG 9.x -> 17`) |
+| **Async Provider -> Subscriber** *(Primary Role)* | `pglogical.create_subscription(forward_origins='{all}')` | Streams selected tables/rows (`PG 9.4–16/17`) to target | Single writer avoids conflicts (`RPO > 0` async) | Zero-downtime major upgrade bridge (`PG 9.x -> 17`) |
 | **Bidirectional / Mesh** *(Multi-Master)* | All peers subscribe (`forward_origins='{}'`) | Filters relayed origins to prevent `A -> B -> A` loops | Exposed to Lost Updates (`LWW`) & clock skew | Requires stepped seqs or UUIDs; no CRDTs |
 | **Synchronous Commit** *(Optional `PC/EC`)* | `synchronous_commit=on` + `synchronous_standby_names` | Targets `pglogical` replication slot for sync flush | Guarantees `RPO = 0`; blocks writer if peer down | Pays `RTT` per commit; rare in multi-master |
 | **Time-Delayed Replica** *(`apply_delay`)* | `create_subscription(apply_delay := '1 hour')` | Holds decoded changes before apply on subscriber | Protects against accidental `DROP`/`DELETE` | Delayed replica lags behind `RPO` window |
@@ -91,7 +91,7 @@ Because `pglogical 2` shares the identical PostgreSQL 17 heap, `wal_level = logi
 | **CRDT Lost-Update Fix** | None (shares LWW drift risk) | Single writer (`0` drift) | None (`-71,063` drift in `D`) | **`0` drift in `D` (`1,837.64 TPS`)** |
 | **DDL Replication** | Manual `replicate_ddl_command()` | None (`L5` fails `ALTER TABLE`) | None (`L5` fails `ALTER TABLE`) | **Automatic (`enable_ddl_replication=on`)** |
 | **Time-Delayed Replica** | Native `apply_delay` parameter | PG 16+ `min_apply_delay` | PG 16+ `min_apply_delay` | PG 16+ `min_apply_delay` |
-| **Reference Empirical Anchor** | Not benchmarked (maintenance) | `917.28 TPS` (`A`), `1.39 ms` lag (`T15`) | `875.91 TPS` (`A`), `1.47 ms` lag (`T15`) | `556.06 TPS` (`A`), `1.16 ms` lag (`T15`) |
+| **Reference Empirical Anchor** | Not benchmarked (maintenance) | `532.38 TPS` (`A`), `1.68 ms` lag (`T15`) | `875.91 TPS` (`A`), `1.47 ms` lag (`T15`) | `556.06 TPS` (`A`), `1.16 ms` lag (`T15`) |
 
 ---
 

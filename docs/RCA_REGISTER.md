@@ -82,6 +82,13 @@
 - **Fix**: Remediated all 8 M1 sheets across atomic `< 15,000` B PRs (`#174`, `#176`, `#178`, `#180`, `#182`), fixing `../../../README*.md` footers, exact submodule script paths, Table B `Status` and Table C `L1`/`L8` CSV parity, denominator/p99 wording, and 100% 7-bit ASCII governance registers.
 - **Result**: `0` broken relative links across all 8 sheets, `0` missing PoC paths, `0` non-ASCII lines in `ACTION_LOGBOOK.md` and `RCA_REGISTER.md`, and `make test` (`13/13` OK) + `make lint` passing on `main`.
 
+### RCA-012 - Unverified `#16 pg17-logical` Reference Anchor in `pglogical2` EN/FR Sheets
+- **Date / Action**: `2026-11-20` (`ACT-096`, `ACT-097`, `ACT-100`)
+- **Symptom**: M2 Verification Wave (`auditor_m2_1`, `reviewer_m2_1`, `reviewer_m2_2`, `challenger_m2_1`) detected unverified inflated `A_single_rw` TPS and underestimated `T15` lag figures for `#16 pg17-logical` on line 94 of `docs/{en,fr}/solutions/pglogical2.md`, conflicting with `results/benchmark_summary.csv:65` (`532.38` TPS), `results/extended_functional_matrix.csv:5` (`p50=1.68ms`), and `docs/{en,fr}/solutions/pg17_logical_unidirectional.md`.
+- **Root Cause**: The comparison-table anchor for `#16 pg17-logical` was written without programmatic verification against `results/benchmark_summary.csv` and `results/extended_functional_matrix.csv`, and the erroneous values were propagated from EN (`PR #192`) into FR (`PR #194`).
+- **Fix**: Replaced the erroneous `#16 pg17-logical` anchor values on line 94 of `docs/{en,fr}/solutions/pglogical2.md` with verified `532.38 TPS` (`A`) and `1.68 ms` (`T15`) under `Issue #199` alongside `forward_origins='{all}'` (`L58`) and FR prose alignment (`L24`, `L85`, `L92`). Non-regression rule: cross-check every comparison-table baseline number programmatically against `results/*.csv` before opening any documentation PR.
+- **Result**: `0` unverified anchor metrics across `pglogical2` EN/FR sheets, 100% `results/*.csv` parity, 7-bit ASCII compliance (`ord(c) <= 127`) in governance registers, and `make test` (`13/13` OK) + `make lint` passing on `main`.
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters
