@@ -213,6 +213,11 @@
 - **Rejected Approach**: Appending Section 6 onto uncompacted `citus.md` (`12,848`/`12,859` B) and `fr/cockroachdb.md` (`12,684` B) or bundling all 4 `citus` + `cockroachdb` sheets in one PR (`~16.2K-18.0K` unified diff chars).
 - **Reason**: Uncompacted `citus.md` approaches `14,000` B (`13,957` B FR) and the 4-sheet diff breaches the `< 15,000`-char cap. Split into PR 3a (`citus` EN+FR with 4-line non-numeric prose compaction) and PR 3b (`cockroachdb` EN+FR with 3-line FR compaction).
 
+### IMP-010 - Combined 3-Slug M3 Batches Approaching the `15,000`-Char PR Diff Ceiling
+- **Date / Action**: `2026-11-20` (`ACT-158`..`ACT-161`)
+- **Rejected Approach**: Bundling all 6 sheets of M3 PR 5 (`bucardo`, `pglogical2`, `opentenbase_pgxl`) or M3 PR 6 (`symmetricds`, `pgpool_ii`, `edb_pgd`) plus governance register updates into single 3-slug PRs (`~13,952-15,100` unified diff chars).
+- **Reason**: Exceeded the advisory `~13,500`-char split threshold and risked breaching the hard `< 15,000`-char PR diff cap (`AGENTS.md`). Split M3 into sequential 2+1 slug atomic PRs (PR 5a, PR 5b, PR 6a, PR 6b), keeping every PR diff well under `11,000` chars while preserving `en_shape == fr_shape`.
+
 ## 3. Current Approximations & Simplifying Assumptions (`APP-XXX`)
 
 ### APP-001 - Ephemeral Local Laboratory Credentials
