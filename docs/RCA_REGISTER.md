@@ -218,6 +218,11 @@
 - **Rejected Approach**: Bundling all 6 sheets of M3 PR 5 (`bucardo`, `pglogical2`, `opentenbase_pgxl`) or M3 PR 6 (`symmetricds`, `pgpool_ii`, `edb_pgd`) plus governance register updates into single 3-slug PRs (`~13,952-15,100` unified diff chars).
 - **Reason**: Exceeded the advisory `~13,500`-char split threshold and risked breaching the hard `< 15,000`-char PR diff cap (`AGENTS.md`). Split M3 into sequential 2+1 slug atomic PRs (PR 5a, PR 5b, PR 6a, PR 6b), keeping every PR diff well under `11,000` chars while preserving `en_shape == fr_shape`.
 
+### IMP-011 - Bundling 4-Repo `legacy_triggers` and Both Wave-4 R1 Alignments in One M4 PR 8
+- **Date / Action**: `2026-11-20` (`ACT-163`..`ACT-165`)
+- **Rejected Approach**: Combining `legacy_triggers` (4-row Section 6 + `#16` scrub), `pg18_native_clustering`, and `yt_cluster_lite` EN/FR updates into a single PR 8 (`~22,000` unified diff chars) or a 2-PR split putting both Wave-4 alignments in one PR (`~13,800-14,200` chars).
+- **Reason**: Breached the `< 15,000`-char PR diff cap (`AGENTS.md`) or exceeded the `~13,500`-char split threshold. Split M4 PR 8 into three sequential 1-slug atomic PRs (PR 8a, PR 8b, PR 8c), keeping each diff under `10,500` chars while preserving `en_shape == fr_shape`.
+
 ## 3. Current Approximations & Simplifying Assumptions (`APP-XXX`)
 
 ### APP-001 - Ephemeral Local Laboratory Credentials
