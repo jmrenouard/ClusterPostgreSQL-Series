@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-109 - Add French Architectural Reference Sheet for OpenTenBase / Postgres-XL (#8) (Issue `#217`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#217` (`docs/issue-217-opentenbase-pgxl-fr`)
+- **Request / Changes / Result**: Created `docs/fr/solutions/opentenbase_pgxl.md` mirroring the English sheet section-for-section (`#8`, `T5` Architectural Reference, 96 lines, explicitly not live-benchmarked) with French Mermaid GTM/GTM-Proxy/CN/DN 2PC diagram, lineage and distribution modes, strengths/weaknesses, verified `results/benchmark_summary.csv` anchors (`#7 citus`, `#5 yugabyte`, `#6 cockroach`, `#15a pg17-standalone`), and Ch. 03b footer links; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-108 - Add English Architectural Reference Sheet for OpenTenBase / Postgres-XL (#8) (Issue `#215`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#215` (`docs/issue-215-opentenbase-pgxl-en`)
 - **Request / Changes / Result**: Created `docs/en/solutions/opentenbase_pgxl.md` (`#8`, `T5` Architectural Reference, explicitly not live-benchmarked) with Mermaid GTM/GTM-Proxy/CN/DN 2PC diagram, lineage and distribution modes (Postgres-XC retired, Postgres-XL PG 10 dormant, OpenTenBase active), strengths/weaknesses, verified `results/benchmark_summary.csv` comparison anchors (`#7 citus`, `#5 yugabyte`, `#6 cockroach`, `#15a pg17-standalone`), and Ch. 03b footer links; `make test` (`13/13` OK) and `make lint` verified.
