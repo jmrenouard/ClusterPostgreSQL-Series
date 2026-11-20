@@ -208,6 +208,11 @@
 - **Rejected Approach**: Reusing the abbreviated 2-bullet Section 6 table from Wave 4 (`pg18_native_clustering.md`, `yt_cluster_lite.md` omitting `open_issues`/full `pushed_at` ISO) or appending full Section 6 onto `pg17_physical_streaming_patroni.md` (`12,955`/`13,205` B) and `pgedge_spock.md` (`12,973`/`13,158` B) without prose compaction.
 - **Reason**: Omitting `open_issues`/`watchers`/`SPDX`/full `pushed_at` violates R1 verbatim telemetry coverage, and uncompacted sheets exceed the `14,000`-byte per-file test ceiling (`14.3-14.9` KB). Standardized on the full 8-column / 3-bullet Section 6 schema with surgical prose compaction preserving every CSV/probe number.
 
+### IMP-009 - Combined `citus` + `cockroachdb` M2 PR 3 Exceeding `14,000` B / `15,000`-Char Caps
+- **Date / Action**: `2026-11-20` (`ACT-155`)
+- **Rejected Approach**: Appending Section 6 onto uncompacted `citus.md` (`12,848`/`12,859` B) and `fr/cockroachdb.md` (`12,684` B) or bundling all 4 `citus` + `cockroachdb` sheets in one PR (`~16.2K-18.0K` unified diff chars).
+- **Reason**: Uncompacted `citus.md` approaches `14,000` B (`13,957` B FR) and the 4-sheet diff breaches the `< 15,000`-char cap. Split into PR 3a (`citus` EN+FR with 4-line non-numeric prose compaction) and PR 3b (`cockroachdb` EN+FR with 3-line FR compaction).
+
 ## 3. Current Approximations & Simplifying Assumptions (`APP-XXX`)
 
 ### APP-001 - Ephemeral Local Laboratory Credentials

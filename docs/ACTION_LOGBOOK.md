@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-155 - Compact and Enrich Citus (#7) EN/FR Sheets With Popularity Telemetry (Issue `#391`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#391` (`docs/issue-391-citus-popularity`)
+- **Request / Changes / Result**: Split M2 PR 3 into PR 3a (`citus`) and PR 3b (`cockroachdb`) to stay under the `< 15,000`-char diff limit; compacted 4 non-numeric prose lines (`L22`, `L24`, `L45`, `L52`) and added standardized Section 6 (`citus` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`) to `docs/en/solutions/citus.md` (`13,325` B / `155` L) and `docs/fr/solutions/citus.md` (`13,375` B / `155` L), plus `docs/ACTION_LOGBOOK.md` and `docs/RCA_REGISTER.md` (`IMP-009`); verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
+
 ### ACT-154 - Enrich PG 17 Uni-Directional Logical (#16) EN/FR Sheets With Popularity Telemetry (Issue `#389`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#389` (`docs/issue-389-logical-uni-popularity`)
 - **Request / Changes / Result**: Added standardized Section 6 GitHub popularity, git presence, `pushed_at` freshness, and Manageability synthesis (`postgres-core`, preserving `#16` with zero `#14` collisions) from `results/project_popularity.csv` (`2026-11-20T17:26:02Z`) to `docs/en/solutions/pg17_logical_unidirectional.md` (`13,516` B / `157` L) and `docs/fr/solutions/pg17_logical_unidirectional.md` (`13,321` B / `157` L), plus `docs/ACTION_LOGBOOK.md` and `docs/RCA_REGISTER.md` (`IDEA-008`); verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
