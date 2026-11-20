@@ -11,11 +11,11 @@
 | :--- | :--- |
 | **ID Catalogue** | `#18` (`YT Cluster & YT Cluster Lite` — DBinvent, ex-YaXAHA) |
 | **Topologies Benchmark** | `yt-cluster` (défaut `cc=half`, `sc=NO_SC`), `yt-cluster-async` (`cc=nodes>=0`, `sc=NO_SC`) (`results/benchmark_yt_cluster.csv`, 22 lignes) |
-| **Version Moteur** | `PostgreSQL 18.7 (Debian 18.7-1.pgdg13+5) + yt_cluster 1.21` (`dbinvent/yt:1.21.3`) |
+| **Version Moteur** | `PostgreSQL 18.7 (Debian 18.7-1.pgdg13+5) + yt_cluster 1.21` ([`dbinvent/yt:1.21.3`](https://hub.docker.com/r/dbinvent/yt)) |
 | **Profil CAP / PACELC** | Écritures `PC/EC` (défaut `cc=half` 2PC XA 2/3, `RPO=0`) + lectures éventuelles `EL` (`NO_SC`) ; option async `PA/EL` (`cc=nodes>=0`) |
 | **Mécanisme** | Triggers par table `yt_synchronize` + hook `yt_cluster.c` `XACT_EVENT_PRE_COMMIT` -> gRPC Unix -> démon Rust `ytserv` Leader `checkin` + XA `PREPARE`/`COMMIT PREPARED` (`max_prepared_transactions >= 100`) |
-| **Séparation Licence** | Cœur ouvert **MIT** (`DBinvent/yt-cluster-lite` : extension `ytpgc` + Protobuf + feuille mono-BD `yt-lite`) vs `ytserv` + `ytctl` fermés (**PolyForm Noncommercial 1.0.0 / Commercial**) |
-| **Stack Docker PoC** | `docker-compose-yt-cluster.yml` (3 nœuds actif-actif `yt1`/`yt2`/`yt3`, ports `5491-5493`, `min_cluster_size=2`) |
+| **Séparation Licence** | Cœur embarqué **MIT** (`DBinvent/yt-cluster-lite` : extension `ytpgc` + Protobuf + feuille mono-BD `yt-lite`) vs `ytserv` + `ytctl` fermés (**PolyForm Noncommercial 1.0.0 / Commercial**, [`agent.md`](https://dbinvent.com/agent.md)) |
+| **Stack Docker PoC** | `docker-compose-yt-cluster.yml` (3 nœuds actif-actif [`dbinvent/yt:1.21.3`](https://hub.docker.com/r/dbinvent/yt) `yt1`/`yt2`/`yt3`, ports `5491-5493`, `min_cluster_size=2`) |
 
 ---
 
@@ -27,7 +27,7 @@ $$
 L_{\text{YT-half}} \approx L_{\text{trig}} + \text{RTT}_{\text{leader}} + 2 \cdot L_{\text{2PC-fsync}}, \qquad L_{\text{YT-async}} \approx L_{\text{trig}} + \text{RTT}_{\text{leader}} + L_{\text{disque}}
 $$
 
-- **Séparation CRITIQUE MIT vs double licence :** `DBinvent/yt-cluster-lite` (**MIT**) ne contient que `yt-core-proto`, l'extension `ytpgc` et `yt-lite` (nœud feuille mono-BD relié en amont à `ytserv >= 1.21` via TLS 1.3 ; rejette le multi-BD en `0A000` et **ne peut pas former seul un cluster multi-maîtres pair-à-pair**). Le moteur multi-maîtres complet `ytserv` + `ytctl` (`dbinvent/yt:1.21.3`) est à code fermé sous **PolyForm Noncommercial 1.0.0** (labo/évaluation gratuits) et **licence commerciale DBinvent**.
+- **Séparation CRITIQUE MIT vs double licence :** `DBinvent/yt-cluster-lite` (**MIT**) est conçu pour être embarqué et raccordé à un vrai nœud de cluster : il fournit `yt-core-proto`, l'extension `ytpgc` et `yt-lite` (nœud feuille mono-BD relié en amont à `ytserv >= 1.21` via TLS 1.3 ; rejette le multi-BD en `0A000` et **ne peut pas former seul un cluster multi-maîtres pair-à-pair**). Construire un vrai cluster requiert l'image complète `ytserv` + `ytctl` ([`dbinvent/yt:1.21.3`](https://hub.docker.com/r/dbinvent/yt), documentée dans [`dbinvent.com/agent.md`](https://dbinvent.com/agent.md)), à code fermé sous **PolyForm Noncommercial 1.0.0** (labo/évaluation gratuits) et **licence commerciale DBinvent**, qui est l'image exacte déployée par notre PoC Docker 3 nœuds.
 - **Nuance du test chaos Jepsen (`https://dbinvent.com/cluster/articles/jepsen`) :** **Auto-exécuté par DBinvent** (pas un audit indépendant Jepsen LLC / Kyle Kingsbury) sur 5 nœuds `1.20.1` (`Jepsen 0.3.14` + Elle), vérifié sur **Elle `cursor-stability` uniquement** (lectures éventuellement cohérentes tolérées, pas de sérialisabilité stricte). La build initiale `1.20.1` a échoué chaque run, révélant **51 anomalies** (**24 sévères** dont double leader `#42`, insertion dupliquée `#1`, écriture échouée survivante `#40`, verrous 2PC bloqués ; **21 alertes** ; **6 faibles** ; **0 classée « critique »** selon la grille DBinvent). Les 51 sont annoncées corrigées et retestées au vert (**49/49**).
 - **Preuve de réversibilité `T_REVERT` :** Le test en direct confirme que `DROP EXTENSION yt_cluster CASCADE;` sur `yt3` retire extension et triggers (`ext=0`, `triggers=0`) tout en conservant les `5/5` lignes validées et en acceptant une écriture PostgreSQL standard (`6/6`).
 
