@@ -126,7 +126,7 @@
     }
     const groupW = ax.plotW / categories.length, barGap = 1.8;
     const maxBarW = Math.min(34, (groupW * 0.8) / series.length);
-    const lblFs = categories.length > 11 ? 9.0 : 10.0;
+    const lblFs = categories.length > 11 ? 8.6 : 10.0;
     categories.forEach((cat, ci) => {
       const gx = M.l + ci * groupW + groupW / 2;
       const startX = gx - (series.length * (maxBarW + barGap) - barGap) / 2;
@@ -138,7 +138,7 @@
         attachHover(rect, pt.tip);
         svg.appendChild(rect);
         if (pt.bad || pt.good) svg.appendChild(el("circle", { cx: bx + maxBarW / 2, cy: Math.max(M.t + 6, by - 5), r: 3.3, fill: pt.bad ? "#dc2626" : "#16a34a", stroke: "#fff", "stroke-width": 1 }));
-        if ((series.length === 1 && categories.length <= 16) || (series.length === 2 && categories.length <= 10)) {
+        if ((series.length === 1 && categories.length <= 18) || (series.length === 2 && categories.length <= 10)) {
           svg.appendChild(el("text", { x: bx + maxBarW / 2, y: Math.max(M.t + 10, by - (pt.bad || pt.good ? 11 : 4)), "text-anchor": "middle", fill: "#1e293b", "font-size": categories.length > 10 ? 8.1 : 9.1, "font-weight": 600 }, fmtNum(pt.v)));
         }
       });
@@ -204,6 +204,8 @@
     ["citus", "Citus 14.2", "#7c3aed"],
     ["yugabyte", "YugabyteDB Raft", "#db2777"],
     ["cockroach", "CockroachDB Raft", "#dc2626"],
+    ["yt-cluster", "YT Cluster (cc=half)", "#4f46e5"],
+    ["yt-cluster-async", "YT Cluster (async)", "#8b5cf6"],
   ];
   const SNAME = {
     CORE_ALL: "All Core Suites (A / B1 / C / E1)",

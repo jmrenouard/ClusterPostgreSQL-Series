@@ -248,6 +248,7 @@ body {
 }
 
 .table-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.table-head .seg { flex-wrap: wrap; }
 .table-head h2 { margin: 0; font-size: 0.98rem; }
 .table-wrap { overflow-x: auto; }
 .data-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; font-variant-numeric: tabular-nums; }

@@ -13,7 +13,7 @@
       <img src="../assets/clusterpostgresql-series-icon.png" alt="ClusterPostgreSQL-Series Project Logo" class="brand-logo" height="46">
       <div class="brand-text">
         <h1 data-fr="ClusterPostgreSQL-Series &mdash; Explorateur de Benchmarks Multi-Master">ClusterPostgreSQL-Series &mdash; PostgreSQL Multi-Master Benchmark Explorer</h1>
-        <p class="subtitle" data-fr="Benchmarks PG 17 &amp; PG 18.6, &#233;chelles Log10, Matrice CAP/PACELC &amp; Popularit&#233;">Empirical PG 17 &amp; PG 18.6 Benchmarks, Log10 Scaling, CAP/PACELC Matrix &amp; Ecosystem Popularity</p>
+        <p class="subtitle" data-fr="Benchmarks PG 17, PG 18.6 &amp; YT Cluster, &#233;chelles Log10, Matrice CAP/PACELC &amp; Popularit&#233;">Empirical PG 17, PG 18.6 &amp; YT Cluster Benchmarks, Log10 Scaling, CAP/PACELC Matrix &amp; Ecosystem Popularity</p>
       </div>
     </div>
     <div class="topbar-actions">
@@ -34,7 +34,7 @@
 <main class="container">
   <nav class="tabs" role="tablist">
     <button type="button" class="tab-btn active" data-tab="bench" data-fr="Benchmarks &amp; Graphiques Log10">Benchmarks &amp; Log10 Charts</button>
-    <button type="button" class="tab-btn" data-tab="matrix" data-fr="Matrice Fonctionnelle &amp; Limites (L1-L8 / T11-T18 / PG 18.6)">Functional &amp; Limits Matrix (L1-L8 / T11-T18 / PG 18.6)</button>
+    <button type="button" class="tab-btn" data-tab="matrix" data-fr="Matrice Fonctionnelle &amp; Limites (L1-L8 / T11-T18 / PG 18.6 / YT)">Functional &amp; Limits Matrix (L1-L8 / T11-T18 / PG 18.6 / YT)</button>
     <button type="button" class="tab-btn" data-tab="popularity" data-fr="Popularit&#233; &amp; Vitalit&#233; &#201;cosyst&#232;me">Ecosystem Popularity &amp; Vitality</button>
     <span id="meta-stamp" class="meta-stamp"></span>
   </nav>
@@ -42,9 +42,9 @@
   <section id="main-controls" class="card controls">
     <div class="ctrl-row">
       <div class="ctrl-head">
-        <span class="ctrl-label" data-fr="Solutions (15 topologies)">Solutions (15 Topologies)</span>
+        <span class="ctrl-label" data-fr="Solutions (17 topologies)">Solutions (17 Topologies)</span>
         <div class="presets">
-          <button type="button" class="preset-btn" data-preset="all" data-fr="Toutes (15)">All 15</button>
+          <button type="button" class="preset-btn" data-preset="all" data-fr="Toutes (17)">All 17</button>
           <button type="button" class="preset-btn preset-pg18" data-preset="pg18_vs_pg17" data-fr="PG 18 vs PG 17">PG 18 vs PG 17</button>
           <button type="button" class="preset-btn" data-preset="stream_logical" data-fr="Streaming vs Logique vs BiRep">Streaming vs Logical vs BiRep</button>
           <button type="button" class="preset-btn" data-preset="active_active" data-fr="Actif-Actif">Active-Active Only</button>
@@ -122,6 +122,7 @@
           <button type="button" class="seg-btn active" data-mtab="core" data-fr="Limites de base (L1-L8)">Core Limits (L1-L8)</button>
           <button type="button" class="seg-btn" data-mtab="ext" data-fr="R&#233;silience &#233;tendue (T11-T18)">Extended Resilience (T11-T18)</button>
           <button type="button" class="seg-btn" data-mtab="pg18" data-fr="Capacit&#233;s &amp; Limites PostgreSQL 18.6">PostgreSQL 18.6 Capabilities &amp; Limits</button>
+          <button type="button" class="seg-btn" data-mtab="yt" data-fr="YT Cluster 1.21 (L1-L8 / T11-T18 / Revert)">YT Cluster 1.21 (L1-L8 / T11-T18 / Revert)</button>
         </div>
         <input type="search" id="matrix-filter" class="search-input" placeholder="Search SQLSTATE, test, limitation...">
       </div>
@@ -158,7 +159,7 @@
       <div class="ctrl-group">
         <span class="ctrl-label" data-fr="Vitalit&#233;">Vitality</span>
         <select id="pop-vit-select" class="select-input">
-          <option value="ALL">All Solutions (21)</option>
+          <option value="ALL">All Solutions (22)</option>
           <option value="Active">Active (&gt;=30 commits/12m)</option>
           <option value="Low">Low (1-29 commits/12m)</option>
           <option value="Dormant">Dormant (0 commits/12m)</option>
@@ -168,7 +169,7 @@
     </section>
     <div class="charts-grid">
       <article class="card chart-card">
-        <div class="chart-head"><h2 id="pop-title-1">GitHub Stars (18 Public Repos)</h2><span id="pop-scale-1" class="scale-pill">log10</span></div>
+        <div class="chart-head"><h2 id="pop-title-1">GitHub Stars (19 Public Repos)</h2><span id="pop-scale-1" class="scale-pill">log10</span></div>
         <div id="pop-chart-1" class="chart-box pop-chart-box"></div>
       </article>
       <article class="card chart-card">
@@ -178,7 +179,7 @@
     </div>
     <section class="card table-card">
       <div class="table-head">
-        <h2 data-fr="T&#233;l&#233;m&#233;trie GitHub &amp; Vitalit&#233; (21 solutions)">GitHub Telemetry &amp; Maintenance Vitality (21 Solutions)</h2>
+        <h2 data-fr="T&#233;l&#233;m&#233;trie GitHub &amp; Vitalit&#233; (22 solutions)">GitHub Telemetry &amp; Maintenance Vitality (22 Solutions)</h2>
         <input type="search" id="pop-filter" class="search-input" placeholder="Search repo, org, license, vitality...">
       </div>
       <div class="table-wrap">
@@ -214,6 +215,7 @@
 <script src="data_bench_2.js"></script>
 <script src="data_bench_3.js"></script>
 <script src="data_bench_pg18.js"></script>
+<script src="data_bench_yt.js"></script>
 <script src="data_matrix.js"></script>
 <script src="data_matrix_ext.js"></script>
 <script src="data_matrix_pg18.js"></script>
