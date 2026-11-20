@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-119 - Add English Architectural Reference Sheet for Legacy Triggers (#14) (Issue `#237`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#237` (`docs/issue-237-legacy-triggers-en`)
+- **Request / Changes / Result**: Created `docs/en/solutions/legacy_triggers.md` (`#14`, Architectural Reference, Historical / EOL) covering Slony-I (`logTrigger`, `slon`, `EXECUTE SCRIPT`), Londiste/Skytools (`pgq.logutriga`, `pgq.ticker`), and RubyRep (`rr_pending_changes`), with 3-subgraph Mermaid diagram, trigger write-amplification model, explicit `#14` vs `#16` (`pg17-logical`) disambiguation, strengths/weaknesses, verified `results/*.csv` baselines (`#9 bucardo`, `pg17-logical`, `#1 pg-birep`, `#15a pg17-standalone`), and Ch. 03b/10 footer links; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-118 - Add French Architectural Reference Sheet for GCP Spanner & AlloyDB (#13) (Issue `#235`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#235` (`docs/issue-235-gcp-spanner-alloydb-fr`)
 - **Request / Changes / Result**: Created `docs/fr/solutions/gcp_spanner_alloydb.md` mirroring `docs/en/solutions/gcp_spanner_alloydb.md` section-for-section (`#13`, Architectural Reference, `APP-005` managed cloud exclusion) with French dual-subgraph Mermaid diagram, TrueTime commit-wait latency model, implementation modes, strengths/weaknesses, verified `results/*.csv` baselines (`#6 cockroach`, `#5 yugabyte`, `#15b pg17-sync-streaming`), and Ch. 03b/10 footer links; `make test` (`13/13` OK) and `make lint` verified.
