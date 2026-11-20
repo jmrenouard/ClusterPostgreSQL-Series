@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-129 - Align pgpool_ii EN/FR Check Counts with test_pgpool.sh Runtime Assertions (Issue `#257`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#257` (`docs/issue-257-pgpool-check-count`)
+- **Request / Changes / Result**: Clarified `docs/en/solutions/pgpool_ii.md:74,89` and `docs/fr/solutions/pgpool_ii.md:74,89` to report `25` runtime `PASS` assertions across `18` functional groups (`24` documented in `env/multi-db-docker-env/documentation/pgpool_cluster.md`); `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-128 - Disambiguate #16 pg17-logical in Ch. 06 and Log RCA-014 (Issue `#255`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#255` (`docs/issue-255-ch06-id-polish-rca014`)
 - **Request / Changes / Result**: Updated `docs/en/06_empirical_test_and_benchmark_results.md:26` (`#14 pg17-logical` -> `#16 pg17-logical`) and `docs/fr/06_resultats_tests_et_benchmarks.md:18` (added `(#16)`) with explicit `#16` vs `#14` disambiguation footnotes; logged `RCA-014` in `docs/RCA_REGISTER.md` (split `pgpool_ii` check-count alignment into follow-up PR to keep diff `< 15,000` bytes); `make test` (`13/13` OK) and `make lint` verified.

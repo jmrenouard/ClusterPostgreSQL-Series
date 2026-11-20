@@ -71,7 +71,7 @@ $$
 | **Unified Proxy Pooling + R/W Splitting:** Combines `num_init_children * max_pool` connection caching, query-level `SELECT` load balancing, and failover without changing app drivers (`Streaming` mode). | **Non-Deterministic SQL Divergence (`replication` mode):** `NOW()`, `CURRENT_TIMESTAMP`, `RANDOM()`, `gen_random_uuid()`, triggers, and concurrent `nextval()` produce divergent state across nodes (`Ch. 07` anti-pattern #5). |
 | **Zero-Extension PostgreSQL 17 Compatibility:** Operates externally over `pgwire` (`port 9999`), preserving `100%` of PostgreSQL heap tables, extensions, and `pgBackRest` PITR in `streaming_replication` mode. | **Proxy Degenerate-Node & Lock Stalls:** Under `replication` / `snapshot_isolation`, backend mismatch degenerates a node offline and `insert_lock` serializes sequence-backed inserts through the proxy. |
 | **Built-In Watchdog & Online Recovery (`pcp`):** Multi-proxy Watchdog quorum prevents split-brain failover and `pcp_recovery_node` automates standby rebuilds (`RTO ~ 5–15 s`). | **Process-Per-Connection Overhead vs. `PgBouncer`:** `PgPool-II` parses SQL per session with heavier memory/CPU footprint than transaction-mode `PgBouncer` behind `HAProxy` (`#15b`). |
-| **Verified Streaming PoC Suite:** `tests/test_pgpool.sh` passes `24` checks across `18` functional groups (`pgpool/pgpool:4.6`, SSL, HAProxy `5100`/`5101`/`8406`, DDL & RO isolation). | **Single-Proxy SPOF Without Watchdog:** Running one `pgpool` container (as in the lab compose) creates a single network bottleneck unless scaled to 3 Watchdog proxies. |
+| **Verified Streaming PoC Suite:** `tests/test_pgpool.sh` passes `25` runtime `PASS` assertions across `18` functional groups (`24` documented in `pgpool_cluster.md`; `pgpool/pgpool:4.6`, SSL, HAProxy `5100`/`5101`/`8406`, DDL & RO isolation). | **Single-Proxy SPOF Without Watchdog:** Running one `pgpool` container (as in the lab compose) creates a single network bottleneck unless scaled to 3 Watchdog proxies. |
 
 ---
 
@@ -86,7 +86,7 @@ Instead, PgPool-II's streaming vs. multi-node write behavior anchors directly on
 | **Write Authority** | Streaming: `1` Primary \| Broadcast: `N` nodes | `1` Primary (`RO` standby `25006`) | `1` Primary (`RO` standby `25006`) | `N` Active Writers (`origin=none`) |
 | **Conflict / Divergence Risk** | Streaming: `0` \| Broadcast: **High SQL drift** | `0` (single-primary) | `0` (single-primary) | `23505` halt; `-71,063` drift (`D`) |
 | **Pooling & R/W Split** | Native SQL parser (`32 x 4` pool, `:9999`) | External (`HAProxy` + `Patroni` `:5000/:5001`) | External (`HAProxy` + `Patroni`) | `HAProxy` round-robin (`:5000`) |
-| **Reference Anchor (`A_single_rw`)** | Not benchmarked (`24/24` functional checks) | `610.15 TPS` (`p95=33.928 ms`) | `409.48 TPS` (`p95=50.307 ms`) | `875.91 TPS` (`0` drift on `A`) |
+| **Reference Anchor (`A_single_rw`)** | Not benchmarked (`25/25` runtime checks; `24` documented) | `610.15 TPS` (`p95=33.928 ms`) | `409.48 TPS` (`p95=50.307 ms`) | `875.91 TPS` (`0` drift on `A`) |
 | **Reference Anchor (`F_wan_netem_25ms`)** | Not benchmarked (sync bcast degrades on WAN) | `599.61 TPS` (`-1.7%` vs LAN) | `57.0 TPS` (`-86.1%`, `p95=353.493 ms`) | `824.04 TPS` (`-5.9%` vs LAN) |
 
 ---

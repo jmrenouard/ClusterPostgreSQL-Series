@@ -71,7 +71,7 @@ $$
 | **Pooling + routage R/W unifié :** Combine cache `num_init_children * max_pool`, répartition de `SELECT` et bascule sans modifier les pilotes clients (mode `Streaming`). | **Divergence SQL non déterministe (`replication`) :** `NOW()`, `CURRENT_TIMESTAMP`, `RANDOM()`, `gen_random_uuid()`, triggers et `nextval()` concurrents désynchronisent les nœuds (`Ch. 07` anti-pattern 5). |
 | **Compatibilité PostgreSQL 17 à 100 % :** Opère en externe sur `pgwire` (port `9999`), préservant tables heap, extensions C et PITR `pgBackRest` en `streaming_replication`. | **Nœud dégénéré et blocages proxy :** En `replication` / `snapshot_isolation`, un écart met un backend hors service et `insert_lock` sérialise les insertions à séquences. |
 | **Watchdog et reprise en ligne (`pcp`) :** Le quorum multi-proxys évite les promotions concurrentes et `pcp_recovery_node` automatise la reconstruction (`RTO ~ 5–15 s`). | **Coût par processus vs `PgBouncer` :** L'analyse SQL par session consomme plus de RAM/CPU qu'un pool transactionnel `PgBouncer` derrière `HAProxy` (`#15b`). |
-| **Suite fonctionnelle PoC validée :** `tests/test_pgpool.sh` valide `24` contrôles sur `18` groupes (`pgpool/pgpool:4.6`, SSL, HAProxy `5100`/`5101`/`8406`, DDL et isolation RO). | **SPOF proxy sans Watchdog :** Un unique conteneur `pgpool` (comme dans le compose de labo) reste un point unique de défaillance sans 3 nœuds Watchdog. |
+| **Suite fonctionnelle PoC validée :** `tests/test_pgpool.sh` valide `25` assertions `PASS` d'exécution sur `18` groupes (`24` documentées dans `pgpool_cluster.md` ; `pgpool/pgpool:4.6`, SSL, HAProxy `5100`/`5101`/`8406`, DDL et isolation RO). | **SPOF proxy sans Watchdog :** Un unique conteneur `pgpool` (comme dans le compose de labo) reste un point unique de défaillance sans 3 nœuds Watchdog. |
 
 ---
 
@@ -86,7 +86,7 @@ Les profils Streaming vs écriture multi-nœuds de PgPool-II s'ancrent directeme
 | **Autorité d'écriture** | Streaming : `1` Primaire \| Diffusion : `N` nœuds | `1` Primaire (standby RO `25006`) | `1` Primaire (standby RO `25006`) | `N` Écrivains actifs (`origin=none`) |
 | **Risque conflit / dérive** | Streaming : `0` \| Diffusion : **Forte dérive SQL** | `0` (mono-primaire) | `0` (mono-primaire) | Arrêt `23505` ; dérive `-71 063` (`D`) |
 | **Pooling & Split R/W** | Parseur SQL natif (pool `32 x 4`, `:9999`) | Externe (`HAProxy` + `Patroni` `:5000/:5001`) | Externe (`HAProxy` + `Patroni`) | `HAProxy` round-robin (`:5000`) |
-| **Ancre réf. (`A_single_rw`)** | Non benchmarké (`24/24` contrôles OK) | `610.15 TPS` (`p95=33.928 ms`) | `409.48 TPS` (`p95=50.307 ms`) | `875.91 TPS` (`0` dérive sur `A`) |
+| **Ancre réf. (`A_single_rw`)** | Non benchmarké (`25/25` contrôles d'exécution ; `24` documentés) | `610.15 TPS` (`p95=33.928 ms`) | `409.48 TPS` (`p95=50.307 ms`) | `875.91 TPS` (`0` dérive sur `A`) |
 | **Ancre réf. (`F_wan_netem_25ms`)** | Non benchmarké (diffusion sync sensible WAN) | `599.61 TPS` (`-1,7 %` vs LAN) | `57.0 TPS` (`-86,1 %`, `p95=353.493 ms`) | `824.04 TPS` (`-5,9 %` vs LAN) |
 
 ---
