@@ -33,8 +33,8 @@ Dans `env/multi-db-docker-env/docker-compose-bucardo.yml`, `bucardo_daemon` se c
 flowchart TB
     C["Clients Actif-Actif"] -->|"TCP 127.0.0.1:15461->5432"| N1["bucardo_node1 (PG 17.12 + plperlu)<br/>Base données + base métadonnées bucardo<br/>bucardo.delta_* | Seq +2 START 1"]
     C -->|"TCP 127.0.0.1:15462->5432"| N2["bucardo_node2 (PG 17.12)<br/>Base données seule<br/>bucardo.delta_* | Seq +2 START 2"]
-    N1 <-->|"LISTEN/NOTIFY + polling<br/>Pull & merge PK deltas (bucardo_latest)"| D["bucardo_daemon (Bucardo 5.6.0)<br/>Perl MCP / CTL / KID | grp_mm / sync_mm"]
-    N2 <-->|"LISTEN/NOTIFY + polling<br/>Pull & merge PK deltas (bucardo_latest)"| D
+    N1 <-->|"LISTEN/NOTIFY + polling<br/>Extraction et fusion des deltas PK (bucardo_latest)"| D["bucardo_daemon (Bucardo 5.6.0)<br/>Perl MCP / CTL / KID | grp_mm / sync_mm"]
+    N2 <-->|"LISTEN/NOTIFY + polling<br/>Extraction et fusion des deltas PK (bucardo_latest)"| D
 ```
 
 Les tables sans clé primaire sont refusées d'emblée par `bucardo add sync` (`validate_sync`), imposant une PK sur chaque table répliquée.
@@ -50,7 +50,7 @@ $$
 L_{\text{N4-bucardo}} \approx L_{\text{disque}} + L_{\text{trigger}} \quad (\text{écriture trigger locale ; polling et fusion asynchrones})
 $$
 
-3. **`dbgroup` multi-sources & `plperlu` :** Bucardo 5 unifie les anciens syncs `swap`/`pushdelta` via `dbgroup` (`source:source` vs `source:target`), et exige `postgresql-plperl-17` (`plperlu`) pour `db_getconn()`.
+3. **`dbgroup` multi-sources & `plperlu` :** Bucardo 5 remplace les anciens syncs Bucardo 4 `swap`/`pushdelta` par des rôles `dbgroup` unifiés (`source:source` vs `source:target`), et exige `postgresql-plperl-17` (`plperlu`) pour `db_getconn()`.
 
 | Mode / Gestionnaire | Portée | Mécanique et stratégie de clés | Impact conflit / bascule | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
