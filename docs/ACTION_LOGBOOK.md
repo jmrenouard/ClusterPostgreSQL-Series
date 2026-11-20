@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-166 - Extend Tier 5 Popularity, Vitality and Freshness Parity Tests Across All 38 Sheets and 22 CSV Rows (Issue `#413`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#413` (`test/issue-413-tier5-popularity-parity`)
+- **Request / Changes / Result**: Replaced the partial 4-column popularity loop in `tests/test_solution_sheets_tier5.py` with `test_tier5_popularity_vitality_and_freshness_parity(self)` enforcing Section 6 headings, 8-column headers, `2026-11-20T17:26:02Z` / `archived = false` intro, 3 synthesis bullets, positional sub-cell splitting (`\s+/\s+` on `rw[3..7]`), `N/A` zero-digit proprietary opacity (`edb-pgd`, `aurora-limitless`, `gcp-spanner-alloydb` + `pgadapter`), and dormant grounding across all 19 slugs (38 sheets) and 22 rows of `results/project_popularity.csv`; verified 7-bit ASCII, `make test` (`21/21` OK, `3/3` tier5), `make lint`, `make check-math`, `make check-security`, and diff `< 15,000` chars.
+
 ### ACT-165 - Align YT Cluster Lite (#18) EN/FR Section 6 With R1 Popularity Telemetry Schema and M4 Split Record (Issue `#411`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#411` (`docs/issue-411-yt-cluster-lite-popularity-align`)
 - **Request / Changes / Result**: Replaced Section 6 in `docs/{en,fr}/solutions/yt_cluster_lite.md` with the canonical 8-column / 3-bullet R1 schema (`yt-cluster-lite` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`, clickable GitHub URL, `open_issues=0`, full `git_role`, full ISO `pushed_at`, `Tier C (Fragile / Young)` | `Current -- Young` | `High Risk` preserving `2026-11-13`, `vkrinitsyn`, `ytserv`, `20.6-41.5 TPS`, and `0A000` context), plus `docs/ACTION_LOGBOOK.md` and `docs/RCA_REGISTER.md` (`IMP-011`); verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
