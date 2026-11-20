@@ -1,0 +1,104 @@
+=== PostgreSQL 18.6 Empirical Benchmark & Capability Summary ===
+engine: PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2) | PGDATA=/var/lib/postgresql/18/docker (VOL=/var/lib/postgresql)
+defaults: io_method=worker (io_workers=3) | data_checksums=on | substream=p (parallel) | io_uring=EPERM in container
+aio_ab: cold_seq_scan worker=829.4ms vs sync=1018.3ms (-18.5%) | warm_avg 385.0 vs 352.5ms | pgbench_rw 290.75 vs 323.98 TPS
+uuidv7: 50/50 concurrent dual-node pg18-birep inserts converged (0x 23505, 0 B-tree inversions); H_append_only=2066.70 TPS
+conflicts: confl_insert_exists=2 confl_update_origin_differs=1/2 confl_update_missing=1 confl_delete_origin_differs=1 confl_multiple_unique_conflicts=1
+logical_limits: publish_generated_columns=stored (pubgencols=s); FOR ALL SEQUENCES & REFRESH SEQUENCES -> SQLSTATE 42601 (seq stuck 1|false -> 23505)
+=== [pg18-standalone] Start (15 suites, PG_SCALE=2) ===
+  A_single_rw: tps=784.43 avg=10.181ms p95=25.372ms PASS_SINGLE_PRIMARY drift=0
+  B1_disjoint_rw: tps=712.7 avg=11.204ms p95=22.979ms PASS_SINGLE_PRIMARY drift=0
+  B2_overlap_rw: tps=506.21 avg=15.783ms p95=41.373ms PASS_SINGLE_PRIMARY drift=0
+  C_multinode_ro: tps=42373.67 avg=0.335ms p95=0.605ms
+  D_hot_conflict: tps=2117.66 avg=3.757ms p95=7.677ms PASS_SINGLE_PRIMARY drift=0
+  E_sysbench_oltp_rw: tps=1046.67 qps=21022.08 avg=7.64ms p95=10.46ms
+  E2_sysbench_oltp_ro: tps=2000.88 qps=32014.06 avg=3.99ms p95=4.82ms
+  E3_sysbench_oltp_wo: tps=1382.15 qps=8345.42 avg=5.78ms p95=10.27ms
+  E4_sysbench_point_select: tps=130850.73 qps=130850.73 avg=0.12ms p95=0.32ms
+  H_append_only_insert: tps=1956.76 avg=4.068ms p95=7.841ms PASS_SINGLE_PRIMARY drift=0
+  G_conc_c1: tps=308.55 avg=3.231ms p95=4.772ms
+  G_conc_c4: tps=753.53 avg=5.292ms p95=9.585ms
+  G_conc_c8: tps=832.54 avg=9.592ms p95=23.844ms
+  G_conc_c16: tps=692.76 avg=23.039ms p95=68.345ms
+  G_conc_c32: tps=813.91 avg=39.185ms p95=126.022ms
+=== [pg18-standalone] Down ===
+=== [pg18-async-streaming] Start (18 suites, PG_SCALE=2) ===
+  A_single_rw: tps=558.34 avg=14.298ms p95=36.662ms PASS_SINGLE_PRIMARY drift=0
+  B1_disjoint_rw: tps=349.25 avg=22.865ms p95=52.793ms PASS_SINGLE_PRIMARY drift=0
+  B2_overlap_rw: tps=353.3 avg=22.623ms p95=65.751ms PASS_SINGLE_PRIMARY drift=0
+  C_multinode_ro: tps=47548.05 avg=0.31ms p95=0.558ms
+  D_hot_conflict: tps=2277.43 avg=3.47ms p95=5.498ms PASS_SINGLE_PRIMARY drift=0
+  E_sysbench_oltp_rw: tps=980.72 qps=19704.25 avg=8.15ms p95=9.91ms
+  E2_sysbench_oltp_ro: tps=1706.9 qps=27310.33 avg=4.68ms p95=6.43ms
+  E3_sysbench_oltp_wo: tps=1809.82 qps=10921.73 avg=4.42ms p95=6.32ms
+  E4_sysbench_point_select: tps=126416.9 qps=126416.9 avg=0.13ms p95=0.32ms
+  H_append_only_insert: tps=1423.07 avg=5.603ms p95=12.339ms PASS_SINGLE_PRIMARY drift=0
+  F_wan_netem_10ms: tps=616.99 avg=12.944ms p95=31.593ms
+  F_wan_netem_25ms: tps=554.93 avg=14.395ms p95=36.938ms
+  F_wan_netem_50ms: tps=407.97 avg=19.576ms p95=57.339ms
+  G_conc_c1: tps=399.68 avg=2.492ms p95=3.233ms
+  G_conc_c4: tps=586.07 avg=6.806ms p95=11.553ms
+  G_conc_c8: tps=651.46 avg=12.256ms p95=29.941ms
+  G_conc_c16: tps=634.12 avg=25.183ms p95=72.015ms
+  G_conc_c32: tps=624.85 avg=51.046ms p95=163.092ms
+=== [pg18-async-streaming] Down ===
+=== [pg18-sync-streaming] Start (18 suites, PG_SCALE=2) ===
+  A_single_rw: tps=497.94 avg=16.044ms p95=40.98ms PASS_SINGLE_PRIMARY drift=0
+  B1_disjoint_rw: tps=523.12 avg=15.268ms p95=28.758ms PASS_SINGLE_PRIMARY drift=0
+  B2_overlap_rw: tps=472.2 avg=16.918ms p95=41.126ms PASS_SINGLE_PRIMARY drift=0
+  C_multinode_ro: tps=32258.16 avg=0.46ms p95=1.011ms
+  D_hot_conflict: tps=1223.75 avg=6.521ms p95=10.034ms PASS_SINGLE_PRIMARY drift=0
+  E_sysbench_oltp_rw: tps=767.63 qps=15443.77 avg=10.41ms p95=13.22ms
+  E2_sysbench_oltp_ro: tps=1869.54 qps=29912.69 avg=4.27ms p95=5.47ms
+  E3_sysbench_oltp_wo: tps=1184.57 qps=7155.74 avg=6.75ms p95=10.09ms
+  E4_sysbench_point_select: tps=122246.91 qps=122246.91 avg=0.13ms p95=0.34ms
+  H_append_only_insert: tps=1760.26 avg=4.532ms p95=5.852ms PASS_SINGLE_PRIMARY drift=0
+  F_wan_netem_10ms: tps=113.71 avg=70.139ms p95=184.95ms
+  F_wan_netem_25ms: tps=41.56 avg=190.244ms p95=529.136ms
+  F_wan_netem_50ms: tps=25.6 avg=309.71ms p95=766.214ms
+  G_conc_c1: tps=286.77 avg=3.48ms p95=4.251ms
+  G_conc_c4: tps=315.12 avg=12.668ms p95=30.628ms
+  G_conc_c8: tps=306.99 avg=26.008ms p95=69.284ms
+  G_conc_c16: tps=425.21 avg=37.483ms p95=109.726ms
+  G_conc_c32: tps=305.22 avg=104.347ms p95=352.464ms
+=== [pg18-sync-streaming] Down ===
+=== [pg18-logical] Start (18 suites, PG_SCALE=2) ===
+  A_single_rw: tps=314.26 avg=25.392ms p95=79.055ms PASS_SINGLE_PRIMARY drift=0
+  B1_disjoint_rw: tps=287.13 avg=27.83ms p95=78.221ms PASS_SINGLE_PRIMARY drift=0
+  B2_overlap_rw: tps=475.08 avg=16.818ms p95=43.899ms PASS_SINGLE_PRIMARY drift=0
+  C_multinode_ro: tps=45862.68 avg=0.323ms p95=0.602ms
+  D_hot_conflict: tps=2998.37 avg=2.651ms p95=4.25ms PASS_SINGLE_PRIMARY drift=0
+  E_sysbench_oltp_rw: tps=1027.84 qps=20651.56 avg=7.78ms p95=10.46ms
+  E2_sysbench_oltp_ro: tps=1517.26 qps=24276.12 avg=5.27ms p95=9.73ms
+  E3_sysbench_oltp_wo: tps=1582.39 qps=9549.55 avg=5.05ms p95=8.74ms
+  E4_sysbench_point_select: tps=131542.35 qps=131542.35 avg=0.12ms p95=0.31ms
+  H_append_only_insert: tps=3518.49 avg=2.262ms p95=2.614ms PASS_SINGLE_PRIMARY drift=0
+  F_wan_netem_10ms: tps=683.29 avg=11.69ms p95=29.679ms
+  F_wan_netem_25ms: tps=844.1 avg=9.462ms p95=22.852ms
+  F_wan_netem_50ms: tps=721.61 avg=11.064ms p95=28.312ms
+  G_conc_c1: tps=407.59 avg=2.443ms p95=3.081ms
+  G_conc_c4: tps=788.59 avg=5.057ms p95=9.058ms
+  G_conc_c8: tps=718.15 avg=11.12ms p95=28.274ms
+  G_conc_c16: tps=736.4 avg=21.686ms p95=63.551ms
+  G_conc_c32: tps=627.69 avg=50.742ms p95=161.779ms
+=== [pg18-logical] Down ===
+=== [pg18-birep] Start (18 suites, PG_SCALE=2) ===
+  A_single_rw: tps=514.28 avg=15.53ms p95=40.902ms PASS_CONVERGED drift=0
+  B1_disjoint_rw: tps=417.18 avg=19.151ms p95=54.956ms PASS_CONVERGED drift=0
+  B2_overlap_rw: tps=792.45 avg=10.077ms p95=22.086ms EXPECTED_LIMITATION_DIVERGED drift=-338
+  C_multinode_ro: tps=42190.66 avg=0.35ms p95=0.689ms
+  D_hot_conflict: tps=1774.11 avg=4.487ms p95=10.638ms EXPECTED_LIMITATION_DIVERGED drift=-83252
+  E_sysbench_oltp_rw: tps=1055.55 qps=21202.11 avg=7.57ms p95=9.73ms
+  E2_sysbench_oltp_ro: tps=2053.07 qps=32849.2 avg=3.89ms p95=4.65ms
+  E3_sysbench_oltp_wo: tps=1492.99 qps=9021.65 avg=5.35ms p95=7.04ms
+  E4_sysbench_point_select: tps=146907.74 qps=146907.74 avg=0.11ms p95=0.28ms
+  H_append_only_insert: tps=2066.7 avg=3.86ms p95=5.424ms PASS_CONVERGED drift=0
+  F_wan_netem_10ms: tps=763.8 avg=10.457ms p95=25.665ms
+  F_wan_netem_25ms: tps=747.42 avg=10.684ms p95=26.95ms
+  F_wan_netem_50ms: tps=782.57 avg=10.206ms p95=24.748ms
+  G_conc_c1: tps=334.72 avg=2.976ms p95=4.097ms
+  G_conc_c4: tps=689.16 avg=5.788ms p95=10.629ms
+  G_conc_c8: tps=799.84 avg=9.983ms p95=24.545ms
+  G_conc_c16: tps=790.46 avg=20.174ms p95=60.942ms
+  G_conc_c32: tps=721.49 avg=44.167ms p95=140.376ms
+=== [pg18-birep] Down ===
