@@ -146,6 +146,20 @@ Ran at `pg_scale = 2` (`retries_40001 = 0`). Only `Avg`, `Stddev` (`0` for `sysb
 | **HAProxy LB** | `haproxy_pgedge` (`haproxy:2.9-alpine`), `127.0.0.1:15450:5432` (TCP RR `inter 2s fall 2 rise 2`); `:8404/stats` internal only |
 | **Key GUCs & Mesh** | `shared_preload_libraries=spock,snowflake`, `output_plugin_libraries=pgoutput,spock_output`, `track_commit_timestamp=on`, `spock.conflict_resolution=last_update_wins`, `spock.exception_behaviour=transdiscard` (default), `spock.enable_ddl_replication=on`, `spock.include_ddl_repset=on`, `spock.save_resolutions=on`, `snowflake.node=1..3`. |
 
+## 6. GitHub Popularity, Git Presence & Maintenance Vitality (`results/project_popularity.csv`)
+
+Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
+
+| Project | Git Presence / Role | Repo (`Account / Repos`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Release / Last Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **pgEdge Spock (#2)** | `Yes` -- `Primary` | [`pgEdge/spock`](https://github.com/pgEdge/spock) (`Org / 51`) | 769 / 59 / 15 | 1616 / 621 | 32 / 68 | C / `NOASSERTION` | `v6.0.0-beta.2` / `2026-11-20T17:04:58Z` |
+| **pgEdge Snowflake (#2b)** | `Yes` -- `Primary (Companion)` | [`pgEdge/snowflake`](https://github.com/pgEdge/snowflake) (`Org / 51`) | 103 / 14 / 17 | 239 / 48 | 20 / 4 | PLpgSQL / `PostgreSQL` | `v2.6.1` / `2026-11-18T22:39:13Z` |
+| **pgEdge LOLOR (#2c)** | `Yes` -- `Primary (Companion)` | [`pgEdge/lolor`](https://github.com/pgEdge/lolor) (`Org / 51`) | 51 / 8 / 7 | 159 / 79 | 16 / 16 | C / `PostgreSQL` | `v1.2.3` / `2026-11-20T07:41:54Z` |
+
+- **Maintenance Level:** **Tier A (Active OSS)** -- `pgEdge/spock` (`621`/12m, `32` contributors, `769` stars) plus active `snowflake` (`48`/12m) and `lolor` (`79`/12m).
+- **Currency / Freshness:** **Current -- High Velocity** -- Last push `2026-11-20T17:04:58Z`, `621` commits/12m, latest release `v6.0.0-beta.2`.
+- **Operational Manageability:** **Moderate** -- Active C extensions (`spock` + `snowflake`); note `NOASSERTION` SPDX on `spock`, `v6.0.0-beta.2` track, and `exception_log` monitoring.
+
 ---
 
 **Navigation:** [Index](../../../README.md) · [Ch. 03a — Native & Extensions](../03a_solutions_native_and_extensions.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/pgedge_spock.md)
