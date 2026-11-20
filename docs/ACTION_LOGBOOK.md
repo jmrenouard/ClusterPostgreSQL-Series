@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-117 - Add English Architectural Reference Sheet for GCP Spanner & AlloyDB (#13) (Issue `#233`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#233` (`docs/issue-233-gcp-spanner-alloydb-en`)
+- **Request / Changes / Result**: Created `docs/en/solutions/gcp_spanner_alloydb.md` (`#13`, Architectural Reference, `APP-005` managed cloud exclusion) disambiguating Cloud Spanner PG Interface (`PGAdapter`, Multi-Paxos, TrueTime commit-wait, zero C extensions) from single-primary AlloyDB / AlloyDB Omni (Log Processing Service, Read Pools, Columnar Engine), with dual-subgraph Mermaid diagram, implementation modes, strengths/weaknesses, verified `results/*.csv` baselines (`#6 cockroach`, `#5 yugabyte`, `#15b pg17-sync-streaming`), and Ch. 03b/10 footer links; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-116 - Add French Architectural Reference Sheet for AWS Aurora Limitless (#12) (Issue `#231`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#231` (`docs/issue-231-aws-aurora-limitless-fr`)
 - **Request / Changes / Result**: Created `docs/fr/solutions/aws_aurora_limitless.md` mirroring `docs/en/solutions/aws_aurora_limitless.md` section-for-section (`#12`, Architectural Reference, `APP-005` managed cloud exclusion) with French Mermaid diagram, AWS Time Sync MVCC latency model, implementation modes, strengths/weaknesses, verified `results/*.csv` `T5` baselines (`#7 citus`, `#5 yugabyte`, `#6 cockroach`, `#15a pg17-standalone`), and Ch. 03b/10 footer links; `make test` (`13/13` OK) and `make lint` verified.
