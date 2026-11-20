@@ -107,15 +107,16 @@ Les 87 lignes ont été mesurées séquentiellement à `pg_scale = 2` (`retries_
 
 ## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
 
-Télémétrie REST/GraphQL GitHub capturée en direct le `2026-11-20T17:26:02Z` (`results/project_popularity.csv`) :
+Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
 
-| Projet | Présence / Rôle Git | Dépôt (Compte / Dépôts publics) | Stars / Forks | Commits (Total / 12m) | Contributeurs | Dernier Tag | Dernier Push |
-| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **PostgreSQL Core (`#1/#15/#16/#17`)** | Miroir de `git.postgresql.org` | `postgres/postgres` (`Org / 6`) | 22,894 / 6,123 | 66,091 / **3,446** | 58* | `REL_19_0` | `2026-11-20` |
-| **Patroni HA (`#15b` compagnon)** | Primaire | `patroni/patroni` (`Org / 1`) | 8,847 / 1,049 | 2,713 / 142 | 246 | `v4.1.5` | `2026-11-20` |
+| Projet | Présence / Rôle Git | Dépôt (`Compte / Dépôts`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Tag / Dernier Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **PostgreSQL Core (`#1/#15/#16/#17`)** | `Yes (Mirror)` -- `Mirror (canonical: git.postgresql.org)` | [`postgres/postgres`](https://github.com/postgres/postgres) (`Org / 6`) | 22894 / 6123 / 589 | 66091 / 3446 | 58* / 0 | C / `NOASSERTION` | `REL_19_0` / `2026-11-20T16:52:40Z` |
+| **Patroni HA (`#15b` compagnon)** | `Yes` -- `Primary` | [`patroni/patroni`](https://github.com/patroni/patroni) (`Org / 1`) | 8847 / 1049 / 124 | 2713 / 142 | 246 / 68 | Python / `MIT` | `v4.1.5` / `2026-11-20T17:03:56Z` |
 
-- **Maintenance et fraîcheur :** **Niveau S (Cœur)** — `postgres/postgres` atteint ~9,4 commits/j (`3,446`/12m, push `2026-11-20`, `REL_19_0`) ; `58*` compte les committeurs du miroir officiel `git.postgresql.org`. `patroni/patroni` (`v4.1.5`, `246` contributeurs, MIT) assure la HA (`142`/12m).
-- **Maintenabilité opérationnelle :** Risque *bus factor* minimal (gouvernance multi-éditeurs, zéro extension propriétaire). Adapter seulement les volumes PG 18 (`PGDATA=/var/lib/postgresql/18/docker`), seccomp pour `io_uring`, et `setval()` jusqu'à PG 19.
+- **Niveau de maintenance :** **Niveau S (Cœur)** + **Niveau A (OSS Actif)** -- `postgres/postgres` (`3446`/12m, `58*` committeurs miroir selon `APP-007`) et `patroni/patroni` (`142`/12m, `246` contributeurs, `68` issues).
+- **Fraîcheur / Actualité :** **À jour -- Actif au quotidien** -- Dernier push `2026-11-20T16:52:40Z` / `2026-11-20T17:03:56Z`, `3446` / `142` commits/12m, dernières versions `REL_19_0` / `v4.1.5`.
+- **Maintenabilité opérationnelle :** **Risque faible** -- Cœur multi-éditeurs + HA MIT ; adapter `PGDATA=/var/lib/postgresql/18/docker`, seccomp (`io_uring`) et `setval()` jusqu'à PG 19.
 
 ---
 

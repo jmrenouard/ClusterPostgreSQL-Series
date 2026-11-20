@@ -107,15 +107,16 @@ All 87 rows ran sequentially at `pg_scale = 2` (`retries_40001 = 0`). Only `Avg`
 
 ## 6. GitHub Popularity, Git Presence & Maintenance Vitality (`results/project_popularity.csv`)
 
-Live GitHub REST/GraphQL telemetry captured `2026-11-20T17:26:02Z` (`results/project_popularity.csv`):
+Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 
-| Project | Git Presence / Role | Repo (Account / Public Repos) | Stars / Forks | Commits (Total / 12m) | Contributors | Latest Tag | Last Push |
-| :--- | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **PostgreSQL Core (`#1/#15/#16/#17`)** | Mirror of `git.postgresql.org` | `postgres/postgres` (`Org / 6`) | 22,894 / 6,123 | 66,091 / **3,446** | 58* | `REL_19_0` | `2026-11-20` |
-| **Patroni HA (`#15b` companion)** | Primary | `patroni/patroni` (`Org / 1`) | 8,847 / 1,049 | 2,713 / 142 | 246 | `v4.1.5` | `2026-11-20` |
+| Project | Git Presence / Role | Repo (`Account / Repos`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Release / Last Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **PostgreSQL Core (`#1/#15/#16/#17`)** | `Yes (Mirror)` -- `Mirror (canonical: git.postgresql.org)` | [`postgres/postgres`](https://github.com/postgres/postgres) (`Org / 6`) | 22894 / 6123 / 589 | 66091 / 3446 | 58* / 0 | C / `NOASSERTION` | `REL_19_0` / `2026-11-20T16:52:40Z` |
+| **Patroni HA (`#15b` companion)** | `Yes` -- `Primary` | [`patroni/patroni`](https://github.com/patroni/patroni) (`Org / 1`) | 8847 / 1049 / 124 | 2713 / 142 | 246 / 68 | Python / `MIT` | `v4.1.5` / `2026-11-20T17:03:56Z` |
 
-- **Maintenance Level & Freshness:** **Tier S (Core Infrastructure)** -- `postgres/postgres` averages ~9.4 commits/day (`3,446`/12m, pushed `2026-11-20`, `REL_19_0` tagged); `58*` reflects trusted committers on the canonical `git.postgresql.org` mirror rather than total patch authors. `patroni/patroni` (`v4.1.5`, `246` contributors, MIT) provides steady HA orchestration (`142`/12m).
-- **Operational Manageability:** Highest long-term sustainability and lowest bus-factor risk in the ecosystem (multi-vendor governance, zero proprietary extensions). Production teams only need to adapt PG 18 Docker volume paths (`PGDATA=/var/lib/postgresql/18/docker`), seccomp if testing `io_uring`, and `setval()` runbooks for logical failover until PG 19.
+- **Maintenance Level:** **Tier S (Core)** + **Tier A (Active OSS)** -- `postgres/postgres` (`3446`/12m, `58*` mirror committers per `APP-007`, not total patch authors) and `patroni/patroni` (`142`/12m, `246` contributors, `68` issues).
+- **Currency / Freshness:** **Current -- Daily Active** -- Last push `2026-11-20T16:52:40Z` / `2026-11-20T17:03:56Z`, `3446` / `142` commits/12m, latest releases `REL_19_0` / `v4.1.5`.
+- **Operational Manageability:** **Low Risk** -- Multi-vendor core + MIT HA; adapt `PGDATA=/var/lib/postgresql/18/docker`, `io_uring` seccomp, and `setval()` runbooks until PG 19.
 
 ---
 
