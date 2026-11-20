@@ -21,9 +21,13 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-078 - Dashboard Project Emblem, LightPath Support Pill & Logo Unit Tests (Issue `#155`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#155` (`feat/issue-155-dashboard-project-logo-and-tests`)
+- **Request / Changes / Result**: Updated `dashboard/index.html` and `dashboard/styles.css` to render `assets/clusterpostgresql-series-icon.png` in the primary `.brand` slot and LightPath dark SVG inside an explicit `"Supported by"` / `"Soutenu par"` `.support-badge` pill + footer; added `test_project_logo_and_supporter_positioning` in `tests/test_benchmark_artifacts.py` (`13/13` tests OK, `make lint` OK, `node --check` 7/7 OK, headless Chrome visually verified).
+
 ### ACT-077 - Add Dedicated ClusterPostgreSQL-Series Project Logo & Position LightPath as Supporter (Issue `#153`)
-- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#153` (`feat/issue-153-project-logo-and-lightpath-support`)
-- **Request / Changes / Result**: Generated dedicated project banner (`assets/clusterpostgresql-series-logo.png`) and square emblem (`assets/clusterpostgresql-series-icon.png`), updated `README.md`, `README.fr.md`, and `dashboard/index.html` + `styles.css` so the project logo owns the primary hero/header slot while LightPath SVGs appear explicitly as `"Supported by"` / `"Soutenu par"` project support; expanded `tests/test_benchmark_artifacts.py` (`13/13` tests OK, `make lint` OK, headless Chrome verified).
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#153` / PR `#154` (`feat/issue-153-project-logo-and-lightpath-support`)
+- **Request / Changes / Result**: Generated dedicated project banner (`assets/clusterpostgresql-series-logo.png`) and square emblem (`assets/clusterpostgresql-series-icon.png`), updated `README.md` and `README.fr.md` so the project logo owns the hero banner while LightPath SVGs appear under explicit `"Supported by"` / `"Soutenu par"` sections, and logged `IMP-005` (`12/12` tests OK, `make lint` OK, `9,338` B diff).
 
 ### ACT-076 - Finalize V2 Governance Registers (`ACTION_LOGBOOK.md` & `RCA_REGISTER.md`) (Issue `#151`)
 - **Date**: `2026-11-19` | **Status**: `COMPLETED` | **Issue / Branch**: `#151` (`docs/issue-151-v2-governance-registers`)

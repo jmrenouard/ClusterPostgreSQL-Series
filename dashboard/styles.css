@@ -42,12 +42,26 @@ body {
   gap: 16px;
   flex-wrap: wrap;
 }
-.brand { display: flex; align-items: center; gap: 16px; }
-.brand-logo { display: block; height: 42px; width: auto; }
-.brand-text h1 { margin: 0; font-size: 1.2rem; font-weight: 700; letter-spacing: -0.01em; }
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-logo { display: block; height: 46px; width: 46px; border-radius: 10px; box-shadow: 0 2px 8px rgba(14, 165, 233, 0.25); }
+.brand-text h1 { margin: 0; font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
 .subtitle { margin: 2px 0 0; font-size: 0.82rem; color: #94a3b8; }
 .topbar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.accent-bar { height: 3px; background: linear-gradient(90deg, #d71920 0%, #f5821f 35%, #fdb913 55%, #0ea5e9 80%, #0066b3 100%); }
+.support-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.support-badge:hover { background: rgba(255, 255, 255, 0.11); border-color: var(--cyan); }
+.support-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; font-weight: 600; }
+.support-logo { display: block; height: 20px; width: auto; }
+.accent-bar { height: 3px; background: linear-gradient(90deg, #1d4ed8 0%, #336791 35%, #0ea5e9 70%, #10b981 100%); }
 
 .container { max-width: 1460px; margin: 18px auto 32px; padding: 0 20px; }
 .hidden { display: none !important; }
