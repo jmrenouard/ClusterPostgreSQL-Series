@@ -166,8 +166,12 @@ class TestBenchmarkArtifacts(unittest.TestCase):
         meta = json.loads(m_meta.group(1))
         self.assertEqual(meta["topology_count"], 10)
         self.assertEqual(meta["pg18_topology_count"], 5)
-        self.assertEqual(meta["total_topology_count"], 15)
+        self.assertEqual(meta["yt_topology_count"], 2)
+        self.assertEqual(meta["total_topology_count"], 17)
         self.assertEqual(meta["pg18_row_count"], 87)
+        self.assertEqual(meta["yt_row_count"], 22)
+        self.assertEqual(meta["total_row_count"], 287)
+        self.assertEqual(meta["popularity_count"], 22)
         self.assertGreaterEqual(meta["row_count"], 170)
 
         pg18_js = (DASH / "data_bench_pg18.js").read_text(encoding="utf-8")
