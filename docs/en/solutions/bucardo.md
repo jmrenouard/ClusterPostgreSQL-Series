@@ -140,6 +140,18 @@ Ran at `pg_scale = 2` (`retries_40001 = 0`). Only `Avg`, `Stddev` (`0` for `sysb
 | **Daemon Container** | `bucardo_daemon` (`debian:trixie-slim` + `bucardo` `5.6.0`), MCP/CTL/KID processes, `/var/run/bucardo/`, `/var/log/bucardo/log.bucardo` |
 | **Key Setup & Sync** | `dbgroup grp_mm db1:source db2:source`, `sync_mm` (`conflict_strategy=bucardo_latest`, `Autokick=Yes`, `Stayalive=Yes`), `INCREMENT BY 2 START WITH 1/2`. |
 
+## 6. GitHub Popularity, Git Presence & Maintenance Vitality (`results/project_popularity.csv`)
+
+Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
+
+| Project | Git Presence / Role | Repo (`Account / Repos`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Release / Last Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **Bucardo 5 (#9)** | `Yes` -- `Primary` | [`bucardo/bucardo`](https://github.com/bucardo/bucardo) (`Org / 15`) | 807 / 110 / 33 | 2535 / 0 | 30 / 53 | Perl / `NOASSERTION` | `5.6.0` / `2025-05-31T18:51:42Z` |
+
+- **Maintenance Level:** **Tier D (EOL / Dormant)** -- `bucardo/bucardo` records `0` commits/12m (`2,535` total, `30` contributors, `807` stars, `53` open issues).
+- **Currency / Freshness:** **Stale / Dormant** -- Last push `2025-05-31T18:51:42Z`, `0` commits/12m, latest release `5.6.0`.
+- **Operational Manageability:** **Do Not Deploy** -- Legacy trigger-based Perl daemon (`5.6.0`) is dormant with `node1` metadata SPOF, `T13` FK races, and high lag.
+
 ---
 
 **Navigation:** [Index](../../../README.md) · [Ch. 03b — Distributed, Triggers & Cloud](../03b_solutions_distributed_triggers_cloud.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/bucardo.md)
