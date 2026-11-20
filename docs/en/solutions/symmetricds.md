@@ -89,6 +89,18 @@ Instead, SymmetricDS's Family 5 trigger-daemon physics (`PA/EL`, trigger write a
 | **CRDT Lost-Update Fix** | None (`NEWER_WINS`/`FALLBACK` loses `+delta`) | None (`-531,620` drift in `D`) | **`spock.delta_apply` (`0` drift, `1,837.64 TPS`)** | None (`-71,063` drift in `D`) |
 | **Reference Anchor (`A` / `T15` Lag)** | Not benchmarked (trigger + HTTP batch) | `735.38 TPS` (`A`), `p50=548.74 ms` (`T15`) | `556.06 TPS` (`A`), `p50=1.16 ms` (`T15`) | `875.91 TPS` (`A`), `p50=1.47 ms` (`T15`) |
 
+## 6. GitHub Popularity, Git Presence & Maintenance Vitality (`results/project_popularity.csv`)
+
+Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
+
+| Project | Git Presence / Role | Repo (`Account / Repos`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Release / Last Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **SymmetricDS (#10)** | `Yes` -- `Primary` | [`jumpmindinc/symmetric-ds`](https://github.com/jumpmindinc/symmetric-ds) (`Org / 8`) | 882 / 241 / 59 | 14926 / 425 | 96 / 17 | Java / `N/A` | `3.18.4` / `2026-11-20T16:39:06Z` |
+
+- **Maintenance Level:** **Tier B (Niche)** -- `jumpmindinc/symmetric-ds` records `425` commits/12m (`14,926` total, `96` contributors, `882` stars, `17` open issues).
+- **Currency / Freshness:** **Current -- Active** -- Last push `2026-11-20T16:39:06Z`, `425` commits/12m, latest release `3.18.4`.
+- **Operational Manageability:** **Moderate** -- Active Java trigger-sync engine (GitHub SPDX `N/A`; LGPL/GPLv3 dual-licensed); JVM agents and `sym_data` purge require disciplined ops.
+
 ---
 
 **Navigation:** [Index](../../../README.md) · [Ch. 03b — Distributed, Triggers & Cloud](../03b_solutions_distributed_triggers_cloud.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/symmetricds.md)

@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-160 - Enrich SymmetricDS (#10) and PgPool-II (#11) EN/FR Sheets With Popularity Telemetry (Issue `#401`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#401` (`docs/issue-401-symmetricds-pgpool-popularity`)
+- **Request / Changes / Result**: Split M3 PR 6 into PR 6a (`symmetricds` + `pgpool_ii`) and PR 6b (`edb_pgd`) to stay under the `< 15,000`-char PR diff ceiling; added standardized Section 6 GitHub popularity, git presence, `pushed_at` freshness, and Manageability synthesis (`symmetricds` and `pgpool2` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`, noting `35` mirror committers per `APP-007`) to `docs/{en,fr}/solutions/symmetricds.md` and `docs/{en,fr}/solutions/pgpool_ii.md`, plus `docs/ACTION_LOGBOOK.md`; verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
+
 ### ACT-159 - Enrich OpenTenBase / Postgres-XL (#8) EN/FR Sheets With Popularity Telemetry (Issue `#399`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#399` (`docs/issue-399-opentenbase-popularity`)
 - **Request / Changes / Result**: Added standardized Section 6 GitHub popularity, git presence, `pushed_at` freshness, and Manageability synthesis (`opentenbase` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`) to `docs/en/solutions/opentenbase_pgxl.md` and `docs/fr/solutions/opentenbase_pgxl.md`, plus `docs/ACTION_LOGBOOK.md`; verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.

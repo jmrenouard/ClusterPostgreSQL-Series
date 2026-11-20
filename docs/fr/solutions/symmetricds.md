@@ -89,6 +89,18 @@ La physique Famille 5 de SymmetricDS (`PA/EL`, amplification par triggers, laten
 | **Protection *Lost Update*** | Aucune (`NEWER_WINS`/`FALLBACK` perd `+delta`) | Aucune (`-531 620` dérive en `D`) | **`spock.delta_apply` (`0` dérive, `1837.64 TPS`)** | Aucune (`-71 063` dérive en `D`) |
 | **Ancre réf. (`A` / Lag `T15`)** | Non benchmarké (triggers + lots HTTP) | `735.38 TPS` (`A`), `p50=548.74 ms` (`T15`) | `556.06 TPS` (`A`), `p50=1.16 ms` (`T15`) | `875.91 TPS` (`A`), `p50=1.47 ms` (`T15`) |
 
+## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
+
+Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
+
+| Projet | Présence / Rôle Git | Dépôt (`Compte / Dépôts`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Tag / Dernier Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **SymmetricDS (#10)** | `Yes` -- `Primary` | [`jumpmindinc/symmetric-ds`](https://github.com/jumpmindinc/symmetric-ds) (`Org / 8`) | 882 / 241 / 59 | 14926 / 425 | 96 / 17 | Java / `N/A` | `3.18.4` / `2026-11-20T16:39:06Z` |
+
+- **Niveau de maintenance :** **Niveau B (Niche)** -- `jumpmindinc/symmetric-ds` totalise `425` commits/12m (`14 926` total, `96` contributeurs, `882` stars, `17` issues).
+- **Fraîcheur / Actualité :** **À jour -- Actif** -- Dernier push `2026-11-20T16:39:06Z`, `425` commits/12m, dernière version `3.18.4`.
+- **Maintenabilité opérationnelle :** **Modéré** -- Moteur Java actif (SPDX GitHub `N/A` ; double licence LGPL/GPLv3) ; les agents JVM et purges `sym_data` exigent du suivi.
+
 ---
 
 **Navigation :** [Index](../../../README.fr.md) · [Ch. 03b — Distribué, triggers et cloud](../03b_catalogue_distribue_triggers_cloud.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](../10_comparatif_streaming_logique_multimaster.md) · [English version](../../en/solutions/symmetricds.md)
