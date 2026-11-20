@@ -141,6 +141,18 @@ Ran at `pg_scale = 2` (`retries_40001 = 0` across all benchmark CSVs). Only `Avg
 | **Image & Resources** | `yugabytedb/yugabyte:2026.1.3.0-b100`, `mem_limit: 2048m`, master `320 MiB`, tserver `1024 MiB`, bridge `yb_net` |
 | **Key Flags & Setup** | `yugabyted start --insecure --fault_tolerance=zone`, `yb_num_shards_per_tserver=1`, `ysql_num_shards_per_tserver=1`, `yb_servers() == 3`, `hid BIGSERIAL PRIMARY KEY` on `pgbench_history`. |
 
+## 6. GitHub Popularity, Git Presence & Maintenance Vitality (`results/project_popularity.csv`)
+
+Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
+
+| Project | Git Presence / Role | Repo (`Account / Repos`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Release / Last Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **YugabyteDB (#5)** | `Yes` -- `Primary` | [`yugabyte/yugabyte-db`](https://github.com/yugabyte/yugabyte-db) (`Org / 314`) | 10670 / 1483 / 222 | 41479 / 5350 | 1217 / 9765 | C / `NOASSERTION` | `v2026.1.3.0` / `2026-11-20T17:22:06Z` |
+
+- **Maintenance Level:** **Tier A (Active OSS)** -- `yugabyte/yugabyte-db` logs `5,350` commits/12m (`41,479` total, `1,217` contributors, `10,670` stars, `9,765` open issues).
+- **Currency / Freshness:** **Current -- Daily Active** -- Last push `2026-11-20T17:22:06Z`, `5,350` commits/12m, latest release `v2026.1.3.0`.
+- **Operational Manageability:** **Moderate** -- High engineering velocity (Apache 2.0 core; `NOASSERTION` SPDX); `2 GiB`/node RAM floor and WAN sensitivity remain key ops constraints.
+
 ---
 
 **Navigation:** [Index](../../../README.md) · [Ch. 03b — Distributed, Triggers & Cloud](../03b_solutions_distributed_triggers_cloud.md) · [Ch. 10 — Streaming vs Logical vs Multi-Master](../10_streaming_vs_logical_vs_multimaster.md) · [Version française](../../fr/solutions/yugabytedb.md)

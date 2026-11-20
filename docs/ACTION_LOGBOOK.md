@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-157 - Enrich YugabyteDB (#5) and PG 17 Bi-Directional Logical (#1) EN/FR Sheets With Popularity Telemetry (Issue `#395`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#395` (`docs/issue-395-yugabyte-birep-popularity`)
+- **Request / Changes / Result**: Added standardized Section 6 GitHub popularity, git presence, `pushed_at` freshness, and Manageability synthesis (`yugabytedb` and `postgres-core` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`) to `docs/{en,fr}/solutions/yugabytedb.md` and `docs/{en,fr}/solutions/pg17_bidirectional_logical.md` (no compaction needed), plus `docs/ACTION_LOGBOOK.md`; verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.
+
 ### ACT-156 - Compact FR and Enrich CockroachDB (#6) EN/FR Sheets With Popularity Telemetry (Issue `#393`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#393` (`docs/issue-393-cockroachdb-popularity`)
 - **Request / Changes / Result**: Compacted 3 non-numeric FR prose lines (`L22`, `L24`, `L48`) in `docs/fr/solutions/cockroachdb.md` (`13,587` B / `161` L) and appended standardized Section 6 (`cockroachdb` verbatim from `results/project_popularity.csv`, `2026-11-20T17:26:02Z`) to `docs/en/solutions/cockroachdb.md` (`13,606` B / `161` L) and `docs/fr/solutions/cockroachdb.md`, plus `docs/ACTION_LOGBOOK.md`; verified `make test` (`20/20` OK), `make lint`, and PR diff `< 15,000` chars.

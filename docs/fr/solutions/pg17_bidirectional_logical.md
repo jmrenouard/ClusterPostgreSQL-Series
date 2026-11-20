@@ -141,6 +141,18 @@ Tests à `pg_scale = 2` (`retries_40001 = 0`). Seules `Avg`, `Stddev` (`0` pour 
 | **HAProxy LB** | `haproxy_pg_birep` (`haproxy:2.9-alpine`), `127.0.0.1:15440:5432` (TCP RR `inter 2s fall 2 rise 2`), `127.0.0.1:15449:8404` (`/stats`) |
 | **GUCs & Maillage** | `wal_level=logical`, `track_commit_timestamp=on`, `max_logical_replication_workers=8`, `wal_keep_size=128MB` ; `pub_birep FOR ALL TABLES` + `sub_from_node1`/`sub_from_node2` (`origin=none`, `copy_data=true`, `INCREMENT BY 2 START WITH 1/2`). |
 
+## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
+
+Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
+
+| Projet | Présence / Rôle Git | Dépôt (`Compte / Dépôts`) | Stars / Forks / Watch | Commits (`Tot / 12m`) | Contrib / Issues | Lang / SPDX | Tag / Dernier Push |
+| :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
+| **PostgreSQL Core (#1/#15/#16)** | `Yes (Mirror)` -- `Mirror (canonical: git.postgresql.org)` | [`postgres/postgres`](https://github.com/postgres/postgres) (`Org / 6`) | 22894 / 6123 / 589 | 66091 / 3446 | 58 / 0 | C / `NOASSERTION` | `REL_19_0` / `2026-11-20T16:52:40Z` |
+
+- **Niveau de maintenance :** **Niveau S (Cœur)** -- Le miroir `postgres/postgres` totalise `3 446` commits/12m (`66 091` total, `58` committeurs, `22 894` stars) sous gouvernance multi-éditeurs.
+- **Fraîcheur / Actualité :** **À jour -- Actif au quotidien** -- Dernier push `2026-11-20T16:52:40Z`, `3 446` commits/12m, dernière version `REL_19_0`.
+- **Maintenabilité opérationnelle :** **Risque élevé** -- Cœur Niveau S (`PostgreSQL License`), mais zéro résolution automatique de conflits : bloque sur `23505` hors clés disjointes.
+
 ---
 
 **Navigation :** [Index](../../../README.fr.md) · [Ch. 03a — Solutions natives et extensions](../03a_catalogue_natif_et_extensions.md) · [Ch. 10 — Streaming vs Logique vs Multi-Maîtres](../10_comparatif_streaming_logique_multimaster.md) · [English version](../../en/solutions/pg17_bidirectional_logical.md)
