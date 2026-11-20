@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-101 - Polish pgedge_spock and bucardo Technical and EN/FR Parity (Issue `#201`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#201` (`docs/issue-201-spock-bucardo-polish`)
+- **Request / Changes / Result**: Clarified `ALTER TABLE` event-trigger vs native WAL `TRUNCATE` replication (line 62) and `sysbench` standalone Lua noise (`112` `E`/`192` `E3`, line 76) in `docs/{en,fr}/solutions/pgedge_spock.md`, aligned Bucardo 4 `dbgroup` wording (line 53) and French Mermaid delta-merge labels (lines 36-37) in `docs/fr/solutions/bucardo.md`, and verified `make test` (`13/13` OK) and `make lint`.
+
 ### ACT-100 - Remediate pglogical2 Reference Anchors, Alignment and Log RCA-012 (Issue `#199`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#199` (`docs/issue-199-pglogical2-remediation`)
 - **Request / Changes / Result**: Remediated `docs/{en,fr}/solutions/pglogical2.md` line 94 `#16 pg17-logical` anchor (replaced unverified TPS and `T15` lag figures with verified `532.38 TPS` (`A`) and `1.68 ms` `p50` (`T15`) per `results/benchmark_summary.csv:65` and `results/extended_functional_matrix.csv:5`), updated line 58 uni-directional `pglogical.create_subscription(forward_origins='{all}')` across EN/FR, aligned `docs/fr/solutions/pglogical2.md` (`L24`, `L85`, `L92`), and recorded `RCA-012` in `docs/RCA_REGISTER.md`; `make test` (`13/13` OK) and `make lint` verified.
