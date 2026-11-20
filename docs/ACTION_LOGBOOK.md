@@ -22,6 +22,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-108 - Add English Architectural Reference Sheet for OpenTenBase / Postgres-XL (#8) (Issue `#215`)
+- **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#215` (`docs/issue-215-opentenbase-pgxl-en`)
+- **Request / Changes / Result**: Created `docs/en/solutions/opentenbase_pgxl.md` (`#8`, `T5` Architectural Reference, explicitly not live-benchmarked) with Mermaid GTM/GTM-Proxy/CN/DN 2PC diagram, lineage and distribution modes (Postgres-XC retired, Postgres-XL PG 10 dormant, OpenTenBase active), strengths/weaknesses, verified `results/benchmark_summary.csv` comparison anchors (`#7 citus`, `#5 yugabyte`, `#6 cockroach`, `#15a pg17-standalone`), and Ch. 03b footer links; `make test` (`13/13` OK) and `make lint` verified.
+
 ### ACT-107 - Add French Architecture Sheet for CockroachDB (#6) (Issue `#213`)
 - **Date**: `2026-11-20` | **Status**: `COMPLETED` | **Issue / Branch**: `#213` (`docs/issue-213-cockroachdb-fr`)
 - **Request / Changes / Result**: Created `docs/fr/solutions/cockroachdb.md` mirroring the English sheet section-for-section (`#6`, `T5`, `cockroach` v24.3.0 / PG-wire 13.0.0, 149 lines) with French Mermaid diagram, implementation modes, strengths/weaknesses, all 19 CSV rows (`44/87/96/685(E fail)/14/16/5` and `G` `0/5/26/64/88` retries), `F1`/`L1-L8`/`T11-T18` probes (`40001;23505;XCEXF;42601;57014`), Ch. 03b links, and Docker PoC spec; `make test` (`13/13` OK) and `make lint` verified.
