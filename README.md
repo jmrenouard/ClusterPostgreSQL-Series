@@ -6,7 +6,7 @@
 
 **Author:** Jean-Marie Renouard (`jmrenouard`) | **Supported by:** [LightPath](https://www.lightpath.fr) | **License:** [MIT](LICENSE) | **Version française :** [README.fr.md](README.fr.md)
 
-A rigorous engineering study, 36-criterion comparative matrix, reproducible Docker Compose labs (powered by [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.4.1`, `13` Compose stacks), 18-test empirical failure-mode catalog (`L1-L8` + `T11-T18`) plus PostgreSQL 18.6 AIO/`uuidv7()`/conflict and YT Cluster `T_REVERT` probes, **310 raw `pgbench` / `sysbench` / `tc netem` benchmark rows** (**301 deduplicated dashboard rows**: `187` V2 + `87` PostgreSQL 18.6 + `36` YT Cluster 1.21.3) across **17 live PostgreSQL topologies** (`16` solutions / `19` architecture sheets), **22 GitHub ecosystem popularity telemetry rows** (`19` public repos + `3` closed/managed), **11 `log10` charts**, and an offline-capable [**Interactive HTML Benchmark Explorer (`dashboard/index.html`)**](dashboard/index.html).
+A rigorous engineering study, 36-criterion comparative matrix, reproducible Docker Compose labs (powered by [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.1`, `13` Compose stacks), 18-test empirical failure-mode catalog (`L1-L8` + `T11-T18`) plus PostgreSQL 18.6 AIO/`uuidv7()`/conflict and YT Cluster `T_REVERT` probes, **628 raw `pgbench` / `sysbench` / `tc netem` benchmark rows** (**310 baseline `PG_SCALE=2`** / **301 deduplicated** + **318 V5 production-tuned `PG_SCALE=20` rows** across **18 live PostgreSQL topologies** incl. `cockroach-rc`, `16` solutions / `19` architecture sheets), **22 GitHub ecosystem popularity telemetry rows** (`19` public repos + `3` closed/managed), **13 `log10` charts**, and a dual-dataset offline [**Interactive HTML Benchmark Explorer (`dashboard/index.html`)**](dashboard/index.html).
 
 ---
 
@@ -58,7 +58,7 @@ Measured sequentially in the same isolated Docker harness on `PostgreSQL 18.6 (D
 
 ## Interactive Benchmark Explorer & Logarithmic Charts (`log10`)
 
-Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser (zero CDN, offline-ready, EN/FR switcher, 17-topology PG 17, PG 18.6 & YT Cluster presets incl. `YT vs Multi-Master`, default `log10` / linear toggle, `L1-L8` / `T11-T18` / `PG 18.6` / `YT` matrix tabs, Ecosystem Popularity tab with 22 entries, and CSV export) or browse the full **11-chart gallery** and Master Traceability Matrix across [Chapter 09](docs/en/09_benchmarks_methodology_and_charts.md) (`chart_01`-`07`), [Chapter 11](docs/en/11_ecosystem_popularity_and_vitality.md) (`chart_08`-`09`), [Chapter 12](docs/en/12_postgresql_18_clustering_and_benchmarks.md) (`chart_10`), and [Chapter 06 §7](docs/en/06_empirical_test_and_benchmark_results.md) (`chart_11`):
+Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser (zero CDN, offline-ready, EN/FR switcher, **Baseline `PG_SCALE=2` (`301` rows) / Production-Tuned `PG_SCALE=20` (`318` rows) dataset toggle**, Before-vs-After `compare` view, 18-topology presets incl. `YT vs Multi-Master`, default `log10` / linear toggle, `L1-L8` / `T11-T18` / `PG 18.6` / `YT` matrix tabs, Ecosystem Popularity tab with 22 entries, and CSV export) or browse the full **13-chart gallery** and Master Traceability Matrix across [Chapter 09](docs/en/09_benchmarks_methodology_and_charts.md) (`chart_01`-`07`), [Chapter 11](docs/en/11_ecosystem_popularity_and_vitality.md) (`chart_08`-`09`), [Chapter 12](docs/en/12_postgresql_18_clustering_and_benchmarks.md) (`chart_10`), [Chapter 06 §7–§8](docs/en/06_empirical_test_and_benchmark_results.md) (`chart_11`), and [**Chapter 13 — Production Tuning (`PG_SCALE=20`)**](docs/en/13_production_tuning_and_realistic_benchmarks.md) (`chart_12`-`13`):
 
 ![Log10 Throughput All Suites](assets/charts/chart_01_tps_log_all_suites.png)
 ![Log10 Latency All Suites](assets/charts/chart_02_latency_log_all_suites.png)
@@ -67,6 +67,10 @@ Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser 
 ![Ecosystem Commits and Maintenance Vitality Log10](assets/charts/chart_09_popularity_commits_activity_log.png)
 ![PostgreSQL 18.6 vs PostgreSQL 17.11 Head-to-Head Log10](assets/charts/chart_10_pg18_vs_pg17_log.png)
 ![YT Cluster vs Active-Active Multi-Master and Raft Log10](assets/charts/chart_11_yt_cluster_vs_multimaster_log.png)
+![Log10 Baseline vs Production-Tuned Throughput](assets/charts/chart_12_baseline_vs_optimized_log.png)
+![Log10 Production-Tuned Panorama Across All 18 Topologies](assets/charts/chart_13_optimized_all_topologies_log.png)
+
+> **V5 Production-Tuned Highlight (`PG_SCALE=20`, `318` rows, `fsync=on`, `v2.6.1`):** Applying durable tunings (`fillfactor=90`, `wal_compression=lz4`, PG 18/YT `io_method=worker`/`4`, `-M prepared`, `5s` warm-up, Spock `delta_apply`, Citus 1-shard colocation, Yugabyte `RC + CACHE 1000` + HAProxy `:15470`, CockroachDB `v25.4` HAProxy `:15480` + non-root `bench` `cockroach-rc`, YT `YT_MAX_PREPARED=300` + parallel `ytctl` + Leader affinity + Lua `55409` hook) drives `pg18-birep` `G_c32` to `4,163.31 TPS`, keeps `pgedge` at **`0` drift** (`2,125.19 TPS` `D`), lifts CockroachDB `v25.4` **`7.32x`** on `A` (`307.95 TPS`) and `cockroach-rc` to `0` `40001` retries in `sysbench` (`153.70 TPS`), and accelerates `yt-cluster-async` `E4` to **`189,286.48 TPS`** (`0` drift) — see [Chapter 13](docs/en/13_production_tuning_and_realistic_benchmarks.md).
 
 ---
 
@@ -87,6 +91,7 @@ Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser 
 | **10 — 5-Tier** | [10 — Streaming vs Logical vs Multi-Master](docs/en/10_streaming_vs_logical_vs_multimaster.md) | [10 — Streaming vs Logique vs Multi-Maîtres](docs/fr/10_comparatif_streaming_logique_multimaster.md) |
 | **11 — Popularity** | [11 — Ecosystem Popularity & Engineering Vitality](docs/en/11_ecosystem_popularity_and_vitality.md) | [11 — Popularité et vitalité de l'écosystème](docs/fr/11_popularite_et_vitalite_ecosysteme.md) |
 | **12 — PG 18.6** | [12 — PostgreSQL 18.6 Clustering & Benchmarks](docs/en/12_postgresql_18_clustering_and_benchmarks.md) | [12 — Clustering PostgreSQL 18.6 et benchmarks](docs/fr/12_clustering_postgresql_18_et_benchmarks.md) |
+| **13 — V5 Tuning** | [13 — Production Tuning & Realistic Scale Benchmarks](docs/en/13_production_tuning_and_realistic_benchmarks.md) | [13 — Optimisation de Production et Benchmarks Réalistes](docs/fr/13_optimisation_production_et_benchmarks_realistes.md) |
 
 ---
 
@@ -132,8 +137,8 @@ The operational PoC topologies, extended test runners (`T11–T18`), and V2 benc
 | `docker-compose-pgedge.yml` | 3-Node pgEdge Spock `5.0.14` + Snowflake + HAProxy | `ghcr.io/pgedge/pgedge-postgres:17-spock5-minimal` |
 | `docker-compose-bucardo.yml` | 2-Node PG 17 (`plperl`) + Bucardo `5.6.0` Daemon | Custom `postgres:17` + `debian:trixie-slim` |
 | `docker-compose-citus.yml` | Citus `14.2.0` (1 Coordinator + 2 Workers) | `citusdata/citus:14.2.0-pg17` |
-| `docker-compose-yugabyte.yml` | 3-Node YugabyteDB RF=3 YSQL + DocDB | `yugabytedb/yugabyte:2026.1.3.0-b100` |
-| `docker-compose-cockroach.yml` | 3-Node CockroachDB RF=3 Multi-Raft | `cockroachdb/cockroach:v24.3.0` |
+| `docker-compose-yugabyte.yml` | 3-Node YugabyteDB RF=3 YSQL + DocDB + HAProxy `:15470` | `yugabytedb/yugabyte:2026.1.3.0-b100`, `haproxy:lts-alpine` |
+| `docker-compose-cockroach.yml` | 3-Node CockroachDB RF=3 Multi-Raft + HAProxy `:15480` | `cockroachdb/cockroach:latest-v25.4`, `haproxy:lts-alpine` |
 | `docker-compose-pg18-streaming.yml` | PG 18.6 Standalone, Async & Sync Streaming (`AIO worker`) | `postgres:18` (`18.6`) |
 | `docker-compose-pg18-logical.yml` | PG 18.6 Uni-Directional Logical (`substream=p`, `pubgencols=s`) | `postgres:18` (`18.6`) |
 | `docker-compose-pg18-birep.yml` | PG 18.6 Bidirectional Logical (`origin=none`, `uuidv7()`) + HAProxy | `postgres:18` (`18.6`), `haproxy:2.9-alpine` |
@@ -142,17 +147,18 @@ The operational PoC topologies, extended test runners (`T11–T18`), and V2 benc
 ### Common Commands
 
 ```bash
-# Initialize the multi-db-docker-env Git submodule (v2.4.1, 13 Compose stacks)
+# Initialize the multi-db-docker-env Git submodule (13 Compose stacks; v2.6.1 benchmark harness)
 make init-env
 make help
 
-# Run unit tests (security, math, 11 charts, 17-topology dashboard) and Compose/Bash lint
+# Run unit tests (security, math, 13 charts, dual-dataset 18-topology dashboard) and Compose/Bash lint
 make test && make lint
 
-# Run topology lifecycle, benchmarks (V1/V2 + PG 18.6 + YT), popularity telemetry, charts, and dashboard
+# Run topology lifecycle, benchmarks (V1/V2 + PG 18.6 + YT; V5 Scale=20 via multi-db-docker-env), charts, and dashboard
 cp .env.example .env
 make up-pgedge && make test-pgedge && make down-pgedge
-make bench-all && make bench-pg18 && make popularity && make charts && make dashboard
+make bench-all && make bench-pg18 && make bench-yt-cluster && make popularity && make charts && make dashboard
+# (cd env/multi-db-docker-env && ./mdb bench pg-optimized)  # Produces results/benchmark_optimized.csv (318 rows)
 ```
 
 ---
