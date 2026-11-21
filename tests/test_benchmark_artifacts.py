@@ -65,6 +65,7 @@ EXPECTED_CHARTS = (
     "chart_08_popularity_stars_forks_log.png",
     "chart_09_popularity_commits_activity_log.png",
     "chart_10_pg18_vs_pg17_log.png",
+    "chart_11_yt_cluster_vs_multimaster_log.png",
 )
 
 EXPECTED_DASH_FILES = (

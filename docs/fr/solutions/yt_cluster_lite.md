@@ -60,7 +60,7 @@ flowchart LR
 
 ## 4. Résultats empiriques et limites vérifiées (`results/benchmark_yt_cluster.csv` & `results/functional_limits_yt_cluster.csv`)
 
-Les 36 lignes (18 `yt-cluster` + 18 `yt-cluster-async`) ont été mesurées séquentiellement à `pg_scale = 2` sur 3 nœuds `dbinvent/yt:1.21.3` (`balance_drift = 0` sur toutes les écritures ; voir [Ch. 09](../09_methodologie_benchmarks_et_graphiques.md)). Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` sont enregistrées (la latence `p99` n'est pas mesurée).
+Les 36 lignes (18 `yt-cluster` + 18 `yt-cluster-async`) ont été mesurées séquentiellement à `pg_scale = 2` sur 3 nœuds `dbinvent/yt:1.21.3` (`balance_drift = 0` sur toutes les écritures ; voir [`chart_11`](../../../assets/charts/chart_11_yt_cluster_vs_multimaster_log.png) et [Ch. 09](../09_methodologie_benchmarks_et_graphiques.md)). Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` sont enregistrées (la latence `p99` n'est pas mesurée).
 
 | Suite (`PG_SCALE=2`) | `yt-cluster` (`cc=half`) TPS | `cc=half` Avg / p95 (ms) | `cc=half` Retries / Échecs | `yt-cluster-async` (`cc=nodes>=0`) TPS | `async` Avg / p95 (ms) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
