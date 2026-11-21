@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-173 - Update YT Cluster Log, `yt_vs_mm` Preset, `RCA-024`, & Submodule `v2.4.1` (`#427`)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#427` (`chore/issue-427-log-preset-submodule`)
+- **Request / Changes / Result**: Updated `results/logs/yt-cluster-benchmark.log` (36 rows), added `data-preset="yt_vs_mm"` in `dashboard/{index.html,app.js}` and `tests/test_benchmark_artifacts.py`, bumped submodule `env/multi-db-docker-env` to `v2.4.1` (`0ec32dd`), logged `RCA-024`; `make test` (`21/21` OK) and `make lint` pass.
+
 ### ACT-172 - Complete 36-Row `yt-cluster-async` Benchmarks & Rebuild Dashboard (`#425`)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#425` (`feat/issue-425-yt-async-36rows`)
 - **Request / Changes / Result**: Expanded `results/benchmark_yt_cluster.csv` to 36 rows (`18` sync + `18` async, monotonic WAN `8.47->4.78->2.90`, `E3=133.55 TPS`, `0` drift), rebuilt `data_bench*.js` (`301` rows), updated `tests/test_benchmark_artifacts.py` (`36`/`301`, `18+18` suites) & `tests/test_solution_sheets.py` (`36`); `make test` (`21/21` OK), `make lint` pass.

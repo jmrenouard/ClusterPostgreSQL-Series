@@ -147,7 +147,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    const P = { all: ALL_T, clear: [], pg18_vs_pg17: TO.slice(0, 10), stream_logical: TO.slice(0, 5), active_active: ["pg-birep", "pg18-birep", "pgedge", "pgedge-delta-apply", "bucardo", "yugabyte", "cockroach", "yt-cluster", "yt-cluster-async"], raft_async: ["pg-birep", "pgedge", "bucardo", "yugabyte", "cockroach"] };
+    const P={all:ALL_T,clear:[],pg18_vs_pg17:TO.slice(0,10),stream_logical:TO.slice(0,5),active_active:["pg-birep","pg18-birep","pgedge","pgedge-delta-apply","bucardo","yugabyte","cockroach","yt-cluster","yt-cluster-async"],raft_async:["pg-birep","pgedge","bucardo","yugabyte","cockroach"],yt_vs_mm:["yt-cluster","yt-cluster-async","pg18-birep","pgedge","yugabyte","cockroach"]};
     const wire = (a, k, cb) => $$(`[${a}]`).forEach((b) => { b.onclick = () => { st[k] = b.getAttribute(a); $$(`[${a}]`).forEach((x) => x.classList.toggle("active", x.getAttribute(a) === st[k])); cb(); }; });
     [["data-lang", "lang", renderAll], ["data-tab", "tab", renderAll], ["data-mtab", "mtab", renderMatrix], ["data-scale", "scale", renderCharts], ["data-lat", "lat", renderCharts]].forEach((x) => wire(...x));
     $$("[data-preset]").forEach((b) => { b.onclick = () => { st.sel = new Set((P[b.dataset.preset] || []).filter((t) => ALL_T.includes(t))); renderAll(); }; });

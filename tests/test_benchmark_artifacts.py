@@ -144,6 +144,7 @@ class TestBenchmarkArtifacts(unittest.TestCase):
             'id="topo-pills"',
             'data-preset="stream_logical"',
             'data-preset="pg18_vs_pg17"',
+            'data-preset="yt_vs_mm"',
             'data-mtab="pg18"',
             'data-mtab="yt"',
             'data-tab="popularity"',
