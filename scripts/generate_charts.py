@@ -7,6 +7,7 @@ import csv
 import math
 import pathlib
 import re
+import sys
 from collections import defaultdict
 
 import matplotlib
@@ -15,10 +16,12 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from chart_meta import COL, CSVS, LBL, ORD, SCOL, SLAB, TOPOS
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 RES_DIR = ROOT / "results"
 OUT_DIR = ROOT / "assets" / "charts"
-CSVS = ("benchmark_summary.csv", "benchmark_extended_workloads.csv", "benchmark_wan_sweep.csv", "benchmark_concurrency_sweep.csv")
 
 plt.rcParams.update({
     "figure.facecolor": "#fff", "axes.facecolor": "#f8fafc", "axes.edgecolor": "#cbd5e1",
@@ -27,31 +30,6 @@ plt.rcParams.update({
     "ytick.labelsize": 8.0, "axes.titleweight": "bold", "axes.labelweight": "bold",
     "legend.facecolor": "#fff", "legend.edgecolor": "#e2e8f0",
 })
-
-TOPOS = [
-    ("pg17-standalone", "PG17 Standalone", "#475569"),
-    ("pg17-async-streaming", "PG17 Async Stream", "#0284c7"),
-    ("pg17-sync-streaming", "PG17 Sync Stream", "#1d4ed8"),
-    ("pg17-logical", "PG17 Logical Uni", "#0891b2"),
-    ("pg-birep", "PG17 BiRep", "#0d9488"),
-    ("pgedge", "pgEdge Spock (LWW)", "#f59e0b"),
-    ("pgedge-delta-apply", "pgEdge delta_apply", "#16a34a"),
-    ("bucardo", "Bucardo 5.6", "#ea580c"),
-    ("citus", "Citus 14.2", "#7c3aed"),
-    ("yugabyte", "YugabyteDB Raft", "#db2777"),
-    ("cockroach", "CockroachDB Raft", "#dc2626"),
-]
-LBL, COL, ORD = {k: v for k, v, _ in TOPOS}, {k: c for k, _, c in TOPOS}, [k for k, _, _ in TOPOS]
-SLAB = {
-    "A_single_rw": "A: Single RW", "B1_disjoint_rw": "B1: Disjoint RW",
-    "B2_overlap_rw": "B2: Overlap RW", "C_multinode_ro": "C: Multi-Node RO",
-    "D_hot_conflict": "D: Hot Conflict", "E_sysbench_oltp_rw": "E1: Sysbench RW",
-    "E1_sysbench_oltp_rw": "E1: Sysbench RW", "E2_sysbench_oltp_ro": "E2: Sysbench RO",
-    "E3_sysbench_oltp_wo": "E3: Sysbench WO", "E4_sysbench_point_select": "E4: Point Select",
-    "F_wan_netem_10ms": "F: WAN 10ms", "F_wan_netem_25ms": "F: WAN 25ms",
-    "F_wan_netem_50ms": "F: WAN 50ms", "H_append_only_insert": "H: Append Insert",
-}
-SCOL = ["#1e40af", "#0ea5e9", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444"]
 
 
 def fnum(v: object) -> float:
@@ -118,7 +96,7 @@ def log_y(ax: plt.Axes, yl: str, ti: str, pad: int = 10) -> None:
 def save_fig(fig: plt.Figure, fn: str, ti: str, sub: str) -> None:
     fig.suptitle(ti, fontsize=12.4, weight="bold", color="#0f172a", y=0.985)
     fig.text(0.5, 0.938, sub, ha="center", va="top", fontsize=8.4, color="#475569")
-    fig.text(0.99, 0.01, "LightPath | ClusterPostgreSQL-Series | 10-Topology Benchmarks", ha="right", va="bottom", fontsize=7.3, color="#64748b", style="italic")
+    fig.text(0.99, 0.01, "LightPath | ClusterPostgreSQL-Series | 17-Topology Benchmarks (PG 17/18 + YT)", ha="right", va="bottom", fontsize=7.2, color="#64748b", style="italic")
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     fig.savefig(OUT_DIR / fn, dpi=180, bbox_inches="tight", facecolor="#fff")
     plt.close(fig)
@@ -126,9 +104,9 @@ def save_fig(fig: plt.Figure, fn: str, ti: str, sub: str) -> None:
 
 def draw_bars(ax: plt.Axes, topos: list[str], su: list[str], idx: dict, fld: str, yl: str, ti: str) -> None:
     ns, av, xs = max(len(su), 1), [], list(range(len(topos)))
-    w = min(0.84 / ns, 0.26)
-    rot = 82 if (ns >= 4 and len(topos) >= 10) else (65 if ns >= 3 else (45 if ns == 2 else 0))
-    fsz = 5.6 if len(topos) >= 10 and ns >= 4 else 6.3
+    w = min(0.84 / ns, 0.24)
+    rot = 88 if (ns >= 4 and len(topos) >= 10) else (72 if ns >= 3 else (45 if ns == 2 else 0))
+    fsz = 4.7 if len(topos) >= 14 and ns >= 4 else (5.2 if len(topos) >= 14 else (5.6 if len(topos) >= 10 and ns >= 4 else 6.3))
     for si, s in enumerate(su):
         off, vals = (si - (ns - 1) / 2.0) * w, [fnum(idx[t].get(s, {}).get(fld)) for t in topos]
         bars = ax.bar([x + off for x in xs], [v or float("nan") for v in vals], w * 0.9, label=SLAB.get(s, s), color=SCOL[si % len(SCOL)], ec="#fff", lw=0.45)
@@ -138,10 +116,10 @@ def draw_bars(ax: plt.Axes, topos: list[str], su: list[str], idx: dict, fld: str
                 ax.text(b.get_x() + b.get_width() / 2.0, v * 1.14, fval(v), ha="center", va="bottom", fontsize=fsz, rotation=rot, color="#1e293b", weight="semibold")
     log_y(ax, yl, ti, 26)
     if av:
-        ax.set_ylim(max(10 ** math.floor(math.log10(min(av)) - 0.15), 0.05), max(av) * (5.2 if rot else 2.6))
+        ax.set_ylim(max(10 ** math.floor(math.log10(min(av)) - 0.15), 0.05), max(av) * (5.8 if rot else 2.6))
     ax.set_xticks(xs)
-    ax.set_xticklabels([LBL.get(t, t) for t in topos], rotation=24, ha="right", fontsize=7.8)
-    ax.legend(fontsize=7.5, ncol=min(ns, 5), loc="lower center", bbox_to_anchor=(0.5, 1.01))
+    ax.set_xticklabels([LBL.get(t, t) for t in topos], rotation=30, ha="right", fontsize=7.4)
+    ax.legend(fontsize=7.4, ncol=min(ns, 5), loc="lower center", bbox_to_anchor=(0.5, 1.01))
 
 
 def spread(items: list, gap: float = 0.085) -> list:
@@ -153,31 +131,31 @@ def spread(items: list, gap: float = 0.085) -> list:
 
 
 def draw_sweep(idx: dict, xl: list[str], seq: list[str], xlab: str, fn: str, ti: str, sub: str, ann: bool = False) -> None:
-    fig, (a1, a2) = plt.subplots(1, 2, figsize=(14.4, 6.1))
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(17.2, 7.0))
     et, el = [], []
     for t in get_topos(idx):
         pt = [(i, v) for i, s in enumerate(seq) if (v := fnum(idx[t].get(s, {}).get("tps"))) > 0]
         pl = [(i, v) for i, s in enumerate(seq) if (v := fnum(idx[t].get(s, {}).get("lat_avg_ms"))) > 0]
-        c = COL.get(t, "#334155")
-        for ax, p, mk, arr, fnf in ((a1, pt, "o-", et, fval), (a2, pl, "s-", el, fms)):
+        c, ls = COL.get(t, "#334155"), "--" if t.startswith("pg18-") else ("-." if t.startswith("yt-") else "-")
+        for ax, p, mk, arr, fnf in ((a1, pt, "o" + ls, et, fval), (a2, pl, "s" + ls, el, fms)):
             if len(p) >= 2:
-                ax.plot([x for x, _ in p], [y for _, y in p], mk, lw=2.0, ms=5.5, color=c, label=LBL.get(t, t))
+                ax.plot([x for x, _ in p], [y for _, y in p], mk, lw=1.7, ms=4.5, color=c, label=LBL.get(t, t))
                 arr.append((p[-1][1], fnf(p[-1][1]), c))
     xr = len(xl) - 1
     for ax, yl, pti, pts in ((a1, "TPS (Log10)", "Throughput (Log10 TPS)", et), (a2, "Avg ms (Log10)", "Avg Latency (Log10 ms)", el)):
         log_y(ax, yl, pti)
         if ann and pts:
-            sp = spread(pts, 0.08 if len(pts) >= 9 else 0.095)
+            sp = spread(pts, 0.068 if len(pts) >= 13 else (0.08 if len(pts) >= 9 else 0.095))
             ax.set_ylim(ax.get_ylim()[0], max(ax.get_ylim()[1], max(y for y, _, _ in sp) * 1.35))
             for y, txt, c in sp:
-                ax.annotate(txt, (xr, y), (5, 0), textcoords="offset points", fontsize=7.1, color=c, weight="bold", va="center")
+                ax.annotate(txt, (xr, y), (5, 0), textcoords="offset points", fontsize=6.5, color=c, weight="bold", va="center")
         ax.set_xticks(range(len(xl)))
         ax.set_xticklabels(xl, fontsize=8.4)
         if ann:
-            ax.set_xlim(-0.15, xr + 0.55)
+            ax.set_xlim(-0.15, xr + 0.65)
         ax.set_xlabel(xlab, fontsize=8.8, color="#334155")
-    fig.legend(*a1.get_legend_handles_labels(), loc="lower center", ncol=5, fontsize=7.9, bbox_to_anchor=(0.5, 0.03))
-    fig.subplots_adjust(top=0.84, bottom=0.22, wspace=0.22)
+    fig.legend(*a1.get_legend_handles_labels(), loc="lower center", ncol=6, fontsize=7.4, bbox_to_anchor=(0.5, 0.02))
+    fig.subplots_adjust(top=0.84, bottom=0.24, wspace=0.22)
     save_fig(fig, fn, ti, sub)
 
 
