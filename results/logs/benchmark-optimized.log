@@ -1805,3 +1805,300 @@ Threads fairness:
   [pg18-logical] E3_sysbench_oltp_wo: tps=1976.71 qps=11893.22 avg=4.04ms p95=5.57ms err=0 rt=99 PASS drift=0
   [pg18-logical] E4_sysbench_point_select: tps=139721.82 qps=139721.82 avg=0.11ms p95=0.27ms err=0 rt=0 PASS drift=0
   [pg18-logical] H_append_only_insert: tps=3012.75 qps=N/A avg=2.639ms p95=2.764ms err=0 rt=0 PASS_SINGLE_PRIMARY drift=0
+  [pg18-logical] G_conc_c1: tps=408.88 qps=N/A avg=2.438ms p95=3.449ms err=0 rt=0 PASS drift=0
+  [pg18-logical] G_conc_c4: tps=1045.29 qps=N/A avg=3.806ms p95=5.118ms err=0 rt=0 PASS drift=0
+  [pg18-logical] G_conc_c8: tps=1587.66 qps=N/A avg=5.017ms p95=7.559ms err=0 rt=0 PASS drift=0
+  [pg18-logical] G_conc_c16: tps=2545.21 qps=N/A avg=6.244ms p95=11.261ms err=0 rt=0 PASS drift=0
+  [pg18-logical] G_conc_c32: tps=4146.78 qps=N/A avg=7.645ms p95=17.225ms err=0 rt=0 PASS drift=0
+  [pg18-logical] F_wan_netem_10ms: tps=1835.38 qps=N/A avg=4.339ms p95=6.394ms err=0 rt=0 PASS_NETEM_10MS drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 18.6 (Debian 18.6-1.pgdg13+2))
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 12 s
+number of transactions actually processed: 21216
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 4.521 ms
+initial connection time = 16.014 ms
+tps = 1769.692563 (without initial connection time)
+  [pg18-logical] F_wan_netem_25ms: tps=1769.69 qps=N/A avg=4.501ms p95=6.9ms err=0 rt=0 PASS_NETEM_25MS drift=0
+  [pg18-logical] F_wan_netem_50ms: tps=1744.73 qps=N/A avg=4.565ms p95=6.874ms err=0 rt=0 PASS_NETEM_50MS drift=0
+=== [pg18-logical] Down ===
+=== [pg18-birep] Start (PG_SCALE=20, SB=25000, WARM=5s) ===
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 18.6 (Debian 18.6-1.pgdg13+2))
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 26378
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 4.548 ms
+initial connection time = 16.858 ms
+tps = 1758.840896 (without initial connection time)
+  [pg18-birep] A_single_rw: tps=1758.84 qps=N/A avg=4.529ms p95=6.65ms err=0 rt=0 PASS_CONVERGED drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 18.6 (Debian 18.6-1.pgdg13+2))
+transaction type: /tmp/s_d1.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 6714
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 8.932 ms
+initial connection time = 13.535 ms
+tps = 447.813637 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 18.6 (Debian 18.6-1.pgdg13+2))
+transaction type: /tmp/s_d2.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 6724
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 8.920 ms
+initial connection time = 13.339 ms
+tps = 448.449275 (without initial connection time)
+  [pg18-birep] B1_disjoint_rw: tps=896.26 qps=N/A avg=8.909ms p95=16.825ms err=0 rt=0 PASS_CONVERGED drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 18.6 (Debian 18.6-1.pgdg13+2))
+transaction type: /tmp/s_ov.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 10174
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 5.891 ms
+initial connection time = 20.041 ms
+tps = 678.966727 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 18.6 (Debian 18.6-1.pgdg13+2))
+transaction type: /tmp/s_ov.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 10177
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 5.890 ms
+initial connection time = 17.956 ms
+tps = 679.067370 (without initial connection time)
+  [pg18-birep] B2_overlap_rw: tps=1358.03 qps=N/A avg=5.871ms p95=9.271ms err=0 rt=0 PASS_CONVERGED drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 18.6 (Debian 18.6-1.pgdg13+2))
+transaction type: <builtin: select only>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 420564
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 0.285 ms
+initial connection time = 19.807 ms
+tps = 28073.432930 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 18.6 (Debian 18.6-1.pgdg13+2))
+transaction type: <builtin: select only>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 419976
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 0.285 ms
+initial connection time = 20.290 ms
+tps = 28032.496860 (without initial connection time)
+  [pg18-birep] C_multinode_ro: tps=56105.93 qps=N/A avg=0.258ms p95=0.419ms err=0 rt=0 PASS drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 18.6 (Debian 18.6-1.pgdg13+2))
+transaction type: /tmp/s_hot.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 12 s
+number of transactions actually processed: 12501
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 3.836 ms
+initial connection time = 12.783 ms
+tps = 1042.672939 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 18.6 (Debian 18.6-1.pgdg13+2))
+transaction type: /tmp/s_hot.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 12 s
+number of transactions actually processed: 12533
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 3.827 ms
+initial connection time = 13.315 ms
+tps = 1045.314069 (without initial connection time)
+  [pg18-birep] D_hot_conflict: tps=2087.99 qps=N/A avg=3.811ms p95=4.854ms err=0 rt=0 EXPECTED_LIMITATION_DIVERGED drift=-95989
+sysbench 1.0.20 (using system LuaJIT 2.1.1700206165)
+
+Running the test with following options:
+Number of threads: 8
+Initializing random number generator from current time
+
+
+Initializing worker threads...
+
+Threads started!
+
+SQL statistics:
+    queries performed:
+        read:                            210042
+        write:                           59902
+        other:                           30071
+        total:                           300015
+    transactions:                        14981  (998.04 per sec.)
+    queries:                             300015 (19987.15 per sec.)
+    ignored errors:                      22     (1.47 per sec.)
+    reconnects:                          0      (0.00 per sec.)
+
+General statistics:
+    total time:                          15.0094s
+    total number of events:              14981
+
+Latency (ms):
+         min:                                    3.67
+         avg:                                    8.01
+         max:                                 1011.36
+         95th percentile:                        8.90
+         sum:                               119993.98
+
+Threads fairness:
+    events (avg/stddev):           1872.6250/59.25
+    execution time (avg/stddev):   14.9992/0.00
+
+  [pg18-birep] E_sysbench_oltp_rw: tps=998.04 qps=19987.15 avg=8.01ms p95=8.9ms err=0 rt=22 PASS drift=0
+  [pg18-birep] E2_sysbench_oltp_ro: tps=1828.0 qps=29248.03 avg=4.37ms p95=5.47ms err=0 rt=0 PASS drift=0
+  [pg18-birep] E3_sysbench_oltp_wo: tps=2042.19 qps=12285.97 avg=3.91ms p95=4.74ms err=0 rt=99 PASS drift=0
+  [pg18-birep] E4_sysbench_point_select: tps=127815.31 qps=127815.31 avg=0.12ms p95=0.31ms err=0 rt=0 PASS drift=0
+  [pg18-birep] H_append_only_insert: tps=2176.42 qps=N/A avg=3.656ms p95=3.484ms err=0 rt=0 PASS_CONVERGED drift=0
+  [pg18-birep] G_conc_c1: tps=438.32 qps=N/A avg=2.274ms p95=3.315ms err=0 rt=0 PASS drift=0
+  [pg18-birep] G_conc_c4: tps=962.08 qps=N/A avg=4.137ms p95=5.299ms err=0 rt=0 PASS drift=0
+  [pg18-birep] G_conc_c8: tps=1417.46 qps=N/A avg=5.622ms p95=10.289ms err=0 rt=0 PASS drift=0
+  [pg18-birep] G_conc_c16: tps=3080.48 qps=N/A avg=5.158ms p95=9.307ms err=0 rt=0 PASS drift=0
+  [pg18-birep] G_conc_c32: tps=4163.31 qps=N/A avg=7.619ms p95=17.051ms err=0 rt=0 PASS drift=0
+  [pg18-birep] F_wan_netem_10ms: tps=1786.77 qps=N/A avg=4.458ms p95=6.637ms err=0 rt=0 PASS_NETEM_10MS drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 18.6 (Debian 18.6-1.pgdg13+2))
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 12 s
+number of transactions actually processed: 22133
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 4.333 ms
+initial connection time = 14.955 ms
+tps = 1846.090917 (without initial connection time)
+  [pg18-birep] F_wan_netem_25ms: tps=1846.09 qps=N/A avg=4.314ms p95=6.527ms err=0 rt=0 PASS_NETEM_25MS drift=0
+  [pg18-birep] F_wan_netem_50ms: tps=1892.07 qps=N/A avg=4.208ms p95=6.439ms err=0 rt=0 PASS_NETEM_50MS drift=0
+=== [pg18-birep] Down ===
+=== [pgedge] Start (PG_SCALE=20, SB=25000, WARM=5s) ===
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 17.12)
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 29209
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 4.105 ms
+initial connection time = 15.722 ms
+tps = 1948.841070 (without initial connection time)
+  [pgedge] A_single_rw: tps=1948.84 qps=N/A avg=4.086ms p95=6.407ms err=0 rt=0 PASS_CONVERGED drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 17.12)
+transaction type: /tmp/s_d1.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 7260
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 8.262 ms
+initial connection time = 12.019 ms
+tps = 484.167877 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 17.12)
+transaction type: /tmp/s_d2.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 15 s
