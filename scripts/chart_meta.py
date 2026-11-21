@@ -28,6 +28,7 @@ TOPOS = [
     ("citus", "Citus 14.2", "#7c3aed"),
     ("yugabyte", "YugabyteDB Raft", "#db2777"),
     ("cockroach", "CockroachDB Raft", "#dc2626"),
+    ("cockroach-rc", "CockroachDB (RC)", "#991b1b"),
     ("yt-cluster", "YT Cluster (cc=half)", "#4f46e5"),
     ("yt-cluster-async", "YT Cluster (async)", "#8b5cf6"),
 ]
