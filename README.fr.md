@@ -6,7 +6,7 @@
 
 > **Auteur** : Jean-Marie Renouard (`jmrenouard`) | **Soutenu par** : [LightPath](https://www.lightpath.fr) | **Licence** : MIT | [English Version (`README.md`)](README.md)
 
-Étude d'ingénierie reproductible sur **16 solutions PostgreSQL** (7 familles, **19 fiches d'architecture**) et **17 topologies Docker opérationnelles** (`10` PG 17/distribuées + `5` PostgreSQL 18.6 + `2` YT Cluster 1.21.3 via le sous-module [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.4.0`, `13` piles), incluant **18 tests fonctionnels/limites (`L1–L8` + `T11–T18`)** plus les sondes PG 18.6 AIO/`uuidv7()`/conflits et `T_REVERT` YT Cluster, **296 mesures empiriques** (`187` V2 + `87` PG 18.6 + `22` YT Cluster : `pgbench`, `sysbench`, `tc netem 10/25/50 ms`, `c=1..32`), **22 entrées de télémétrie GitHub** (`19` dépôts publics + `3` fermés/managés), **10 graphiques `log10`** et l'[**Explorateur HTML interactif hors-ligne (`dashboard/index.html`)**](dashboard/index.html).
+Étude d'ingénierie reproductible sur **16 solutions PostgreSQL** (7 familles, **19 fiches d'architecture**) et **17 topologies Docker opérationnelles** (`10` PG 17/distribuées + `5` PostgreSQL 18.6 + `2` YT Cluster 1.21.3 via le sous-module [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.4.1`, `13` piles), incluant **18 tests fonctionnels/limites (`L1–L8` + `T11–T18`)** plus les sondes PG 18.6 AIO/`uuidv7()`/conflits et `T_REVERT` YT Cluster, **310 mesures empiriques brutes** (**301 lignes tableau de bord** : `187` V2 + `87` PG 18.6 + `36` YT Cluster : `pgbench`, `sysbench`, `tc netem 10/25/50 ms`, `c=1..32`), **22 entrées de télémétrie GitHub** (`19` dépôts publics + `3` fermés/managés), **11 graphiques `log10`** et l'[**Explorateur HTML interactif hors-ligne (`dashboard/index.html`)**](dashboard/index.html).
 
 ---
 
@@ -40,15 +40,15 @@ Mesures séquentielles dans le même harnais Docker isolé sur `PostgreSQL 18.6 
 | **`pg18-logical`** | 314,26 | 475,08 (`0`) | 2 998,37 (`0`) | 1 027,84 (`79`) | **3 518,49** | **844,10** | `23505`, `42601`, `55000` (`substream=p`) |
 | **`pg18-birep`** (`uuidv7()`) | 514,28 | 792,45 (**`-338`**) | 1 774,11 (**`-83 252`**) | 1 055,55 (`76`) | **2 066,70** (`3,30x`) | **747,42** | `23503`, `23505`, `42601`, `55000`, 7 `confl_*` |
 | **`yt-cluster`** (`#18` `cc=half`) | 20,63 | 10,69 (`0`) | 67,76 (`0`) | 28,48 (`12`) | 110,53 | 2,25 | `0A000`, `40001`, `55409`, `57P03` (`T_REVERT` OK) |
-| **`yt-cluster-async`** (`#18` `nodes>=0`) | 41,45 | 55,03 (`0`) | 163,01 (`0`) | - | - | 4,78 | `40001`, `55409` (`2,0x-5,1x` vs `half`, dérive `0`) |
+| **`yt-cluster-async`** (`#18` `nodes>=0`) | 41,45 | 55,03 (`0`) | 163,01 (`0`) | 124,05 (`34`) | 224,93 | 4,78 | `40001`, `55000`, `55409` (`2,0x-5,1x` vs `half`, dérive `0`) |
 
-*Note : `yt-cluster` / `yt-cluster-async` exécutés sur 3 nœuds `dbinvent/yt:1.21.3` (PG 18.7 + `yt_cluster 1.21` / `ytserv`, `results/benchmark_yt_cluster.csv`, `22` lignes ; voir [Fiche #18](docs/fr/solutions/yt_cluster_lite.md)).*
+*Note : `yt-cluster` / `yt-cluster-async` exécutés sur 3 nœuds `dbinvent/yt:1.21.3` (PG 18.7 + `yt_cluster 1.21` / `ytserv`, `results/benchmark_yt_cluster.csv`, `36` lignes sur les 18 suites ; voir [Fiche #18](docs/fr/solutions/yt_cluster_lite.md) et [Chapitre 06 §7](docs/fr/06_resultats_tests_et_benchmarks.md)).*
 
 ---
 
 ## 1b. Explorateur HTML interactif et graphiques logarithmiques (`log10`)
 
-Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne dans tout navigateur (sélecteur 17 topologies PG 17, PG 18.6 & YT Cluster, bascule `log10`/linéaire, interface EN/FR, matrices `L1–L8` / `T11–T18` / `PG 18.6` / `YT`, onglet Popularité & Vitalité à 22 entrées, export CSV) ou consultez les **10 graphiques** dans les [Chapitre 09](docs/fr/09_methodologie_benchmarks_et_graphiques.md) (`chart_01`–`07`), [Chapitre 11](docs/fr/11_popularite_et_vitalite_ecosysteme.md) (`chart_08`–`09`) et [Chapitre 12](docs/fr/12_clustering_postgresql_18_et_benchmarks.md) (`chart_10`) :
+Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne dans tout navigateur (sélecteur 17 topologies PG 17, PG 18.6 & YT Cluster dont `YT vs Multi-Maître`, bascule `log10`/linéaire, interface EN/FR, matrices `L1–L8` / `T11–T18` / `PG 18.6` / `YT`, onglet Popularité & Vitalité à 22 entrées, export CSV) ou consultez les **11 graphiques** et la matrice de traçabilité complète dans les [Chapitre 09](docs/fr/09_methodologie_benchmarks_et_graphiques.md) (`chart_01`–`07`), [Chapitre 11](docs/fr/11_popularite_et_vitalite_ecosysteme.md) (`chart_08`–`09`), [Chapitre 12](docs/fr/12_clustering_postgresql_18_et_benchmarks.md) (`chart_10`) et [Chapitre 06 §7](docs/fr/06_resultats_tests_et_benchmarks.md) (`chart_11`) :
 
 ![Débit Log10 toutes suites](assets/charts/chart_01_tps_log_all_suites.png)
 ![Latence Log10 toutes suites](assets/charts/chart_02_latency_log_all_suites.png)
@@ -56,6 +56,7 @@ Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne dans tout n
 ![Popularité Écosystème Étoiles et Forks Log10](assets/charts/chart_08_popularity_stars_forks_log.png)
 ![Commits et Vitalité Écosystème Log10](assets/charts/chart_09_popularity_commits_activity_log.png)
 ![Comparatif PostgreSQL 18.6 vs PostgreSQL 17.11 Log10](assets/charts/chart_10_pg18_vs_pg17_log.png)
+![Comparatif YT Cluster vs Multi-Maîtres et Raft Log10](assets/charts/chart_11_yt_cluster_vs_multimaster_log.png)
 
 ### Trois conclusions clés
 1. **L'illusion de la performance asynchrone** : En écriture concurrente sur des clés partagées (`B2` et `D`), les solutions asynchrones LWW sans CRDT perdent silencieusement jusqu'à **50,8 %** des mises à jour (`bucardo`: `-531 620`) ou divergent (`pg-birep`: `-71 063`). Seul **`spock.delta_apply`** (`#2`) préserve une dérive `0` à 1 837,64 TPS sur compteurs numériques.
@@ -121,14 +122,14 @@ Les piles opérationnelles, la suite étendue (`T11–T18`) et les benchmarks V2
 ### Commandes `Makefile` essentielles
 
 ```bash
-make init-env        # Initialise le sous-module Git env/multi-db-docker-env (v2.4.0, 13 piles)
-make test && make lint  # Valide gouvernance, sécurité, LaTeX, 10 graphiques, Bash et 13 Compose
+make init-env        # Initialise le sous-module Git env/multi-db-docker-env (v2.4.1, 13 piles)
+make test && make lint  # Valide gouvernance, sécurité, LaTeX, 11 graphiques, Bash et 13 Compose
 cp .env.example .env
 make up-pgedge && make test-pgedge && make down-pgedge
 make bench-all && make bench-pg18 && make popularity && make charts && make dashboard
 ```
 
-### Piles Docker disponibles (`env/multi-db-docker-env` `v2.4.0` — voir [`stacks/README.md`](stacks/README.md))
+### Piles Docker disponibles (`env/multi-db-docker-env` `v2.4.1` — voir [`stacks/README.md`](stacks/README.md))
 
 - `pg17-baseline` / `pg-streaming` / `pg-logical` (Standalone, Streaming Async/Sync, Logique Uni PG 17)
 - `pg-birep` (`#1` PG 17 natif `origin = none`), `pgedge-spock` (`#2` Spock 5 + Snowflake), `bucardo` (`#9` Bucardo 5.6)

@@ -15,6 +15,7 @@
 | **Phase 6** | Bilingual Per-Technology Architecture Sheets | Dedicated EN+FR ~1-2 A4 sheets (`docs/{en,fr}/solutions/`) + Mermaid + navigation links + Tiers 1-5 E2E | Complete | `make test && make lint` |
 | **Phase 7** | Wave 3: Ecosystem Popularity, PG 18.6, Charts 08-10 & Dashboard V3 | GitHub API popularity study, PG 18.6 PoC & 87 benchmarks, Ch. 11-12 EN/FR, Charts 08-10, 15-topology Dashboard V3, submodule `v2.3.0` | Complete | `make test && make lint` |
 | **Phase 8** | Wave 4: PG 18.6 Sheet #17, YT Cluster 1.21.3 / YT Cluster Lite PoC & Sheet #18, 17-Topology Dashboard & Submodule `v2.4.0` | PG 18.6 18th sheet & core chapters, YT Cluster 22-row live PoC & 19th sheet, 22-entry popularity & Charts 08-09, 17-topology offline dashboard, 19-slug E2E tests, 13-stack `Makefile` & submodule `v2.4.0` | Complete | `make test && make lint` |
+| **Phase 9** | Wave 5: 18-Suite `yt-cluster-async`, 17-Topology Charts 01-07 + `chart_11`, Benchmark Traceability & `v2.4.1` | 36-row YT Cluster empirical matrix, 17-topology `chart_01-07` + `chart_11`, 301-row offline dashboard (`yt_vs_mm`), Ch. 06 Section 7 & Ch. 09 Traceability Matrix, submodule `v2.4.1` | Complete | `make test && make lint` |
 
 ## 1. Ongoing Actions (`IN PROGRESS`)
 
@@ -23,6 +24,10 @@
 | *None* | - | - | - | All tracked actions archived below once verified. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-183 - Update `README.fr.md` & Add `Phase 9` Milestone (`#447`)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#447` (`docs/issue-447-readme-fr-yt`)
+- **Request / Changes / Result**: Updated `README.fr.md` with 310/301 row totals, `yt-cluster-async` E/H metrics, `chart_11` embed, `v2.4.1`, and Ch. 06/09 links, and added `Phase 9` milestone row; `make test` (`21/21` OK) and `make lint` pass.
 
 ### ACT-182 - Update `README.md` with YT Cluster 36-Row Matrix, `chart_11`, & `v2.4.1` (`#445`)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#445` (`docs/issue-445-readme-en-yt`)
