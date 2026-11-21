@@ -3015,3 +3015,303 @@ number of transactions actually processed: 2902
 number of failed transactions: 0 (0.000%)
 number of serialization failures: 0 (0.000%)
 number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 20.713 ms
+initial connection time = 3.465 ms
+tps = 193.114310 (without initial connection time)
+  [cockroach] B2_overlap_rw: tps=355.81 qps=N/A avg=22.44ms p95=40.944ms err=0 rt=0 PASS_CONVERGED drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+NOTICE:  No license is installed. Throttling will begin after 2026-11-28 21:39:42 +0000 UTC unless a license is installed before then.
+NOTICE:  No license is installed. Throttling will begin after 2026-11-28 21:39:42 +0000 UTC unless a license is installed before then.
+[... repeated NOTICE lines omitted ...]
+transaction type: <builtin: select only>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 78493
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 1.528 ms
+initial connection time = 4.751 ms
+tps = 5233.976619 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: <builtin: select only>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 85933
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 1.396 ms
+initial connection time = 5.756 ms
+tps = 5730.143725 (without initial connection time)
+  [cockroach] C_multinode_ro: tps=10964.12 qps=N/A avg=1.444ms p95=2.17ms err=0 rt=0 PASS drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: /tmp/s_hot.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 12 s
+number of transactions actually processed: 3745
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 12.821 ms
+initial connection time = 5.622 ms
+tps = 311.985188 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: /tmp/s_hot.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 12 s
+number of transactions actually processed: 3497
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 13.724 ms
+initial connection time = 4.562 ms
+tps = 291.453414 (without initial connection time)
+  [cockroach] D_hot_conflict: tps=603.44 qps=N/A avg=13.233ms p95=25.093ms err=0 rt=0 PASS_CONVERGED drift=0
+sysbench 1.0.20 (using system LuaJIT 2.1.1700206165)
+
+Running the test with following options:
+Number of threads: 8
+Initializing random number generator from current time
+
+
+Initializing worker threads...
+
+Threads started!
+
+SQL statistics:
+    queries performed:
+        read:                            26955
+        write:                           3659
+        other:                           6844
+        total:                           37458
+    transactions:                        1292   (85.38 per sec.)
+    queries:                             37458  (2475.28 per sec.)
+    ignored errors:                      650    (42.95 per sec.)
+    reconnects:                          0      (0.00 per sec.)
+
+General statistics:
+    total time:                          15.1319s
+    total number of events:              1292
+
+Latency (ms):
+         min:                                   22.91
+         avg:                                   93.36
+         max:                                 1009.77
+         95th percentile:                      253.35
+         sum:                               120624.27
+
+Threads fairness:
+    events (avg/stddev):           161.5000/24.46
+    execution time (avg/stddev):   15.0780/0.04
+
+  [cockroach] E_sysbench_oltp_rw: tps=85.38 qps=2475.28 avg=93.36ms p95=253.35ms err=0 rt=650 PASS drift=0
+  [cockroach] E2_sysbench_oltp_ro: tps=427.25 qps=6836.06 avg=18.71ms p95=26.68ms err=0 rt=0 PASS drift=0
+  [cockroach] E3_sysbench_oltp_wo: tps=316.91 qps=1901.45 avg=25.22ms p95=44.98ms err=0 rt=0 PASS drift=0
+  [cockroach] E4_sysbench_point_select: tps=11275.47 qps=11275.47 avg=1.42ms p95=2.35ms err=0 rt=0 PASS drift=0
+  [cockroach] H_append_only_insert: tps=1305.7 qps=N/A avg=6.107ms p95=7.449ms err=0 rt=0 PASS_CONVERGED drift=0
+  [cockroach] G_conc_c1: tps=34.25 qps=N/A avg=29.178ms p95=90.752ms err=0 rt=0 PASS drift=0
+  [cockroach] G_conc_c4: tps=169.75 qps=N/A avg=23.455ms p95=42.838ms err=0 rt=0 PASS drift=0
+  [cockroach] G_conc_c8: tps=258.6 qps=N/A avg=29.847ms p95=61.247ms err=0 rt=0 PASS drift=0
+  [cockroach] G_conc_c16: tps=240.83 qps=N/A avg=65.978ms p95=183.234ms err=0 rt=6 PASS drift=0
+  [cockroach] G_conc_c32: tps=365.47 qps=N/A avg=83.477ms p95=229.026ms err=0 rt=56 PASS drift=0
+  [cockroach] F_wan_netem_10ms: tps=57.05 qps=N/A avg=139.194ms p95=239.975ms err=0 rt=0 PASS_NETEM_10MS drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+NOTICE:  No license is installed. Throttling will begin after 2026-11-28 21:39:42 +0000 UTC unless a license is installed before then.
+NOTICE:  No license is installed. Throttling will begin after 2026-11-28 21:39:42 +0000 UTC unless a license is installed before then.
+[... repeated NOTICE lines omitted ...]
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 12 s
+number of transactions actually processed: 341
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 295.155 ms
+initial connection time = 5.599 ms
+tps = 27.104448 (without initial connection time)
+  [cockroach] F_wan_netem_25ms: tps=27.1 qps=N/A avg=285.933ms p95=464.053ms err=0 rt=0 PASS_NETEM_25MS drift=0
+  [cockroach] F_wan_netem_50ms: tps=14.33 qps=N/A avg=540.624ms p95=895.388ms err=0 rt=0 PASS_NETEM_50MS drift=0
+=== [cockroach] Down ===
+=== [cockroach-rc] Start (PG_SCALE=20, SB=25000, WARM=5s) ===
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 4312
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 27.857 ms
+initial connection time = 8.518 ms
+tps = 287.182184 (without initial connection time)
+  [cockroach-rc] A_single_rw: tps=287.18 qps=N/A avg=27.819ms p95=48.099ms err=0 rt=0 PASS_CONVERGED drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: /tmp/s_d1.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 822
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 73.206 ms
+initial connection time = 5.057 ms
+tps = 54.640552 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: /tmp/s_d2.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 852
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 70.629 ms
+initial connection time = 4.429 ms
+tps = 56.634122 (without initial connection time)
+  [cockroach-rc] B1_disjoint_rw: tps=111.27 qps=N/A avg=71.782ms p95=192.531ms err=0 rt=0 PASS_CONVERGED drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: /tmp/s_ov.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 2049
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 29.309 ms
+initial connection time = 4.983 ms
+tps = 136.476171 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: /tmp/s_ov.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 2104
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 28.557 ms
+initial connection time = 4.208 ms
+tps = 140.068470 (without initial connection time)
+  [cockroach-rc] B2_overlap_rw: tps=276.54 qps=N/A avg=28.883ms p95=68.067ms err=0 rt=0 PASS_CONVERGED drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+NOTICE:  No license is installed. Throttling will begin after 2026-11-28 21:45:58 +0000 UTC unless a license is installed before then.
+NOTICE:  No license is installed. Throttling will begin after 2026-11-28 21:45:58 +0000 UTC unless a license is installed before then.
+[... repeated NOTICE lines omitted ...]
+transaction type: <builtin: select only>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 78362
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 1.531 ms
+initial connection time = 6.302 ms
+tps = 5225.841138 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: <builtin: select only>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 78384
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 1.530 ms
+initial connection time = 6.613 ms
+tps = 5227.415307 (without initial connection time)
+  [cockroach-rc] C_multinode_ro: tps=10453.26 qps=N/A avg=1.516ms p95=2.185ms err=0 rt=0 PASS drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: /tmp/s_hot.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 12 s
+number of transactions actually processed: 2915
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 16.469 ms
+initial connection time = 3.736 ms
+tps = 242.883898 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 13.0.0)
+transaction type: /tmp/s_hot.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
