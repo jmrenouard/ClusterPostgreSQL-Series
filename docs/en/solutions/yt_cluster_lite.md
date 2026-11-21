@@ -60,7 +60,7 @@ flowchart LR
 
 ## 4. Empirical Benchmarks & Verified Limits (`results/benchmark_yt_cluster.csv` & `results/functional_limits_yt_cluster.csv`)
 
-All 36 rows (18 `yt-cluster` + 18 `yt-cluster-async`) ran sequentially at `pg_scale = 2` on 3-node `dbinvent/yt:1.21.3` (`balance_drift = 0` on every write suite; see [Ch. 09](../09_benchmarks_methodology_and_charts.md)). Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` are recorded (`p99` latency is unmeasured).
+All 36 rows (18 `yt-cluster` + 18 `yt-cluster-async`) ran sequentially at `pg_scale = 2` on 3-node `dbinvent/yt:1.21.3` (`balance_drift = 0` on every write suite; see [`chart_11`](../../../assets/charts/chart_11_yt_cluster_vs_multimaster_log.png) and [Ch. 09](../09_benchmarks_methodology_and_charts.md)). Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` are recorded (`p99` latency is unmeasured).
 
 | Suite (`PG_SCALE=2`) | `yt-cluster` (`cc=half`) TPS | `cc=half` Avg / p95 (ms) | `cc=half` Retries / Fail | `yt-cluster-async` (`cc=nodes>=0`) TPS | `async` Avg / p95 (ms) |
 | :--- | :---: | :---: | :---: | :---: | :---: |

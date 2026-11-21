@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-176 - Add Chart 11 YT Cluster vs Multi-Master Log Comparison (`#433`)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#433` (`feat/issue-433-chart-11-yt-comparison`)
+- **Request / Changes / Result**: Added `scripts/generate_charts_v4.py` and `assets/charts/chart_11_yt_cluster_vs_multimaster_log.png`, wired into `Makefile` (`charts`), enforced in `tests/test_benchmark_artifacts.py` (`EXPECTED_CHARTS`), and linked in EN/FR `docs/{en,fr}/solutions/yt_cluster_lite.md`; `make test` (`21/21` OK) and `make lint` pass.
+
 ### ACT-175 - Expand Charts 01-07 to All 17 PostgreSQL & YT Cluster Topologies (`#431`)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#431` (`feat/issue-431-expand-charts-01-07`)
 - **Request / Changes / Result**: Updated `chart_07` (`xlim(10, ...)`, 18 bars) and 17-topology `specs` in `scripts/generate_charts.py`, regenerated `assets/charts/chart_01..07_*.png` at 180 DPI with zero overlap; `make test` (`21/21` OK) and `make lint` pass.
