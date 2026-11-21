@@ -173,6 +173,13 @@
 - **Applied Change / Fix**: `env/multi-db-docker-env` (`v2.4.1`, `0ec32dd`) targets non-Leader `wn`, adds cooldown/retry and isolated `prep_sb()` before `E3`; updated CSV, `#18` sheets, Ch. `06` & `09`.
 - **Result & Non-Regression Test**: 36/36 YT rows pass (`drift = 0`), monotonic async WAN (`41.45 -> 8.47 -> 4.78 -> 2.90 TPS`), `E3 = 133.55 TPS` (`make test` + `make lint`).
 
+### RCA-025 - V5 `PG_SCALE=20` Production Tuning Traps (Citus Scatter, CRDB `42P02`/`42501`, YT CLI & `55409` Exit)
+- **Date / Action**: `2026-11-21` (`ACT-184`, `multi-db-docker-env` `v2.6.1` `3515629`)
+- **Observed Symptom**: Initial `PG_SCALE=20` runs surfaced five failures/bottlenecks: (1) Citus `pgbench_history` colocated on `bid` triggered 32-shard scatter on `WHERE aid=:aid` (`40.56 TPS`, `197.2ms` avg); (2) PG 17 (`17.11`) failed on PG 18 `io_method`/`io_workers` GUCs and `io_uring` hit Docker `EPERM`; (3) CockroachDB `v25.4` rejected `sql.defaults.default_transaction_isolation` (`42P02`) and `ALTER ROLE ALL` ignored `root` (`42501`); (4) YT `postgres -c shared_preload_libraries=...` clobbered `conf.d/yt.conf` and `pgbench` exited `RC=2` on `55409`; (5) Yugabyte `COPY` at `PG_SCALE=20` risked OOM and `pgedge` needed peer history drain before `hs[0]` reset.
+- **Root Cause Analysis**: (1) `pgbench` hot updates filter by `aid`, not `bid`; (2) `io_method` is PG 18+ only and Docker seccomp blocks `io_uring`; (3) CRDB `v25.4` requires `sql.txn.read_committed_isolation.enabled=true` plus a non-`root` `bench` role; (4) CLI `-c` overrides include files and `pgbench` only retries `40001`/`40P01`; (5) DocDB tablet splits and Spock `-old` delta replay are sensitive to bulk-load memory and residual queued deletes.
+- **Applied Change / Fix**: Built modular `v2.6.1` `bench_pg_optimized_runner.sh` (`fillfactor=90`, `lz4` WAL, PG 18/YT `io_method=worker/4`, `-M prepared`, `WARMUP_S=5`, Spock `delta_apply` + drain, Citus `colocate_with=>'pgbench_accounts'`, Yugabyte `50k` chunked inserts + `RC` + `CACHE 1000` + HAProxy `:15470`, CRDB `v25.4` HAProxy `:15480` + `bench` role, YT `YT_MAX_PREPARED=300` + `ytctl` parallel tokens + Leader affinity + Lua `55409`/`40001`/`40P01` hook); documented in Ch. `13`, `06 Section 8`, `09`, `README*` with `chart_12`/`chart_13`.
+- **Result & Non-Regression Test**: `318/318` sequential rows collected (`results/benchmark_optimized.csv`), `0` drift on `pgedge`, `sync`, Raft, Citus, and YT (`317/318` `tx_failed=0`, only `yt-cluster-async | D` `tx_failed=1`), monotonic WAN sweeps across all 8 WAN-enabled consensus/sync stacks, and `make test && make lint` pass.
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters
@@ -276,6 +283,11 @@
 - **Date / Action**: `2026-11-20` (`ACT-149`)
 - **Assumption**: `results/project_popularity.csv` (`2026-11-20T17:26:02Z`, `22` rows) reports `open_issues=0`, `contributors=58` (trusted committers), and next-major tag `REL_19_0` on the `postgres/postgres` GitHub mirror (canonical issue tracking lives on `pgsql-bugs`), while `pgEdge/spock` reports `v6.0.0-beta.2` alongside stable `5.0.14` tested in the PoC; additionally, tight sheets (`pg17_physical_streaming_patroni`, `pgedge_spock`) near `13 KB` require prose compaction in Sections 1-5/Table D to fit Section 6 under the `14,000`-byte cap (`tests/test_solution_sheets.py:200`).
 - **Impact & Removal Condition**: Preserves 100% verbatim CSV-to-Markdown telemetry parity and zero benchmark metric loss without loosening test density bounds; mirror caveats and `v5.0.14` PoC alignment are stated inline, and telemetry refreshes via `make popularity`.
+
+### APP-010 - `PG_SCALE=20` Single-Host Container RAM Caps & Prepared/Warm-Up Protocol Shift
+- **Date / Action**: `2026-11-21` (`ACT-184`)
+- **Assumption**: V5 tuned runs (`results/benchmark_optimized.csv`, `318` rows) compare `PG_SCALE=20` + `sysbench 4x25k` + `-M prepared` + `5s` warm-up + HAProxy/RC against `PG_SCALE=2` + `4x10k` + simple protocol + `0s` warm-up baselines inside a single `15 GiB`-capped WSL2 Docker host (`2048m`/node Citus, `3072m`/node Yugabyte & CockroachDB `v25.4`), and capture `sysbench` Lua-ignored transient aborts in `retries_40001` while reporting `tx_failed=0`.
+- **Impact & Removal Condition**: Ratios (`G_opt`, `R_p95`) measure combined architectural tuning + `10x`/`2.5x` dataset scaling rather than single-variable isolation, and `sysbench` retry churn remains visible via `retries_40001`; removable via multi-host NVMe/cloud runs (`IDEA-003`) at fixed scale.
 
 ## 4. Unimplemented Ideas & Future Roadmap (`IDEA-XXX`)
 

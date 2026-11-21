@@ -16,6 +16,7 @@
 | **Phase 7** | Wave 3: Ecosystem Popularity, PG 18.6, Charts 08-10 & Dashboard V3 | GitHub API popularity study, PG 18.6 PoC & 87 benchmarks, Ch. 11-12 EN/FR, Charts 08-10, 15-topology Dashboard V3, submodule `v2.3.0` | Complete | `make test && make lint` |
 | **Phase 8** | Wave 4: PG 18.6 Sheet #17, YT Cluster 1.21.3 / YT Cluster Lite PoC & Sheet #18, 17-Topology Dashboard & Submodule `v2.4.0` | PG 18.6 18th sheet & core chapters, YT Cluster 22-row live PoC & 19th sheet, 22-entry popularity & Charts 08-09, 17-topology offline dashboard, 19-slug E2E tests, 13-stack `Makefile` & submodule `v2.4.0` | Complete | `make test && make lint` |
 | **Phase 9** | Wave 5: 18-Suite `yt-cluster-async`, 17-Topology Charts 01-07 + `chart_11`, Benchmark Traceability & `v2.4.1` | 36-row YT Cluster empirical matrix, 17-topology `chart_01-07` + `chart_11`, 301-row offline dashboard (`yt_vs_mm`), Ch. 06 Section 7 & Ch. 09 Traceability Matrix, submodule `v2.4.1` | Complete | `make test && make lint` |
+| **Phase 10** | V5 Production Tuning & Realistic Scale Benchmarks (`PG_SCALE=20`, `18` Topologies, `318` Rows, `v2.6.1`) | `results/benchmark_optimized.csv` (`318` rows), `chart_12` & `chart_13`, dual-dataset offline dashboard (`301` + `318`), Chapter 13 EN/FR, Ch. 06 Section 8, Ch. 09 Matrix, `README*` & governance updates | Complete | `make charts && make dashboard && make test && make lint` |
 
 ## 1. Ongoing Actions (`IN PROGRESS`)
 
@@ -24,6 +25,10 @@
 | *None* | - | - | - | All tracked actions archived below once verified. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-184 - Land V5 PG_SCALE=20 Benchmarks, Charts 12-13, Dual Dashboard, Ch. 13 & Submodule v2.6.1 (#449-#494)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#449-#494` (`chore/issue-494-phase10-gov-v261`)
+- **Request / Changes / Result**: Landed `results/benchmark_optimized.csv` (318 rows, #449 / PRs #450-#452), `results/logs/benchmark-optimized.log` (3,718 lines, #453 / PRs #454-#466), `generate_charts_v5.py` & `chart_12`-`chart_13` (#467 / PRs #468-#469), dual-dataset dashboard shards/UI (#470 / PRs #471-#474, #475 / PRs #476-#478), `tests/test_benchmark_artifacts.py` (#479 / PR #480), bilingual Ch. 13 (#481 / PRs #482-#483), Ch. 06 Sec. 8 (#484 / PR #485), Ch. 09 EN/FR (#486 / PR #487, #488 / PR #489), `README*` (#490 / PR #491, #492 / PR #493), `RCA-025`/`APP-010`, `Phase 10` completion, and `env/multi-db-docker-env` bump to `v2.6.1` (`3515629`, #494); every PR < 14,800 B with `make test` (21/21 OK) and `make lint` green.
 
 ### ACT-183 - Update `README.fr.md` & Add `Phase 9` Milestone (`#447`)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#447` (`docs/issue-447-readme-fr-yt`)
