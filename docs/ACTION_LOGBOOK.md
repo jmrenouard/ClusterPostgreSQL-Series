@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-170 - Populate Complete 18-Suite `yt-cluster-async` Metrics in EN/FR Sheets (Issue `#421`)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#421` (`docs/issue-421-yt-async-solution-sheets`)
+- **Request / Changes / Result**: Updated `docs/{en,fr}/solutions/yt_cluster_lite.md` (`13.4 KB` / `13.6 KB`, `116` lines) with full 18-suite empirical `yt-cluster-async` values (`0` drift) and `SQLSTATE 55000` async `recon` notes; passed `make test` (`21/21` OK), `make lint`, and PR diff `< 11,000` chars.
+
 ### ACT-169 - Separate `LP_BENCH_META` Header in `dashboard/data_bench.js` (Issue `#419`)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#419` (`chore/issue-419-meta-line-sep`)
 - **Request / Changes / Result**: Added blank-line separator between `LP_BENCH_META` and `LP_BENCH_ROWS_1` in `scripts/build_dashboard.py` and rebuilt `dashboard/data_bench.js` so later metadata updates avoid 11 KB context diffs; verified `make test` (`21/21` OK), `make lint`, and PR diff `< 14,800` chars.
