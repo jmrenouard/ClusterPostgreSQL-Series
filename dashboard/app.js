@@ -67,26 +67,25 @@
       kc(bc ? "kpi-err" : "kpi-ok", tr("kpiInt"), `${rows.length - bc}/${rows.length} OK`, bc ? `${bc} LOST/DIVERGED` : "0 drift"),
     ].join("");
   }
-  const BENCH = BASE_BENCH, ALL_T = BASE_T, ALL_S = BASE_S, IDX = BASE_IDX, E1 = e1S(BASE_S);
+
   function renderCharts() {
-    const cT = $("chart-tps"), cL = $("chart-lat");
+    const cT = $("chart-tps"), cL = $("chart-lat"), ix = curI(), allS = curS();
+    $("title-tps").textContent = tr("tTps"); $("title-lat").textContent = tr("tLat");
     $("badge-scale-tps").textContent = $("badge-scale-lat").textContent = st.scale === "log" ? "log10" : "linear";
-    const ts = ALL_T.filter((t) => st.sel.has(t) && IDX[t] && (st.suite === "D_hot_conflict" || t !== "pgedge-delta-apply"));
+    const ts = curT().filter((t) => st.sel.has(t) && ix[t] && (st.suite === "D_hot_conflict" || t !== "pgedge-delta-apply"));
     if (!ts.length) { cT.innerHTML = cL.innerHTML = `<div class="chart-empty">${esc(tr("noSel"))}</div>`; return; }
     const lf = st.lat === "p95" ? "lat_p95_ms" : "lat_avg_ms";
     if (st.suite === "SWEEP_CONC" || st.suite === "SWEEP_WAN") {
-      const isC = st.suite === "SWEEP_CONC";
-      const ms = ALL_S.map((s) => [s, s.match(isC ? /^G_conc_c?(\d+)$/ : /^F_wan_netem_(\d+)ms$/)]).filter(([, m]) => m).sort((a, b) => a[1][1] - b[1][1]);
-      const xl = isC ? ms.map(([, m]) => "c=" + m[1]) : ["0 ms", ...ms.map(([, m]) => m[1] + " ms")];
-      const seq = isC ? ms.map(([s]) => s) : ["A_single_rw", ...ms.map(([s]) => s)];
-      const mk = (f) => ts.map((t) => ({ label: TL[t] || t, color: TC[t] || "#334155", points: seq.map((s) => { const r = getR(t, s); return r ? { v: +r[f], tip: makeTip(r) } : null; }) }));
+      const isC = st.suite === "SWEEP_CONC", ms = allS.map((s) => [s, s.match(isC ? /^G_conc_c?(\d+)$/ : /^F_wan_netem_(\d+)ms$/)]).filter(([, m]) => m).sort((a, b) => a[1][1] - b[1][1]);
+      const xl = isC ? ms.map(([, m]) => "c=" + m[1]) : ["0 ms", ...ms.map(([, m]) => m[1] + " ms")], seq = isC ? ms.map(([s]) => s) : ["A_single_rw", ...ms.map(([s]) => s)];
+      const mk = (f) => ts.map((t) => ({ label: tLbl(t), color: TC[t] || "#334155", points: seq.map((s) => { const r = getR(t, s); return r ? { v: +r[f], tip: makeTip(r) } : null; }) }));
       renderLineChart(cT, { xLabels: xl, series: mk("tps"), scale: st.scale, unit: "tps", emptyMsg: tr("noSel") });
       renderLineChart(cL, { xLabels: xl, series: mk(lf), scale: st.scale, unit: "ms", emptyMsg: tr("noSel") });
       return;
     }
-    const cats = ts.map((t) => ({ key: t, label: TL[t] || t }));
+    const cats = ts.map((t) => ({ key: t, label: tLbl(t) }));
     if (st.suite === "CORE_ALL") {
-      const sl = ["A_single_rw", "B1_disjoint_rw", "C_multinode_ro", E1, "H_append_only_insert"].filter((s) => s && ALL_S.includes(s));
+      const sl = ["A_single_rw", "B1_disjoint_rw", "C_multinode_ro", e1S(allS), "H_append_only_insert"].filter((s) => s && allS.includes(s));
       const mk = (f) => sl.map((s, si) => ({ label: (SNAME[s] || s).split(":")[0] + ": " + s.split("_").slice(1, 3).join(" "), color: SCOL[si % SCOL.length], values: cats.map((c) => { const r = getR(c.key, s); return r ? { v: +r[f], tip: makeTip(r), bad: isBad(r) } : null; }) }));
       renderBarChart(cT, { categories: cats, series: mk("tps"), scale: st.scale, unit: "tps" });
       renderBarChart(cL, { categories: cats, series: mk(lf), scale: st.scale, unit: "ms" });
@@ -101,41 +100,45 @@
   function renderTable(rows) {
     const c = st.sort, d = st.dir, loc = st.lang === "fr" ? "fr-FR" : "en-US";
     const sr = [...rows].sort((a, b) => { const an = +a[c], bn = +b[c]; return (a[c] !== "" && b[c] !== "" && !Number.isNaN(an) && !Number.isNaN(bn)) ? (an - bn) * d : String(a[c] ?? "").localeCompare(String(b[c] ?? "")) * d; });
-    $$("#bench-table th[data-sort]").forEach((th) => th.classList.toggle("sorted", th.dataset.sort === c));
+    $$("#bench-table th[data-sort]").forEach((th) => { th.classList.toggle("sorted", th.dataset.sort === c); th.onclick = () => { st.dir = st.sort === th.dataset.sort ? -st.dir : -1; st.sort = th.dataset.sort; renderTable(fBench()); }; });
     const n = (v, m) => (+(v || 0)).toLocaleString(loc, m ? { maximumFractionDigits: m } : undefined);
-    $("bench-tbody").innerHTML = sr.map((r) => {
-      const dr = +(r.balance_drift || 0);
-      return `<tr><td><span class="topo-cell">${dot(r.topology)}${esc(TL[r.topology] || r.topology)}</span></td><td>${esc(r.suite)}</td><td class="num">${esc(r.clients)}</td><td class="num"><strong>${n(r.tps, 2)}</strong></td><td class="num">${fmtNum(r.lat_avg_ms)}</td><td class="num">${fmtNum(r.lat_p95_ms)}</td><td class="num">${n(r.tx_committed)}</td><td class="num">${esc(r.retries_40001 || 0)}</td><td>${bdg(isBad(r) ? "badge-err" : "badge-ok", r.convergence_status || "PASS")}</td><td class="num">${bdg(dr ? "badge-err" : "badge-ok", dr ? (dr > 0 ? "+" : "") + n(dr) : "0 drift")}</td></tr>`;
-    }).join("");
+    $("bench-tbody").innerHTML = sr.map((r) => { const dr = +(r.balance_drift || 0); return `<tr><td><span class="topo-cell">${dot(r.topology)}${esc(tLbl(r.topology))}</span></td><td>${esc(r.suite)}</td><td class="num">${esc(r.clients)}</td><td class="num"><strong>${n(r.tps, 2)}</strong></td><td class="num">${fmtNum(r.lat_avg_ms)}</td><td class="num">${fmtNum(r.lat_p95_ms)}</td><td class="num">${n(r.tx_committed)}</td><td class="num">${esc(r.retries_40001 || 0)}</td><td>${bdg(isBad(r) ? "badge-err" : "badge-ok", r.convergence_status || "PASS")}</td><td class="num">${bdg(dr ? "badge-err" : "badge-ok", dr ? (dr > 0 ? "+" : "") + n(dr) : "0 drift")}</td></tr>`; }).join("");
   }
 
   function exportCSV() {
-    if (st.tab === "popularity" && window.LPPopularity) return window.LPPopularity.exportCSV();
+    if (st.tab === "popularity" && W.LPPopularity) return W.LPPopularity.exportCSV();
+    if (st.tab === "bench" && st.dataset === "compare" && Opt) return Opt.exportCompareCSV(BASE_IDX, st, Opt.OPT_T, e1S(Opt.OPT_S));
     const isB = st.tab === "bench", cols = isB ? BCOLS : MAT[st.mtab].cols, rows = isB ? fBench() : MAT[st.mtab].rows.filter((r) => st.sel.has(r.topology));
     const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const csv = [cols.map(q).join(","), ...rows.map((r) => cols.map((c) => q(r[c])).join(","))].join("\n") + "\n";
-    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" })), download: isB ? "cluster_pg_filtered_benchmarks.csv" : `cluster_pg_${st.mtab}_matrix.csv` });
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" })), download: isB ? `cluster_pg_${st.dataset}_benchmarks.csv` : `cluster_pg_${st.mtab}_matrix.csv` });
     a.click(); URL.revokeObjectURL(a.href);
   }
 
   function renderAll() {
     buildControls();
     $$("[data-fr]").forEach((e) => { if (!e.dataset.en) e.dataset.en = e.textContent; e.textContent = st.lang === "fr" ? e.dataset.fr : e.dataset.en; });
+    if (Opt) Opt.syncUI(st.dataset, st.lang);
     $$("[data-lang]").forEach((b) => b.classList.toggle("active", b.dataset.lang === st.lang));
-    const isB = st.tab === "bench", isM = st.tab === "matrix", isP = st.tab === "popularity";
-    [["main-controls", isP], ["bench-controls", !isB], ["panel-bench", !isB], ["panel-matrix", !isM], ["panel-popularity", !isP]].forEach(([id, h]) => $(id).classList.toggle("hidden", h));
-    if (isB) { const r = fBench(); renderKPIs(r); renderCharts(); renderTable(r); } else if (isM && W.LPMatrix) W.LPMatrix.render(st); else if (window.LPPopularity) window.LPPopularity.render(st.lang);
+    const isBench = st.tab === "bench", isMat = st.tab === "matrix", isPop = st.tab === "popularity";
+    [["main-controls", isPop], ["bench-controls", !isBench], ["panel-bench", !isBench], ["panel-matrix", !isMat], ["panel-popularity", !isPop]].forEach(([id, h]) => $(id).classList.toggle("hidden", h));
+    if (isBench) {
+      if (st.dataset === "compare" && Opt) Opt.renderCompare(BASE_IDX, st, Opt.OPT_T, e1S(Opt.OPT_S));
+      else { const r = fBench(); renderKPIs(r); renderCharts(); renderTable(r); }
+    } else if (isMat && W.LPMatrix) W.LPMatrix.render(st);
+    else if (W.LPPopularity) W.LPPopularity.render(st.lang);
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    const P={all:ALL_T,clear:[],pg18_vs_pg17:TO.slice(0,10),stream_logical:TO.slice(0,5),active_active:["pg-birep","pg18-birep","pgedge","pgedge-delta-apply","bucardo","yugabyte","cockroach","yt-cluster","yt-cluster-async"],raft_async:["pg-birep","pgedge","bucardo","yugabyte","cockroach"],yt_vs_mm:["yt-cluster","yt-cluster-async","pg18-birep","pgedge","yugabyte","cockroach"]};
+    const P = { all: "ALL", clear: [], pg18_vs_pg17: TO.slice(0, 10), stream_logical: TO.slice(0, 5), active_active: ["pg-birep", "pg18-birep", "pgedge", "pgedge-delta-apply", "bucardo", "yugabyte", "cockroach", "cockroach-rc", "yt-cluster", "yt-cluster-async"], raft_async: ["pg-birep", "pgedge", "bucardo", "yugabyte", "cockroach", "cockroach-rc"], yt_vs_mm: ["yt-cluster", "yt-cluster-async", "pg18-birep", "pgedge", "yugabyte", "cockroach", "cockroach-rc"] };
+    const cmpOr = (fn) => (st.dataset === "compare" && Opt ? Opt.renderCompare(BASE_IDX, st, Opt.OPT_T, e1S(Opt.OPT_S)) : fn());
     const wire = (a, k, cb) => $$(`[${a}]`).forEach((b) => { b.onclick = () => { st[k] = b.getAttribute(a); $$(`[${a}]`).forEach((x) => x.classList.toggle("active", x.getAttribute(a) === st[k])); cb(); }; });
-    [["data-lang", "lang", renderAll], ["data-tab", "tab", renderAll], ["data-mtab", "mtab", () => W.LPMatrix && W.LPMatrix.render(st)], ["data-scale", "scale", renderCharts], ["data-lat", "lat", renderCharts]].forEach((x) => wire(...x));
-    $$("[data-preset]").forEach((b) => { b.onclick = () => { st.sel = new Set((P[b.dataset.preset] || []).filter((t) => ALL_T.includes(t))); renderAll(); }; });
+    [["data-lang", "lang", renderAll], ["data-tab", "tab", renderAll], ["data-mtab", "mtab", () => W.LPMatrix && W.LPMatrix.render(st)], ["data-scale", "scale", () => cmpOr(renderCharts)], ["data-lat", "lat", () => cmpOr(renderCharts)]].forEach((x) => wire(...x));
+    $$("[data-dataset]").forEach((b) => { b.onclick = () => { const prev = curT(), wasAll = prev.every((t) => st.sel.has(t)); st.dataset = b.dataset.dataset; $$("[data-dataset]").forEach((x) => x.classList.toggle("active", x.dataset.dataset === st.dataset)); const next = curT(); st.sel = wasAll ? new Set(next) : new Set([...st.sel].filter((t) => next.includes(t))); if (!wasAll && st.dataset !== "baseline" && st.sel.has("cockroach")) st.sel.add("cockroach-rc"); renderAll(); }; });
+    $$("[data-preset]").forEach((b) => { b.onclick = () => { const allT = curT(), ps = P[b.dataset.preset]; st.sel = new Set(ps === "ALL" ? allT : (ps || []).filter((t) => allT.includes(t))); renderAll(); }; });
     $("suite-select").onchange = (e) => { st.suite = e.target.value; renderAll(); };
-    $("table-filter").oninput = (e) => { st.qB = e.target.value; renderTable(fBench()); };
+    $("table-filter").oninput = (e) => { st.qB = e.target.value; cmpOr(() => renderTable(fBench())); };
     $("matrix-filter").oninput = (e) => { st.qM = e.target.value; if (W.LPMatrix) W.LPMatrix.render(st); };
-    $$("#bench-table th[data-sort]").forEach((th) => { th.onclick = () => { const c = th.dataset.sort; st.dir = st.sort === c ? -st.dir : -1; st.sort = c; renderTable(fBench()); }; });
     $("btn-export").onclick = exportCSV;
     renderAll();
   });
