@@ -1,0 +1,107 @@
+topology,suite,pg_scale,clients,duration_s,tps,qps,lat_avg_ms,lat_stddev_ms,lat_p95_ms,tx_committed,tx_failed,retries_40001,convergence_status,balance_drift,notes
+pg17-standalone,A_single_rw,20,8,15,1833.98,N/A,4.342,2.887,6.936,27489,0,0,PASS_SINGLE_PRIMARY,0,d=197251 acc=197251 h=27489
+pg17-standalone,B1_disjoint_rw,20,8,15,620.74,N/A,12.865,25.352,24.083,9309,0,0,PASS_SINGLE_PRIMARY,0,d=-169875 acc=-169875 h=9309
+pg17-standalone,B2_overlap_rw,20,8,15,1574.23,N/A,5.061,4.517,8.404,23591,0,0,PASS_SINGLE_PRIMARY,0,d=-584851 acc=-584851 h=23591
+pg17-standalone,C_multinode_ro,20,16,15,54157.59,N/A,0.257,0.07,0.352,810209,0,0,PASS,0,m=1 c=16 j=4
+pg17-standalone,D_hot_conflict,20,8,12,2999.19,N/A,2.649,1.298,4.082,35928,0,0,PASS_SINGLE_PRIMARY,0,d=1811554 acc=1811554 h=35928
+pg17-standalone,E_sysbench_oltp_rw,20,8,15,975.67,19551.82,8.19,0,10.46,14643,0,32,PASS,0,oltp_read_write 4x25k
+pg17-standalone,E2_sysbench_oltp_ro,20,8,12,1926.97,30831.51,4.15,0,4.74,23139,0,0,PASS,0,oltp_read_only 4x25k
+pg17-standalone,E3_sysbench_oltp_wo,20,8,12,2059.73,12391.72,3.88,0,5.28,24727,0,100,PASS,0,oltp_write_only 4x25k
+pg17-standalone,E4_sysbench_point_select,20,16,12,131517.94,131517.94,0.12,0,0.3,1579325,0,0,PASS,0,oltp_point_select 4x25k
+pg17-standalone,H_append_only_insert,20,8,12,2430.82,N/A,3.264,4.144,6.727,29127,0,0,PASS_SINGLE_PRIMARY,0,1n rows=29127
+pg17-standalone,G_conc_c1,20,1,8,357.94,N/A,2.783,2.774,3.716,2862,0,0,PASS,0,m=1 c=1 j=1
+pg17-standalone,G_conc_c4,20,4,8,1034.03,N/A,3.847,3.635,5.405,8262,0,0,PASS,0,m=1 c=4 j=2
+pg17-standalone,G_conc_c8,20,8,8,2041.36,N/A,3.9,1.558,6.048,16308,0,0,PASS,0,m=1 c=8 j=4
+pg17-standalone,G_conc_c16,20,16,8,2988.82,N/A,5.317,3.089,9.613,23848,0,0,PASS,0,m=1 c=16 j=4
+pg17-standalone,G_conc_c32,20,32,8,3026.06,N/A,10.501,13.98,34.052,24045,0,0,PASS,0,m=1 c=32 j=4
+pg17-async-streaming,A_single_rw,20,8,15,1276.91,N/A,6.241,4.527,11.259,19142,0,0,PASS_SINGLE_PRIMARY,0,d=176757 acc=176757/176757 h=19142/19142
+pg17-async-streaming,B1_disjoint_rw,20,8,15,359.45,N/A,22.229,24.9,51.502,5392,0,0,PASS_SINGLE_PRIMARY,0,d=59159 acc=59159/59159 h=5392/5392
+pg17-async-streaming,B2_overlap_rw,20,8,15,1230.92,N/A,6.477,6.234,11.848,18447,0,0,PASS_SINGLE_PRIMARY,0,d=673491 acc=673491/673491 h=18447/18447
+pg17-async-streaming,C_multinode_ro,20,16,15,52531.55,N/A,0.274,0.152,0.485,786746,0,0,PASS,0,m=2 c=16 j=4
+pg17-async-streaming,D_hot_conflict,20,8,12,2045.29,N/A,3.89,4.08,6.174,24506,0,0,PASS_SINGLE_PRIMARY,0,d=1243620 acc=1243620/1243620 h=24506/24506
+pg17-async-streaming,E_sysbench_oltp_rw,20,8,15,878.29,17595.69,9.1,0,11.45,13184,0,25,PASS,0,oltp_read_write 4x25k
+pg17-async-streaming,E2_sysbench_oltp_ro,20,8,12,1694.68,27114.93,4.72,0,6.32,20348,0,0,PASS,0,oltp_read_only 4x25k
+pg17-async-streaming,E3_sysbench_oltp_wo,20,8,12,1723.46,10364.71,4.64,0,6.43,20697,0,72,PASS,0,oltp_write_only 4x25k
+pg17-async-streaming,E4_sysbench_point_select,20,16,12,142307.91,142307.91,0.11,0,0.28,1709145,0,0,PASS,0,oltp_point_select 4x25k
+pg17-async-streaming,H_append_only_insert,20,8,12,2425.19,N/A,3.282,2.003,4.274,29049,0,0,PASS_SINGLE_PRIMARY,0,1n rows=29049/29049
+pg17-async-streaming,F_wan_netem_10ms,20,8,12,1186.41,N/A,6.696,12.088,12.655,14407,0,0,PASS_NETEM_10MS,0,tc netem 10ms (pg_stream_standby)
+pg17-async-streaming,F_wan_netem_25ms,20,8,12,1163.62,N/A,6.852,12.86,12.49,13941,0,0,PASS_NETEM_25MS,0,tc netem 25ms (pg_stream_standby)
+pg17-async-streaming,F_wan_netem_50ms,20,8,12,1384.07,N/A,5.76,5.991,10.745,16590,0,0,PASS_NETEM_50MS,0,tc netem 50ms (pg_stream_standby)
+pg17-async-streaming,G_conc_c1,20,1,8,346.67,N/A,2.872,2.077,3.801,2772,0,0,PASS,0,m=1 c=1 j=1
+pg17-async-streaming,G_conc_c4,20,4,8,731.33,N/A,5.444,5.26,8.052,5845,0,0,PASS,0,m=1 c=4 j=2
+pg17-async-streaming,G_conc_c8,20,8,8,1492.35,N/A,5.337,2.166,8.856,11919,0,0,PASS,0,m=1 c=8 j=4
+pg17-async-streaming,G_conc_c16,20,16,8,2039.56,N/A,7.8,9.332,14.88,16254,0,0,PASS,0,m=1 c=16 j=4
+pg17-async-streaming,G_conc_c32,20,32,8,2891.42,N/A,10.982,12.486,28.691,22971,0,0,PASS,0,m=1 c=32 j=4
+pg17-sync-streaming,A_single_rw,20,8,15,947.8,N/A,8.422,6.186,14.895,14235,0,0,PASS_SINGLE_PRIMARY,0,d=380315 acc=380315/380315 h=14235/14235
+pg17-sync-streaming,B1_disjoint_rw,20,8,15,486.71,N/A,16.41,13.774,30.876,7300,0,0,PASS_SINGLE_PRIMARY,0,d=-14479 acc=-14479/-14479 h=7300/7300
+pg17-sync-streaming,B2_overlap_rw,20,8,15,985.62,N/A,8.1,6.88,13.993,14773,0,0,PASS_SINGLE_PRIMARY,0,d=521639 acc=521639/521639 h=14773/14773
+pg17-sync-streaming,C_multinode_ro,20,16,15,54327.86,N/A,0.266,0.118,0.44,813867,0,0,PASS,0,m=2 c=16 j=4
+pg17-sync-streaming,D_hot_conflict,20,8,12,1103.53,N/A,7.235,7.989,11.286,13221,0,0,PASS_SINGLE_PRIMARY,0,d=668017 acc=668017/668017 h=13221/13221
+pg17-sync-streaming,E_sysbench_oltp_rw,20,8,15,721.28,14455.64,11.08,0,16.12,10827,0,25,PASS,0,oltp_read_write 4x25k
+pg17-sync-streaming,E2_sysbench_oltp_ro,20,8,12,1958.06,31329.03,4.08,0,4.65,23508,0,0,PASS,0,oltp_read_only 4x25k
+pg17-sync-streaming,E3_sysbench_oltp_wo,20,8,12,1113.51,6701.74,7.18,0,11.45,13370,0,62,PASS,0,oltp_write_only 4x25k
+pg17-sync-streaming,E4_sysbench_point_select,20,16,12,139858.21,139858.21,0.11,0,0.28,1679736,0,0,PASS,0,oltp_point_select 4x25k
+pg17-sync-streaming,H_append_only_insert,20,8,12,1584.88,N/A,5.035,4.927,6.097,18999,0,0,PASS_SINGLE_PRIMARY,0,1n rows=18999/18999
+pg17-sync-streaming,F_wan_netem_10ms,20,8,12,416.54,N/A,19.18,8.303,33.609,4999,0,0,PASS_NETEM_10MS,0,tc netem 10ms (pg17_sync_standby)
+pg17-sync-streaming,F_wan_netem_25ms,20,8,12,115.73,N/A,68.943,58.226,174.875,1392,0,0,PASS_NETEM_25MS,0,tc netem 25ms (pg17_sync_standby)
+pg17-sync-streaming,F_wan_netem_50ms,20,8,12,108.43,N/A,73.224,30.923,118.616,1318,0,0,PASS_NETEM_50MS,0,tc netem 50ms (pg17_sync_standby)
+pg17-sync-streaming,G_conc_c1,20,1,8,241.75,N/A,4.127,3.722,5.715,1933,0,0,PASS,0,m=1 c=1 j=1
+pg17-sync-streaming,G_conc_c4,20,4,8,650.5,N/A,6.135,1.504,8.78,5195,0,0,PASS,0,m=1 c=4 j=2
+pg17-sync-streaming,G_conc_c8,20,8,8,1038.84,N/A,7.681,3.069,13.163,8295,0,0,PASS,0,m=1 c=8 j=4
+pg17-sync-streaming,G_conc_c16,20,16,8,1439.47,N/A,11.085,10.822,24.454,11485,0,0,PASS,0,m=1 c=16 j=4
+pg17-sync-streaming,G_conc_c32,20,32,8,1957.79,N/A,16.176,20.578,45.827,15793,0,0,PASS,0,m=1 c=32 j=4
+pg17-logical,A_single_rw,20,8,15,1857.44,N/A,4.286,2.796,6.661,27825,0,0,PASS_SINGLE_PRIMARY,0,d=933030 acc=933030/933030 h=27825/27825
+pg17-logical,B1_disjoint_rw,20,8,15,728.8,N/A,10.958,9.158,22.341,10928,0,0,PASS_SINGLE_PRIMARY,0,d=485838 acc=485838/485838 h=10928/10928
+pg17-logical,B2_overlap_rw,20,8,15,1709.59,N/A,4.656,3.665,7.398,25688,0,0,PASS_SINGLE_PRIMARY,0,d=-413412 acc=-413412/-413412 h=25688/25688
+pg17-logical,C_multinode_ro,20,16,15,55598.32,N/A,0.261,0.11,0.425,832622,0,0,PASS,0,m=2 c=16 j=4
+pg17-logical,D_hot_conflict,20,8,12,2871.31,N/A,2.768,2.386,4.249,34395,0,0,PASS_SINGLE_PRIMARY,0,d=1735965 acc=1735965/1735965 h=34395/34395
+pg17-logical,E_sysbench_oltp_rw,20,8,15,1028.84,20621.25,7.77,0,9.39,15444,0,37,PASS,0,oltp_read_write 4x25k
+pg17-logical,E2_sysbench_oltp_ro,20,8,12,1964.6,31433.59,4.07,0,4.65,23589,0,0,PASS,0,oltp_read_only 4x25k
+pg17-logical,E3_sysbench_oltp_wo,20,8,12,1918.2,11538.88,4.17,0,5.88,23029,0,89,PASS,0,oltp_write_only 4x25k
+pg17-logical,E4_sysbench_point_select,20,16,12,138881.17,138881.17,0.11,0,0.27,1667984,0,0,PASS,0,oltp_point_select 4x25k
+pg17-logical,H_append_only_insert,20,8,12,3258.16,N/A,2.444,1.641,3.329,39053,0,0,PASS_SINGLE_PRIMARY,0,1n rows=39053/39053
+pg17-logical,F_wan_netem_10ms,20,8,12,1529.2,N/A,5.211,6.088,8.981,18333,0,0,PASS_NETEM_10MS,0,tc netem 10ms (pg_logical_sub)
+pg17-logical,F_wan_netem_25ms,20,8,12,1947.79,N/A,4.087,1.859,6.652,23348,0,0,PASS_NETEM_25MS,0,tc netem 25ms (pg_logical_sub)
+pg17-logical,F_wan_netem_50ms,20,8,12,1778.95,N/A,4.478,3.342,7.099,21312,0,0,PASS_NETEM_50MS,0,tc netem 50ms (pg_logical_sub)
+pg17-logical,G_conc_c1,20,1,8,394.72,N/A,2.526,2.537,3.5,3156,0,0,PASS,0,m=1 c=1 j=1
+pg17-logical,G_conc_c4,20,4,8,1074.06,N/A,3.702,2.14,5.267,8575,0,0,PASS,0,m=1 c=4 j=2
+pg17-logical,G_conc_c8,20,8,8,1793.73,N/A,4.439,2.153,7.082,14327,0,0,PASS,0,m=1 c=8 j=4
+pg17-logical,G_conc_c16,20,16,8,2928.6,N/A,5.419,2.444,9.764,23342,0,0,PASS,0,m=1 c=16 j=4
+pg17-logical,G_conc_c32,20,32,8,3432.39,N/A,9.248,11.429,24.661,27322,0,0,PASS,0,m=1 c=32 j=4
+pg-birep,A_single_rw,20,8,15,1836.27,N/A,4.335,2.871,6.781,27527,0,0,PASS_CONVERGED,0,d=1648626 acc=1648626/1648626 h=27527/27527
+pg-birep,B1_disjoint_rw,20,8,15,902.87,N/A,8.843,8.899,17.833,13533,0,0,PASS_CONVERGED,0,d=-436977 acc=-436977/-436977 h=13533/13533
+pg-birep,B2_overlap_rw,20,8,15,1641.89,N/A,4.853,4.77,7.165,24612,0,0,PASS_CONVERGED,0,d=177449 acc=177449/177449 h=24612/24612
+pg-birep,C_multinode_ro,20,16,15,56354.37,N/A,0.256,0.107,0.416,844072,0,0,PASS,0,m=2 c=16 j=4
+pg-birep,D_hot_conflict,20,8,12,2115.99,N/A,3.761,4.916,4.981,25369,0,0,EXPECTED_LIMITATION_DIVERGED,-94514,d=1279999 acc=1185485/1185528 h=25369/25369
+pg-birep,E_sysbench_oltp_rw,20,8,15,1036.93,20773.42,7.71,0,9.22,15563,0,29,PASS,0,oltp_read_write 4x25k
+pg-birep,E2_sysbench_oltp_ro,20,8,12,1987.44,31799.01,4.02,0,4.57,23862,0,0,PASS,0,oltp_read_only 4x25k
+pg-birep,E3_sysbench_oltp_wo,20,8,12,2016.39,12125.32,3.96,0,5.18,24208,0,81,PASS,0,oltp_write_only 4x25k
+pg-birep,E4_sysbench_point_select,20,16,12,138991.81,138991.81,0.11,0,0.27,1669384,0,0,PASS,0,oltp_point_select 4x25k
+pg-birep,H_append_only_insert,20,8,12,2401.93,N/A,3.31,4.048,3.8,28792,0,0,PASS_CONVERGED,0,2n rows=28792/28792
+pg-birep,F_wan_netem_10ms,20,8,12,1999.06,N/A,3.983,1.772,6.42,23971,0,0,PASS_NETEM_10MS,0,tc netem 10ms (pg_birep_node2)
+pg-birep,F_wan_netem_25ms,20,8,12,1588.44,N/A,5.017,6.102,8.529,19042,0,0,PASS_NETEM_25MS,0,tc netem 25ms (pg_birep_node2)
+pg-birep,F_wan_netem_50ms,20,8,12,1929.24,N/A,4.126,2.321,6.669,23142,0,0,PASS_NETEM_50MS,0,tc netem 50ms (pg_birep_node2)
+pg-birep,G_conc_c1,20,1,8,390.24,N/A,2.555,2.988,3.515,3120,0,0,PASS,0,m=1 c=1 j=1
+pg-birep,G_conc_c4,20,4,8,1129.48,N/A,3.521,1.315,4.894,9025,0,0,PASS,0,m=1 c=4 j=2
+pg-birep,G_conc_c8,20,8,8,1577.76,N/A,5.049,5.319,8.062,12589,0,0,PASS,0,m=1 c=8 j=4
+pg-birep,G_conc_c16,20,16,8,2549.55,N/A,6.235,6.648,11.57,20320,0,0,PASS,0,m=1 c=16 j=4
+pg-birep,G_conc_c32,20,32,8,3890.14,N/A,8.157,7.217,19.915,30980,0,0,PASS,0,m=1 c=32 j=4
+pg18-standalone,A_single_rw,20,8,15,1883.93,N/A,4.225,3.24,6.406,28215,0,0,PASS_SINGLE_PRIMARY,0,d=40097 acc=40097 h=28215
+pg18-standalone,B1_disjoint_rw,20,8,15,838.53,N/A,9.522,9.206,17.818,12570,0,0,PASS_SINGLE_PRIMARY,0,d=736819 acc=736819 h=12570
+pg18-standalone,B2_overlap_rw,20,8,15,1891.18,N/A,4.211,3.687,6.373,28347,0,0,PASS_SINGLE_PRIMARY,0,d=290353 acc=290353 h=28347
+pg18-standalone,C_multinode_ro,20,16,15,56125.45,N/A,0.248,0.058,0.339,840408,0,0,PASS,0,m=1 c=16 j=4
+pg18-standalone,D_hot_conflict,20,8,12,3322.45,N/A,2.391,0.851,3.776,39832,0,0,PASS_SINGLE_PRIMARY,0,d=2015216 acc=2015216 h=39832
+pg18-standalone,E_sysbench_oltp_rw,20,8,15,1078.99,21619.4,7.41,0,8.58,16195,0,33,PASS,0,oltp_read_write 4x25k
+pg18-standalone,E2_sysbench_oltp_ro,20,8,12,2001.69,32027.01,3.99,0,4.57,24032,0,0,PASS,0,oltp_read_only 4x25k
+pg18-standalone,E3_sysbench_oltp_wo,20,8,12,2106.55,12666.93,3.79,0,4.91,25292,0,83,PASS,0,oltp_write_only 4x25k
+pg18-standalone,E4_sysbench_point_select,20,16,12,140380.87,140380.87,0.11,0,0.27,1685982,0,0,PASS,0,oltp_point_select 4x25k
+pg18-standalone,H_append_only_insert,20,8,12,2626.99,N/A,3.027,3.992,3.665,31487,0,0,PASS_SINGLE_PRIMARY,0,1n rows=31487
+pg18-standalone,G_conc_c1,20,1,8,423.53,N/A,2.354,0.684,3.556,3386,0,0,PASS,0,m=1 c=1 j=1
+pg18-standalone,G_conc_c4,20,4,8,1112.34,N/A,3.574,1.233,5.27,8881,0,0,PASS,0,m=1 c=4 j=2
+pg18-standalone,G_conc_c8,20,8,8,1896.64,N/A,4.181,3.03,6.341,15228,0,0,PASS,0,m=1 c=8 j=4
+pg18-standalone,G_conc_c16,20,16,8,3042.87,N/A,5.212,2.736,9.436,24258,0,0,PASS,0,m=1 c=16 j=4
+pg18-standalone,G_conc_c32,20,32,8,4160.5,N/A,7.621,6.192,17.887,33207,0,0,PASS,0,m=1 c=32 j=4
+pg18-async-streaming,A_single_rw,20,8,15,1373.98,N/A,5.791,6.032,9.242,20631,0,0,PASS_SINGLE_PRIMARY,0,d=553425 acc=553425/553425 h=20631/20631
+pg18-async-streaming,B1_disjoint_rw,20,8,15,603.19,N/A,13.244,10.901,25.256,9046,0,0,PASS_SINGLE_PRIMARY,0,d=385122 acc=385122/385122 h=9046/9046
+pg18-async-streaming,B2_overlap_rw,20,8,15,1440.53,N/A,5.533,4.55,9.551,21595,0,0,PASS_SINGLE_PRIMARY,0,d=98854 acc=98854/98854 h=21595/21595
+pg18-async-streaming,C_multinode_ro,20,16,15,57100.96,N/A,0.252,0.116,0.41,855461,0,0,PASS,0,m=2 c=16 j=4
