@@ -60,20 +60,21 @@ flowchart LR
 
 ## 4. Résultats empiriques et limites vérifiées (`results/benchmark_yt_cluster.csv` & `results/functional_limits_yt_cluster.csv`)
 
-Les 22 lignes ont été mesurées séquentiellement à `pg_scale = 2` sur 3 nœuds `dbinvent/yt:1.21.3` (`balance_drift = 0` sur toutes les écritures). Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` sont enregistrées (la latence `p99` n'est pas mesurée).
+Les 36 lignes (18 `yt-cluster` + 18 `yt-cluster-async`) ont été mesurées séquentiellement à `pg_scale = 2` sur 3 nœuds `dbinvent/yt:1.21.3` (`balance_drift = 0` sur toutes les écritures ; voir [Ch. 09](../09_methodologie_benchmarks_et_graphiques.md)). Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` sont enregistrées (la latence `p99` n'est pas mesurée).
 
 | Suite (`PG_SCALE=2`) | `yt-cluster` (`cc=half`) TPS | `cc=half` Avg / p95 (ms) | `cc=half` Retries / Échecs | `yt-cluster-async` (`cc=nodes>=0`) TPS | `async` Avg / p95 (ms) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **`A_single_rw`** (8c/15s) | **20.63** | 384.867 / 1,330.433 | 185 / 0 | **41.45** | 185.733 / 758.357 |
-| **`B1_disjoint_rw`** (8c/15s) | 36.14 | 220.597 / 663.403 | 197 / 0 | N/A | N/A |
+| **`B1_disjoint_rw`** (8c/15s) | 36.14 | 220.597 / 663.403 | 197 / 0 | **88.19** | 90.398 / 252.257 |
 | **`B2_overlap_rw`** (8c/15s) | **10.69** | 565.791 / 1,741.838 | 284 (`33`/`251`) / 14 | **55.03** | 130.887 / 538.021 |
-| **`C_multinode_ro`** (16c/15s) | **48,787.74** | 0.305 / 0.504 | 0 / 0 | N/A | N/A |
+| **`C_multinode_ro`** (16c/15s) | **48,787.74** | 0.305 / 0.504 | 0 / 0 | **40,774.49** | 0.367 / 0.682 |
 | **`D_hot_conflict`** (8c/12s) | **67.76** (dérive `0`) | 117.401 / 249.196 | 32 (`55409`) / 0 | **163.01** (dérive `0`) | 48.819 / 152.900 |
-| **`E_sysbench_oltp_rw`** (8c/15s) | **28.48** (`582.89 QPS`) | 280.34 / 530.08 | 0 / 12 | N/A | N/A |
-| **`E2_ro` / `E3_wo`** (8c/12s) | 2,122.68 / 26.43 | 3.76 / 4.33 ; 301.54 / 846.57 | 0 / 0 ; 0 / 8 | N/A | N/A |
-| **`E4_point_select`** (16c/12s) | **165,472.75** | 0.10 / 0.24 | 0 / 0 | N/A | N/A |
-| **`H_append_only_insert`** (`uuidv7()`) | **110.53** | 72.217 / 135.582 | 0 / 0 | N/A | N/A |
-| **`F_wan_netem_25ms`** (`10`/`25`/`50ms`) | **2.25** (`4.81`/`2.25`/`1.41`) | 2,708.087 / 5,557.313 | 7 / 0 | **4.78** | 1,356.434 / 4,136.144 |
+| **`E_sysbench_oltp_rw`** (8c/15s) | **28.48** (`582.89 QPS`) | 280.34 / 530.08 | 0 / 12 | **124.05** (`2,519.71 QPS`) | 64.46 / 108.68 (`34` err) |
+| **`E2_ro` / `E3_wo`** (8c/12s) | 2,122.68 / 26.43 | 3.76 / 4.33 ; 301.54 / 846.57 | 0 / 0 ; 0 / 8 | 2,083.85 / **133.55** | 3.83 / 4.57 ; 59.77 / 81.48 |
+| **`E4_point_select`** (16c/12s) | **165,472.75** | 0.10 / 0.24 | 0 / 0 | **177,442.88** | 0.09 / 0.23 |
+| **`H_append_only_insert`** (`uuidv7()`) | **110.53** | 72.217 / 135.582 | 0 / 0 | **224.93** | 35.538 / 60.944 |
+| **`F_wan_netem_25ms`** (`10`/`25`/`50ms`) | **2.25** (`4.81`/`2.25`/`1.41`) | 2,708.087 / 5,557.313 | 7 / 0 | **4.78** (`8.47`/`4.78`/`2.90`) | 1,356.434 / 4,136.144 |
+| **`G_conc_c1..c32`** (1/4/8/16/32c) | **28.07 -> 4.60** | 35.61 -> 3,542.782 | 0..91 / 0 | **53.94 -> 91.68 -> 44.20** | 18.52 -> 431.504 |
 
 | Sonde / Limite vérifiée | Résultat empirique YT Cluster 1.21.3 (`results/functional_limits_yt_cluster.csv`) |
 | :--- | :--- |
@@ -83,7 +84,7 @@ Les 22 lignes ont été mesurées séquentiellement à `pg_scale = 2` sur 3 nœu
 | **`L7` Panne & `L8` Quorum** | `1/3` HS (`yt3`) : `10/10` écritures OK (`yt1+yt2`), rattrapage `78 ms` ; `2/3` HS (`min_cluster_size=2`) : bloqué (**`57P03`**, `YT-E1852 Not enough working nodes`), reprise propre |
 | **`T11` Bulk 10k, `T12` & `T13` FK** | `T11` : **`86 rows/s`** (`115,961 ms`, trigger/ligne + 2PC ; rattrapage `yt2=111 ms`, `yt3=12,059 ms`) ; `T12` `DELETED/DELETED/DELETED` ; `T13` `10/10` FK cohérentes |
 | **`T14–T17` & Preuve `T_REVERT`** | `T14` `3/3` `md5=00493e3a` ; `T15` `p50=82.14`, `p95=101.29`, `max=104.38 ms` ; `T16` `20/20`, **`RPO=0`**, `57P03` pendant bascule 8s (risque pidfile `YT-E1104`) ; `T17` `NO_DIRTY_READ` (`78/79 ms`) ; **`T_REVERT`** : `DROP EXTENSION` -> `ext=0`, `triggers=0`, `5/5` -> `6/6` PG nu OK |
-| **SQLSTATEs vérifiés** | `0A000` (rollback `SAVEPOINT`), `40001` (`UNIQUE`/conflit), `55409` (rejet checkin YT), `57P03` (perte quorum / bascule `YT-E1852`) |
+| **SQLSTATEs vérifiés** | `0A000` (rollback `SAVEPOINT`), `40001` (`UNIQUE`/conflit), `55000` (quarantaine `recon` async sur tables réutilisées), `55409` (rejet checkin YT), `57P03` (quorum / bascule `YT-E1852`) |
 
 ---
 
