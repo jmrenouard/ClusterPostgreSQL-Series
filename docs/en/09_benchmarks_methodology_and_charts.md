@@ -8,9 +8,12 @@
 
 ## 1. Execution Harness & Controlled Isolation
 
-All **187 empirical benchmark rows** across **10 PostgreSQL topologies** (`results/benchmark_summary.csv`, `results/benchmark_extended_workloads.csv`, `results/benchmark_wan_sweep.csv`, `results/benchmark_concurrency_sweep.csv`) are produced sequentially via `scripts/bench_pg_multimaster.sh` and `env/multi-db-docker-env` (`scripts/bench_pg_v2_runner.sh`) on a 20-vCPU, 16.4 GiB WSL2 Docker host:
+All **310 raw benchmark rows** (**301 deduplicated dashboard rows**) across **17 live topologies** (`18` variants on Suite D incl. `pgedge-delta-apply`) are generated sequentially on a 20-vCPU, 16.4 GiB WSL2 Docker host via three runners under `env/multi-db-docker-env` (`v2.4.1`):
+- `scripts/bench_pg_v2_runner.sh`: **187 rows** across 10 PG 17 & Distributed SQL topologies (`results/benchmark_summary.csv` `70`, `results/benchmark_extended_workloads.csv` `40`, `results/benchmark_wan_sweep.csv` `27`, `results/benchmark_concurrency_sweep.csv` `50`).
+- `scripts/bench_pg18_runner.sh`: **87 rows** across 5 PG 18.6 native topologies (`results/benchmark_pg18.csv`).
+- `scripts/bench_yt_runner.sh`: **36 rows** (`18` `yt-cluster` `cc=half` + `18` `yt-cluster-async` `cc=nodes>=0`) on 3-node PG 18.7 (`results/benchmark_yt_cluster.csv`).
 
-- **One-Stack Isolation:** Exactly one cluster runs at a time (`up -> setup -> warm-up -> suites -> down -v`) to eliminate RAM/NVMe noise across RocksDB, Pebble, and PostgreSQL `shared_buffers`.
+- **One-Stack Isolation:** Exactly one cluster runs at a time (`up -> setup -> warm-up -> suites -> down -v`) to eliminate RAM/NVMe noise across RocksDB, Pebble, `ytserv`, and PostgreSQL `shared_buffers`.
 - **Zero NAT Skew:** `pgbench` and `sysbench` execute inside an ephemeral `bench_client` container (`multi-db-pgbench-sysbench:latest`) attached directly to each cluster's internal Docker bridge (`--cap-add NET_ADMIN`).
 - **Dataset Parity & Reconciliation:** Every suite uses `PG_SCALE = 2` (`200,000` `pgbench_accounts`, `20` `pgbench_tellers`, `2` `pgbench_branches`). Between write suites, `reset_ds()` zeroes balances and truncates `pgbench_history`; `conv_chk()` then verifies `SUM(abalance) - SUM(delta)` on every node (`balance_drift`).
 - **Exact Tail Latency (`p95`):** Per-transaction logs (`pgbench -l`) yield exact mean, stddev, and 95th percentile (`lat_p95_ms`).
@@ -19,12 +22,13 @@ All **187 empirical benchmark rows** across **10 PostgreSQL topologies** (`resul
 
 ## 2. Schema Standardization Across Engines
 
-Standard `pgbench -i` leaves `pgbench_history` **keyless**, breaking logical replication `UPDATE`/`DELETE` (`SQLSTATE 55000`) and Bucardo sync validation. To evaluate all 10 stacks fairly while testing keyless limits separately in `L2`, the harness injects an engine-idiomatic surrogate Primary Key `hid`:
+Standard `pgbench -i` leaves `pgbench_history` **keyless**, breaking logical replication `UPDATE`/`DELETE` (`SQLSTATE 55000`) and Bucardo sync validation. To evaluate all 17 stacks fairly while testing keyless limits separately in `L2`, the harness injects an engine-idiomatic surrogate Primary Key `hid`:
 
 | Topology Group | `pgbench_history` Surrogate PK & Distribution Adaptation | `sysbench` Adaptation |
 | :--- | :--- | :--- |
-| **`pg17-*` & `yugabyte`** | `hid BIGSERIAL PRIMARY KEY` | Standard `sbtest1..4` (replicated on `pg17-logical`) |
+| **`pg17-*`, `pg18-streaming/logical`, `yugabyte`** | `hid BIGSERIAL PRIMARY KEY` | Standard `sbtest1..4` (replicated on streaming/logical) |
 | **`pg-birep` & `bucardo`** | Stepped sequence `INCREMENT BY 2 START WITH {1, 2}` (`BIGINT PK`) | Standard `sbtest1..4` (synced across nodes) |
+| **`pg18-birep` & `yt-cluster*`** | Native PG 18 `hid UUID PRIMARY KEY DEFAULT uuidv7()` (`yt_setup()` on `yt*`) | `yt_setup('public.sbtest%')`; isolated `prep_sb()` before `E3` async (avoids `55000` `recon` lock) |
 | **`pgedge` (Spock 5)** | `hid BIGINT PRIMARY KEY DEFAULT snowflake.nextval('snowflake.id_seq')` | Standard; `delta_apply` tested on `abalance` |
 | **`citus`** | Composite `PRIMARY KEY(aid, hid)` + `create_distributed_table` (`bid`/`tid`/`aid`) | `create_distributed_table('sbtest1..4','id')` |
 | **`cockroach`** | `hid INT8 DEFAULT unique_rowid() PRIMARY KEY` | Auto-fallback `--db-ps-mode=disable` if needed |
@@ -35,42 +39,42 @@ Standard `pgbench -i` leaves `pgbench_history` **keyless**, breaking logical rep
 
 ### 3.1 `pgbench` Suites (`A`, `B1`, `B2`, `C`, `D`, `G`, `H`)
 
-All `pgbench` runs use `-n -r --max-tries=100 --failures-detailed -l` to count client-side `SQLSTATE 40001` retries explicitly:
+All `pgbench` runs use `-n -r --max-tries=100 --failures-detailed -l` to count client-side `SQLSTATE 40001` retries explicitly (`55409`+`40001` in YT Cluster):
 
-| Suite ID | Workload Profile | Clients / Streams | Window | Empirical Span Across 10 Topologies |
+| Suite ID | Workload Profile | Clients / Streams | Window | Empirical Span Across 17 Topologies |
 | :--- | :--- | :---: | :---: | :--- |
-| **`A_single_rw`** | Standard TPC-B RW (`1` endpoint) | `8` (`1x8`, `-j 4`) | `20 s` | `42.08` (`cockroach`) to `875.91 TPS` (`pg-birep`) |
-| **`B1_disjoint_rw`** | Partitioned keys (`1..100k` vs `100k+1..200k`) | `8` (`2x4`, `-j 2`) | `20 s` | `60.35` (`cockroach`) to `1,078.90 TPS` (`bucardo`) |
-| **`B2_overlap_rw`** | Full overlapping keyspace on `2` writers | `8` (`2x4`, `-j 2`) | `20 s` | `74.17` (`cockroach`) to `1,267.77 TPS` (`bucardo`, drift `+123,679`) |
-| **`C_multinode_ro`** | `pgbench -S` Select-Only lookups | `16` (`2x8`/`1x16`) | `20 s` | `13,185.54` (`cockroach`) to `55,614.16 TPS` (`pg17-standalone`) |
-| **`D_hot_conflict`** | `50` hot rows (`aid 1..50`, `delta 1..100`) | `8` (`2x4`/`1x8`) | `15 s` | `471.61` (`cockroach`) to `3,128.63 TPS`; CRDT `1,837.64` (`0` drift) |
-| **`G_conc_c1..c32`** | Concurrency sweep ($c \in \{1, 4, 8, 16, 32\}$) | `1..32` | `8 s` | `36.07` (`crdb c=1`) to `801.27 TPS` (`standalone c=32`) |
-| **`H_append_only_insert`** | Pure `INSERT INTO bench_append_events` | `8` (`2x4`/`1x8`) | `12 s` | `627.13` (`pg-birep`) to `3,108.22 TPS` (`standalone`); `yb=2,987.24` |
+| **`A_single_rw`** | Standard TPC-B RW (`1` endpoint) | `8` (`1x8`, `-j 4`) | `15–20 s` | `20.63` (`yt-cluster`) to `875.91 TPS` (`pg-birep`) |
+| **`B1_disjoint_rw`** | Partitioned keys (`1..100k` vs `100k+1..200k`) | `8` (`2x4`, `-j 2`) | `15–20 s` | `36.14` (`yt-cluster`) to `1,078.90 TPS` (`bucardo`) |
+| **`B2_overlap_rw`** | Full overlapping keyspace on `2` writers | `8` (`2x4`, `-j 2`) | `15–20 s` | `10.69` (`yt-cluster`, `0` drift) to `1,267.77 TPS` (`bucardo`, `+123,679`) |
+| **`C_multinode_ro`** | `pgbench -S` Select-Only lookups | `16` (`2x8`/`1x16`) | `15–20 s` | `13,185.54` (`cockroach`) to `55,614.16 TPS` (`pg17-standalone`) |
+| **`D_hot_conflict`** | `50` hot rows (`aid 1..50`, `delta 1..100`) | `8` (`2x4`/`1x8`) | `12–15 s` | `67.76` (`yt-cluster`, `0` drift) to `3,128.63 TPS`; CRDT `1,837.64` (`0` drift) |
+| **`G_conc_c1..c32`** | Concurrency sweep ($c \in \{1, 4, 8, 16, 32\}$) | `1..32` | `8 s` | `4.60` (`yt c=32`) to `814.33 TPS` (`pg17-standalone` `801`, `pg18-standalone c=32`) |
+| **`H_append_only_insert`** | Pure `INSERT INTO bench_append_events` | `8` (`2x4`/`1x8`) | `12 s` | `110.53` (`yt-cluster`) to `3,518.49 TPS` (`pg18-logical`); `yb=2,987.24` |
 
 ### 3.2 `sysbench` OLTP Suites (`E1–E4`, `--db-driver=pgsql`)
 
-Cross-validation runs `sysbench --db-driver=pgsql --tables=4 --table-size=10000` across four Lua workloads: **`E1_sysbench_oltp_rw`** (`oltp_read_write`, `8` threads, `20 s`), **`E2_sysbench_oltp_ro`** (`oltp_read_only`, `8` threads, `12 s`), **`E3_sysbench_oltp_wo`** (`oltp_write_only`, `8` threads, `12 s`), and **`E4_sysbench_point_select`** (`oltp_point_select`, `16` threads, `12 s`).
+Cross-validation runs `sysbench --db-driver=pgsql --tables=4 --table-size=10000` across four Lua workloads: **`E_sysbench_oltp_rw`** (`oltp_read_write`, `8` threads, `15–20 s`), **`E2_sysbench_oltp_ro`** (`oltp_read_only`, `8` threads, `12 s`), **`E3_sysbench_oltp_wo`** (`oltp_write_only`, `8` threads, `12 s`), and **`E4_sysbench_point_select`** (`oltp_point_select`, `16` threads, `12 s`).
 
-- **Critical `40001` Error-Handling Contrast:** Unlike MySQL runs using `--mysql-ignore-errors=all`, stock `sysbench --db-driver=pgsql` lacks PostgreSQL `SQLSTATE 40001` retry loops. Under CockroachDB's optimistic `SERIALIZABLE` isolation, Suite E1 logged **`685` ignored errors alongside `902` commits** (`43.2%` abort rate, `p95 = 502.20 ms`), whereas YugabyteDB (`READ COMMITTED` Wait-on-Conflict) recorded **`0` errors** (`128.24 TPS`). Point-select (`E4`) peaked at **`148,022.41 TPS`** (`0.11 ms` avg) on `pg17-async-streaming` vs `11,557–19,831 TPS` on distributed engines.
+- **Critical `40001` & Async `55000` Handling:** Unlike MySQL runs using `--mysql-ignore-errors=all`, stock `sysbench --db-driver=pgsql` lacks `SQLSTATE 40001` retry loops (`685` ignored errors alongside `902` commits on CockroachDB `E`, vs `0` errors on YugabyteDB `READ COMMITTED` `128.24 TPS`). On `yt-cluster-async`, reusing post-`E` `sbtest` tables triggered `SQLSTATE 55000` (`recon` row blocked); fresh per-suite `prep_sb()` yielded **`133.55 TPS` (`E3`)**. Point-select (`E4`) peaked at **`177,442.88 TPS`** (`0.09 ms` avg) on `yt-cluster-async` and **`148,022.41 TPS`** on `pg17-async-streaming` vs `11,557–19,831 TPS` on distributed engines.
 
 ### 3.3 WAN Latency Injection (`F_wan_netem_10ms / 25ms / 50ms`)
 
-WAN RTT physics are emulated via Linux `tc qdisc netem` inside peer/standby/worker/voter network namespaces (`~20`, `~50`, and `~100 ms` effective RTT), cleaned up deterministically via `tc qdisc del dev eth0 root`:
+WAN RTT physics are emulated via Linux `tc qdisc netem` inside peer/standby/worker/voter network namespaces (`~20`, `~50`, and `~100 ms` effective RTT), cleaned up deterministically via `tc qdisc del dev eth0 root` (in YT Cluster `r_wan`, targeting a deterministic non-Leader node `wn` prevents Leader-affinity bypass):
 
 ```bash
 docker run --rm --network container:<peer> --cap-add NET_ADMIN \
   multi-db-pgbench-sysbench:latest tc qdisc replace dev eth0 root netem delay 25ms
 ```
 
-Under `50 ms` egress delay (`~100 ms` RTT), `PC/EC` engines collapsed to **`25.79 TPS`** (`pg17-sync-streaming`, `p95 = 779.85 ms`), **`8.84 TPS`** (`citus`, `p95 = 1,486.04 ms`), **`4.53 TPS`** (`cockroach`, `p95 = 4,453.74 ms`), and **`3.06 TPS`** (`yugabyte`, `p95 = 5,474.71 ms`), whereas `PA/EL` async topologies sustained `612.56–687.00 TPS` (`pg17-async-streaming`, `pgedge`, `bucardo`).
+Under `50 ms` egress delay (`~100 ms` RTT), `PC/EC` and `ytserv` engines dropped to **`25.79 TPS`** (`pg17-sync-streaming`), **`8.84 TPS`** (`citus`), **`4.53 TPS`** (`cockroach`), **`3.06 TPS`** (`yugabyte`), **`2.90 TPS`** (`yt-cluster-async`), and **`1.41 TPS`** (`yt-cluster`), whereas `PA/EL` async topologies sustained `612.56–782.57 TPS` (`pg18-birep` `782.57`, `pgedge` `687.00`).
 
 ---
 
 ## 4. Why Logarithmic (`log10`) Scales Are Mathematically Mandatory
 
-Across all 187 empirical rows, measurements span **nearly five orders of magnitude**:
-- **Throughput (`TPS`):** `3.06 TPS` (`yugabyte`, `F_wan_netem_50ms`) to `148,022.41 TPS` (`pg17-async-streaming`, `E4_sysbench_point_select`) — dynamic ratio $R_{\text{TPS}} = 148{,}022.41 / 3.06 \approx 48{,}373\times$ ($4.68$ decades; core V1 `pgbench` `5.78` to `55,614.16 TPS` spans $3.98$ decades).
-- **Latency (`ms`):** `0.110 ms` (`E4` avg; `0.257 ms` `pgbench -S`) to `5,474.705 ms` (`yugabyte`, `F_wan_netem_50ms` `p95`; `3,401.333 ms` at `25 ms`) — dynamic ratio $R_{\text{lat}} = 5{,}474.705 / 0.110 \approx 49{,}770\times$ ($4.70$ decades).
+Across all **310 raw benchmark rows**, measurements span **over five orders of magnitude**:
+- **Throughput (`TPS`):** `1.41 TPS` (`yt-cluster`, `F_wan_netem_50ms`) to `177,442.88 TPS` (`yt-cluster-async`, `E4_sysbench_point_select`) — dynamic ratio $R_{\text{TPS}} = 177{,}442.88 / 1.41 \approx 125{,}846\times$ ($5.10$ decades; core `pgbench` `2.25` to `55,614.16 TPS` spans $4.39$ decades).
+- **Latency (`ms`):** `0.090 ms` (`yt-cluster-async` `E4` avg; `0.110 ms` PG 17 `E4`) to `12,893.483 ms` (`yt-cluster-async`, `F_wan_netem_50ms` `p95`; `5,474.705 ms` on `yugabyte`) — dynamic ratio $R_{\text{lat}} = 12{,}893.483 / 0.090 \approx 143{,}261\times$ ($5.16$ decades).
 
 The decade span $D_{\text{decades}}$ and visual distance $\Delta y_{\log}$ between any two engines $(v_1, v_2)$ obey:
 
@@ -78,7 +82,7 @@ $$
 D_{\text{decades}} = \log_{10}\!\left(\frac{v_{\max}}{v_{\min}}\right), \qquad \Delta y_{\log} = \log_{10}(v_2) - \log_{10}(v_1) = \log_{10}\!\left(\frac{v_2}{v_1}\right)
 $$
 
-On a linear axis scaled to `55,614` or `148,022 TPS`, a `57.00 TPS` sync WAN bar occupies `< 0.1%` pixel height and `3.06 TPS` disappears completely (`0.002%`). A `log10` axis maps every `2x` speedup to an identical step ($\log_{10}(2) \approx 0.301$), preserving multiplicative ratios across all decades.
+On a linear axis scaled to `55,614` or `177,443 TPS`, a `57.00 TPS` sync WAN bar occupies `< 0.04%` pixel height and `1.41 TPS` disappears completely (`0.0008%`). A `log10` axis maps every `2x` speedup to an identical step ($\log_{10}(2) \approx 0.301$), preserving multiplicative ratios across all decades.
 
 ---
 

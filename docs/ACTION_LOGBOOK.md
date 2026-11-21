@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-178 - Update Ch. 09 EN Sections 1-4 Harness (`#437`)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#437` (`docs/issue-437-ch09-en-harness`)
+- **Request / Changes / Result**: Updated Sections 1-4 (`17` topologies, `310/301` rows, `11` PNG charts); `make test` (`21/21` OK) and `make lint` pass.
+
 ### ACT-177 - Add Section 7 YT Cluster Comparison to Chapter 06 EN/FR (`#435`)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#435` (`docs/issue-435-ch06-yt-comparison`)
 - **Request / Changes / Result**: Added Section 7 comparative matrix, 4 architectural takeaways, and `chart_11` embed across `docs/en/06_empirical_test_and_benchmark_results.md` and `docs/fr/06_resultats_tests_et_benchmarks.md`; verified diff `< 14,800` chars, `make test` (`21/21` OK), and `make lint`.
