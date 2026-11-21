@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-177 - Add Section 7 YT Cluster Comparison to Chapter 06 EN/FR (`#435`)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#435` (`docs/issue-435-ch06-yt-comparison`)
+- **Request / Changes / Result**: Added Section 7 comparative matrix, 4 architectural takeaways, and `chart_11` embed across `docs/en/06_empirical_test_and_benchmark_results.md` and `docs/fr/06_resultats_tests_et_benchmarks.md`; verified diff `< 14,800` chars, `make test` (`21/21` OK), and `make lint`.
+
 ### ACT-176 - Add Chart 11 YT Cluster vs Multi-Master Log Comparison (`#433`)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#433` (`feat/issue-433-chart-11-yt-comparison`)
 - **Request / Changes / Result**: Added `scripts/generate_charts_v4.py` and `assets/charts/chart_11_yt_cluster_vs_multimaster_log.png`, wired into `Makefile` (`charts`), enforced in `tests/test_benchmark_artifacts.py` (`EXPECTED_CHARTS`), and linked in EN/FR `docs/{en,fr}/solutions/yt_cluster_lite.md`; `make test` (`21/21` OK) and `make lint` pass.
