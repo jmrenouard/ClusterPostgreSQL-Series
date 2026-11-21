@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-180 - Update Ch. 09 FR Sections 1-4 Harness (`#441`)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#441` (`docs/issue-441-ch09-fr-harness`)
+- **Request / Changes / Result**: Updated Sections 1-4 (`17` topologies, `310/301` rows, `11` PNG charts); `make test` (`21/21` OK) and `make lint` pass.
+
 ### ACT-179 - Add Ch. 09 EN Traceability Matrix & Charts 08-11 (`#439`)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#439` (`docs/issue-439-ch09-en-matrix`)
 - **Request / Changes / Result**: Added Master Traceability Matrix Tables A/B and `chart_08..11` embeds to `docs/en/09_benchmarks_methodology_and_charts.md`; `make test` (`21/21` OK) and `make lint` pass.
