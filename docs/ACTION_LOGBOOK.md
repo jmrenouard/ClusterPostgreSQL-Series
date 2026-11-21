@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-174 - Extract 18-Topology Chart Metadata & Update Chart Helpers (`#428`)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#428` (`refactor/issue-428-chart-meta-helpers`)
+- **Request / Changes / Result**: Extracted 18-topology palette, 6 CSVs, and suite labels into `scripts/chart_meta.py` (`2,087` B), updated `save_fig`/`draw_bars`/`draw_sweep` in `scripts/generate_charts.py`; verified `py_compile`, `make test` (`21/21` OK), and `make lint`.
+
 ### ACT-173 - Update YT Cluster Log, `yt_vs_mm` Preset, `RCA-024`, & Submodule `v2.4.1` (`#427`)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#427` (`chore/issue-427-log-preset-submodule`)
 - **Request / Changes / Result**: Updated `results/logs/yt-cluster-benchmark.log` (36 rows), added `data-preset="yt_vs_mm"` in `dashboard/{index.html,app.js}` and `tests/test_benchmark_artifacts.py`, bumped submodule `env/multi-db-docker-env` to `v2.4.1` (`0ec32dd`), logged `RCA-024`; `make test` (`21/21` OK) and `make lint` pass.
