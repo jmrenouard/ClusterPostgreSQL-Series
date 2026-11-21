@@ -28,7 +28,7 @@
 
 ### ACT-185 - Generate PACELC Catalog Metadata Bundle (`#496`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#496` (`feat/issue-496-pacelc-catalog-bundle`)
-- **Request / Changes / Result**: Added `scripts/pacelc_catalog.py` (`4,946` B), wired `scripts/build_dashboard.py` to emit `dashboard/data_pacelc.js` (`4,955` B, `window.LP_PACELC_CATALOG`, 17 topologies + 2 variants), logged `APP-011`; `make dashboard && make test && make lint` + `node --check` pass.
+- **Request / Changes / Result**: Added `scripts/pacelc_catalog.py` (`4,929` B), wired `scripts/build_dashboard.py` to emit `dashboard/data_pacelc.js` (`5,342` B, `window.LP_PACELC_CATALOG`, 17 topologies + 2 variants), logged `APP-011`; `make dashboard && make test && make lint` + `node --check` pass.
 
 ### ACT-184 - Land V5 PG_SCALE=20 Benchmarks, Charts 12-13, Dual Dashboard, Ch. 13 & Submodule v2.6.1 (#449-#494)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#449-#494` (`chore/issue-494-phase10-gov-v261`)

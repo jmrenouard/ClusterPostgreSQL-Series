@@ -15,19 +15,19 @@ COLS = [
 # Bilingual [EN, FR] operational caveats (7-bit ASCII escapes).
 CAVEATS: dict[str, list[str]] = {
     "sp": ["No HA; add Patroni+etcd.", "Sans HA ; Patroni+etcd."],
-    "ar": ["Async PA/EL: RPO>0 risk.", "Async PA/EL : RPO>0."],
-    "sw": ["Sync PC/EC: WAN -86..-97% TPS.", "Sync PC/EC : WAN -86..-97%."],
-    "r09": ["RCA-009: No SERIAL sync (23505).", "RCA-009 : sans SERIAL (23505)."],
-    "r18": ["RCA-018: No FOR ALL SEQUENCES (42601).", "RCA-018 : sans FOR ALL SEQUENCES (42601)."],
-    "r08": ["RCA-008: SQL_ASCII default (54000).", "RCA-008 : SQL_ASCII d\u00e9faut (54000)."],
-    "lw": ["LWW loses hot writes; use CRDT/partition.", "LWW perd conflits ; CRDT/partition."],
-    "cd": ["delta_apply: 0 drift on counters (V5).", "delta_apply : 0 d\u00e9rive compteurs (V5)."],
-    "bk": ["Perl triggers: PK req, -531K drift.", "Triggers Perl : PK req, -531K."],
-    "ci": ["2PC needs shard key in PK/UNIQUE (0A000).", "2PC : cl\u00e9 shard en PK/UNIQUE (0A000)."],
-    "r41": ["Needs 40001 retry loop (+55409 YT).", "Retry requis 40001 (+55409 YT)."],
-    "cr": ["V5 RC+HAProxy: 0 sysbench 40001.", "V5 RC+HAProxy : 0 abort 40001."],
-    "r22": ["RCA-022: No SAVEPOINT (0A000), <2/3 57P03.", "RCA-022 : sans SAVEPOINT (0A000), 57P03."],
-    "a08": ["APP-008: Closed ytserv, self Jepsen, BF=1.", "APP-008 : ytserv ferm\u00e9, BF=1."],
+    "ar": ["Async PA/EL: RPO>0.", "Async PA/EL : RPO>0."],
+    "sw": ["Sync PC/EC: WAN -86..-97%.", "Sync PC/EC : WAN -86..-97%."],
+    "r09": ["RCA-009: No SERIAL (23505).", "RCA-009 : sans SERIAL (23505)."],
+    "r18": ["RCA-018: No FOR ALL SEQ (42601).", "RCA-018 : sans FOR ALL SEQ (42601)."],
+    "r08": ["RCA-008: SQL_ASCII (54000).", "RCA-008 : SQL_ASCII (54000)."],
+    "lw": ["LWW loses hot writes.", "LWW perd les conflits."],
+    "cd": ["delta_apply: 0 drift (V5).", "delta_apply : 0 d\u00e9rive (V5)."],
+    "bk": ["Perl triggers: PK req, -531K.", "Triggers Perl : PK req, -531K."],
+    "ci": ["2PC: shard key in PK (0A000).", "2PC : cl\u00e9 shard en PK (0A000)."],
+    "r41": ["Retry loop 40001 (+55409 YT).", "Retry 40001 (+55409 YT)."],
+    "cr": ["V5 RC+HAProxy: 0 40001.", "V5 RC+HAProxy : 0 40001."],
+    "r22": ["RCA-022: No SAVEPOINT (0A000), 57P03.", "RCA-022 : sans SAVEPOINT, 57P03."],
+    "a08": ["APP-008: Closed ytserv, BF=1.", "APP-008 : ytserv ferm\u00e9, BF=1."],
 }
 
 # topo|sid|pacelc|profile|tco|nodes|stack|slug|caveats
@@ -58,9 +58,9 @@ _SCOPES = {"pgedge-delta-apply": "baseline", "cockroach-rc": "optimized"}
 def _commands(topo: str, stack: str) -> tuple[str, str]:
     """Return verified Makefile and multi-db-docker-env ./mdb commands."""
     if stack == "pg17-baseline":
-        mk, mdb = "make up-pg17-baseline && make setup-pg17-baseline", "./mdb up pg17-baseline"
+        mk, mdb = "make up-pg17-baseline setup-pg17-baseline", "./mdb up pg17-baseline"
     else:
-        mk, mdb = f"make up-{stack} && make test-{stack}", f"./mdb up {stack}"
+        mk, mdb = f"make up-{stack} setup-{stack} test-{stack}", f"./mdb up {stack} && ./mdb setup {stack}"
     if topo.endswith("-streaming"):
         mdb += " (HA: ./mdb up patroni)"
     return mk, mdb
@@ -71,11 +71,13 @@ def build_pacelc_catalog() -> dict[str, object]:
     rows = []
     for line in _ROWS:
         t, sid, pcls, prof, tco, n_s, stack, slug, ck = line.split("|")
-        nodes = int(n_s)
+        nodes, keys = int(n_s), ck.split(",")
+        if unknown := set(keys) - CAVEATS.keys():
+            raise ValueError(f"Unknown caveat keys for {t}: {sorted(unknown)}")
         mk, mdb = _commands(t, stack)
         rows.append([
             t, sid, pcls, pcls != "PA/EL", nodes > 1 and not t.endswith("-logical"),
-            prof != "single", prof, tco, nodes, _SCOPES.get(t, "both"), mk, mdb, ck.split(","), slug,
+            prof != "single", prof, tco, nodes, _SCOPES.get(t, "both"), mk, mdb, keys, slug,
         ])
     return {
         "version": 1,
