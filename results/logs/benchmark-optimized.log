@@ -2411,3 +2411,295 @@ tps = 26906.706687 (without initial connection time)
   [bucardo] C_multinode_ro: tps=53749.11 qps=N/A avg=0.269ms p95=0.453ms err=0 rt=0 PASS drift=0
 pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 17.12 (Debian 17.12-1.pgdg13+1))
 transaction type: /tmp/s_hot.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 12 s
+number of transactions actually processed: 5979
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 8.021 ms
+initial connection time = 17.406 ms
+tps = 498.716882 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 17.12 (Debian 17.12-1.pgdg13+1))
+transaction type: /tmp/s_hot.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 12 s
+number of transactions actually processed: 6199
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 7.736 ms
+initial connection time = 16.839 ms
+tps = 517.033583 (without initial connection time)
+  [bucardo] D_hot_conflict: tps=1015.75 qps=N/A avg=7.865ms p95=9.732ms err=0 rt=0 EXPECTED_LIMITATION_LOST_UPDATE drift=-303741
+sysbench 1.0.20 (using system LuaJIT 2.1.1700206165)
+
+Running the test with following options:
+Number of threads: 8
+Initializing random number generator from current time
+
+
+Initializing worker threads...
+
+Threads started!
+
+SQL statistics:
+    queries performed:
+        read:                            222922
+        write:                           63582
+        other:                           31894
+        total:                           318398
+    transactions:                        15892  (1058.84 per sec.)
+    queries:                             318398 (21213.88 per sec.)
+    ignored errors:                      31     (2.07 per sec.)
+    reconnects:                          0      (0.00 per sec.)
+
+General statistics:
+    total time:                          15.0080s
+    total number of events:              15892
+
+Latency (ms):
+         min:                                    3.38
+         avg:                                    7.55
+         max:                                   74.70
+         95th percentile:                        8.74
+         sum:                               119975.73
+
+Threads fairness:
+    events (avg/stddev):           1986.5000/3.71
+    execution time (avg/stddev):   14.9970/0.00
+
+  [bucardo] E_sysbench_oltp_rw: tps=1058.84 qps=21213.88 avg=7.55ms p95=8.74ms err=0 rt=31 PASS drift=0
+  [bucardo] E2_sysbench_oltp_ro: tps=1951.28 qps=31220.53 avg=4.1ms p95=4.65ms err=0 rt=0 PASS drift=0
+  [bucardo] E3_sysbench_oltp_wo: tps=1786.5 qps=10743.66 avg=4.47ms p95=6.09ms err=0 rt=74 PASS drift=0
+  [bucardo] E4_sysbench_point_select: tps=141151.83 qps=141151.83 avg=0.11ms p95=0.28ms err=0 rt=0 PASS drift=0
+  [bucardo] H_append_only_insert: tps=1043.14 qps=N/A avg=7.655ms p95=11.188ms err=0 rt=0 PASS_CONVERGED drift=0
+  [bucardo] G_conc_c1: tps=320.64 qps=N/A avg=3.108ms p95=4.208ms err=0 rt=0 PASS drift=0
+  [bucardo] G_conc_c4: tps=506.35 qps=N/A avg=7.883ms p95=14.394ms err=0 rt=0 PASS drift=0
+  [bucardo] G_conc_c8: tps=680.74 qps=N/A avg=11.727ms p95=19.868ms err=0 rt=0 PASS drift=0
+  [bucardo] G_conc_c16: tps=633.25 qps=N/A avg=25.215ms p95=53.044ms err=0 rt=0 PASS drift=0
+  [bucardo] G_conc_c32: tps=567.95 qps=N/A avg=55.245ms p95=166.937ms err=0 rt=0 PASS drift=0
+  [bucardo] F_wan_netem_10ms: tps=719.69 qps=N/A avg=11.1ms p95=19.369ms err=0 rt=0 PASS_NETEM_10MS drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 17.12 (Debian 17.12-1.pgdg13+1))
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 12 s
+number of transactions actually processed: 8544
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 11.224 ms
+initial connection time = 22.531 ms
+tps = 712.789414 (without initial connection time)
+  [bucardo] F_wan_netem_25ms: tps=712.79 qps=N/A avg=11.208ms p95=17.805ms err=0 rt=0 PASS_NETEM_25MS drift=0
+  [bucardo] F_wan_netem_50ms: tps=702.26 qps=N/A avg=11.374ms p95=21.142ms err=0 rt=0 PASS_NETEM_50MS drift=0
+=== [bucardo] Down ===
+=== [citus] Start (PG_SCALE=20, SB=25000, WARM=5s) ===
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 17.10 (Debian 17.10-1.pgdg13+1))
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 7455
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 16.202 ms
+initial connection time = 22.478 ms
+tps = 493.756840 (without initial connection time)
+  [citus] A_single_rw: tps=493.76 qps=N/A avg=16.125ms p95=25.144ms err=0 rt=0 PASS_SINGLE_PRIMARY drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 17.10 (Debian 17.10-1.pgdg13+1))
+transaction type: /tmp/s_d1.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 2293
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 26.176 ms
+initial connection time = 18.610 ms
+tps = 152.811828 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 17.10 (Debian 17.10-1.pgdg13+1))
+transaction type: /tmp/s_d2.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 2469
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 24.312 ms
+initial connection time = 17.659 ms
+tps = 164.524900 (without initial connection time)
+  [citus] B1_disjoint_rw: tps=317.34 qps=N/A avg=25.175ms p95=43.745ms err=0 rt=0 PASS_SINGLE_PRIMARY drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 17.10 (Debian 17.10-1.pgdg13+1))
+transaction type: /tmp/s_ov.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 3843
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 15.611 ms
+initial connection time = 20.999 ms
+tps = 256.235565 (without initial connection time)
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 17.10 (Debian 17.10-1.pgdg13+1))
+transaction type: /tmp/s_ov.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 4
+number of threads: 2
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 3865
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 15.510 ms
+initial connection time = 21.719 ms
+tps = 257.901219 (without initial connection time)
+  [citus] B2_overlap_rw: tps=514.14 qps=N/A avg=15.538ms p95=24.336ms err=0 rt=0 PASS_SINGLE_PRIMARY drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 17.10 (Debian 17.10-1.pgdg13+1))
+transaction type: <builtin: select only>
+scaling factor: 20
+query mode: prepared
+number of clients: 16
+number of threads: 4
+maximum number of tries: 200
+duration: 15 s
+number of transactions actually processed: 282072
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 0.848 ms
+initial connection time = 56.002 ms
+tps = 18857.310066 (without initial connection time)
+  [citus] C_multinode_ro: tps=18857.31 qps=N/A avg=0.818ms p95=1.216ms err=0 rt=0 PASS drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 17.10 (Debian 17.10-1.pgdg13+1))
+transaction type: /tmp/s_hot.sql
+scaling factor: 1
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 12 s
+number of transactions actually processed: 15196
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 6.314 ms
+initial connection time = 20.605 ms
+tps = 1267.115672 (without initial connection time)
+  [citus] D_hot_conflict: tps=1267.12 qps=N/A avg=6.297ms p95=9.157ms err=0 rt=0 PASS_SINGLE_PRIMARY drift=0
+sysbench 1.0.20 (using system LuaJIT 2.1.1700206165)
+
+Running the test with following options:
+Number of threads: 8
+Initializing random number generator from current time
+
+
+Initializing worker threads...
+
+Threads started!
+
+SQL statistics:
+    queries performed:
+        read:                            16212
+        write:                           4627
+        other:                           2319
+        total:                           23158
+    transactions:                        1157   (76.76 per sec.)
+    queries:                             23158  (1536.30 per sec.)
+    ignored errors:                      1      (0.07 per sec.)
+    reconnects:                          0      (0.00 per sec.)
+
+General statistics:
+    total time:                          15.0716s
+    total number of events:              1157
+
+Latency (ms):
+         min:                                   60.71
+         avg:                                  104.08
+         max:                                  217.16
+         95th percentile:                      130.13
+         sum:                               120417.27
+
+Threads fairness:
+    events (avg/stddev):           144.6250/1.11
+    execution time (avg/stddev):   15.0522/0.01
+
+  [citus] E_sysbench_oltp_rw: tps=76.76 qps=1536.3 avg=104.08ms p95=130.13ms err=0 rt=1 PASS drift=0
+  [citus] E2_sysbench_oltp_ro: tps=83.16 qps=1330.54 avg=95.92ms p95=121.08ms err=0 rt=0 PASS drift=0
+  [citus] E3_sysbench_oltp_wo: tps=513.18 qps=3083.39 avg=15.58ms p95=38.94ms err=0 rt=13 PASS drift=0
+  [citus] E4_sysbench_point_select: tps=20737.81 qps=20737.81 avg=0.77ms p95=1.3ms err=0 rt=0 PASS drift=0
+  [citus] H_append_only_insert: tps=2544.52 qps=N/A avg=3.13ms p95=4.147ms err=0 rt=0 PASS_SINGLE_PRIMARY drift=0
+  [citus] G_conc_c1: tps=113.07 qps=N/A avg=8.832ms p95=19.081ms err=0 rt=0 PASS drift=0
+  [citus] G_conc_c4: tps=337.9 qps=N/A avg=11.815ms p95=16.287ms err=0 rt=0 PASS drift=0
+  [citus] G_conc_c8: tps=561.35 qps=N/A avg=14.212ms p95=22.909ms err=0 rt=0 PASS drift=0
+  [citus] G_conc_c16: tps=646.63 qps=N/A avg=24.657ms p95=62.176ms err=0 rt=0 PASS drift=0
+  [citus] G_conc_c32: tps=894.14 qps=N/A avg=35.529ms p95=96.622ms err=0 rt=0 PASS drift=0
+  [citus] F_wan_netem_10ms: tps=78.52 qps=N/A avg=101.289ms p95=129.114ms err=0 rt=0 PASS_NETEM_10MS drift=0
+pgbench (17.11 (Debian 17.11-1.pgdg13+2), server 17.10 (Debian 17.10-1.pgdg13+1))
+transaction type: <builtin: TPC-B (sort of)>
+scaling factor: 20
+query mode: prepared
+number of clients: 8
+number of threads: 4
+maximum number of tries: 200
+duration: 12 s
+number of transactions actually processed: 404
+number of failed transactions: 0 (0.000%)
+number of serialization failures: 0 (0.000%)
+number of deadlock failures: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 240.956 ms
+initial connection time = 22.172 ms
+tps = 33.201025 (without initial connection time)
+  [citus] F_wan_netem_25ms: tps=33.2 qps=N/A avg=239.562ms p95=311.327ms err=0 rt=0 PASS_NETEM_25MS drift=0
