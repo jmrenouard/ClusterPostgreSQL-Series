@@ -166,6 +166,13 @@
 - **Applied Change / Fix**: Added deterministic stale PID cleanup during container startup in `env/multi-db-docker-env` `v2.4.0` (`e130508f89bf9c9c61cad3f7aa8d9299e4bcca93`, `docker-compose-yt-cluster.yml`) and documented the `YT-E1104` risk in `results/functional_limits_yt_cluster.csv` and `docs/{en,fr}/solutions/yt_cluster_lite.md`.
 - **Result & Non-Regression Test**: Verified clean crash-recovery (`T16`, `20/20`, `RPO=0`) and deterministic `make lint` validation across all 13 submodule Compose stacks.
 
+### RCA-024 - YT Cluster Async Non-Leader WAN Bypass & `sbtest` `SQLSTATE 55000` `recon` Lock
+- **Date / Action**: `2026-11-21` (`ACT-171`, `multi-db-docker-env` `v2.4.1` `#336`)
+- **Observed Symptom**: Static `yt1` async WAN sweeps were non-monotonic (`92.08 -> 4.78 -> 81.06`) and `E3_sysbench_oltp_wo` hit `SQLSTATE 55000` (`recon` row blocked) after `E_sysbench_oltp_rw`.
+- **Root Cause Analysis**: Leader `yt1` bypassed peer `netem`, and async concurrent `E_rw` left `recon`-quarantined diverged rows on reused `sbtest1..4` tables.
+- **Applied Change / Fix**: `env/multi-db-docker-env` (`v2.4.1`, `0ec32dd`) targets non-Leader `wn`, adds cooldown/retry and isolated `prep_sb()` before `E3`; updated CSV, `#18` sheets, Ch. `06` & `09`.
+- **Result & Non-Regression Test**: 36/36 YT rows pass (`drift = 0`), monotonic async WAN (`41.45 -> 8.47 -> 4.78 -> 2.90 TPS`), `E3 = 133.55 TPS` (`make test` + `make lint`).
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters
