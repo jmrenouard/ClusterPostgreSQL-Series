@@ -40,9 +40,19 @@
   </nav>
 
   <section id="main-controls" class="card controls">
+    <div id="dataset-bar" class="ctrl-row dataset-row">
+      <div class="ctrl-head">
+        <span class="ctrl-label" data-fr="Jeu de donn&#233;es">Benchmark Dataset</span>
+        <div class="seg" role="group" aria-label="Dataset">
+          <button type="button" class="seg-btn active" data-dataset="baseline" data-fr="Baseline (301 l., PG_SCALE=2)">Baseline Default (301 rows, PG_SCALE=2)</button>
+          <button type="button" class="seg-btn" data-dataset="optimized" data-fr="Optimis&#233; Prod (318 l., PG_SCALE=20)">Production-Tuned Realistic (318 rows, PG_SCALE=20)</button>
+          <button type="button" class="seg-btn" data-dataset="compare" data-fr="Comparatif Avant / Apr&#232;s">Before vs. After Delta</button>
+        </div>
+      </div>
+    </div>
     <div class="ctrl-row">
       <div class="ctrl-head">
-        <span class="ctrl-label" data-fr="Solutions (17 topologies)">Solutions (17 Topologies)</span>
+        <span id="sol-count-label" class="ctrl-label" data-fr="Solutions (17 topologies)">Solutions (17 Topologies)</span>
         <div class="presets">
           <button type="button" class="preset-btn" data-preset="all" data-fr="Toutes (17)">All 17</button>
           <button type="button" class="preset-btn preset-pg18" data-preset="pg18_vs_pg17" data-fr="PG 18 vs PG 17">PG 18 vs PG 17</button>
@@ -55,7 +65,6 @@
       </div>
       <div id="topo-pills" class="pill-grid"></div>
     </div>
-
     <div id="bench-controls" class="ctrl-row ctrl-split">
       <div class="ctrl-group">
         <span class="ctrl-label" data-fr="Suite de charge / Vue courbe">Workload Suite / View</span>
@@ -98,18 +107,7 @@
       </div>
       <div class="table-wrap">
         <table id="bench-table" class="data-table">
-          <thead><tr>
-            <th data-sort="topology" data-fr="Topologie">Topology</th>
-            <th data-sort="suite" data-fr="Suite">Suite</th>
-            <th data-sort="clients" class="num">Clients</th>
-            <th data-sort="tps" class="num">TPS</th>
-            <th data-sort="lat_avg_ms" class="num" data-fr="Moy (ms)">Avg (ms)</th>
-            <th data-sort="lat_p95_ms" class="num">p95 (ms)</th>
-            <th data-sort="tx_committed" class="num" data-fr="TX valid&#233;es">Committed TX</th>
-            <th data-sort="retries_40001" class="num">40001 Retries</th>
-            <th data-sort="convergence_status" data-fr="Int&#233;grit&#233;">Integrity Status</th>
-            <th data-sort="balance_drift" class="num" data-fr="D&#233;rive solde">Balance Drift</th>
-          </tr></thead>
+          <thead id="bench-thead"><tr><th data-sort="topology" data-fr="Topologie">Topology</th><th data-sort="suite" data-fr="Suite">Suite</th><th data-sort="clients" class="num">Clients</th><th data-sort="tps" class="num">TPS</th><th data-sort="lat_avg_ms" class="num" data-fr="Moy (ms)">Avg (ms)</th><th data-sort="lat_p95_ms" class="num">p95 (ms)</th><th data-sort="tx_committed" class="num" data-fr="TX valid&#233;es">Committed TX</th><th data-sort="retries_40001" class="num">40001 Retries</th><th data-sort="convergence_status" data-fr="Int&#233;grit&#233;">Integrity Status</th><th data-sort="balance_drift" class="num" data-fr="D&#233;rive solde">Balance Drift</th></tr></thead>
           <tbody id="bench-tbody"></tbody>
         </table>
       </div>
@@ -135,73 +133,18 @@
   <section id="panel-popularity" class="hidden">
     <div id="pop-kpi-grid" class="kpi-grid"></div>
     <section class="card pop-controls">
-      <div class="ctrl-group">
-        <span class="ctrl-label" data-fr="&#201;chelle graphique">Chart Scale</span>
-        <div class="seg" role="group">
-          <button type="button" class="seg-btn active" data-pscale="log" data-fr="Logarithmique (log10)">Logarithmic (log10)</button>
-          <button type="button" class="seg-btn" data-pscale="linear" data-fr="Lin&#233;aire">Linear</button>
-        </div>
-      </div>
-      <div class="ctrl-group">
-        <span class="ctrl-label" data-fr="Graphique 1">Chart 1</span>
-        <div class="seg" role="group">
-          <button type="button" class="seg-btn active" data-pmet1="stars" data-fr="&#201;toiles">Stars</button>
-          <button type="button" class="seg-btn" data-pmet1="forks">Forks</button>
-        </div>
-      </div>
-      <div class="ctrl-group">
-        <span class="ctrl-label" data-fr="Graphique 2">Chart 2</span>
-        <div class="seg" role="group">
-          <button type="button" class="seg-btn active" data-pmet2="commits_12m" data-fr="Commits 12m">12m Commits</button>
-          <button type="button" class="seg-btn" data-pmet2="total_commits" data-fr="Commits tot.">Total Commits</button>
-          <button type="button" class="seg-btn" data-pmet2="contributors" data-fr="Contrib.">Contributors</button>
-        </div>
-      </div>
-      <div class="ctrl-group">
-        <span class="ctrl-label" data-fr="Vitalit&#233;">Vitality</span>
-        <select id="pop-vit-select" class="select-input">
-          <option value="ALL">All Solutions (22)</option>
-          <option value="Active">Active (&gt;=30 commits/12m)</option>
-          <option value="Low">Low (1-29 commits/12m)</option>
-          <option value="Dormant">Dormant (0 commits/12m)</option>
-          <option value="Proprietary">Proprietary / Managed</option>
-        </select>
-      </div>
+      <div class="ctrl-group"><span class="ctrl-label" data-fr="&#201;chelle graphique">Chart Scale</span><div class="seg" role="group"><button type="button" class="seg-btn active" data-pscale="log" data-fr="Logarithmique (log10)">Logarithmic (log10)</button><button type="button" class="seg-btn" data-pscale="linear" data-fr="Lin&#233;aire">Linear</button></div></div>
+      <div class="ctrl-group"><span class="ctrl-label" data-fr="Graphique 1">Chart 1</span><div class="seg" role="group"><button type="button" class="seg-btn active" data-pmet1="stars" data-fr="&#201;toiles">Stars</button><button type="button" class="seg-btn" data-pmet1="forks">Forks</button></div></div>
+      <div class="ctrl-group"><span class="ctrl-label" data-fr="Graphique 2">Chart 2</span><div class="seg" role="group"><button type="button" class="seg-btn active" data-pmet2="commits_12m" data-fr="Commits 12m">12m Commits</button><button type="button" class="seg-btn" data-pmet2="total_commits" data-fr="Commits tot.">Total Commits</button><button type="button" class="seg-btn" data-pmet2="contributors" data-fr="Contrib.">Contributors</button></div></div>
+      <div class="ctrl-group"><span class="ctrl-label" data-fr="Vitalit&#233;">Vitality</span><select id="pop-vit-select" class="select-input"><option value="ALL">All Solutions (22)</option><option value="Active">Active (&gt;=30 commits/12m)</option><option value="Low">Low (1-29 commits/12m)</option><option value="Dormant">Dormant (0 commits/12m)</option><option value="Proprietary">Proprietary / Managed</option></select></div>
     </section>
     <div class="charts-grid">
-      <article class="card chart-card">
-        <div class="chart-head"><h2 id="pop-title-1">GitHub Stars (19 Public Repos)</h2><span id="pop-scale-1" class="scale-pill">log10</span></div>
-        <div id="pop-chart-1" class="chart-box pop-chart-box"></div>
-      </article>
-      <article class="card chart-card">
-        <div class="chart-head"><h2 id="pop-title-2">12-Month Commit Velocity</h2><span id="pop-scale-2" class="scale-pill">log10</span></div>
-        <div id="pop-chart-2" class="chart-box pop-chart-box"></div>
-      </article>
+      <article class="card chart-card"><div class="chart-head"><h2 id="pop-title-1">GitHub Stars (19 Public Repos)</h2><span id="pop-scale-1" class="scale-pill">log10</span></div><div id="pop-chart-1" class="chart-box pop-chart-box"></div></article>
+      <article class="card chart-card"><div class="chart-head"><h2 id="pop-title-2">12-Month Commit Velocity</h2><span id="pop-scale-2" class="scale-pill">log10</span></div><div id="pop-chart-2" class="chart-box pop-chart-box"></div></article>
     </div>
     <section class="card table-card">
-      <div class="table-head">
-        <h2 data-fr="T&#233;l&#233;m&#233;trie GitHub &amp; Vitalit&#233; (22 solutions)">GitHub Telemetry &amp; Maintenance Vitality (22 Solutions)</h2>
-        <input type="search" id="pop-filter" class="search-input" placeholder="Search repo, org, license, vitality...">
-      </div>
-      <div class="table-wrap">
-        <table id="pop-table" class="data-table">
-          <thead><tr>
-            <th data-psort="project_name" data-fr="Solution / D&#233;p&#244;t">Solution / Repo</th>
-            <th data-psort="git_present" data-fr="Pr&#233;sence Git">Git Presence</th>
-            <th data-psort="git_account" data-fr="Org GitHub">GitHub Org</th>
-            <th data-psort="stars" class="num" data-fr="&#201;toiles">Stars</th>
-            <th data-psort="forks" class="num">Forks</th>
-            <th data-psort="total_commits" class="num" data-fr="Commits tot.">Total Commits</th>
-            <th data-psort="commits_12m" class="num" data-fr="Commits 12m">12m Commits</th>
-            <th data-psort="contributors" class="num" data-fr="Contrib.">Contributors</th>
-            <th data-psort="latest_release" data-fr="Version">Latest Release</th>
-            <th data-psort="license_spdx" data-fr="Licence">License</th>
-            <th data-psort="pushed_at" data-fr="Derni&#232;re maint.">Last Maintenance</th>
-            <th data-psort="vitality" data-fr="Vitalit&#233;">Vitality</th>
-          </tr></thead>
-          <tbody id="pop-tbody"></tbody>
-        </table>
-      </div>
+      <div class="table-head"><h2 data-fr="T&#233;l&#233;m&#233;trie GitHub &amp; Vitalit&#233; (22 solutions)">GitHub Telemetry &amp; Maintenance Vitality (22 Solutions)</h2><input type="search" id="pop-filter" class="search-input" placeholder="Search repo, org, license, vitality..."></div>
+      <div class="table-wrap"><table id="pop-table" class="data-table"><thead><tr><th data-psort="project_name" data-fr="Solution / D&#233;p&#244;t">Solution / Repo</th><th data-psort="git_present" data-fr="Pr&#233;sence Git">Git Presence</th><th data-psort="git_account" data-fr="Org GitHub">GitHub Org</th><th data-psort="stars" class="num" data-fr="&#201;toiles">Stars</th><th data-psort="forks" class="num">Forks</th><th data-psort="total_commits" class="num" data-fr="Commits tot.">Total Commits</th><th data-psort="commits_12m" class="num" data-fr="Commits 12m">12m Commits</th><th data-psort="contributors" class="num" data-fr="Contrib.">Contributors</th><th data-psort="latest_release" data-fr="Version">Latest Release</th><th data-psort="license_spdx" data-fr="Licence">License</th><th data-psort="pushed_at" data-fr="Derni&#232;re maint.">Last Maintenance</th><th data-psort="vitality" data-fr="Vitalit&#233;">Vitality</th></tr></thead><tbody id="pop-tbody"></tbody></table></div>
     </section>
   </section>
 </main>
@@ -212,17 +155,10 @@
 </footer>
 
 <div id="lp-tooltip" class="tooltip hidden" role="tooltip"></div>
-<script src="data_bench.js"></script>
-<script src="data_bench_2.js"></script>
-<script src="data_bench_3.js"></script>
-<script src="data_bench_pg18.js"></script>
-<script src="data_bench_yt.js"></script>
-<script src="data_matrix.js"></script>
-<script src="data_matrix_ext.js"></script>
-<script src="data_matrix_pg18.js"></script>
-<script src="data_popularity.js"></script>
-<script src="charts.js"></script>
-<script src="popularity.js"></script>
-<script src="app.js"></script>
+<script src="data_bench.js"></script><script src="data_bench_2.js"></script><script src="data_bench_3.js"></script>
+<script src="data_bench_pg18.js"></script><script src="data_bench_yt.js"></script>
+<script src="data_bench_opt_1.js"></script><script src="data_bench_opt_2.js"></script><script src="data_bench_opt_3.js"></script><script src="data_bench_opt_4.js"></script>
+<script src="data_matrix.js"></script><script src="data_matrix_ext.js"></script><script src="data_matrix_pg18.js"></script><script src="data_popularity.js"></script>
+<script src="charts.js"></script><script src="popularity.js"></script><script src="matrix.js"></script><script src="opt.js"></script><script src="app.js"></script>
 </body>
 </html>
