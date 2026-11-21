@@ -24,6 +24,7 @@ PG18_BENCH_CSV = RES / "benchmark_pg18.csv"
 PG18_MATRIX_CSV = RES / "functional_limits_pg18.csv"
 YT_BENCH_CSV = RES / "benchmark_yt_cluster.csv"
 YT_MATRIX_CSV = RES / "functional_limits_yt_cluster.csv"
+OPT_BENCH_CSV = RES / "benchmark_optimized.csv"
 POPULARITY_CSV = RES / "project_popularity.csv"
 
 MAX_SHARD_BYTES = 10500
@@ -184,6 +185,36 @@ def emit_bench_bundles(
     return [p1, p2, p3, p18, pyt]
 
 
+def emit_opt_bundles(opt_rows: list[list[object]], n_shards: int = 4) -> list[pathlib.Path]:
+    """Emit Production-Tuned PG_SCALE=20 benchmark rows across 4 balanced JS shards (< 13.5 KB each)."""
+    topos = sorted({str(r[0]) for r in opt_rows})
+    suites = sorted({str(r[1]) for r in opt_rows})
+    meta = {
+        "cols": BENCH_FIELDS,
+        "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
+        "pg_scale": 20,
+        "row_count": len(opt_rows),
+        "topology_count": len(topos),
+        "suite_count": len(suites),
+    }
+    step = max(1, (len(opt_rows) + n_shards - 1) // n_shards)
+    chunks = [opt_rows[i * step : (i + 1) * step] for i in range(n_shards)]
+    out: list[pathlib.Path] = []
+    for idx, chunk in enumerate(chunks, 1):
+        p = DASH / f"data_bench_opt_{idx}.js"
+        arr = json.dumps(chunk, ensure_ascii=True, separators=(",", ":"))
+        if idx == 1:
+            txt = (
+                dump_js_chunk("LP_BENCH_OPT_META", meta, f"Production-tuned shard {idx}/{n_shards} (build_dashboard.py)")
+                + f"window.LP_BENCH_OPT_ROWS={arr};\n"
+            )
+        else:
+            txt = f"/* Production-tuned shard {idx}/{n_shards} (build_dashboard.py) */\nwindow.LP_BENCH_OPT_ROWS=(window.LP_BENCH_OPT_ROWS||[]).concat({arr});\n"
+        p.write_text(txt, encoding="utf-8", newline="\n")
+        out.append(p)
+    return out
+
+
 def pack_matrix(rows: list[dict[str, str]], num_cols: set[str] | None = None) -> dict[str, object]:
     """Pack CSV dict rows into compact {cols, rows} tabular form."""
     if not rows:
@@ -220,6 +251,7 @@ def main() -> None:
     bench_rows = load_bench_rows(tuple(RES / n for n in BENCH_CSVS))
     pg18_bench = load_bench_rows((PG18_BENCH_CSV,))
     yt_bench = load_bench_rows((YT_BENCH_CSV,))
+    opt_bench = load_bench_rows((OPT_BENCH_CSV,))
     core_matrix = read_csv_rows(MATRIX_CSV)
     ext_matrix = read_csv_rows(EXT_MATRIX_CSV)
     pg18_matrix = read_csv_rows(PG18_MATRIX_CSV)
@@ -227,10 +259,11 @@ def main() -> None:
     pop_rows = read_csv_rows(POPULARITY_CSV)
     emitted = (
         emit_bench_bundles(bench_rows, pg18_bench, yt_bench, yt_matrix, len(pop_rows))
+        + emit_opt_bundles(opt_bench)
         + emit_matrix_and_pop_bundles(core_matrix, ext_matrix, pg18_matrix, pop_rows)
     )
     print(
-        f"Built bundles ({len(bench_rows)} V2 + {len(pg18_bench)} PG18 + {len(yt_bench)} YT bench, "
+        f"Built bundles ({len(bench_rows)} V2 + {len(pg18_bench)} PG18 + {len(yt_bench)} YT + {len(opt_bench)} Opt bench, "
         f"{len(core_matrix)} L1-L8, {len(ext_matrix)} T11-T18, "
         f"{len(pg18_matrix)} PG18 + {len(yt_matrix)} YT matrix, {len(pop_rows)} popularity):"
     )
