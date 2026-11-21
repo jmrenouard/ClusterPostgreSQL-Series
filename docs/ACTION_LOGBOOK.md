@@ -26,6 +26,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-185 - Generate PACELC Catalog Metadata Bundle (`#496`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#496` (`feat/issue-496-pacelc-catalog-bundle`)
+- **Request / Changes / Result**: Added `scripts/pacelc_catalog.py` (`4,929` B), wired `scripts/build_dashboard.py` to emit `dashboard/data_pacelc.js` (`5,342` B, `window.LP_PACELC_CATALOG`, 17 topologies + 2 variants), logged `APP-011`; `make dashboard && make test && make lint` + `node --check` pass.
+
 ### ACT-184 - Land V5 PG_SCALE=20 Benchmarks, Charts 12-13, Dual Dashboard, Ch. 13 & Submodule v2.6.1 (#449-#494)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#449-#494` (`chore/issue-494-phase10-gov-v261`)
 - **Request / Changes / Result**: Landed `results/benchmark_optimized.csv` (318 rows, #449 / PRs #450-#452), `results/logs/benchmark-optimized.log` (3,718 lines, #453 / PRs #454-#466), `generate_charts_v5.py` & `chart_12`-`chart_13` (#467 / PRs #468-#469), dual-dataset dashboard shards/UI (#470 / PRs #471-#474, #475 / PRs #476-#478), `tests/test_benchmark_artifacts.py` (#479 / PR #480), bilingual Ch. 13 (#481 / PRs #482-#483), Ch. 06 Sec. 8 (#484 / PR #485), Ch. 09 EN/FR (#486 / PR #487, #488 / PR #489), `README*` (#490 / PR #491, #492 / PR #493), `RCA-025`/`APP-010`, `Phase 10` completion, and `env/multi-db-docker-env` bump to `v2.6.1` (`3515629`, #494); every PR < 14,800 B with `make test` (21/21 OK) and `make lint` green.

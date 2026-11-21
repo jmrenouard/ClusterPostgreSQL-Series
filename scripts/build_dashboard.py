@@ -8,6 +8,11 @@ import json
 import pathlib
 from datetime import datetime, timezone
 
+try:
+    from scripts.pacelc_catalog import emit_pacelc_bundle
+except ImportError:
+    from pacelc_catalog import emit_pacelc_bundle
+
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 RES = ROOT / "results"
 DASH = ROOT / "dashboard"
@@ -261,6 +266,7 @@ def main() -> None:
         emit_bench_bundles(bench_rows, pg18_bench, yt_bench, yt_matrix, len(pop_rows))
         + emit_opt_bundles(opt_bench)
         + emit_matrix_and_pop_bundles(core_matrix, ext_matrix, pg18_matrix, pop_rows)
+        + [emit_pacelc_bundle(DASH)]
     )
     print(
         f"Built bundles ({len(bench_rows)} V2 + {len(pg18_bench)} PG18 + {len(yt_bench)} YT + {len(opt_bench)} Opt bench, "
