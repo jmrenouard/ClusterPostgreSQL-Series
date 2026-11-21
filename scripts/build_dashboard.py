@@ -175,6 +175,7 @@ def emit_bench_bundles(
     yt_mat_json = json.dumps(pack_matrix(yt_matrix), ensure_ascii=True, separators=(",", ":"))
     pyt_txt = (
         dump_js_chunk("LP_BENCH_ROWS_YT", yt_rows, "YT Cluster 1.21.3 benchmark & limits bundle")
+        + "\n\n\n\n"
         + f"window.LP_MATRIX_YT={yt_mat_json};\n"
     )
 
