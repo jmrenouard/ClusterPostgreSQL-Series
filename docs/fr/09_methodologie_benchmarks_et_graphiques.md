@@ -8,14 +8,15 @@
 
 ## 1. Harnais d'exécution et isolation expérimentale
 
-Les **310 lignes brutes de benchmarks** (**301 lignes dédupliquées dans le tableau de bord**) couvrant **17 topologies opérationnelles** (`18` variantes en Suite D avec `pgedge-delta-apply`) sont produites séquentiellement sur hôte Docker WSL2 (20 vCPU, 16,4 Gio RAM) par trois scripts de `env/multi-db-docker-env` (`v2.4.1`) :
+Les **628 lignes brutes de benchmarks** (**310 lignes baseline** à `PG_SCALE=2` / **301 dédupliquées** sur **17 topologies**, plus **318 lignes V5 optimisées** à `PG_SCALE=20` sur **18 topologies** incl. `cockroach-rc`) sont produites séquentiellement sur hôte Docker WSL2 (20 vCPU, 16,4 Gio RAM) par quatre scripts de `env/multi-db-docker-env` (`v2.4.1` -> **`v2.6.1`**) :
 - `scripts/bench_pg_v2_runner.sh` : **187 lignes** sur 10 topologies PG 17 et SQL distribué (`results/benchmark_summary.csv` `70`, `results/benchmark_extended_workloads.csv` `40`, `results/benchmark_wan_sweep.csv` `27`, `results/benchmark_concurrency_sweep.csv` `50`).
 - `scripts/bench_pg18_runner.sh` : **87 lignes** sur 5 topologies natives PG 18.6 (`results/benchmark_pg18.csv`).
 - `scripts/bench_yt_runner.sh` : **36 lignes** (`18` `yt-cluster` `cc=half` + `18` `yt-cluster-async` `cc=nodes>=0`) sur 3 nœuds PG 18.7 (`results/benchmark_yt_cluster.csv`).
+- `scripts/bench_pg_optimized_runner.sh` (`v2.6.1`) : **318 lignes** sur **18 topologies** à `PG_SCALE=20`, `sysbench 4x25k`, `pgbench -M prepared --max-tries=200`, `WARMUP_S=5`, `fillfactor=90` et `fsync=on` (`results/benchmark_optimized.csv`, [Ch. 13](13_optimisation_production_et_benchmarks_realistes.md)).
 
 - **Isolation stricte :** Une seule pile tourne à la fois (`up -> setup -> chauffe -> suites -> down -v`) pour exclure toute contention RAM/NVMe entre RocksDB, Pebble, `ytserv` et `shared_buffers`.
 - **Zéro biais NAT :** `pgbench` et `sysbench` tournent dans un conteneur éphémère `bench_client` (`multi-db-pgbench-sysbench:latest`) relié au pont Docker interne de chaque cluster (`--cap-add NET_ADMIN`).
-- **Parité de jeu et réconciliation :** Chaque suite tourne à `PG_SCALE = 2` (`200 000` comptes, `20` guichets, `2` agences). Entre chaque suite d'écriture, `reset_ds()` réinitialise les soldes ; `conv_chk()` contrôle `SUM(abalance) - SUM(delta)` sur chaque nœud (`balance_drift`).
+- **Parité de jeu et réconciliation :** Les baselines tournent à `PG_SCALE = 2` (`200 000` comptes, `sysbench 4x10k`), tandis que V5 passe à `PG_SCALE = 20` (`2 000 000` comptes, `sysbench 4x25k`). Entre chaque suite d'écriture, `reset_ds()` réinitialise les soldes ; `conv_chk()` contrôle `SUM(abalance) - SUM(delta)` sur chaque nœud (`balance_drift`).
 - **Latence exacte (`p95`) :** Les journaux par transaction (`pgbench -l`) fournissent moyenne, écart-type et 95e centile (`lat_p95_ms`).
 
 ---
@@ -86,9 +87,9 @@ Sur un axe linéaire à `55 614` ou `177 443 TPS`, une barre à `57,00 TPS` repr
 
 ---
 
-## 5. Explorateur interactif, 11 graphiques logarithmiques et Matrice de traçabilité
+## 5. Explorateur interactif, 13 graphiques logarithmiques et Matrice de traçabilité
 
-Explorez les **17 topologies** et **301 lignes dédupliquées** (**310 lignes CSV brutes** ; 9 lignes `F_wan_netem_25ms` communes entre `summary` et `wan_sweep`) — avec **bascule `log10` / linéaire**, préréglages `YT vs Multi-Maître` et `PG 18 vs PG 17`, interface EN/FR, badges de dérive, matrices `L1–L8`, `T11–T18`, `PG 18.6`, `YT`, onglet Popularité (22 entrées) et export CSV — via [**Explorateur interactif hors-ligne (`dashboard/index.html`)**](../../dashboard/index.html).
+Explorez les **18 topologies**, **301 lignes baseline dédupliquées** (`310` brutes, `PG_SCALE=2`) et **318 lignes V5 optimisées** (`PG_SCALE=20`) via la bascule Baseline/Optimisé—avec **bascule `log10` / linéaire**, préréglages `YT vs Multi-Maître` et `PG 18 vs PG 17`, interface EN/FR, badges de dérive, matrices `L1–L8`, `T11–T18`, `PG 18.6`, `YT`, onglet Popularité (22 entrées) et export CSV—via [**Explorateur interactif hors-ligne (`dashboard/index.html`)**](../../dashboard/index.html).
 
 ### 5.1 Matrice maîtresse de traçabilité Benchmarks -> Graphiques
 
@@ -100,6 +101,7 @@ Explorez les **17 topologies** et **301 lignes dédupliquées** (**310 lignes CS
 | **`bench_pg_v2_runner.sh`** (`v2.2.0`) | `benchmark_concurrency_sweep.csv` | `G_conc_c1/c4/c8/c16/c32` | `10` PG 17 & SQL dist. | `50` |
 | **`bench_pg18_runner.sh`** (`v2.3.0`) | `benchmark_pg18.csv` | Les `18` (`15` sur `pg18-standalone`, hors WAN) | `5` piles natives PG 18.6 (`worker` AIO, `uuidv7()`) | `87` |
 | **`bench_yt_runner.sh`** (`v2.4.1`) | `benchmark_yt_cluster.csv` | Les `18` (`A`–`H`, `F_wan*`, `G_conc*`) | `yt-cluster` (`cc=half`) & `yt-cluster-async` (`nodes>=0`) | `36` |
+| **`bench_pg_optimized_runner.sh`** (`v2.6.1`) | `benchmark_optimized.csv` | Les `18` à `PG_SCALE=20`, `-M prepared`, chauffe `5s` | Les `18` topologies (incl. `cockroach-rc` rôle `bench`) | `318` |
 | **`collect_popularity.py`** + Tests | `project_popularity.csv` + `functional_limits_*.csv` | Télémétrie GitHub API ; sondes `L1–L8` / `T11–T18` | `22` solutions (`19` dépôts Git) ; `16` lignes limites | `22` / `26` |
 
 | Artefact (`assets/charts/` et `dashboard/`) | CSV source(s) | Suites représentées | Script générateur | Chapitre lié |
@@ -115,7 +117,9 @@ Explorez les **17 topologies** et **301 lignes dédupliquées** (**310 lignes CS
 | **`chart_09_popularity_commits_activity_log.png`** | `project_popularity.csv` (`19` dépôts) | Commits 12m vs jours sans push | `scripts/generate_charts_v3.py` | [Ch. 11](11_popularite_et_vitalite_ecosysteme.md) |
 | **`chart_10_pg18_vs_pg17_log.png`** | `summary`+`ext`+`wan` vs `benchmark_pg18.csv` | `A`, `C`, `E`, `E3`, `H`, `F_25ms` | `scripts/generate_charts_v3.py` | [Ch. 12](12_clustering_postgresql_18_et_benchmarks.md) |
 | **`chart_11_yt_cluster_vs_multimaster_log.png`** | `yt_cluster`+`pg18`+`summary/ext/wan/conc` | `18/18` (`yt-*` vs `pg18-birep`/`pgedge`/`yb`/`crdb`) | `scripts/generate_charts_v4.py` | [Ch. 06 §7](06_resultats_tests_et_benchmarks.md) · [#18](solutions/yt_cluster_lite.md) |
-| **`dashboard/index.html`** (`dashboard/*.js`) | Les `6` bench + `4` limites + `popularity` CSVs | Explorateur `301` lignes / `17` topos | `scripts/build_dashboard.py` | [Ch. 06](06_resultats_tests_et_benchmarks.md) |
+| **`chart_12_baseline_vs_optimized_log.png`** | `benchmark_optimized.csv` vs `6` CSV baseline | `A`, `B2`, `D`, `E`, `H`, `F_25ms` (`PG_SCALE=2` vs `20`) | `scripts/generate_charts_v5.py` | [Ch. 13](13_optimisation_production_et_benchmarks_realistes.md) · [Ch. 06 §8](06_resultats_tests_et_benchmarks.md) |
+| **`chart_13_optimized_all_topologies_log.png`** | `benchmark_optimized.csv` (`318` lignes) | `A`, `B1`, `C`, `E1`, `H`, `G_c1..32`, `F_0..50ms` (`18` topos) | `scripts/generate_charts_v5.py` | [Ch. 13](13_optimisation_production_et_benchmarks_realistes.md) · [Ch. 06 §8](06_resultats_tests_et_benchmarks.md) |
+| **`dashboard/index.html`** (`dashboard/*.js`) | `6` baseline + `benchmark_optimized.csv` + `4` limites + `popularity` | Explorateur dual `301` + `318` lignes / `18` topos | `scripts/build_dashboard.py` | [Ch. 06](06_resultats_tests_et_benchmarks.md) · [Ch. 13](13_optimisation_production_et_benchmarks_realistes.md) |
 
 ### Graphique 01 — Débit multi-suites (`log10` TPS)
 ![Débit Log10 sur les suites principales](../../assets/charts/chart_01_tps_log_all_suites.png)
@@ -147,13 +151,16 @@ Explorez les **17 topologies** et **301 lignes dédupliquées** (**310 lignes CS
 
 ---
 
-## 6. Extensions V3 & V4 : Télémétrie (`chart_08`, `chart_09`), PG 18.6 (`chart_10`) et YT Cluster (`chart_11`)
+## 6. Extensions V3, V4 & V5 : Télémétrie (`chart_08`–`09`), PG 18.6 (`chart_10`), YT (`chart_11`) et Optimisation Production (`chart_12`–`13`)
 
 ![Popularité Écosystème Étoiles et Forks Log10](../../assets/charts/chart_08_popularity_stars_forks_log.png)
 ![Commits et Vitalité Écosystème Log10](../../assets/charts/chart_09_popularity_commits_activity_log.png)
 ![Comparatif PostgreSQL 18.6 vs PostgreSQL 17.11 Log10](../../assets/charts/chart_10_pg18_vs_pg17_log.png)
 ![Comparatif YT Cluster vs Multi-Maîtres et Raft Log10](../../assets/charts/chart_11_yt_cluster_vs_multimaster_log.png)
+![Comparatif Log10 Baseline vs Optimisé](../../assets/charts/chart_12_baseline_vs_optimized_log.png)
+![Panorama Log10 Optimisé sur 18 Topologies](../../assets/charts/chart_13_optimized_all_topologies_log.png)
 
 - **Vitalité écosystème (`chart_08`–`09`, [Ch. 11](11_popularite_et_vitalite_ecosysteme.md)) :** Télémétrie GitHub (`21` entrées / `19` dépôts publics sur `3+` décades) distinguant le socle `Tier A` (`postgres`, `cockroachdb`, `yugabytedb`, `citus`, `patroni`) d'extensions `Tier C` récentes comme `DBinvent/yt-cluster-lite` (`15` étoiles, `0` fork, `21` commits, `2` contributeurs).
 - **Saut générationnel PG 18.6 (`chart_10`, [Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)) :** `87` mesures PG 18.6 quantifiant AIO `worker`, `data_checksums=on`, `substream=p` et `uuidv7()` (`pg18-birep` `H=2 066,70`, `pg18-logical` `H=3 518,49`, `pg18-sync` `E3=1 184,57 TPS`).
 - **YT Cluster Sync/Async vs Multi-Maîtres (`chart_11`, [Ch. 06 §7](06_resultats_tests_et_benchmarks.md)) :** `36` mesures (`18` `cc=half` + `18` `cc=nodes>=0`) chiffrant le gain async `2,0x–5,1x` à `0` dérive (`A` `20,63->41,45`, `B2` `10,69->55,03`, `D` `67,76->163,01`, `E3` `26,43->133,55`, `H` `110,53->224,93 TPS`), les lectures `E4` (`177 442,88 TPS`) et l'atténuation WAN `ytserv` (`1,41–8,47 TPS`).
+- **Échelle réaliste optimisée V5 (`chart_12`–`13`, [Ch. 13](13_optimisation_production_et_benchmarks_realistes.md)) :** `318` mesures (`v2.6.1`, `PG_SCALE=20`, `sysbench 4x25k`, `-M prepared`, `5s` chauffe, `fsync=on`) comparant les gains sur les `18` topologies : `pg18-birep` `G_c32` (`4 163,31 TPS`), `pgedge` `delta_apply` (`2 125,19 TPS`, `0` dérive en `D`), `cockroach` `v25.4` (`307,95 TPS` `A`, `7,32x`), `cockroach-rc` (`153,70 TPS` `E`, `0` retry `40001`) et `yt-cluster-async` (`189 286,48 TPS` `E4`, `0` dérive).
