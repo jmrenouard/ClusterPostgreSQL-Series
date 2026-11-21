@@ -166,7 +166,7 @@ def chart_07(idx: dict) -> None:
     ad = [abs(d) for d in rd]
     oks = [d == 0 and not any(k in r.get("convergence_status", "") for k in ("DIVERGED", "LOST_UPDATE")) for d, r in zip(ad, dr)]
     ys = list(range(len(topos)))
-    fig, (a1, a2) = plt.subplots(1, 2, figsize=(14.4, 6.6), sharey=True)
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(15.8, 8.6), sharey=True)
     for ax, xl, ti in ((a1, "Suite D TPS (Log10)", "Hot-Row TPS (Green=0 Drift, Red=Loss)"), (a2, "Abs Drift |delta| (Log10)", "Silent Drift (50-Key Contention)")):
         ax.set_xscale("log")
         ax.xaxis.set_major_formatter(FuncFormatter(ftick))
@@ -174,52 +174,47 @@ def chart_07(idx: dict) -> None:
         ax.set_xlabel(xl, fontsize=9)
         ax.set_title(ti, fontsize=9.6, pad=8)
     a1.barh(ys, tps, color=["#16a34a" if ok else "#dc2626" for ok in oks], ec="#fff", height=0.64)
-    a1.set_xlim(100, max(tps) * 8.0)
+    a1.set_xlim(10, max(tps) * 11.0)
     a1.set_yticks(ys)
-    a1.set_yticklabels([LBL.get(t, t) for t in topos], fontsize=8.4, weight="semibold")
+    a1.set_yticklabels([LBL.get(t, t) for t in topos], fontsize=8.2, weight="semibold")
     a1.invert_yaxis()
     for y, v, ok in zip(ys, tps, oks):
-        a1.text(v * 1.12, y, f"{fval(v)} TPS ({'0 drift' if ok else 'LOST'})", va="center", fontsize=7.6, color="#166534" if ok else "#991b1b", weight="bold")
+        a1.text(v * 1.12, y, f"{fval(v)} TPS ({'0 drift' if ok else 'LOST'})", va="center", fontsize=7.3, color="#166534" if ok else "#991b1b", weight="bold")
     a2.barh(ys, [d or 0 for d in ad], color=["#dc2626" if d > 0 else "#16a34a" for d in ad], ec="#fff", height=0.64)
     a2.set_xlim(1, max(max(ad), 1e3) * 18.0)
     for y, r, d in zip(ys, rd, ad):
-        a2.text(1.5 if d == 0 else d * 1.25, y, "0 (EXACT)" if d == 0 else f"{'-' if r < 0 else '+'}{int(d):,} drift", va="center", fontsize=7.7, color="#166534" if d == 0 else "#991b1b", weight="bold")
-    fig.subplots_adjust(top=0.85, bottom=0.13, wspace=0.07)
-    save_fig(fig, "chart_07_integrity_vs_throughput.png", "Suite D Integrity vs Throughput (LWW vs delta_apply & Raft)", "Async LWW masks silent loss; delta_apply, streaming, logical & Raft keep 0 drift")
+        a2.text(1.5 if d == 0 else d * 1.25, y, "0 (EXACT)" if d == 0 else f"{'-' if r < 0 else '+'}{int(d):,} drift", va="center", fontsize=7.4, color="#166534" if d == 0 else "#991b1b", weight="bold")
+    fig.subplots_adjust(top=0.85, bottom=0.11, wspace=0.07)
+    save_fig(fig, "chart_07_integrity_vs_throughput.png", "Suite D Integrity vs Throughput (LWW vs delta_apply, YT & Raft)", "Async LWW masks silent loss; delta_apply, YT Cluster, streaming, logical & Raft keep 0 drift")
 
 
 def main() -> None:
     idx, su = load_data()
     topos = get_topos(idx)
     e1 = "E1_sysbench_oltp_rw" if "E1_sysbench_oltp_rw" in su else ("E_sysbench_oltp_rw" if "E_sysbench_oltp_rw" in su else "")
-    pick = lambda q: [s for s in q if s and s in su]
-    s_core = pick(("A_single_rw", "B1_disjoint_rw", "C_multinode_ro", e1, "H_append_only_insert"))
-    s_lat = pick(("A_single_rw", "B1_disjoint_rw", "C_multinode_ro", e1, "F_wan_netem_25ms"))
-    s_sb = pick((e1, "E2_sysbench_oltp_ro", "E3_sysbench_oltp_wo", "E4_sysbench_point_select"))
+    pk = lambda q: [s for s in q if s and s in su]
+    sc = pk(("A_single_rw", "B1_disjoint_rw", "C_multinode_ro", e1, "H_append_only_insert"))
+    sl = pk(("A_single_rw", "B1_disjoint_rw", "C_multinode_ro", e1, "F_wan_netem_25ms"))
+    sb = pk((e1, "E2_sysbench_oltp_ro", "E3_sysbench_oltp_wo", "E4_sysbench_point_select"))
     specs = [
-        ("chart_01_tps_log_all_suites.png", (1, 1), (15.0, 6.4), {"top": 0.83, "bottom": 0.20}, "PostgreSQL 10-Topology Throughput (Log10)", "Core pgbench, Sysbench & Append-Only TPS",
-         [(s_core, "tps", "TPS (Log10)", "Core Workloads (All 10 Topologies)")]),
-        ("chart_02_latency_log_all_suites.png", (2, 1), (15.0, 10.0), {"top": 0.84, "bottom": 0.10, "hspace": 0.54}, "Average and p95 Latency (Log10)", "Log10 separates sub-ms reads from WAN consensus",
-         [(s_lat, "lat_avg_ms", "Avg ms (Log10)", "Average Latency (ms)"), (s_lat, "lat_p95_ms", "p95 ms (Log10)", "p95 Latency (ms)")]),
-        ("chart_05_sysbench_profile_log.png", (1, 2), (15.6, 6.2), {"top": 0.82, "bottom": 0.23, "wspace": 0.20}, "Sysbench OLTP Profile E1-E4 (Log10)", "OLTP RW/RO/WO & Point-Select (10 topologies)",
-         [(s_sb, "tps", "Sysbench TPS (Log10)", "Sysbench TPS (E1-E4)"), (s_sb, "lat_p95_ms", "p95 ms (Log10)", "Sysbench p95 (E1-E4)")]),
-        ("chart_06_streaming_vs_logical_vs_mm.png", (1, 2), (15.4, 6.2), {"top": 0.82, "bottom": 0.23, "wspace": 0.20}, "Streaming vs Logical vs Multi-Master & DistSQL (Log10)", "10-topology tier comparison from PG17 to Raft",
-         [(pick(("A_single_rw", "C_multinode_ro", "F_wan_netem_25ms")), "tps", "TPS (Log10)", "TPS by Tier (LAN / RO / WAN 25ms)"),
-          (pick(("A_single_rw", "F_wan_netem_25ms")), "lat_p95_ms", "p95 ms (Log10)", "p95 Latency (LAN vs WAN 25ms)")]),
+        ("chart_01_tps_log_all_suites.png", (1, 1), (19.8, 6.8), {"top": 0.83, "bottom": 0.22}, "PostgreSQL 17-Topology Throughput (Log10)", "Core pgbench, Sysbench & Append-Only TPS (PG 17/18 + YT Cluster)", [(sc, "tps", "TPS (Log10)", "Core Workloads (All 17 Topologies)")]),
+        ("chart_02_latency_log_all_suites.png", (2, 1), (19.6, 10.6), {"top": 0.84, "bottom": 0.11, "hspace": 0.56}, "Average and p95 Latency Across 17 Topologies (Log10)", "Log10 separates sub-ms reads from sync/2PC/Raft WAN consensus", [(sl, "lat_avg_ms", "Avg ms (Log10)", "Average Latency (ms)"), (sl, "lat_p95_ms", "p95 ms (Log10)", "p95 Latency (ms)")]),
+        ("chart_05_sysbench_profile_log.png", (1, 2), (21.0, 6.6), {"top": 0.82, "bottom": 0.24, "wspace": 0.16}, "Sysbench OLTP Profile E1-E4 (Log10)", "OLTP RW/RO/WO & Point-Select (17 topologies)", [(sb, "tps", "Sysbench TPS (Log10)", "Sysbench TPS (E1-E4)"), (sb, "lat_p95_ms", "p95 ms (Log10)", "Sysbench p95 (E1-E4)")]),
+        ("chart_06_streaming_vs_logical_vs_mm.png", (1, 2), (21.0, 6.6), {"top": 0.82, "bottom": 0.24, "wspace": 0.16}, "Streaming vs Logical vs Multi-Master & YT Cluster (Log10)", "17-topology comparison across PG 17, PG 18.6, YT Cluster 1.21.3 & Raft", [(pk(("A_single_rw", "C_multinode_ro", "F_wan_netem_25ms")), "tps", "TPS (Log10)", "TPS by Tier (LAN / RO / WAN 25ms)"), (pk(("A_single_rw", "F_wan_netem_25ms")), "lat_p95_ms", "p95 ms (Log10)", "p95 Latency (LAN vs WAN 25ms)")]),
     ]
     for fn, (nr, nc), fsz, adj, ti, sub, panels in specs:
         fig, axes = plt.subplots(nr, nc, figsize=fsz)
-        for ax, (sl, fld, yl, pti) in zip([axes] if nr * nc == 1 else list(axes.flat), panels):
-            draw_bars(ax, topos, sl, idx, fld, yl, pti)
+        for ax, (p, fld, yl, pti) in zip([axes] if nr * nc == 1 else list(axes.flat), panels):
+            draw_bars(ax, topos, p, idx, fld, yl, pti)
         fig.subplots_adjust(**adj)
         save_fig(fig, fn, ti, sub)
     cm = {int(m.group(1)): s for s in su if (m := re.match(r"^G_conc_c?(\d+)$", s))}
     cs = sorted(cm)
     xl, seq = ([f"c={c}" for c in cs], [cm[c] for c in cs]) if cm else (["c=8", "c=16"], ["A_single_rw", "C_multinode_ro"])
-    draw_sweep(idx, xl, seq, "Clients", "chart_03_concurrency_sweep_log.png", "Concurrency Scalability (c=1..32, Log10)", "pgbench concurrency scaling (10 topologies)", bool(cm))
+    draw_sweep(idx, xl, seq, "Clients", "chart_03_concurrency_sweep_log.png", "Concurrency Scalability (c=1..32, Log10)", "pgbench concurrency scaling (17 topologies)", bool(cm))
     rm = {0: "A_single_rw", **{int(m.group(1)): s for s in su if (m := re.match(r"^F_wan_netem_(\d+)ms$", s))}}
     rtts = sorted(rm)
-    draw_sweep(idx, [f"{r} ms" for r in rtts], [rm[r] for r in rtts], "Delay (tc netem)", "chart_04_wan_netem_sweep_log.png", "WAN Latency Sensitivity (0-50ms, Log10)", "Sync/2PC/Raft collapse; async stays flat", True)
+    draw_sweep(idx, [f"{r} ms" for r in rtts], [rm[r] for r in rtts], "Delay (tc netem)", "chart_04_wan_netem_sweep_log.png", "WAN Latency Sensitivity (0-50ms, Log10)", "Sync/2PC/Raft collapse; async stays flat (17 topologies)", True)
     chart_07(idx)
     print(f"Rendered 7 charts ({len(topos)} topologies x {len(su)} suites).")
 
