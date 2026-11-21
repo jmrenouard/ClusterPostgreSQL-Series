@@ -25,10 +25,11 @@ check-math: ## Validate Markdown LaTeX math rules
 check-security: ## Validate governance and security rules
 	python3 -m unittest tests/test_governance_and_security.py -v
 
-charts: ## Regenerate all 11 Log10 PNG charts in assets/charts/
+charts: ## Regenerate all 13 Log10 PNG charts in assets/charts/
 	python3 scripts/generate_charts.py
 	python3 scripts/generate_charts_v3.py
 	python3 scripts/generate_charts_v4.py
+	python3 scripts/generate_charts_v5.py
 
 popularity: ## Collect live GitHub ecosystem popularity telemetry into results/project_popularity.csv
 	python3 scripts/collect_popularity.py
