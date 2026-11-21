@@ -171,7 +171,7 @@
     series.forEach((s) => {
       const valid = s.points.map((pt, i) => (pt && pt.v > 0 ? { i, pt, x: xOf(i), y: ax.yOf(pt.v) } : null)).filter(Boolean);
       if (!valid.length) return;
-      if (valid.length >= 2) svg.appendChild(el("path", { d: valid.map((p, idx) => `${idx ? "L" : "M"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" "), fill: "none", stroke: s.color, "stroke-width": 2.3, "stroke-linejoin": "round" }));
+      if (valid.length >= 2) svg.appendChild(el("path", { d: valid.map((p, idx) => `${idx ? "L" : "M"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" "), fill: "none", stroke: s.color, "stroke-width": s.dash ? 1.8 : 2.3, "stroke-dasharray": s.dash ? "5 4" : "none", "stroke-linejoin": "round", opacity: s.dash ? 0.72 : 1 }));
       valid.forEach((p) => {
         const dot = el("circle", { cx: p.x, cy: p.y, r: 4.2, fill: s.color, stroke: "#fff", "stroke-width": 1.3 });
         attachHover(dot, p.pt.tip);
@@ -204,6 +204,7 @@
     ["citus", "Citus 14.2", "#7c3aed"],
     ["yugabyte", "YugabyteDB Raft", "#db2777"],
     ["cockroach", "CockroachDB Raft", "#dc2626"],
+    ["cockroach-rc", "CockroachDB (RC)", "#991b1b"],
     ["yt-cluster", "YT Cluster (cc=half)", "#4f46e5"],
     ["yt-cluster-async", "YT Cluster (async)", "#8b5cf6"],
   ];
