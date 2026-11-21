@@ -18,6 +18,20 @@ yt-cluster,G_conc_c8,2,8,8,19.16,N/A,407.418,471.749,1708.56,155,0,87,PASS,0,cc=
 yt-cluster,G_conc_c16,2,16,8,17.32,N/A,564.52,780.757,1940.483,142,0,91,PASS,0,cc=half sc=NO_SC c=16 j=4
 yt-cluster,G_conc_c32,2,32,8,4.6,N/A,3542.782,3373.743,8154.425,38,0,29,PASS,0,cc=half sc=NO_SC c=32 j=4
 yt-cluster-async,A_single_rw,2,8,15,41.45,N/A,185.733,295.8,758.357,629,0,381,PASS_CONVERGED,0,cc=nodes>=0 sc=NO_SC d=-1631 acc=-1631/-1631/-1631 h=629/629/629
+yt-cluster-async,B1_disjoint_rw,2,8,15,88.19,N/A,90.398,95.552,252.257,1326,0,494,PASS_CONVERGED,0,cc=nodes>=0 sc=NO_SC d=-78630 acc=-78630/-78630/-78630 h=1326/1326/1326
 yt-cluster-async,B2_overlap_rw,2,8,15,55.03,N/A,130.887,228.452,538.021,827,4,2173,PASS_CONVERGED,0,cc=nodes>=0 sc=NO_SC r40001=86 r55409=2087 d=-44471 acc=-44471/-44471/-44471 h=827/827/827
+yt-cluster-async,C_multinode_ro,2,16,15,40774.49,N/A,0.367,0.393,0.682,610966,0,0,PASS,0,cc=nodes>=0 sc=NO_SC select_only 16c
 yt-cluster-async,D_hot_conflict,2,8,12,163.01,N/A,48.819,53.651,152.9,1959,0,2111,PASS_CONVERGED,0,cc=nodes>=0 sc=NO_SC r40001=0 r55409=2111 d=100723 acc=100723/100723/100723 h=1959/1959/1959
+yt-cluster-async,E_sysbench_oltp_rw,2,8,15,124.05,2519.71,64.46,0,108.68,1865,34,0,PASS,0,cc=nodes>=0 sc=NO_SC oltp_read_write 4x10k
+yt-cluster-async,E2_sysbench_oltp_ro,2,8,12,2083.85,33341.6,3.83,0,4.57,25020,0,0,PASS,0,cc=nodes>=0 sc=NO_SC oltp_read_only 4x10k
+yt-cluster-async,E3_sysbench_oltp_wo,2,8,12,133.55,808.85,59.77,0,81.48,1611,28,0,PASS,0,cc=nodes>=0 sc=NO_SC oltp_write_only 4x10k
+yt-cluster-async,E4_sysbench_point_select,2,16,12,177442.88,177442.88,0.09,0,0.23,2131215,0,0,PASS,0,cc=nodes>=0 sc=NO_SC oltp_point_select 4x10k
+yt-cluster-async,H_append_only_insert,2,8,12,224.93,N/A,35.538,15.107,60.944,2697,0,0,PASS_CONVERGED,0,cc=nodes>=0 sc=NO_SC uuidv7 2n rows=2697/2697/2697
+yt-cluster-async,F_wan_netem_10ms,2,8,12,8.47,N/A,856.927,1090.148,2688.633,103,0,43,PASS_NETEM_10MS,0,cc=nodes>=0 sc=NO_SC netem 10ms wn=yt2 ldr=yt1
 yt-cluster-async,F_wan_netem_25ms,2,8,12,4.78,N/A,1356.434,1910.836,4136.144,59,0,33,PASS_NETEM_25MS,0,cc=nodes>=0 sc=NO_SC netem 25ms
+yt-cluster-async,F_wan_netem_50ms,2,8,12,2.9,N/A,2199.477,2812.496,12893.483,38,0,17,PASS_NETEM_50MS,0,cc=nodes>=0 sc=NO_SC netem 50ms wn=yt2 ldr=yt1
+yt-cluster-async,G_conc_c1,2,1,8,53.94,N/A,18.52,12.426,45.478,432,0,0,PASS,0,cc=nodes>=0 sc=NO_SC c=1 j=1
+yt-cluster-async,G_conc_c4,2,4,8,91.68,N/A,43.489,39.893,117.986,734,0,90,PASS,0,cc=nodes>=0 sc=NO_SC c=4 j=2
+yt-cluster-async,G_conc_c8,2,8,8,87.01,N/A,89.167,230.603,316.332,697,0,457,PASS,0,cc=nodes>=0 sc=NO_SC c=8 j=4
+yt-cluster-async,G_conc_c16,2,16,8,61.45,N/A,143.331,631.441,243.919,497,0,277,PASS,0,cc=nodes>=0 sc=NO_SC c=16 j=4
+yt-cluster-async,G_conc_c32,2,32,8,44.2,N/A,431.504,1124.538,2739.944,359,0,571,PASS,0,cc=nodes>=0 sc=NO_SC c=32 j=4

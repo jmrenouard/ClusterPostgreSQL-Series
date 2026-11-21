@@ -26,7 +26,7 @@ EXTRA_BENCH = {
 }
 EXTRA_SPECS = (
     ("pg18_native_clustering", "benchmark_pg18.csv", "functional_limits_pg18.csv", 87, 5, "t11_bulk_10k_throughput_and_catchup", {"A_single_rw", "C_multinode_ro", "E_sysbench_oltp_rw", "E3_sysbench_oltp_wo", "H_append_only_insert", "F_wan_netem_25ms"}),
-    ("yt_cluster_lite", "benchmark_yt_cluster.csv", "functional_limits_yt_cluster.csv", 22, 1, "t11_bulk_10k", {"A_single_rw", "B2_overlap_rw", "C_multinode_ro", "D_hot_conflict", "E_sysbench_oltp_rw", "E4_sysbench_point_select", "H_append_only_insert", "F_wan_netem_25ms"}),
+    ("yt_cluster_lite", "benchmark_yt_cluster.csv", "functional_limits_yt_cluster.csv", 36, 1, "t11_bulk_10k", {"A_single_rw", "B2_overlap_rw", "C_multinode_ro", "D_hot_conflict", "E_sysbench_oltp_rw", "E4_sysbench_point_select", "H_append_only_insert", "F_wan_netem_25ms"}),
 )
 SLUGS = tuple(SPEC) + tuple(EXTRA_BENCH)
 BENCH = {k: tuple(v.split(",")) for k, v in SPEC.items() if v}
