@@ -6,7 +6,7 @@
 
 **Author:** Jean-Marie Renouard (`jmrenouard`) | **Supported by:** [LightPath](https://www.lightpath.fr) | **License:** [MIT](LICENSE) | **Version française :** [README.fr.md](README.fr.md)
 
-A rigorous engineering study, 36-criterion comparative matrix, reproducible Docker Compose labs (powered by [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.4.0`, `13` Compose stacks), 18-test empirical failure-mode catalog (`L1-L8` + `T11-T18`) plus PostgreSQL 18.6 AIO/`uuidv7()`/conflict and YT Cluster `T_REVERT` probes, **296 standardized `pgbench` / `sysbench` / `tc netem` benchmark rows** (`187` V2 + `87` PostgreSQL 18.6 + `22` YT Cluster 1.21.3) across **17 live PostgreSQL topologies** (`16` solutions / `19` architecture sheets), **22 GitHub ecosystem popularity telemetry rows** (`19` public repos + `3` closed/managed), **10 `log10` charts**, and an offline-capable [**Interactive HTML Benchmark Explorer (`dashboard/index.html`)**](dashboard/index.html).
+A rigorous engineering study, 36-criterion comparative matrix, reproducible Docker Compose labs (powered by [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.4.1`, `13` Compose stacks), 18-test empirical failure-mode catalog (`L1-L8` + `T11-T18`) plus PostgreSQL 18.6 AIO/`uuidv7()`/conflict and YT Cluster `T_REVERT` probes, **310 raw `pgbench` / `sysbench` / `tc netem` benchmark rows** (**301 deduplicated dashboard rows**: `187` V2 + `87` PostgreSQL 18.6 + `36` YT Cluster 1.21.3) across **17 live PostgreSQL topologies** (`16` solutions / `19` architecture sheets), **22 GitHub ecosystem popularity telemetry rows** (`19` public repos + `3` closed/managed), **11 `log10` charts**, and an offline-capable [**Interactive HTML Benchmark Explorer (`dashboard/index.html`)**](dashboard/index.html).
 
 ---
 
@@ -50,15 +50,15 @@ Measured sequentially in the same isolated Docker harness on `PostgreSQL 18.6 (D
 | **`pg18-logical`** | `314.26` | `475.08` (`0`) | `2,998.37` (`0`) | `1,027.84` (`79`) | **`3,518.49`** | **`844.10`** | `23505`; `42601`; `55000` (`substream=p`) |
 | **`pg18-birep`** (`uuidv7()`) | `514.28` | `792.45` (**`-338`**) | `1,774.11` (**`-83,252`**) | `1,055.55` (`76`) | **`2,066.70`** (`3.30x`) | **`747.42`** | `23503`; `23505`; `42601`; `55000`; 7 `confl_*` |
 | **`yt-cluster`** (`#18` `cc=half`) | `20.63` | `10.69` (`0`) | `67.76` (`0`) | `28.48` (`12`) | `110.53` | `2.25` | `0A000`; `40001`; `55409`; `57P03` (`T_REVERT` OK) |
-| **`yt-cluster-async`** (`#18` `nodes>=0`) | `41.45` | `55.03` (`0`) | `163.01` (`0`) | - | - | `4.78` | `40001`; `55409` (`2.0x-5.1x` vs `half`, `0` drift) |
+| **`yt-cluster-async`** (`#18` `nodes>=0`) | `41.45` | `55.03` (`0`) | `163.01` (`0`) | `124.05` (`34`) | `224.93` | `4.78` | `40001`; `55000`; `55409` (`2.0x-5.1x` vs `half`, `0` drift) |
 
-*Note: `yt-cluster` / `yt-cluster-async` ran on 3-node `dbinvent/yt:1.21.3` (PG 18.7 + `yt_cluster 1.21` / `ytserv`, `results/benchmark_yt_cluster.csv`, `22` rows; see [Solution #18](docs/en/solutions/yt_cluster_lite.md)).*
+*Note: `yt-cluster` / `yt-cluster-async` ran on 3-node `dbinvent/yt:1.21.3` (PG 18.7 + `yt_cluster 1.21` / `ytserv`, `results/benchmark_yt_cluster.csv`, `36` rows across all 18 suites; see [Solution #18](docs/en/solutions/yt_cluster_lite.md) and [Chapter 06 §7](docs/en/06_empirical_test_and_benchmark_results.md)).*
 
 ---
 
 ## Interactive Benchmark Explorer & Logarithmic Charts (`log10`)
 
-Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser (zero CDN, offline-ready, EN/FR switcher, 17-topology PG 17, PG 18.6 & YT Cluster presets, default `log10` / linear toggle, `L1-L8` / `T11-T18` / `PG 18.6` / `YT` matrix tabs, Ecosystem Popularity tab with 22 entries, and CSV export) or browse the full **10-chart gallery** across [Chapter 09](docs/en/09_benchmarks_methodology_and_charts.md) (`chart_01`-`07`), [Chapter 11](docs/en/11_ecosystem_popularity_and_vitality.md) (`chart_08`-`09`), and [Chapter 12](docs/en/12_postgresql_18_clustering_and_benchmarks.md) (`chart_10`):
+Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser (zero CDN, offline-ready, EN/FR switcher, 17-topology PG 17, PG 18.6 & YT Cluster presets incl. `YT vs Multi-Master`, default `log10` / linear toggle, `L1-L8` / `T11-T18` / `PG 18.6` / `YT` matrix tabs, Ecosystem Popularity tab with 22 entries, and CSV export) or browse the full **11-chart gallery** and Master Traceability Matrix across [Chapter 09](docs/en/09_benchmarks_methodology_and_charts.md) (`chart_01`-`07`), [Chapter 11](docs/en/11_ecosystem_popularity_and_vitality.md) (`chart_08`-`09`), [Chapter 12](docs/en/12_postgresql_18_clustering_and_benchmarks.md) (`chart_10`), and [Chapter 06 §7](docs/en/06_empirical_test_and_benchmark_results.md) (`chart_11`):
 
 ![Log10 Throughput All Suites](assets/charts/chart_01_tps_log_all_suites.png)
 ![Log10 Latency All Suites](assets/charts/chart_02_latency_log_all_suites.png)
@@ -66,6 +66,7 @@ Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser 
 ![Ecosystem Popularity Stars and Forks Log10](assets/charts/chart_08_popularity_stars_forks_log.png)
 ![Ecosystem Commits and Maintenance Vitality Log10](assets/charts/chart_09_popularity_commits_activity_log.png)
 ![PostgreSQL 18.6 vs PostgreSQL 17.11 Head-to-Head Log10](assets/charts/chart_10_pg18_vs_pg17_log.png)
+![YT Cluster vs Active-Active Multi-Master and Raft Log10](assets/charts/chart_11_yt_cluster_vs_multimaster_log.png)
 
 ---
 
@@ -141,14 +142,14 @@ The operational PoC topologies, extended test runners (`T11–T18`), and V2 benc
 ### Common Commands
 
 ```bash
-# Initialize the multi-db-docker-env Git submodule (v2.4.0, 13 Compose stacks)
+# Initialize the multi-db-docker-env Git submodule (v2.4.1, 13 Compose stacks)
 make init-env
 make help
 
-# Run unit tests (security, math, 10 charts, 17-topology dashboard) and Compose/Bash lint
+# Run unit tests (security, math, 11 charts, 17-topology dashboard) and Compose/Bash lint
 make test && make lint
 
-# Run topology lifecycle, benchmarks (V1/V2 + PG 18.6), popularity telemetry, charts, and dashboard
+# Run topology lifecycle, benchmarks (V1/V2 + PG 18.6 + YT), popularity telemetry, charts, and dashboard
 cp .env.example .env
 make up-pgedge && make test-pgedge && make down-pgedge
 make bench-all && make bench-pg18 && make popularity && make charts && make dashboard
