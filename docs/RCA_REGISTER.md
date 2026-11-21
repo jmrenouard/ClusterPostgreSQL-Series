@@ -289,6 +289,11 @@
 - **Assumption**: V5 tuned runs (`results/benchmark_optimized.csv`, `318` rows) compare `PG_SCALE=20` + `sysbench 4x25k` + `-M prepared` + `5s` warm-up + HAProxy/RC against `PG_SCALE=2` + `4x10k` + simple protocol + `0s` warm-up baselines inside a single `15 GiB`-capped WSL2 Docker host (`2048m`/node Citus, `3072m`/node Yugabyte & CockroachDB `v25.4`), and capture `sysbench` Lua-ignored transient aborts in `retries_40001` while reporting `tx_failed=0`.
 - **Impact & Removal Condition**: Ratios (`G_opt`, `R_p95`) measure combined architectural tuning + `10x`/`2.5x` dataset scaling rather than single-variable isolation, and `sysbench` retry churn remains visible via `retries_40001`; removable via multi-host NVMe/cloud runs (`IDEA-003`) at fixed scale.
 
+### APP-011 - Compact PACELC Catalog & Live Empirical Cross-Join
+- **Date / Action**: `2026-11-22` (`ACT-185`)
+- **Assumption**: `dashboard/data_pacelc.js` stores compact `cols`/`rows`, `sheet_prefix` + `sheet_slug`, and bilingual caveat keys without duplicating raw `LP_BENCH_*` / `LP_MATRIX_*` data.
+- **Impact & Removal Condition**: Keeps files `< 10 KB` and PR diffs `< 15 KB` while ensuring live CSV parity.
+
 ## 4. Unimplemented Ideas & Future Roadmap (`IDEA-XXX`)
 
 ### IDEA-001 - Automated Cross-Topology `pgbench` & `sysbench` Matrix
