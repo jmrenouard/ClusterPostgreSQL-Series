@@ -86,42 +86,74 @@ On a linear axis scaled to `55,614` or `177,443 TPS`, a `57.00 TPS` sync WAN bar
 
 ---
 
-## 5. Interactive Dashboard & Seven Logarithmic Charts
+## 5. Interactive Dashboard, 11 Logarithmic Charts & Master Traceability Matrix
 
-Explore all 10 topologies and 187 rows interactively—with **default `log10` / linear toggle**, multi-solution selector pills, EN/FR UI, drift badges, 18-test Functional/Limits Matrix (`L1–L8` + `T11–T18`), and filtered CSV export—in the offline-capable [**Interactive Benchmark Explorer (`dashboard/index.html`)**](../../dashboard/index.html).
+Explore all **17 live topologies** and **301 deduplicated dashboard rows** (**310 raw CSV rows**; 9 overlapping `F_wan_netem_25ms` rows between Summary and WAN sweep) interactively—with **default `log10` / linear toggle**, `YT vs Multi-Master` and PG 18 vs PG 17 presets, EN/FR UI, drift badges, Functional/Limits matrices (`L1–L8`, `T11–T18`, `PG 18.6`, `YT`), 22-entry Ecosystem Popularity tab, and CSV export—in [**Interactive Benchmark Explorer (`dashboard/index.html`)**](../../dashboard/index.html).
+
+### 5.1 Master Benchmark-to-Chart Traceability Matrix
+
+| Dataset / Runner | Raw CSV (`results/`) | Workloads / Suites | Topologies Covered | Rows |
+| :--- | :--- | :--- | :--- | :---: |
+| **`bench_pg_v2_runner.sh`** (`v2.2.0`) | `benchmark_summary.csv` | `A`, `B1`, `B2`, `C`, `D`, `E`, `F_25ms` | `10` PG 17 & DistSQL + `pgedge-delta-apply` (`D`) | `70` |
+| **`bench_pg_v2_runner.sh`** (`v2.2.0`) | `benchmark_extended_workloads.csv` | `E2`, `E3`, `E4`, `H` | `10` PG 17 & DistSQL | `40` |
+| **`bench_pg_v2_runner.sh`** (`v2.2.0`) | `benchmark_wan_sweep.csv` | `F_wan_netem_10ms/25ms/50ms` | `9` replicated PG 17 & DistSQL | `27` |
+| **`bench_pg_v2_runner.sh`** (`v2.2.0`) | `benchmark_concurrency_sweep.csv` | `G_conc_c1/c4/c8/c16/c32` | `10` PG 17 & DistSQL | `50` |
+| **`bench_pg18_runner.sh`** (`v2.3.0`) | `benchmark_pg18.csv` | All `18` (`15` on `pg18-standalone`, no WAN) | `5` PG 18.6 native (`worker` AIO, `uuidv7()`) | `87` |
+| **`bench_yt_runner.sh`** (`v2.4.1`) | `benchmark_yt_cluster.csv` | All `18` (`A`–`H`, `F_wan*`, `G_conc*`) | `yt-cluster` (`cc=half`) & `yt-cluster-async` (`nodes>=0`) | `36` |
+| **`collect_popularity.py`** + Tests | `project_popularity.csv` + `functional_limits_*.csv` | GitHub API metrics; `L1–L8` / `T11–T18` probes | `22` solutions (`19` GitHub repos); `16` matrix rows | `22` / `26` |
+
+| Artifact (`assets/charts/` & `dashboard/`) | Input CSV(s) | Suites Visualized | Generator Script | Chapter Link |
+| :--- | :--- | :--- | :--- | :--- |
+| **`chart_01_tps_log_all_suites.png`** | All `6` benchmark CSVs (`17` topos) | `A`, `B1`, `C`, `E1`, `H` | `scripts/generate_charts.py` | [Ch. 06](06_empirical_test_and_benchmark_results.md) |
+| **`chart_02_latency_log_all_suites.png`** | All `6` benchmark CSVs (`17` topos) | `A`, `B1`, `C`, `E1`, `F_25ms` (`avg`/`p95`) | `scripts/generate_charts.py` | [Ch. 06](06_empirical_test_and_benchmark_results.md) |
+| **`chart_03_concurrency_sweep_log.png`** | `summary`+`conc`+`pg18`+`yt_cluster` | `G_conc_c1`, `c4`, `c8`, `c16`, `c32` | `scripts/generate_charts.py` | [Ch. 09 §5](#chart-03--concurrency-scalability-sweep-g_conc_c1c32-log10) |
+| **`chart_04_wan_netem_sweep_log.png`** | `summary`+`wan`+`pg18`+`yt_cluster` | `0ms` (`A`), `10ms`, `25ms`, `50ms` | `scripts/generate_charts.py` | [Ch. 06](06_empirical_test_and_benchmark_results.md) |
+| **`chart_05_sysbench_profile_log.png`** | `summary`+`ext`+`pg18`+`yt_cluster` | `E_rw`, `E2_ro`, `E3_wo`, `E4_pt` | `scripts/generate_charts.py` | [Ch. 09 §5](#chart-05--sysbench-workload-profile-e1e4-log10) |
+| **`chart_06_streaming_vs_logical_vs_mm.png`** | All `6` benchmark CSVs (`17` topos) | `A`, `C`, `F_wan_netem_25ms` | `scripts/generate_charts.py` | [Ch. 10](10_streaming_vs_logical_vs_multimaster.md) |
+| **`chart_07_integrity_vs_throughput.png`** | `summary`+`pg18`+`yt_cluster` (`18` bars) | `D_hot_conflict` TPS vs drift | `scripts/generate_charts.py` | [Ch. 06](06_empirical_test_and_benchmark_results.md) |
+| **`chart_08_popularity_stars_forks_log.png`** | `project_popularity.csv` (`19` repos) | Stars, forks, commits vs role | `scripts/generate_charts_v3.py` | [Ch. 11](11_ecosystem_popularity_and_vitality.md) |
+| **`chart_09_popularity_commits_activity_log.png`** | `project_popularity.csv` (`19` repos) | 12m commits vs days idle | `scripts/generate_charts_v3.py` | [Ch. 11](11_ecosystem_popularity_and_vitality.md) |
+| **`chart_10_pg18_vs_pg17_log.png`** | `summary`+`ext`+`wan` vs `benchmark_pg18.csv` | `A`, `C`, `E`, `E3`, `H`, `F_25ms` | `scripts/generate_charts_v3.py` | [Ch. 12](12_postgresql_18_clustering_and_benchmarks.md) |
+| **`chart_11_yt_cluster_vs_multimaster_log.png`** | `yt_cluster`+`pg18`+`summary/ext/wan/conc` | `18/18` (`yt-*` vs `pg18-birep`/`pgedge`/`yb`/`crdb`) | `scripts/generate_charts_v4.py` | [Ch. 06 §7](06_empirical_test_and_benchmark_results.md) · [#18](solutions/yt_cluster_lite.md) |
+| **`dashboard/index.html`** (`dashboard/*.js`) | All `6` bench + `4` limit + `popularity` CSVs | Interactive `301` rows / `17` topos + presets | `scripts/build_dashboard.py` | [Ch. 06](06_empirical_test_and_benchmark_results.md) |
 
 ### Chart 01 — Multi-Suite Throughput (`log10` TPS)
 ![Log10 Throughput Across Core Suites](../../assets/charts/chart_01_tps_log_all_suites.png)
-*Compares `A_single_rw`, `B1_disjoint_rw`, `C_multinode_ro`, `E_sysbench_oltp_rw`, and `H_append_only_insert` across all 10 topologies (`42.08` to `55,614.16 TPS`).*
+*Compares `A_single_rw`, `B1_disjoint_rw`, `C_multinode_ro`, `E_sysbench_oltp_rw`, and `H_append_only_insert` across all 17 topologies (`20.63` on `yt-cluster` to `55,614.16 TPS` on `pg17-standalone`).*
 
 ### Chart 02 — Average & Tail `p95` Latency (`log10` ms)
 ![Log10 Average and p95 Latency](../../assets/charts/chart_02_latency_log_all_suites.png)
-*Reveals the `4+`-decade latency spread from `0.257 ms` native reads up to `625.04 ms` (`cockroach` Suite A `p95`) and `5,474.71 ms` (`yugabyte` `50 ms` WAN `p95`).*
+*Reveals the `4+`-decade latency spread from `0.257 ms` (`pg17-standalone` `-S`) and `0.305 ms` (`yt-cluster` `C`) up to `5,557.31 ms` (`yt-cluster` `25 ms` WAN `p95`) and `4,136.14 ms` (`yt-cluster-async`).*
 
 ### Chart 03 — Concurrency Scalability Sweep (`G_conc_c1..c32`, `log10`)
 ![Log10 Concurrency Scalability Sweep](../../assets/charts/chart_03_concurrency_sweep_log.png)
-*Real 5-point curves (`c = 1, 4, 8, 16, 32`): `pg17-standalone` scales to `801.27 TPS`; `pg17-sync` plateaus at `425 TPS`; `cockroach` peaks at `c = 4` (`74.11 TPS`) then drops to `40.25 TPS` (`88` retries, `p95 = 3,400 ms`) at `c = 32`.*
+*Real 5-point curves (`c = 1, 4, 8, 16, 32`) across 17 topologies: `pg17-standalone` (`801.27`) and `pg18-standalone` (`814.33`) scale up; `cockroach` peaks at `c = 4` (`74.11`); `yt-cluster-async` peaks at `c = 4` (`91.68 -> 44.20`), outpacing `yt-cluster` `cc=half` (`28.07 -> 4.60 TPS`).*
 
 ### Chart 04 — WAN RTT Sensitivity Sweep (`tc netem 0/10/25/50 ms`, `log10`)
 ![Log10 WAN Latency Sensitivity Sweep](../../assets/charts/chart_04_wan_netem_sweep_log.png)
-*Captures the PACELC split across `0/10/25/50 ms`: `pg17-async` (`587->600->619 TPS`) and `pgedge` (`645->647->687`) stay flat while `pg17-sync` (`122->57->26`), `citus` (`44->22->9`), `cockroach` (`19->10->4.5`), and `yugabyte` (`15->5.8->3.1`) drop exponentially.*
+*Captures the PACELC split across `0/10/25/50 ms`: async PG stacks (`587–783 TPS`) stay flat while `pg17-sync` (`25.79`), `pg18-sync` (`25.60`), `citus` (`8.84`), `cockroach` (`4.53`), `yugabyte` (`3.06`), `yt-cluster-async` (`2.90`), and `yt-cluster` (`1.41 TPS`) decay cleanly.*
 
 ### Chart 05 — `sysbench` Workload Profile (`E1–E4`, `log10`)
 ![Log10 Sysbench Workload Profile](../../assets/charts/chart_05_sysbench_profile_log.png)
-*Contrasts all four Lua profiles (`E1–E4`): native PG stacks hit `1,659–1,806 TPS` (`E2` RO) and `124k–148k TPS` (`E4` point-select) vs distributed `180–522 TPS` (`E2`) and `11.6k–19.8k TPS` (`E4`).*
+*Contrasts all 17 topologies on `E1–E4`: native PG (`1,659–2,053` `E2`, `122k–148k` `E4`) vs distributed SQL vs `yt-cluster*` (`26.43`/`133.55` `E3` and `165.5k`/`177.4k TPS` `E4`).*
 
 ### Chart 06 — Streaming vs Native Logical vs Multi-Master (`log10`)
 ![Log10 Streaming vs Logical vs Multi-Master](../../assets/charts/chart_06_streaming_vs_logical_vs_mm.png)
-*Directly contrasts all 10 topologies across Chapter 10's five replication tiers (`pg17-async-streaming` `610.15` vs `pg17-logical` `532.38` vs `pg17-sync` `409.48` vs active-active meshes and Raft).*
+*Contrasts all 17 topologies across Chapter 10's replication tiers from PG 17 and PG 18.6 (`pg18-logical` `844.10`, `pg18-birep` `747.42` WAN `25ms`) through YT Cluster 1.21.3 and Raft DistSQL.*
 
 ### Chart 07 — Data Integrity vs Throughput (Suite D Hot-Row Contention)
 ![Suite D Integrity vs Throughput](../../assets/charts/chart_07_integrity_vs_throughput.png)
-*Exposes silent Lost Update drift (`-531,620` `bucardo`, `-278,698` `pgedge` LWW, `-71,063` `pg-birep`) versus **`0` drift** on `pgedge-delta-apply` (`1,837.64 TPS`), `pg17-async`/`logical` (`2,081`/`2,387`), `citus`, `yugabyte`, and `cockroach`.*
+*Exposes silent Lost Update drift (`-531,620` `bucardo`, `-278,698` `pgedge` LWW, `-71,063` `pg-birep`, `-83,252` `pg18-birep`) versus **`0` drift** on `pgedge-delta-apply` (`1,837.64 TPS`), `yt-cluster` (`67.76`), `yt-cluster-async` (`163.01`), streaming, logical, Citus, YugabyteDB, and CockroachDB.*
 
 ---
 
-## 6. V3 Extensions: Ecosystem Telemetry (`chart_08`, `chart_09`) & PostgreSQL 18.6 (`chart_10`)
+## 6. V3 & V4 Extensions: Ecosystem Telemetry (`chart_08`, `chart_09`), PG 18.6 (`chart_10`) & YT Cluster (`chart_11`)
 
-The V3 benchmark and telemetry expansion adds two modular datasets under the same `log10` visualization standard:
-- **Ecosystem Popularity & Vitality ([Ch. 11](11_ecosystem_popularity_and_vitality.md)):** Live GitHub REST/GraphQL telemetry (`21` rows in [`results/project_popularity.csv`](../../results/project_popularity.csv), spanning `3+` decades) rendered in [`chart_08_popularity_stars_forks_log.png`](../../assets/charts/chart_08_popularity_stars_forks_log.png) and [`chart_09_popularity_commits_activity_log.png`](../../assets/charts/chart_09_popularity_commits_activity_log.png).
-- **PostgreSQL 18.6 Generational Benchmarks ([Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)):** **87 sequential rows** across all 5 native PG 18.6 topologies ([`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv)) plus **5 x 26 functional probes** ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv)) using identical `PG_SCALE=2` isolation and `uuidv7()` PKs on `pg18-birep`, compared directly against PG 17.11 in [`chart_10_pg18_vs_pg17_log.png`](../../assets/charts/chart_10_pg18_vs_pg17_log.png) and the interactive [`dashboard/index.html`](../../dashboard/index.html).
+![Ecosystem Popularity Stars and Forks Log10](../../assets/charts/chart_08_popularity_stars_forks_log.png)
+![Ecosystem Commits and Maintenance Vitality Log10](../../assets/charts/chart_09_popularity_commits_activity_log.png)
+![PostgreSQL 18.6 vs PostgreSQL 17.11 Head-to-Head Log10](../../assets/charts/chart_10_pg18_vs_pg17_log.png)
+![YT Cluster vs Active-Active Multi-Master and Raft Log10](../../assets/charts/chart_11_yt_cluster_vs_multimaster_log.png)
+
+- **Ecosystem Vitality (`chart_08`–`09`, [Ch. 11](11_ecosystem_popularity_and_vitality.md)):** Live GitHub telemetry (`21` entries / `19` public repos spanning `3+` decades) separates core `Tier A` platforms (`postgres`, `cockroachdb`, `yugabytedb`, `citus`, `patroni`) from young `Tier C` extensions like `DBinvent/yt-cluster-lite` (`15` stars, `0` forks, `21` commits, `2` contributors).
+- **PG 18.6 Generational Shift (`chart_10`, [Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)):** `87` sequential PG 18.6 rows quantify AIO `worker`, `data_checksums=on`, `substream=p`, and `uuidv7()` (`pg18-birep` `H=2,066.70`, `pg18-logical` `H=3,518.49`, `pg18-sync` `E3=1,184.57 TPS`).
+- **YT Cluster Sync/Async vs Multi-Master (`chart_11`, [Ch. 06 §7](06_empirical_test_and_benchmark_results.md)):** `36` sequential rows (`18` `cc=half` + `18` `cc=nodes>=0`) quantify YT's `2.0x–5.1x` async speedup with `0` drift (`A` `20.63->41.45`, `B2` `10.69->55.03`, `D` `67.76->163.01`, `E3` `26.43->133.55`, `H` `110.53->224.93 TPS`) alongside native `E4` read speed (`177,442.88 TPS`) and `ytserv` WAN RTT decay (`1.41–8.47 TPS`).
