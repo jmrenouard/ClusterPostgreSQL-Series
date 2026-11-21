@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-175 - Expand Charts 01-07 to All 17 PostgreSQL & YT Cluster Topologies (`#431`)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#431` (`feat/issue-431-expand-charts-01-07`)
+- **Request / Changes / Result**: Updated `chart_07` (`xlim(10, ...)`, 18 bars) and 17-topology `specs` in `scripts/generate_charts.py`, regenerated `assets/charts/chart_01..07_*.png` at 180 DPI with zero overlap; `make test` (`21/21` OK) and `make lint` pass.
+
 ### ACT-174 - Extract 18-Topology Chart Metadata & Update Chart Helpers (`#428`)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#428` (`refactor/issue-428-chart-meta-helpers`)
 - **Request / Changes / Result**: Extracted 18-topology palette, 6 CSVs, and suite labels into `scripts/chart_meta.py` (`2,087` B), updated `save_fig`/`draw_bars`/`draw_sweep` in `scripts/generate_charts.py`; verified `py_compile`, `make test` (`21/21` OK), and `make lint`.
