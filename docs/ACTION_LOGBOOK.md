@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-182 - Update `README.md` with YT Cluster 36-Row Matrix, `chart_11`, & `v2.4.1` (`#445`)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#445` (`docs/issue-445-readme-en-yt`)
+- **Request / Changes / Result**: Updated `README.md` with 310/301 row totals, `yt-cluster-async` E/H metrics, `chart_11` embed, `v2.4.1`, and Ch. 06/09 links; `make test` (`21/21` OK) and `make lint` pass.
+
 ### ACT-181 - Add Ch. 09 FR Traceability Matrix & Charts 08-11 (`#443`)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#443` (`docs/issue-443-ch09-fr-matrix`)
 - **Request / Changes / Result**: Added Master Traceability Matrix Tables A/B and `chart_08..11` embeds to `docs/fr/09_methodologie_benchmarks_et_graphiques.md`; `make test` (`21/21` OK) and `make lint` pass.
