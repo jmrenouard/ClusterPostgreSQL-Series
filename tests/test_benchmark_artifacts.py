@@ -177,8 +177,8 @@ class TestBenchmarkArtifacts(unittest.TestCase):
         self.assertEqual(meta["yt_topology_count"], 2)
         self.assertEqual(meta["total_topology_count"], 17)
         self.assertEqual(meta["pg18_row_count"], 87)
-        self.assertEqual(meta["yt_row_count"], 22)
-        self.assertEqual(meta["total_row_count"], 287)
+        self.assertEqual(meta["yt_row_count"], 36)
+        self.assertEqual(meta["total_row_count"], 301)
         self.assertEqual(meta["popularity_count"], 22)
         self.assertGreaterEqual(meta["row_count"], 170)
 
@@ -190,7 +190,7 @@ class TestBenchmarkArtifacts(unittest.TestCase):
         yt_js = (DASH / "data_bench_yt.js").read_text(encoding="utf-8")
         myt_b = re.search(r"window\.LP_BENCH_ROWS_YT=(\[.*?\]);", yt_js)
         self.assertIsNotNone(myt_b, "Missing LP_BENCH_ROWS_YT in data_bench_yt.js")
-        self.assertEqual(len(json.loads(myt_b.group(1))), 22)
+        self.assertEqual(len(json.loads(myt_b.group(1))), 36)
         myt_m = re.search(r"window\.LP_MATRIX_YT=(\{.*?\});", yt_js)
         self.assertIsNotNone(myt_m, "Missing LP_MATRIX_YT in data_bench_yt.js")
         self.assertEqual(len(json.loads(myt_m.group(1))["rows"]), 1)
@@ -257,9 +257,11 @@ class TestBenchmarkArtifacts(unittest.TestCase):
         self.assertTrue(yt_b.is_file(), "Missing benchmark_yt_cluster.csv")
         with yt_b.open(encoding="utf-8", newline="") as fh:
             yt_rows = list(csv.DictReader(fh))
-        self.assertEqual(len(yt_rows), 22)
+        self.assertEqual(len(yt_rows), 36)
         self.assertTrue(required.issubset(yt_rows[0].keys()))
         self.assertEqual({r["topology"].strip() for r in yt_rows}, YT_TOPOLOGIES)
+        for topo in YT_TOPOLOGIES:
+            self.assertEqual(len({r["suite"].strip() for r in yt_rows if r["topology"].strip() == topo}), 18)
         for r in yt_rows:
             self.assertGreater(float(r["tps"]), 0.0)
 

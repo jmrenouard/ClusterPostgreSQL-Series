@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-172 - Complete 36-Row `yt-cluster-async` Benchmarks & Rebuild Dashboard (`#425`)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#425` (`feat/issue-425-yt-async-36rows`)
+- **Request / Changes / Result**: Expanded `results/benchmark_yt_cluster.csv` to 36 rows (`18` sync + `18` async, monotonic WAN `8.47->4.78->2.90`, `E3=133.55 TPS`, `0` drift), rebuilt `data_bench*.js` (`301` rows), updated `tests/test_benchmark_artifacts.py` (`36`/`301`, `18+18` suites) & `tests/test_solution_sheets.py` (`36`); `make test` (`21/21` OK), `make lint` pass.
+
 ### ACT-171 - Separate `LP_MATRIX_YT` in `dashboard/data_bench_yt.js` (Issue `#423`)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#423` (`chore/issue-423-yt-matrix-sep`)
 - **Request / Changes / Result**: Added blank-line separator between `LP_BENCH_ROWS_YT` and `LP_MATRIX_YT` in `scripts/build_dashboard.py` and rebuilt `dashboard/data_bench_yt.js` on current CSVs; verified `make test` (`21/21` OK), `make lint`, and PR diff `< 14,800` chars.
