@@ -24,6 +24,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-169 - Separate `LP_BENCH_META` Header in `dashboard/data_bench.js` (Issue `#419`)
+- **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#419` (`chore/issue-419-meta-line-sep`)
+- **Request / Changes / Result**: Added blank-line separator between `LP_BENCH_META` and `LP_BENCH_ROWS_1` in `scripts/build_dashboard.py` and rebuilt `dashboard/data_bench.js` so later metadata updates avoid 11 KB context diffs; verified `make test` (`21/21` OK), `make lint`, and PR diff `< 14,800` chars.
+
 ### ACT-168 - Link Official dbinvent/yt Docker Hub and agent.md in README Solutions Catalog (Issue `#417`)
 - **Date**: `2026-11-21` | **Status**: `COMPLETED` | **Issue / Branch**: `#417` (`docs/issue-417-readme-yt-docker-agent-links`)
 - **Request / Changes / Result**: Added official `https://hub.docker.com/r/dbinvent/yt` and `https://dbinvent.com/agent.md` references to row `#18` of the Solutions Catalog in `README.md` and `README.fr.md` (split from `#415` to keep every PR diff strictly `< 15,000` bytes); verified `make test` (`21/21` OK) and `make lint`.
