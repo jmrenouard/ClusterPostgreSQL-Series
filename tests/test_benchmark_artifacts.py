@@ -42,6 +42,8 @@ YT_TOPOLOGIES = {
     "yt-cluster-async",
 }
 
+OPT_TOPOLOGIES = CORE_TOPOLOGIES | PG18_TOPOLOGIES | YT_TOPOLOGIES | {"cockroach-rc"}
+
 BENCH_CSVS = (
     "benchmark_summary.csv",
     "benchmark_extended_workloads.csv",
@@ -66,6 +68,8 @@ EXPECTED_CHARTS = (
     "chart_09_popularity_commits_activity_log.png",
     "chart_10_pg18_vs_pg17_log.png",
     "chart_11_yt_cluster_vs_multimaster_log.png",
+    "chart_12_baseline_vs_optimized_log.png",
+    "chart_13_optimized_all_topologies_log.png",
 )
 
 EXPECTED_DASH_FILES = (
@@ -73,12 +77,18 @@ EXPECTED_DASH_FILES = (
     "styles.css",
     "charts.js",
     "popularity.js",
+    "matrix.js",
+    "opt.js",
     "app.js",
     "data_bench.js",
     "data_bench_2.js",
     "data_bench_3.js",
     "data_bench_pg18.js",
     "data_bench_yt.js",
+    "data_bench_opt_1.js",
+    "data_bench_opt_2.js",
+    "data_bench_opt_3.js",
+    "data_bench_opt_4.js",
     "data_matrix.js",
     "data_matrix_ext.js",
     "data_matrix_pg18.js",
@@ -87,7 +97,7 @@ EXPECTED_DASH_FILES = (
 
 
 class TestBenchmarkArtifacts(unittest.TestCase):
-    """Verify LightPath SVG branding, 10 Log10 PNG charts, offline dashboard, and CSVs."""
+    """Verify LightPath SVG branding, 13 Log10 PNG charts, offline dashboard, and CSVs."""
 
     def test_lightpath_svg_logos(self) -> None:
         """Validate official dark and light LightPath supporter SVG logos exist and parse."""
@@ -119,7 +129,7 @@ class TestBenchmarkArtifacts(unittest.TestCase):
         self.assertIn("Soutenu par", readme_fr)
 
     def test_ten_png_charts_valid(self) -> None:
-        """Verify all 10 generated PNG charts (01-10) exist with valid PNG headers."""
+        """Verify all 13 generated PNG charts (01-13) exist with valid PNG headers."""
         png_magic = b"\x89PNG\r\n\x1a\n"
         for fname in EXPECTED_CHARTS:
             path = CHARTS / fname
@@ -151,18 +161,27 @@ class TestBenchmarkArtifacts(unittest.TestCase):
             'data-tab="popularity"',
             'data-lang="en"',
             'data-lang="fr"',
+            'data-dataset="baseline"',
+            'data-dataset="optimized"',
+            'data-dataset="compare"',
             'id="btn-export"',
             "data_bench.js",
             "data_bench_2.js",
             "data_bench_3.js",
             "data_bench_pg18.js",
             "data_bench_yt.js",
+            "data_bench_opt_1.js",
+            "data_bench_opt_2.js",
+            "data_bench_opt_3.js",
+            "data_bench_opt_4.js",
             "data_matrix.js",
             "data_matrix_ext.js",
             "data_matrix_pg18.js",
             "data_popularity.js",
             "charts.js",
             "popularity.js",
+            "matrix.js",
+            "opt.js",
             "app.js",
         ):
             self.assertIn(token, html, f"Missing expected dashboard token: {token}")
@@ -196,6 +215,23 @@ class TestBenchmarkArtifacts(unittest.TestCase):
         myt_m = re.search(r"window\.LP_MATRIX_YT=(\{.*?\});", yt_js)
         self.assertIsNotNone(myt_m, "Missing LP_MATRIX_YT in data_bench_yt.js")
         self.assertEqual(len(json.loads(myt_m.group(1))["rows"]), 1)
+
+        opt1_js = (DASH / "data_bench_opt_1.js").read_text(encoding="utf-8")
+        m_opt_meta = re.search(r"window\.LP_BENCH_OPT_META=(\{.*?\});", opt1_js)
+        self.assertIsNotNone(m_opt_meta, "Missing LP_BENCH_OPT_META in data_bench_opt_1.js")
+        opt_meta = json.loads(m_opt_meta.group(1))
+        self.assertEqual(opt_meta["row_count"], 318)
+        self.assertEqual(opt_meta["topology_count"], 18)
+        self.assertEqual(opt_meta["pg_scale"], 20)
+        self.assertEqual(opt_meta["suite_count"], 18)
+        opt_rows: list[list[object]] = []
+        for idx in range(1, 5):
+            sh_txt = (DASH / f"data_bench_opt_{idx}.js").read_text(encoding="utf-8")
+            m_sh = re.search(r"window\.LP_BENCH_OPT_ROWS=(?:\(window\.LP_BENCH_OPT_ROWS\|\|\[\]\)\.concat\()?(\[.*\])\)?;", sh_txt)
+            self.assertIsNotNone(m_sh, f"Missing LP_BENCH_OPT_ROWS in data_bench_opt_{idx}.js")
+            opt_rows.extend(json.loads(m_sh.group(1)))
+        self.assertEqual(len(opt_rows), 318)
+        self.assertEqual(len({r[0] for r in opt_rows}), 18)
 
         for fname, var, exp_len in (
             ("data_matrix.js", "LP_MATRIX_CORE", 10),
@@ -283,6 +319,24 @@ class TestBenchmarkArtifacts(unittest.TestCase):
         self.assertTrue(pop_cols.issubset(pop_rows[0].keys()))
         public = [r for r in pop_rows if r["stars"].strip().upper() != "N/A"]
         self.assertEqual(len(public), 19)
+
+        opt_p = RESULTS / "benchmark_optimized.csv"
+        self.assertTrue(opt_p.is_file(), "Missing benchmark_optimized.csv")
+        with opt_p.open(encoding="utf-8", newline="") as fh:
+            opt_rows = list(csv.DictReader(fh))
+        self.assertEqual(len(opt_rows), 318)
+        self.assertTrue((required | {"pg_scale"}).issubset(opt_rows[0].keys()))
+        self.assertEqual({r["topology"].strip() for r in opt_rows}, OPT_TOPOLOGIES)
+        for r in opt_rows:
+            self.assertEqual(r["pg_scale"].strip(), "20")
+            self.assertGreater(float(r["tps"]), 0.0)
+        for topo in OPT_TOPOLOGIES:
+            exp_n = 15 if topo.endswith("-standalone") else 18
+            self.assertEqual(len({r["suite"].strip() for r in opt_rows if r["topology"].strip() == topo}), exp_n)
+        pgedge_map = {r["suite"].strip(): r for r in opt_rows if r["topology"].strip() == "pgedge"}
+        for crdt_suite in ("B2_overlap_rw", "D_hot_conflict"):
+            self.assertEqual(float(pgedge_map[crdt_suite]["balance_drift"]), 0.0)
+            self.assertEqual(pgedge_map[crdt_suite]["convergence_status"].strip(), "PASS_CONVERGED")
 
     def test_dashboard_and_scripts_file_size_cap(self) -> None:
         """Enforce < 14,000 byte limit on every text file in dashboard/ and scripts/."""
