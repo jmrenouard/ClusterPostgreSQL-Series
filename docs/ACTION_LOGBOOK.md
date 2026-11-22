@@ -26,6 +26,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-188 - Add Automated PACELC Selector Unit & Parity Tests (`#502`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#502` (`test/issue-502-pacelc-selector-tests`)
+- **Request / Changes / Result**: Extended `tests/test_benchmark_artifacts.py` (`EXPECTED_DASH_FILES` + HTML tokens) and added `tests/test_pacelc_selector.py` validating 17+2 catalog parity, Makefile/`./mdb` targets, EN/FR sheet paths, canonical S1-S4 Node.js scoring, drift rejection, score transparency across all 32 input matrices, and mock-DOM UI flows; logged `APP-013`; `make test` (`24/24` OK) and `make lint` pass.
+
 ### ACT-187 - Add PACELC Selector Tab & Styles (`#500`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#500` (`feat/issue-500-pacelc-dashboard-ui`)
 - **Request / Changes / Result**: Added `dashboard/pacelc_ui.js`, `dashboard/pacelc.css`, and minimal wiring in `dashboard/{index.html,app.js}` for bilingual `data-tab="pacelc"` selector, copyable lab commands, tab jump, and CSV export; logged `IMP-012`; all files `< 14,000` B, `node --check`, `make test` (`21/21`), `make lint` pass.
