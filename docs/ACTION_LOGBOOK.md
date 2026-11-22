@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-199 - Align Chapter 05 EN With 13 Stacks / 18 Topologies & STE Compliance (`#571`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#571` (`docs/issue-571-ch05-stacks-ste`)
+- **Request / Changes / Result**: Expanded `docs/en/05_poc_architectures_and_test_protocol.md` Section 2 and Section 6 to all 13 Compose stacks / 18 topologies (`v25.4` + V1/V2 `v24.3.0`, PG 18.6, YT Cluster 1.21.3, `H`/`F_wan`/`G_conc`), added Diataxis cross-links, and fixed all STE mixed-mode errors to 0; `make test` (`31/31`) and `make lint` pass.
+
 ### ACT-198 - Update `stacks/README.md` to 18 Topologies & Fix STE Compliance (`#569`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#569` (`docs/issue-569-stacks-18-topologies`)
 - **Request / Changes / Result**: Updated `stacks/README.md` to document all 13 Compose stacks and 18 topologies (CockroachDB `v25.4` active stack + `v24.3.0` V1/V2 note) with 0 STE procedural errors; logged `RCA-028` and `IMP-015`; `make test` (`31/31`) and `make lint` pass.
