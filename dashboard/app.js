@@ -3,8 +3,9 @@
   "use strict";
 
   const $ = (id) => document.getElementById(id), $$ = (s) => document.querySelectorAll(s);
-  const { TOPOS, SNAME, fmtNum, renderBarChart, renderLineChart, esc, isBad, makeTip } = window.LPCharts;
-  const TL = Object.fromEntries(TOPOS.map(([k, v]) => [k, v])), TC = Object.fromEntries(TOPOS.map(([k, , c]) => [k, c])), TO = TOPOS.map(([k]) => k);
+  const { SNAME, fmtNum, renderBarChart, renderLineChart, esc, isBad, makeTip } = window.LPCharts;
+  const { TL, TC, TO, upk, dot, bdg, kc, exportCSV: saveCSV, sortRows } = window.LPUtil;
+  const BENCH_NUM = new Set(["clients", "tps", "lat_avg_ms", "lat_p95_ms", "tx_committed", "retries_40001", "balance_drift"]);
   const SCOL = ["#1e40af", "#0ea5e9", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444"];
   const MSG = {
     kpiPeak: ["Peak Selected TPS", "Pic TPS"], kpiLat: ["Lowest Avg Latency", "Meilleure latence"],
@@ -13,7 +14,7 @@
     tTps: ["Throughput (TPS)", "D\u00e9bit (TPS)"], tLat: ["Transaction Latency (ms)", "Latence transactionnelle (ms)"],
   };
 
-  const W = window, upk = (c, r) => (r || []).map((a) => Object.fromEntries(c.map((k, i) => [k, a[i] ?? ""])));
+  const W = window;
   const BCOLS = (W.LP_BENCH_META || {}).cols || [];
   const BASE_BENCH = upk(BCOLS, [].concat(W.LP_BENCH_ROWS_1 || [], W.LP_BENCH_ROWS_2 || [], W.LP_BENCH_ROWS_3 || [], W.LP_BENCH_ROWS_PG18 || [], W.LP_BENCH_ROWS_YT || []));
   const MAT = (W.LPMatrix && W.LPMatrix.MAT) || { core: { cols: [], rows: [] }, ext: { cols: [], rows: [] }, pg18: { cols: [], rows: [] }, yt: { cols: [], rows: [] } };
@@ -28,7 +29,6 @@
   const tLbl = (t) => (Opt ? Opt.lbl(st.dataset, t) : TL[t] || t);
   const e1S = (ss) => ["E1_sysbench_oltp_rw", "E_sysbench_oltp_rw"].find((s) => ss.includes(s)) || "";
   const tr = (k) => (MSG[k] ? MSG[k][st.lang === "fr" ? 1 : 0] : k);
-  const dot = (t) => `<span class="dot" style="background:${TC[t] || "#64748b"}"></span>`, bdg = (c, x) => `<span class="badge ${c}">${esc(x)}</span>`;
   const getR = (t, s) => { const ix = curI(); return (ix[t] && ix[t][s]) || null; };
 
   function buildControls() {
@@ -59,7 +59,6 @@
     const vl = rows.filter((r) => +r.lat_avg_ms > 0), bl = vl.length ? vl.reduce((a, b) => (+b.lat_avg_ms < +a.lat_avg_ms ? b : a)) : null;
     const wr = curR().filter((r) => st.sel.has(r.topology) && r.suite === "F_wan_netem_25ms"), bw = wr.length ? wr.reduce((a, b) => (+b.tps > +a.tps ? b : a)) : null;
     const bc = rows.filter(isBad).length, nm = (t) => esc(tLbl(t));
-    const kc = (c, l, v, s) => `<div class="kpi-card ${c}"><div class="kpi-label">${esc(l)}</div><div class="kpi-val">${v}</div><div class="kpi-sub">${s}</div></div>`;
     $("kpi-grid").innerHTML = [
       kc("", tr("kpiPeak"), `${fmtNum(pk.tps)} TPS`, `${nm(pk.topology)} &middot; ${esc(pk.suite)}`),
       kc("kpi-ok", tr("kpiLat"), bl ? `${fmtNum(bl.lat_avg_ms)} ms` : "N/A", bl ? `${nm(bl.topology)} &middot; ${esc(bl.suite)}` : "-"),
@@ -99,21 +98,19 @@
 
   function renderTable(rows) {
     const c = st.sort, d = st.dir, loc = st.lang === "fr" ? "fr-FR" : "en-US";
-    const sr = [...rows].sort((a, b) => { const an = +a[c], bn = +b[c]; return (a[c] !== "" && b[c] !== "" && !Number.isNaN(an) && !Number.isNaN(bn)) ? (an - bn) * d : String(a[c] ?? "").localeCompare(String(b[c] ?? "")) * d; });
+    const sr = sortRows(rows, c, d, BENCH_NUM);
     $$("#bench-table th[data-sort]").forEach((th) => { th.classList.toggle("sorted", th.dataset.sort === c); th.onclick = () => { st.dir = st.sort === th.dataset.sort ? -st.dir : -1; st.sort = th.dataset.sort; renderTable(fBench()); }; });
-    const n = (v, m) => (+(v || 0)).toLocaleString(loc, m ? { maximumFractionDigits: m } : undefined);
-    $("bench-tbody").innerHTML = sr.map((r) => { const dr = +(r.balance_drift || 0); return `<tr><td><span class="topo-cell">${dot(r.topology)}${esc(tLbl(r.topology))}</span></td><td>${esc(r.suite)}</td><td class="num">${esc(r.clients)}</td><td class="num"><strong>${n(r.tps, 2)}</strong></td><td class="num">${fmtNum(r.lat_avg_ms)}</td><td class="num">${fmtNum(r.lat_p95_ms)}</td><td class="num">${n(r.tx_committed)}</td><td class="num">${esc(r.retries_40001 || 0)}</td><td>${bdg(isBad(r) ? "badge-err" : "badge-ok", r.convergence_status || "PASS")}</td><td class="num">${bdg(dr ? "badge-err" : "badge-ok", dr ? (dr > 0 ? "+" : "") + n(dr) : "0 drift")}</td></tr>`; }).join("");
+    const n = (v, m) => { const x = Number(v || 0); return Number.isFinite(x) ? x.toLocaleString(loc, m ? { maximumFractionDigits: m } : undefined) : esc(v); };
+    $("bench-tbody").innerHTML = sr.map((r) => { const dr = Number(r.balance_drift || 0); return `<tr><td><span class="topo-cell">${dot(r.topology)}${esc(tLbl(r.topology))}</span></td><td>${esc(r.suite)}</td><td class="num">${esc(r.clients)}</td><td class="num"><strong>${n(r.tps, 2)}</strong></td><td class="num">${fmtNum(r.lat_avg_ms)}</td><td class="num">${fmtNum(r.lat_p95_ms)}</td><td class="num">${n(r.tx_committed)}</td><td class="num">${esc(r.retries_40001 || 0)}</td><td>${bdg(isBad(r) ? "badge-err" : "badge-ok", r.convergence_status || "PASS")}</td><td class="num">${bdg(dr ? "badge-err" : "badge-ok", Number.isFinite(dr) ? (dr ? (dr > 0 ? "+" : "") + n(dr) : "0 drift") : r.balance_drift)}</td></tr>`; }).join("");
   }
 
   function exportCSV() {
     if (st.tab === "popularity" && W.LPPopularity) return W.LPPopularity.exportCSV();
     if (st.tab === "pacelc") return W.LPPacelcUI?.exportCSV();
     if (st.tab === "bench" && st.dataset === "compare" && Opt) return Opt.exportCompareCSV(BASE_IDX, st, Opt.OPT_T, e1S(Opt.OPT_S));
-    const isB = st.tab === "bench", cols = isB ? BCOLS : MAT[st.mtab].cols, rows = isB ? fBench() : MAT[st.mtab].rows.filter((r) => st.sel.has(r.topology));
-    const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    const csv = [cols.map(q).join(","), ...rows.map((r) => cols.map((c) => q(r[c])).join(","))].join("\n") + "\n";
-    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" })), download: isB ? `cluster_pg_${st.dataset}_benchmarks.csv` : `cluster_pg_${st.mtab}_matrix.csv` });
-    a.click(); URL.revokeObjectURL(a.href);
+    const isBench = st.tab === "bench", cols = isBench ? BCOLS : MAT[st.mtab].cols;
+    const rows = isBench ? fBench() : (W.LPMatrix ? W.LPMatrix.filteredRows(st) : []);
+    return saveCSV(isBench ? `cluster_pg_${st.dataset}_benchmarks.csv` : `cluster_pg_${st.mtab}_matrix.csv`, cols, rows);
   }
 
   function renderAll() {
@@ -138,7 +135,11 @@
     $$("[data-dataset]").forEach((b) => { b.onclick = () => { const prev = curT(), wasAll = prev.every((t) => st.sel.has(t)); st.dataset = b.dataset.dataset; $$("[data-dataset]").forEach((x) => x.classList.toggle("active", x.dataset.dataset === st.dataset)); const next = curT(); st.sel = wasAll ? new Set(next) : new Set([...st.sel].filter((t) => next.includes(t))); if (!wasAll && st.dataset !== "baseline" && st.sel.has("cockroach")) st.sel.add("cockroach-rc"); renderAll(); }; });
     $$("[data-preset]").forEach((b) => { b.onclick = () => { const allT = curT(), ps = P[b.dataset.preset]; st.sel = new Set(ps === "ALL" ? allT : (ps || []).filter((t) => allT.includes(t))); renderAll(); }; });
     $("suite-select").onchange = (e) => { st.suite = e.target.value; renderAll(); };
-    $("table-filter").oninput = (e) => { st.qB = e.target.value; cmpOr(() => renderTable(fBench())); };
+    $("table-filter").oninput = (e) => {
+      st.qB = e.target.value;
+      if (st.dataset === "compare" && Opt) Opt.renderCompareTable(Opt.buildPairs(BASE_IDX, st, Opt.OPT_T, e1S(Opt.OPT_S)), st);
+      else renderTable(fBench());
+    };
     $("matrix-filter").oninput = (e) => { st.qM = e.target.value; if (W.LPMatrix) W.LPMatrix.render(st); };
     $("btn-export").onclick = exportCSV;
     renderAll();
