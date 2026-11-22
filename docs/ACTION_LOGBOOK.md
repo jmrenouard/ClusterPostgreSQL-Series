@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-209 - Refactor Chapter 03a EN Part 1 (#1-#4) for ASD-STE100 (`#591`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#591` (`docs/issue-591-ch03a-en-p1`)
+- **Request / Changes / Result**: Refactored Part 1 (`#1-#4`) of `docs/en/03a_solutions_native_and_extensions.md` to eliminate semicolons, `via`, and >25-word sentences while keeping links and metrics intact; `make test` (`31/31`) and `make lint` pass.
+
 ### ACT-208 - Fix ASD-STE100 Compliance in Chapter 02 FR (`#589`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#589` (`docs/issue-589-ch02-fr-ste`)
 - **Request / Changes / Result**: Refactored `docs/fr/02_fondements_theoriques_cap_pacelc_conflits.md` to 0 STE mixed-mode errors (0 semicolons, 0 weak modals, `<= 25` words/sentence) while keeping LaTeX math syntax intact; `make test` (`31/31`) and `make lint` pass.

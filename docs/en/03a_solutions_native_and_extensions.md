@@ -30,7 +30,7 @@
 
 ### Architecture & Internals
 
-Introduced in PostgreSQL 16 via the `origin = none` subscription parameter, native bidirectional logical replication connects two or more standard PostgreSQL servers into an asynchronous active-active mesh using built-in `pgoutput` logical decoding. Each node creates a `PUBLICATION` for shared tables and subscribes to peer publications using:
+Introduced in PostgreSQL 16 with `origin = none`, native bidirectional logical replication connects PostgreSQL servers into an async active-active mesh. Each node uses built-in `pgoutput` logical decoding. Each node creates a `PUBLICATION` for shared tables and subscribes to peer publications using:
 
 ```sql
 CREATE SUBSCRIPTION sub_from_peer
@@ -43,14 +43,14 @@ Setting `origin = none` instructs the logical decoding `walsender` to emit **onl
 
 ### Conflict Resolution, DDL & Sequences
 
-- **Conflicts:** Core PostgreSQL 16/17 provides **no autonomous conflict resolution** (no LWW, no CRDTs). A primary-key or `UNIQUE` collision (`SQLSTATE 23505`) **immediately halts the apply worker**, accumulating WAL inside the publisher's replication slot until an operator resolves the row or skips the transaction via `ALTER SUBSCRIPTION ... SKIP (lsn = '...')`. Missing-row updates/deletes are logged/skipped depending on version/configuration, silently creating data drift.
+- **Conflicts:** Core PostgreSQL 16/17 provides **no autonomous conflict resolution** (no LWW, no CRDTs). Any `PRIMARY KEY` or `UNIQUE` collision (`SQLSTATE 23505`) **halts the apply worker** and retains WAL in the slot. An operator must delete the row or skip it with `ALTER SUBSCRIPTION ... SKIP (lsn = '...')`. Missing-row writes drift silently.
 - **DDL & Sequences:** Neither DDL statements nor sequence increments (`nextval()`) replicate natively. Applications must deploy stepped sequences (`INCREMENT BY N START WITH node_id`) or UUIDv7/Snowflake IDs, and coordinate DDL manually in strict topological order.
 - **Keyless Tables:** `UPDATE` and `DELETE` fail on tables without a `PRIMARY KEY` or `REPLICA IDENTITY FULL` (`SQLSTATE 55000`).
 
 ### Strengths & Limits
 
 - **Pros:** Zero external dependencies, zero licensing cost, full PG 17/18 extension ecosystem, native performance.
-- **Cons:** Halts on `23505` collisions; unsafe for competing multi-node writes without strict sharded/partitioned write routing; no DDL or large-object (`pg_largeobject`) replication; offline peer slots can exhaust disk WAL if `max_slot_wal_keep_size` is uncapped.
+- **Cons:** Halts on `23505` collisions and breaks competing multi-node writes without partitioned routing. Lacks DDL and `pg_largeobject` sync, and offline peer slots can fill disk WAL if `max_slot_wal_keep_size` is uncapped.
 
 ---
 
@@ -62,18 +62,18 @@ Setting `origin = none` instructs the logical decoding `walsender` to emit **onl
 
 ### Architecture & Internals
 
-Developed by pgEdge for PostgreSQL 15–17, **Spock v5** modernizes the open-source `pglogical` lineage into a cohesive active-active multi-master extension suite loaded via `shared_preload_libraries = 'spock,snowflake'` (plus `lolor` for Large Objects). Each node joins a peer-to-peer logical mesh (`spock.node_create`, `spock.sub_create`) reading WAL via a custom logical output plugin that tags origins cleanly across 3+ node topologies.
+Built by pgEdge for PostgreSQL 15–17, **Spock v5** updates `pglogical` into a multi-master extension suite (`shared_preload_libraries = 'spock,snowflake'`, plus `lolor`). Each node joins a peer-to-peer mesh (`spock.node_create`, `spock.sub_create`) reading WAL with a custom origin-tagging plugin.
 
 ### Conflict Resolution, DDL & Sequences
 
 - **LWW & Delta-Apply CRDTs:** With `track_commit_timestamp = on` and `spock.conflict_resolution = 'last_update_wins'`, Spock compares commit timestamps (breaking ties deterministically by node ID) instead of halting on conflicts. Critically, Spock implements **Delta-Apply** for numeric columns: when `balance = balance + 50` executes, Spock transmits the old and new column values so the remote node applies `target_val + (remote_new - remote_old)`, eliminating non-commutative **Lost Updates**.
 - **Snowflake Sequences (`snowflake`):** Generates 64-bit K-sortable global IDs encoding timestamp, `snowflake.node` (`1..1023`), and per-millisecond counter, eliminating `23505` PK collisions without cross-node locking.
-- **Auto-DDL & Large Objects:** Setting `spock.enable_ddl_replication = on` captures schema changes via event triggers and propagates them over replication sets automatically; `lolor` intercepts `pg_largeobject` operations that standard logical replication ignores.
+- **Auto-DDL & Large Objects:** Setting `spock.enable_ddl_replication = on` captures schema changes with event triggers and pushes them over replication sets. `lolor` replicates `pg_largeobject` operations that native logical decoding ignores.
 
 ### Strengths & Limits
 
-- **Pros:** 100% open-source PG 17 native storage/extensions; solves native PG's three biggest gaps (LWW + Delta-Apply CRDTs, Snowflake IDs, Auto-DDL).
-- **Cons:** Still asynchronous (`PA/EL`) — non-delta columns remain vulnerable to LWW overwrites and cross-region clock skew (`chrony`/NTP drift); secondary `UNIQUE` collisions still drop one winning row under LWW; simultaneous DDL on multiple nodes lacks Raft global serialization.
+- **Pros:** 100% open-source PG 17 storage and extensions. Solves native PG's three biggest gaps (LWW + Delta-Apply CRDTs, Snowflake IDs, Auto-DDL).
+- **Cons:** Async (`PA/EL`) design leaves non-delta columns exposed to LWW overwrites and `chrony`/NTP drift. Secondary `UNIQUE` collisions drop one winning row, and concurrent DDL lacks Raft serialization.
 
 ---
 
@@ -85,17 +85,17 @@ Developed by pgEdge for PostgreSQL 15–17, **Spock v5** modernizes the open-sou
 
 ### Architecture & Internals
 
-Created by 2ndQuadrant prior to PostgreSQL 10's built-in logical replication, **pglogical 2** exposes `pglogical.create_node`, replication sets (`default`, `default_insert_only`, `ddl_sql`), and `pglogical.create_subscription` via background worker processes. It remains widely deployed for zero-downtime major version upgrades and legacy active-active topologies.
+Created by 2ndQuadrant prior to PostgreSQL 10's built-in logical replication, **pglogical 2** exposes `pglogical.create_node`, replication sets (`default`, `default_insert_only`, `ddl_sql`), and `pglogical.create_subscription` with background worker processes. It remains widely deployed for zero-downtime major version upgrades and legacy active-active topologies.
 
 ### Conflict Resolution, DDL & Sequences
 
 - **Conflicts:** Supports `pglogical.conflict_resolution` policies (`error`, `apply_remote`, `keep_local`, `last_update_wins`, `first_update_wins`), requiring `track_commit_timestamp = on` for timestamp-ordered resolution. Lacks Delta-Apply CRDTs.
-- **DDL & Sequences:** DDL does **not** replicate transparently on raw SQL execution; operators must wrap DDL inside `SELECT pglogical.replicate_ddl_command('...')`. Sequences can sync periodically in batches (`synchronize_structure` / `add_all_sequences`), which does not protect against simultaneous uncoordinated `INSERT` collisions.
+- **DDL & Sequences:** DDL does **not** replicate transparently on raw SQL execution. Operators must wrap DDL inside `SELECT pglogical.replicate_ddl_command('...')`. Sequences can sync periodically in batches (`synchronize_structure` / `add_all_sequences`), which does not protect against simultaneous uncoordinated `INSERT` collisions.
 
 ### Strengths & Limits
 
-- **Pros:** Battle-tested selective table/column/row filtering; supports older PostgreSQL releases (PG 9.4–16/17 bridges).
-- **Cons:** Superseded in modern active-active design by Spock v5 (for open-source CRDTs/auto-DDL) and native PG 17+ (for simple subscriptions); lacks CRDTs and Snowflake IDs out of the box.
+- **Pros:** Battle-tested table, column, and row filtering. Supports older PostgreSQL releases (`PG 9.4–16/17` bridges).
+- **Cons:** Superseded by Spock v5 (for OSS CRDTs/auto-DDL) and native PG 17+ (for simple subscriptions). Lacks CRDTs and Snowflake IDs out of the box.
 
 ---
 
@@ -107,7 +107,7 @@ Created by 2ndQuadrant prior to PostgreSQL 10's built-in logical replication, **
 
 ### Architecture & Internals
 
-**EDB Postgres Distributed (PGD)** — evolved from BDR (Bi-Directional Replication) — couples high-speed asynchronous logical replication with an embedded **Raft consensus layer** across data nodes and witness nodes, fronted by **PGD Proxy** for smart routing. Unlike pure async meshes, PGD lets architects mix asynchronous geo-replication with Raft-coordinated synchronous guarantees per node group or transaction.
+**EDB Postgres Distributed (PGD)** — evolved from BDR — pairs async logical replication with an embedded **Raft consensus layer** across data and witness nodes. **PGD Proxy** handles smart client routing. Unlike pure async meshes, PGD lets architects mix asynchronous geo-replication with Raft-coordinated synchronous guarantees per node group or transaction.
 
 ### Conflict Resolution, DDL & Sequences
 
@@ -116,12 +116,12 @@ Created by 2ndQuadrant prior to PostgreSQL 10's built-in logical replication, **
   - **CAMO (Commit At Most Once):** Pairs nodes so a client verifies commit status against a partner node if a primary dies mid-commit, preventing duplicate payment/order retries.
   - **Eager All-Node Replication:** Raft-backed global transaction synchronization across participating nodes (zero conflicts, high WAN RTT cost).
   - **Write-Lead:** PGD Proxy directs all writes to one Raft-elected Lead Master while keeping peer masters hot for sub-second failover.
-- **DDL & Global Sequences:** Global DDL locks acquired via Raft consensus prevent divergent concurrent schema mutations; `bdr.global_sequences` (`snowflakeid`, Raft-backed `galloc`, and legacy `timeshard`) issue conflict-free global IDs.
+- **DDL & Global Sequences:** Global DDL locks acquired with Raft consensus prevent conflicting schema changes. `bdr.global_sequences` (`snowflakeid`, Raft `galloc`, and legacy `timeshard`) issue conflict-free IDs.
 
 ### Strengths & Limits
 
 - **Pros:** Most mature feature set on top of standard PostgreSQL (Raft DDL locks, CAMO, Write-Lead, CRDTs, enterprise PITR/proxy orchestration).
-- **Cons:** **Commercial/Proprietary licensing** (`EDB` subscription required; non-trivial per-core TCO); Raft global DDL locks block writes across WAN links during schema migrations; operational complexity requires dedicated witness nodes and PGD Proxy tuning.
+- **Cons:** **Commercial/Proprietary licensing** requires an `EDB` subscription with per-core TCO. Raft DDL locks block WAN writes during migrations, and clusters require witness nodes plus PGD Proxy tuning.
 
 ---
 
