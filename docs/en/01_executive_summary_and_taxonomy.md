@@ -8,18 +8,18 @@
 
 ## 1. Executive Summary
 
-PostgreSQL is engineered around a single-writer shared-nothing-by-default storage engine. Every committed modification flows through one sequential Write-Ahead Log (WAL), one cluster-wide transaction identifier (`XID`) allocator, and one local `ProcArray` visibility table. That architecture guarantees ACID integrity and predictable OLTP latency on a single primary node, yet it creates a fundamental tension when organizations require **active-active multi-master writes** across availability zones or continents.
+PostgreSQL is engineered around a single-writer shared-nothing-by-default storage engine. Every committed modification flows through one sequential Write-Ahead Log (WAL), one cluster-wide transaction identifier (`XID`) allocator, and one local `ProcArray` visibility table. That architecture guarantees ACID integrity and predictable OLTP latency on one primary node. Requiring **active-active multi-master writes** across availability zones or continents creates a fundamental tension.
 
 The market offers more than a dozen technologies claiming "PostgreSQL Multi-Master" or "Active-Active" support. In practice, that label conceals four incompatible guarantees:
 
-1. **Asynchronous Eventual Convergence (`AP/EL`)**: Multiple nodes accept local writes independently and ship logical row changes or triggers later. Latency stays local, but concurrent edits to the same key collide and must be resolved via Last-Write-Wins (LWW), CRDTs, or manual intervention.
+1. **Asynchronous Eventual Convergence (`AP/EL`)**: Multiple nodes accept local writes independently and ship logical row changes or triggers later. Latency stays local, but concurrent edits on the same key collide. Applications resolve collisions with Last-Write-Wins (LWW), CRDTs, or manual repair.
 2. **Distributed Consensus (`CP/EC`)**: Every write passes through a Raft or Paxos quorum before committing. Conflicts are aborted or serialized cleanly, at the cost of cross-node network round-trips (`2 * RTT`) on every commit.
 3. **Sharded Shared-Nothing with 2PC (`CP/EC` / `PC/EC`)**: Tables are horizontally partitioned across independent PostgreSQL nodes. Single-shard writes scale linearly, while cross-shard queries and reference tables incur Two-Phase Commit (2PC) overhead.
 4. **Statement-Broadcast Middleware**: A proxy intercepts SQL text and replays each statement on every backend node, breaking silently whenever queries invoke non-deterministic functions or concurrent execution orders diverge.
 
-This study evaluates **PostgreSQL 16, 17 (`17.11`), and 18.6** as explicit native clustering targets alongside **16+ architectures across 7 engineering families** (**19 dedicated bilingual solution sheets**), pairing formal distributed-systems theory (CAP, PACELC, conflict calculus) with reproducible Docker Compose proofs-of-concept, empirical breaking-point limits, and **296 standardized `pgbench`/`sysbench`/`tc netem` benchmark rows** (`187` V2 + `87` PostgreSQL 18.6 + `22` YT Cluster 1.21.3).
+This study evaluates **PostgreSQL 16, 17 (`17.11`), and 18.6** as native clustering targets alongside **16+ architectures across 7 engineering families** (**19 bilingual solution sheets**). It pairs distributed-systems theory (CAP, PACELC, conflict calculus) with Docker Compose labs, breaking-point limits, and **296 `pgbench`/`sysbench`/`tc netem` rows** (`187` V2 + `87` PG 18.6 + `22` YT Cluster 1.21.3).
 
-**PostgreSQL 18.6 Native Leap (`#17`):** Measured live on `PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)` ([Solution #17](solutions/pg18_native_clustering.md) | [Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)), PG 18.6 introduces native RFC 9562 **`uuidv7()`** active-active primary keys (`50/50` dual-node convergence, `0` `23505` collisions, **`2,066.70 TPS`** = **`3.30x`** BiRep append-only throughput vs PG 17 `627.13 TPS`), asynchronous I/O **`io_method=worker`** (`-18.5%` cold scan latency vs `sync`) with default **`data_checksums=on`**, **7 `confl_*` counters** (`+confl_multiple_unique_conflicts`), and default parallel apply (`substream=p`), while `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` still returns `SQLSTATE 42601` (deferred to PG 19) and automated LWW/CRDT/DDL replication remains outside core.
+**PostgreSQL 18.6 Native Leap (`#17`):** Measured on `PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)` ([Solution #17](solutions/pg18_native_clustering.md) | [Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)), PG 18.6 adds RFC 9562 **`uuidv7()`** active-active primary keys (`50/50` convergence, `0` `23505` collisions, **`2,066.70 TPS`** = `3.30x` vs PG 17 `627.13 TPS`). It also provides **`io_method=worker`** (`-18.5%` cold scan latency vs `sync`), default **`data_checksums=on`**, **7 `confl_*` counters**, and parallel apply (`substream=p`). `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` still returns `SQLSTATE 42601` (PG 19 target), and core lacks automated LWW, CRDT, and DDL replication.
 
 ---
 
@@ -35,7 +35,7 @@ To understand why multi-master PostgreSQL is difficult, examine the invariants e
 | **System Catalogs** | `pg_class` and `pg_attribute` OIDs allocated locally per cluster | DDL (`ALTER TABLE`) changes physical tuple descriptors; unsynchronized schemas break binary decoding |
 | **Sequences** | `nextval()` increments an in-memory/WAL sequence page on one node | Uncoordinated `SERIAL` or `IDENTITY` columns collide immediately (`SQLSTATE 23505`) across active writers |
 
-Physical streaming replication (`walreceiver`) ships raw 8 KiB block images and redo records, forcing every standby into read-only recovery (`pg_is_in_recovery() = true`). Breaking the single-writer barrier therefore requires abandoning physical WAL shipping at the write boundary in favor of **logical WAL decoding (`pgoutput`)**, **row-level triggers**, **statement interception**, or **replacing PostgreSQL's heap/WAL engine with a distributed consensus storage layer**.
+Physical streaming replication (`walreceiver`) ships raw 8 KiB block images and redo records, forcing every standby into read-only recovery (`pg_is_in_recovery() = true`). Breaking the single-writer barrier therefore abandons physical WAL shipping at the write boundary. Engines instead use **logical WAL decoding (`pgoutput`)**, **row triggers**, **statement proxies**, or **distributed consensus storage**.
 
 ---
 
@@ -86,7 +86,7 @@ flowchart TD
     Q2 -- "SQL Proxy Broadcast" --> F6["Family 6: #11 PgPool-II (Replication / SI Mode)"]
 ```
 
-*\*Note: Google Cloud AlloyDB is included in Family 7 for architectural disambiguation; it uses disaggregated shared storage with a single primary writer and read pools rather than multi-master writes.*
+*\*Note: Family 7 includes Google Cloud AlloyDB for architectural disambiguation. It uses shared storage with one primary writer and read pools instead of multi-master writes.*
 
 ---
 
@@ -110,4 +110,4 @@ This repository separates **verifiable architectural mechanics** from **live emp
 | **[11 - Ecosystem Popularity & Vitality](11_ecosystem_popularity_and_vitality.md)** | Live GitHub API telemetry (`21` rows), Git Presence/Accounts, stars, 12m commits | Complete |
 | **[12 - PostgreSQL 18.6 Clustering & Benchmarks](12_postgresql_18_clustering_and_benchmarks.md)** | PG 16->17->18.6 evolution, AIO, `uuidv7()`, 7 `confl_*`, 87 rows & [Sheet #17](solutions/pg18_native_clustering.md) | Complete |
 
-**Empirical Honesty Guarantee:** Theoretical chapters state only proven mechanics and explicit analytical formulas. All throughput, latency, and failure-rate metrics published in Chapters 06, 08, 09, 10, and the dedicated `solutions/` sheets were measured directly against isolated Docker topologies (`results/*.csv`).
+**Empirical Honesty Guarantee:** Theoretical chapters state only proven mechanics and explicit analytical formulas. Chapters 06, 08, 09, 10, 12, 13, and `solutions/` sheets report throughput, latency, and failure rates from isolated Docker runs (`results/*.csv`).

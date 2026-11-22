@@ -155,7 +155,7 @@ Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf 
 
 - **Niveau de maintenance :** **Niveau S (Cœur)** -- `postgres/postgres` (`3446` commits/12m) & `patroni/patroni` (**Niveau A (OSS Actif)**, `142` commits/12m, `246` contributeurs).
 - **Fraîcheur / Actualité :** **Actuel -- Actif au quotidien** -- Dernier push `2026-11-20T16:52:40Z` / `2026-11-20T17:03:56Z`, `3446` / `142` commits/12m, dernière version `REL_19_0` / `v4.1.5`.
-- **Maintenabilité opérationnelle :** **Risque faible** -- Cœur multi-éditeurs + HA MIT ; surveiller `max_slot_wal_keep_size` et quorum `etcd`.
+- **Maintenabilité opérationnelle :** **Risque faible** -- Cœur multi-éditeurs et HA MIT, imposant le suivi de `max_slot_wal_keep_size` et du quorum `etcd`.
 
 ---
 

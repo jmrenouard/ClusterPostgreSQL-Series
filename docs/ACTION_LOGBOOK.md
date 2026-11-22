@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-205 - Fix ASD-STE100 Compliance in Chapter 01 EN & Patroni Sheets (`#583`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#583` (`docs/issue-583-ch01-en-patroni-ste`)
+- **Request / Changes / Result**: Refactored `docs/en/01_executive_summary_and_taxonomy.md` and `docs/{en,fr}/solutions/pg17_physical_streaming_patroni.md` to 0 STE mixed-mode errors while preserving Tier 1-5 parity; `make test` (`31/31`) and `make lint` pass.
+
 ### ACT-204 - Align CockroachDB FR V5 Spec & Fix STE Compliance (`#581`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#581` (`docs/issue-581-cockroach-fr-ch01-en`)
 - **Request / Changes / Result**: Added CockroachDB V5 `v25.4.21`/`3072m` upgrade block and fixed all 6 STE mixed-mode errors (`0 errors`) in `docs/fr/solutions/cockroachdb.md` (`13,940` B < `14,000` B) while preserving historical `v24.3.0` Tier 1-5 parity; `make test` (`31/31`) and `make lint` pass.
