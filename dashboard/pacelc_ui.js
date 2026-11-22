@@ -20,16 +20,17 @@
   };
   const jp = (spec) => {
     if (!st || !redraw) return;
-    const [tab, tp = ""] = spec.split(":"), mt = tp.replace(/-delta-apply$|-rc$/, "");
+    const [tab, tp = ""] = spec.split(":"), mt = tp.replace(/-delta-apply$|-rc$/, ""), isM = tab === "matrix";
     st.tab = tab;
-    if (tp) st.sel = new Set(tab === "matrix" ? [mt] : tp === "pgedge-delta-apply" ? [tp, "pgedge"] : [tp]);
-    if (tab === "matrix") st.mtab = /^pg18/.test(mt) ? "pg18" : /^yt/.test(mt) ? "yt" : "core";
-    ["tab", "mtab"].forEach((a) => $$(`[data-${a}]`).forEach((x) => x.classList.toggle("active", x.dataset[a] === st[a])));
+    if (!isM && st.dataset === "compare") st.dataset = "baseline";
+    if (tp) st.sel = new Set(isM ? [mt] : tp === "pgedge-delta-apply" ? [tp, "pgedge"] : [tp]);
+    if (isM) st.mtab = /^pg18/.test(mt) ? "pg18" : /^yt/.test(mt) ? "yt" : "core";
+    ["tab", "mtab", "dataset"].forEach((a) => $$(`[data-${a}]`).forEach((x) => x.classList.toggle("active", x.dataset[a] === st[a])));
     redraw();
   };
   const html = (res) => {
     const r = res.top, ds = res.inputs.dataset, fr = st?.lang === "fr", sc = (c, h) => `<section class="card ${c}">${h}</section>`;
-    const nm = (k) => { const m = C.TOPOS.find((x) => x[0] === k); return `<span class="dot" style="background:${m?.[2] || "#64748b"}"></span>${esc(W.LPOpt ? W.LPOpt.lbl(ds, k) : m?.[1] || k)}`; };
+    const nm = (k) => { const m = C.TOPOS.find((x) => x[0] === k); return `<span class="dot" style="background:${m?.[2] || "#64748b"}"></span>${esc(W.LPOpt?.lbl(ds, k) || m?.[1] || k)}`; };
     const ctrl = sc("p-c", mp(GS, ([l, k, o]) => dv("ctrl-group", sp("ctrl-label", esc(tx(l))) + dv("seg", mp(o.split("|"), (p) => { const [v, x] = p.split(":"); return bt(`seg-btn${String(k === "ds" ? ds : cfg[k]) === v ? " active" : ""}`, `data-k="${k}:${v}"`, esc(tx(x))); })))));
     let hero = "";
     if (r) {
@@ -67,7 +68,8 @@
     const cs = "rank topology pacelc_class score status tps lat_p95_ms balance_drift make_cmd mdb_cmd".split(" ");
     const csv = [cs, ...last.results.map((r, i) => cs.map((c) => `"${String((c === "rank" ? i + 1 : r[c]) ?? "").replace(/"/g, '""')}"`))].map((r) => r.join(",")).join("\n") + "\n";
     const u = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-    Object.assign(ce("a"), { href: u, download: `pacelc_${last.inputs.dataset}.csv` }).click(); URL.revokeObjectURL(u);
+    Object.assign(ce("a"), { href: u, download: `pacelc_${last.inputs.dataset}.csv` }).click();
+    URL.revokeObjectURL(u);
   };
   W.LPPacelcUI = { render(s, cb) { host = D.getElementById("panel-pacelc"); st = s; redraw = cb || redraw; draw(); }, exportCSV };
 })();

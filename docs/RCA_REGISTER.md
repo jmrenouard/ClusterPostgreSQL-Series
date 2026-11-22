@@ -238,9 +238,7 @@
 - **Reason**: Breached the `< 15,000`-char PR diff cap (`AGENTS.md`) or exceeded the `~13,500`-char split threshold. Split M4 PR 8 into three sequential 1-slug atomic PRs (PR 8a, PR 8b, PR 8c), keeping each diff under `10,500` chars while preserving `en_shape == fr_shape`.
 
 ### IMP-012 - Inlining PACELC UI & Styles Inside `index.html` / `app.js`
-- **Date / Action**: `2026-11-22` (`ACT-187`)
-- **Rejected Approach**: Embedding PACELC controls/cards inline in `index.html` (`13.6 KB`) and `app.js` (`13.9 KB`).
-- **Reason**: Breached the `< 14,000` B per-file cap; isolated into `pacelc_ui.js` and `pacelc.css` with delegated events.
+- **Date / Action**: `2026-11-22` (`ACT-187`) | **Rejected**: Inlining PACELC controls/cards into `index.html`/`app.js` breached `< 14,000` B per-file cap; isolated into `pacelc_ui.js` and `pacelc.css`.
 
 ## 3. Current Approximations & Simplifying Assumptions (`APP-XXX`)
 
