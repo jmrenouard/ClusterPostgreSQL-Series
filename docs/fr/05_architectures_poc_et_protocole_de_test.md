@@ -2,7 +2,7 @@
 
 > **Auteur** : Jean-Marie Renouard (`jmrenouard`) - [LightPath](https://www.lightpath.fr) | **Licence** : MIT
 
-Ce chapitre documente la méthodologie expérimentale adoptée pour tester de manière équitable, transparente et reproductible les architectures multi-maîtres et distribuées PostgreSQL, ainsi que les limites de validité inhérentes à un laboratoire local conteneurisé.
+Ce chapitre documente la méthodologie expérimentale adoptée pour tester les architectures distribuées PostgreSQL de façon reproductible. Il précise aussi les limites de validité inhérentes à un laboratoire local conteneurisé. Voir [`stacks/README.md`](../../stacks/README.md) pour la liste des piles Compose.
 
 ---
 
@@ -17,15 +17,20 @@ Les PoCs reproductibles s'exécutent sous **Docker Engine dans WSL2 (Ubuntu 24.0
 
 ## 2. Topologies PoC et neutralisation du biais réseau NAT
 
-| Topologie PoC | Image / Base technique | Nœuds | Ports localhost (Admin/Sonde) | Routage client benchmark |
-| :--- | :--- | :---: | :--- | :--- |
-| **`pg-birep`** | `postgres:17` + `haproxy:2.9-alpine` | 2 PG + 1 HAProxy | `15441`, `15442`, `15440` (proxy) | Réseau Docker interne (`haproxy_pg_birep:5432`) |
-| **`pgedge`** | PG 17 + Spock 5 + Snowflake + `lolor` | 3 PG + 1 HAProxy | `15451`–`15453`, `15450` (proxy) | Réseau Docker interne (`haproxy_pgedge:5432`) |
-| **`bucardo`** | PG 17 (`plperl`) + daemon Bucardo 5 | 2 PG + 1 Bucardo | `15461`, `15462` | Réseau Docker interne |
-| **`yugabyte`** | `yugabytedb/yugabyte` (RF=3) | 3 nœuds YSQL | `15471`–`15473`, `17001` (UI) | Réseau Docker interne (`5433`) |
-| **`cockroach`** | `cockroachdb/cockroach` (`--insecure` lab) | 3 nœuds CRDB | `15481`–`15483`, `18081` (UI) | Réseau Docker interne (`26257`) |
-| **`citus`** | `citusdata/citus` (PG 17) | 1 coord + 2 workers | `15490` (coord), `15491`–`15492` | Réseau Docker interne (`citus_coord:5432`) |
-| **Baselines (`#15`)** | `postgres:17` Standalone / Patroni + etcd | 1 PG / 3 PG + 3 etcd | Ports dédiés localhost | Réseau Docker interne |
+Le harnais exécute **13 piles Docker Compose** couvrant **18 topologies actives** (plus la variante V1/V2 `pgedge-delta-apply`) :
+
+| Pile Compose | Topologies actives (18 au total) | Image / Base technique | Nœuds & Routage |
+| :--- | :--- | :--- | :--- |
+| `pg17-baseline`, `pg-streaming` (plus `patroni` HA) | `pg17-standalone`, `pg17-async-streaming`, `pg17-sync-streaming`, Patroni HA (`#15`) | `postgres:17`, Patroni + `etcd` | 1 PG / 2 PG / 3 PG + 3 etcd |
+| `pg-logical` | `pg17-logical` (`#16`) | `postgres:17` | 2 PG, réplication logique uni |
+| `pg-birep` | `pg-birep` (`#1`) | `postgres:17` + HAProxy | 2 PG + 1 HAProxy (`15440`) |
+| `pgedge` | `pgedge` (`#2`, plus V1/V2 `pgedge-delta-apply`) | PG 17 + Spock `5.0.14` + Snowflake | 3 PG + 1 HAProxy (`15450`) |
+| `bucardo` | `bucardo` (`#9`) | PG 17 (`plperl`) + Bucardo `5.6.0` | 2 PG + daemon Perl (`15461`–`15462`) |
+| `citus` | `citus` (`#7`) | `citusdata/citus` (`14.2.0` sur PG 17) | 1 coord (`15490`) + 2 workers |
+| `yugabyte` | `yugabyte` (`#5`) | `yugabytedb/yugabyte:2026.1.3.0` (RF=3) | 3 YSQL (`5433`) + HAProxy `:15470` |
+| `cockroach` | `cockroach`, `cockroach-rc` (`#6`) | `cockroachdb/cockroach:latest-v25.4` (V1/V2 : `v24.3.0`) | 3 CRDB + HAProxy `:15480` |
+| `pg18-streaming`, `pg18-logical`, `pg18-birep` | `pg18-standalone`, `pg18-async-streaming`, `pg18-sync-streaming`, `pg18-logical`, `pg18-birep` (`#17`) | `postgres:18.6` (`io_method=worker`, `uuidv7()`) | 1 à 3 PG 18.6 + HAProxy |
+| `yt-cluster` | `yt-cluster` (`cc=half`), `yt-cluster-async` (`nodes>=0`, `#18`) | `dbinvent/yt:1.21.3` (PG 18.7) | 3 nœuds `yt_cluster` / `ytserv` |
 
 > [!IMPORTANT]
 > **Élimination du biais de port-forwarding WSL2** : Les ports publiés sur `127.0.0.1:154xx` servent uniquement aux scripts de contrôle et d'administration. Tous les tirs de charge (`pgbench` et `sysbench`) sont injectés depuis le **réseau Docker interne (`bridge`)** directement sur les noms DNS de conteneurs afin d'éviter la surcharge du proxy TCP Windows/WSL2 sur les paquets courts.
@@ -34,7 +39,7 @@ Les PoCs reproductibles s'exécutent sous **Docker Engine dans WSL2 (Ubuntu 24.0
 
 ## 3. Standardisation de schéma : clé primaire sur `pgbench_history`
 
-L'initialisation standard `pgbench -i -s 10` crée quatre tables : `pgbench_branches`, `pgbench_tellers`, `pgbench_accounts` (dotées de clés primaires) et **`pgbench_history` (dépourvue de clé primaire)**. En réplication logique PostgreSQL (`REPLICA IDENTITY DEFAULT`), les insertions sur `pgbench_history` passent, mais toute opération `UPDATE` ou `DELETE` ultérieure échoue avec `SQLSTATE 55000`, et Bucardo refuse purement les tables sans identifiant unique.
+L'initialisation standard `pgbench -i -s 10` crée quatre tables : `pgbench_branches`, `pgbench_tellers`, `pgbench_accounts` (dotées de clés primaires) et **`pgbench_history` (dépourvue de clé primaire)**. En réplication logique PostgreSQL (`REPLICA IDENTITY DEFAULT`), les insertions sur `pgbench_history` passent. Toute opération `UPDATE` ou `DELETE` échoue en revanche avec `SQLSTATE 55000`, et Bucardo rejette les tables sans clé unique.
 
 Pour garantir l'équité des benchmarks TPC-B et la comparabilité entre moteurs, le protocole applique systématiquement deux étapes :
 1. **Capture de la limite brute** : Vérification du rejet ou du comportement exact sur une table `pgbench_history_nokey` sans clé primaire.
@@ -76,15 +81,18 @@ Au-delà des cas nominaux, chaque PoC est poussé jusqu'à ses **points de ruptu
 
 ---
 
-## 6. Suites de charge (`pgbench` Suites A-D et `sysbench` Suite E)
+## 6. Suites de charge (`Suites A-H`, `V1-V5`)
 
-Les performances comparatives sont mesurées à facteur d'échelle fixe (`PG_BENCH_SCALE = 10` par défaut, soit $1\,000\,000$ de lignes dans `pgbench_accounts`) avec phase de chauffe (*warm-up*) préalable :
+Les vagues baseline (`V1-V2`) utilisent `PG_SCALE = 2` (ou `PG_BENCH_SCALE = 10`, soit $1\,000\,000$ de lignes). Les vagues `V5` optimisées utilisent `PG_SCALE = 20` avec chauffe préalable :
 
-- **Suite A (`pgbench` TPC-B standard multi-écrivain)** : Charge mixte lecture/écriture (`accounts`, `tellers`, `branches`, `history` avec surrogate PK) répartie entre nœuds actifs via le point d'entrée proxy/routeur.
-- **Suite B (`pgbench -S` lecture seule)** : Mesure du passage à l'échelle horizontal des lectures sur l'ensemble des nœuds.
+- **Suite A (`pgbench` TPC-B standard multi-écrivain)** : Charge mixte lecture/écriture (`accounts`, `tellers`, `branches`, `history` avec surrogate PK) répartie entre nœuds actifs par le proxy.
+- **Suite B (`pgbench -S` et `B2` Overlap RW)** : Mesure du passage à l'échelle des lectures et des conflits d'écritures concurrentes.
 - **Suite C (écritures disjointes partitionnées)** : Chaque nœud écrit sur une partition dédiée d'identifiants (`aid` modulaires ou plages par nœud) afin de mesurer le débit maximal sans conflit logique ni contention de verrou inter-nœuds.
 - **Suite D (contention forte sur ligne chaude)** : Multiples clients ciblant un unique compte (`aid = 1`) pour exposer le coût des verrous distribués, le taux d'erreurs `SQLSTATE 40001` et la divergence en mode asynchrone.
 - **Suite E (`sysbench oltp_read_write`)** : Charge analytique/OLTP alternative indépendante de `pgbench` validant le comportement sur transactions multi-requêtes préparées.
+- **Suites `H`, `F_wan` et `G_conc` (`V2-V5`)** : Mesurent les insertions séquentielles (`H`), la latence WAN `tc netem 10/25/50 ms` (`F_wan`) et la montée en charge `V5` (`G_conc`).
+
+Consultez les résultats complets aux chapitres [06](06_resultats_tests_et_benchmarks.md), [12](12_clustering_postgresql_18_et_benchmarks.md) et [13](13_optimisation_production_et_benchmarks_realistes.md).
 
 ---
 
@@ -93,7 +101,7 @@ Les performances comparatives sont mesurées à facteur d'échelle fixe (`PG_BEN
 Toute extrapolation des mesures de ce laboratoire vers une production industrielle doit intégrer cinq biais structurels :
 
 1. **Latence réseau quasi nulle en local** : Entre conteneurs sur un même pont Docker, le RTT reste sous la milliseconde ($< 1\text{ ms}$). En production multi-régions ($\text{RTT} = 12\text{--}150\text{ ms}$), les solutions Raft/2PC (`#4` Eager, `#5`, `#6`, `#13`) subissent un effondrement de débit par session proportionnel à $1 / \text{RTT}$ (chapitre 02).
-2. **Stockage VHDX partagé** : Sous WSL2, tous les nœuds d'une grappe écrivent sur le même contrôleur NVMe virtuel ; la contention `fsync` cumulée pénalise artificiellement les grappes à 3 nœuds par rapport à trois serveurs physiques isolés.
+2. **Stockage VHDX partagé** : Sous WSL2, tous les nœuds d'une grappe écrivent sur le même contrôleur NVMe virtuel. Cette contention `fsync` cumulée pénalise artificiellement les grappes à 3 nœuds face à trois serveurs isolés.
 3. **Absence de dérive NTP réelle** : Tous les conteneurs partagent le noyau Linux WSL2 et donc exactement la même horloge système ($\epsilon_{\text{clock}} \approx 0$). Les anomalies LWW liées à la dérive horloge réelle ($\Delta t_{\text{skew}} = 5\text{--}100\text{ ms}$) n'apparaissent qu'en multi-machines physique/VM.
 4. **Échelle de données en mémoire** : À `scale = 10` (quelques centaines de mégaoctets), le jeu actif tient en RAM (`shared_buffers` / cache OS). Les coûts de compaction LSM (DocDB/Pebble) et de *VACUUM* (table `bucardo_delta` / heap PG) s'amplifient fortement sur des bases multi-téraoctets.
-5. **Boucle de ré-essai applicative** : Les tests Raft mesurent à la fois le taux brut de `40001` et la convergence après ré-essai client ; un logiciel métier non préparé aux retries échouera directement là où le harnais de test converge.
+5. **Boucle de ré-essai applicative** : Les tests Raft mesurent le taux brut de `40001` et la convergence après ré-essai client. Un logiciel métier sans boucle de retry échoue directement là où le harnais de test converge.

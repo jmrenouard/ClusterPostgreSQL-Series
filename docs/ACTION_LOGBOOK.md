@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-200 - Align Chapter 05 FR With 13 Stacks / 18 Topologies & STE Compliance (`#573`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#573` (`docs/issue-573-ch05-fr-stacks-ste`)
+- **Request / Changes / Result**: Expanded `docs/fr/05_architectures_poc_et_protocole_de_test.md` Section 2 and Section 6 to all 13 Compose stacks (`pg17-baseline`..) / 18 topologies (`v25.4` + V1/V2 `v24.3.0`, PG 18.6, YT Cluster 1.21.3, `H`/`F_wan`/`G_conc`), added Diataxis cross-links, and fixed all STE mixed-mode errors to 0; `make test` (`31/31`) and `make lint` pass.
+
 ### ACT-199 - Align Chapter 05 EN With 13 Stacks / 18 Topologies & STE Compliance (`#571`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#571` (`docs/issue-571-ch05-stacks-ste`)
 - **Request / Changes / Result**: Expanded `docs/en/05_poc_architectures_and_test_protocol.md` Section 2 and Section 6 to all 13 Compose stacks / 18 topologies (`v25.4` + V1/V2 `v24.3.0`, PG 18.6, YT Cluster 1.21.3, `H`/`F_wan`/`G_conc`), added Diataxis cross-links, and fixed all STE mixed-mode errors to 0; `make test` (`31/31`) and `make lint` pass.
