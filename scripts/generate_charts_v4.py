@@ -8,8 +8,8 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from generate_charts import fnum, fval, load_data, plt, spread
-from generate_charts_v3 import BKW, NAN, glog, save
+from chart_meta import BKW, NAN, fnum, fval, load_csv_idx, log_axis, plt, resolve_e1, save_fig
+from generate_charts import spread
 
 MM = [
     ("yt-cluster", "YT Cluster (cc=half)", "#4f46e5", "-"),
@@ -19,29 +19,33 @@ MM = [
     ("yugabyte", "YugabyteDB Raft", "#db2777", "-"),
     ("cockroach", "CockroachDB Raft", "#dc2626", "-"),
 ]
-PANELS = [
-    (
-        "A. Core Writes, Hot Contention & Append TPS (Log10)",
-        [
-            ("A_single_rw", "A: Single RW"), ("B1_disjoint_rw", "B1: Disjoint"),
-            ("B2_overlap_rw", "B2: Overlap"), ("D_hot_conflict", "D: Hot Conflict"),
-            ("H_append_only_insert", "H: Append uuidv7"),
-        ],
-    ),
-    (
-        "B. Read Scaling & Sysbench OLTP Profiles (Log10 TPS)",
-        [
-            ("C_multinode_ro", "C: Read Only"), ("E_sysbench_oltp_rw", "E1: SB RW"),
-            ("E2_sysbench_oltp_ro", "E2: SB RO"), ("E3_sysbench_oltp_wo", "E3: SB WO"),
-            ("E4_sysbench_point_select", "E4: Point Sel"),
-        ],
-    ),
-]
 SWEEPS = [
     ("C. WAN RTT Sensitivity (tc netem 0-50ms, Log10 TPS)", "Delay (tc netem)", [("A_single_rw", "0 ms"), ("F_wan_netem_10ms", "10 ms"), ("F_wan_netem_25ms", "25 ms"), ("F_wan_netem_50ms", "50 ms")]),
     ("D. Concurrency Scaling (c=1..32, Log10 TPS)", "Concurrent Clients", [(f"G_conc_c{c}", f"c={c}") for c in (1, 4, 8, 16, 32)]),
 ]
 FOOT = "LightPath | ClusterPostgreSQL-Series | 18-Suite Empirical Comparison (PG_SCALE=2)"
+
+
+def build_panels(e1: str) -> list[tuple[str, list[tuple[str, str]]]]:
+    """Return panel definitions with resolved E1_ or legacy E_ suite key."""
+    return [
+        (
+            "A. Core Writes, Hot Contention & Append TPS (Log10)",
+            [
+                ("A_single_rw", "A: Single RW"), ("B1_disjoint_rw", "B1: Disjoint"),
+                ("B2_overlap_rw", "B2: Overlap"), ("D_hot_conflict", "D: Hot Conflict"),
+                ("H_append_only_insert", "H: Append uuidv7"),
+            ],
+        ),
+        (
+            "B. Read Scaling & Sysbench OLTP Profiles (Log10 TPS)",
+            [
+                ("C_multinode_ro", "C: Read Only"), (e1, "E1: SB RW"),
+                ("E2_sysbench_oltp_ro", "E2: SB RO"), ("E3_sysbench_oltp_wo", "E3: SB WO"),
+                ("E4_sysbench_point_select", "E4: Point Sel"),
+            ],
+        ),
+    ]
 
 
 def draw_bars(ax: plt.Axes, idx: dict, ti: str, suites: list[tuple[str, str]]) -> None:
@@ -56,7 +60,7 @@ def draw_bars(ax: plt.Axes, idx: dict, ti: str, suites: list[tuple[str, str]]) -
             if v > 0:
                 av.append(v)
                 ax.text(b.get_x() + b.get_width() / 2.0, v * 1.13, fval(v), ha="center", va="bottom", fontsize=5.8, rotation=82, weight="semibold", color="#1e293b")
-    glog(ax, "y")
+    log_axis(ax, "y")
     ax.set_ylabel("TPS (Log10)", fontsize=8.8)
     ax.set_title(ti, fontsize=9.8, pad=10)
     if av:
@@ -73,7 +77,7 @@ def draw_curve(ax: plt.Axes, idx: dict, ti: str, xlab: str, steps: list[tuple[st
         if len(pts) >= 2:
             ax.plot([x for x, _ in pts], [y for _, y in pts], marker="o", ls=ls, lw=2.0, ms=5.0, color=col, label=lb)
             pts_end.append((pts[-1][1], fval(pts[-1][1]), col))
-    glog(ax, "y")
+    log_axis(ax, "y")
     ax.set_ylabel("TPS (Log10)", fontsize=8.8)
     ax.set_xlabel(xlab, fontsize=8.6, color="#334155")
     ax.set_title(ti, fontsize=9.8, pad=10)
@@ -89,20 +93,21 @@ def draw_curve(ax: plt.Axes, idx: dict, ti: str, xlab: str, steps: list[tuple[st
 
 def main() -> None:
     """Build chart_11_yt_cluster_vs_multimaster_log.png."""
-    idx, _ = load_data()
+    idx, su = load_csv_idx()
+    e1 = resolve_e1(su, "E_sysbench_oltp_rw")
     fig, ((a1, a2), (a3, a4)) = plt.subplots(2, 2, figsize=(16.0, 10.6))
-    for ax, (ti, suites) in zip((a1, a2), PANELS):
+    for ax, (ti, suites) in zip((a1, a2), build_panels(e1)):
         draw_bars(ax, idx, ti, suites)
     for ax, (ti, xlab, steps) in zip((a3, a4), SWEEPS):
         draw_curve(ax, idx, ti, xlab, steps)
     fig.legend(*a1.get_legend_handles_labels(), loc="lower center", ncol=6, fontsize=8.2, bbox_to_anchor=(0.5, 0.032))
     fig.subplots_adjust(top=0.89, bottom=0.11, hspace=0.30, wspace=0.18)
-    save(
+    save_fig(
         fig,
         "chart_11_yt_cluster_vs_multimaster_log.png",
         "YT Cluster 1.21.3 (Sync-2PC & Async) vs Active-Active Multi-Master & Raft (Log10)",
         "3-node PG 18.7 (cc=half sync-2PC vs nodes>=0 async, 0 drift) vs PG 18 BiRep, pgEdge LWW & Raft DistSQL",
-        FOOT,
+        FOOT, sub_y=0.942, foot_y=0.008,
     )
     print("Rendered chart_11_yt_cluster_vs_multimaster_log.png")
 
