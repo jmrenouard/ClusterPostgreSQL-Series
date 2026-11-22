@@ -4,13 +4,13 @@
 
 ## 1. Synthèse exécutive
 
-PostgreSQL s'est imposé comme le système de gestion de bases de données relationnelles open-source de référence grâce à son extensibilité, sa conformité SQL et la robustesse de son moteur MVCC (*Multi-Version Concurrency Control*). Historiquement conçu autour d'un modèle **mono-écrivain sur stockage local** (*shared-nothing* ou mono-nœud à journal WAL unique), PostgreSQL excelle dans les topologies Haute Disponibilité (HA) de type **Primaire-Secondaire** orchestrées par Patroni, etcd et HAProxy.
+PostgreSQL s'impose comme le SGBD relationnel open-source de référence grâce à son extensibilité et son moteur MVCC (*Multi-Version Concurrency Control*). Conçu autour d'un modèle **mono-écrivain** sur journal WAL unique, il excelle en Haute Disponibilité **Primaire-Secondaire** avec Patroni, etcd et HAProxy.
 
-En revanche, l'exigence d'**écriture multi-nœuds** (*Active-Active* ou *Multi-Master*) - qu'elle vise la géo-distribution à faible latence, l'isolation de pannes multi-régions sans temps de bascule applicatif, ou le partitionnement horizontal des écritures - heurte frontalement les invariants internes du noyau PostgreSQL : identifiants de transaction locaux (`XID` 32 bits), verrous mémoire locaux (`LWLock`, verrous consultatifs), journal séquentiel unique (`LSN`) et séquences non distribuées.
+À l'inverse, l'**écriture multi-nœuds** (*Active-Active* ou *Multi-Master*) heurte directement les invariants internes du noyau PostgreSQL. La géo-distribution, l'isolation multi-régions et le sharding butent sur quatre verrous : `XID` 32 bits locaux, `LWLock`, `LSN` unique et séquences locales.
 
-Cette étude technique évalue explicitement les cibles natives **PostgreSQL 16, 17 (`17.11`) et 18.6** aux côtés de **16+ solutions** regroupées en **7 familles architecturales** (**19 fiches techniques bilingues** et **296 mesures empiriques** : `187` V2 + `87` PG 18.6 + `22` YT Cluster 1.21.3) afin de démystifier les compromis réels entre disponibilité en écriture, cohérence forte, compatibilité PostgreSQL et coût opérationnel (TCO).
+Cette étude évalue **PostgreSQL 16, 17 (`17.11`) et 18.6** aux côtés de **16+ solutions** réparties en **7 familles**. Elle réunit **19 fiches bilingues** et **296 mesures empiriques** (`187` V2, `87` PG 18.6, `22` YT Cluster 1.21.3). Elle compare disponibilité, cohérence, parité PostgreSQL et TCO.
 
-**Saut générationnel PostgreSQL 18.6 (`#17`) :** Mesuré en direct sur `PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)` ([Fiche #17](solutions/pg18_native_clustering.md) | [Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)), PG 18.6 introduit les clés primaires actif-actif **`uuidv7()`** RFC 9562 (`50/50` convergence bi-nœuds, `0` collision `23505`, **`2 066,70 TPS`** = **`3,30x`** le débit BiRep append-only de PG 17 à `627,13 TPS`), les E/S asynchrones **`io_method=worker`** (`-18,5 %` sur scan froid) avec **`data_checksums=on`** par défaut, **7 compteurs `confl_*`** (`+confl_multiple_unique_conflicts`) et `substream=p` par défaut, tandis que `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` renvoie encore `SQLSTATE 42601` (reporté à PG 19) sans LWW/CRDT ni DDL automatique.
+**Saut générationnel PostgreSQL 18.6 (`#17`) :** Mesuré sur `PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)` ([Fiche #17](solutions/pg18_native_clustering.md) | [Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)), PG 18.6 ajoute **`uuidv7()`** RFC 9562 (`50/50` convergence, `0` `23505`, **`2 066,70 TPS`** = `3,30x` PG 17 `627,13 TPS`). Il inclut **`io_method=worker`** (`-18,5 %` scan froid), **`data_checksums=on`**, **7 compteurs `confl_*`** et `substream=p`. En revanche, `FOR ALL SEQUENCES` lève `SQLSTATE 42601` (PG 19) et le noyau reste sans LWW/CRDT ni Auto-DDL.
 
 > [!IMPORTANT]
 > **Thèse centrale de l'étude** : Il n'existe pas de réplication multi-maîtres magique sur PostgreSQL. Toute architecture multi-écrivains choisit explicitement entre **cohérence forte coordonnée par consensus** (soumise à la latence réseau WAN et aux annulations par sérialisation) et **réplication asynchrone optimiste** (exposée aux conflits Write-Write, à la dérive d'horloge et à la perte de mises à jour sans logique CRDT).
@@ -23,10 +23,10 @@ Dans un nœud PostgreSQL standard, la cohérence ACID repose sur quatre mécanis
 
 1. **Journalisation séquentielle (WAL)** : Chaque modification produit des enregistrements ordonnés par un *Log Sequence Number* (`LSN`) monotone propre à un seul maître.
 2. **Visibilité MVCC par `XID`** : Les champs système `xmin` et `xmax` des tuples dépendent d'un gestionnaire de transactions local (`CLOG` / `pg_xact`) et des captures d'instantanés (*snapshots*).
-3. **Verrouillage et contraintes en mémoire partagée** : La détection des conflits sur clés primaires (`PK`), index `UNIQUE` et clés étrangères (`FK`) s'effectue via la mémoire partagée d'une seule instance.
+3. **Verrouillage et contraintes en mémoire partagée** : La détection des conflits sur clés primaires (`PK`), index `UNIQUE` et clés étrangères (`FK`) s'effectue dans la mémoire partagée d'une seule instance.
 4. **Séquences locales et état de session** : `nextval()`, `pg_advisory_lock()`, `LISTEN/NOTIFY` et les tables temporaires ne traversent pas nativement les frontières d'une instance.
 
-Dès lors que deux nœuds acceptent simultanément des opérations `INSERT`, `UPDATE` ou `DELETE`, le système doit soit **coordonner chaque validation avant le commit** (consensus Raft/Paxos ou validation à deux phases 2PC), soit **réconcilier les divergences a posteriori** par décodage logique du WAL ou par déclencheurs SQL.
+Lorsque deux nœuds acceptent simultanément `INSERT`, `UPDATE` ou `DELETE`, le moteur arbitre deux approches. Il **coordonne chaque validation avant le commit** (Raft/Paxos ou 2PC), ou il **réconcilie a posteriori** par décodage logique ou déclencheurs.
 
 ---
 
@@ -104,4 +104,4 @@ Pour exploiter cette étude selon votre rôle (architecte, DBA, SRE ou décideur
 
 ## 5. Avertissement méthodologique
 
-Aucune architecture ne supprime gratuitement les lois de la physique réseau : la vitesse de la lumière dans la fibre impose environ 5 ms par tranche de 1 000 km aller simple. Dès lors, un consensus synchrone intercontinental souffre irrémédiablement de la latence RTT (*Round-Trip Time*), tandis qu'une réplication logique asynchrone échange la faible latence locale contre un RPO non nul et une exposition directe aux conflits d'écriture simultanés.
+Aucune architecture ne supprime gratuitement les lois de la physique réseau : la vitesse de la lumière dans la fibre impose environ 5 ms par tranche de 1 000 km aller simple. Un consensus synchrone intercontinental subit donc toujours la latence RTT (*Round-Trip Time*). À l'inverse, la réplication logique asynchrone offre une faible latence locale contre un RPO non nul et des conflits d'écriture.

@@ -97,7 +97,7 @@ All tests ran at `pg_scale = 2` (`retries_40001 = 0`). Only `Avg`, `Stddev` (`0`
 | `E4_sysbench_point_select` | 16 / 12s | 143147.96 | 143147.96 | 0.11 / 0 / 0.27 | 1718999 (0) | 0 | `PASS` |
 | `H_append_only_insert` | 8 / 12s | 3108.22 | N/A | 2.556 / 0.768 / 3.481 | 37246 (0) | 0 | `PASS_SINGLE_PRIMARY` |
 
-*(Sysbench `tx_failed` = `112` in `E`, `192` in `E3` are `ignored errors`; zero `SQLSTATE` aborts in `pgbench`.)*
+*(Sysbench `tx_failed` = `112` in `E`, `192` in `E3` are `ignored errors`. Zero `SQLSTATE` aborts occurred in `pgbench`.)*
 
 ### Table B — Concurrency Sweep (`results/benchmark_concurrency_sweep.csv`, `8s` RW)
 
@@ -152,7 +152,7 @@ Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 
 - **Maintenance Level:** **Tier S (Core)** -- `postgres/postgres` (`3446` commits/12m, `22894` stars, `6123` forks, `58` mirror committers).
 - **Currency / Freshness:** **Current -- Daily Active** -- Last push `2026-11-20T16:52:40Z`, `3446` commits/12m, latest release `REL_19_0`.
-- **Operational Manageability:** **Low Risk** -- Multi-vendor core governance; single-node `SPOF` remains an architectural boundary.
+- **Operational Manageability:** **Low Risk** -- Multi-vendor core governance, where single-node `SPOF` remains an architectural boundary.
 
 ---
 

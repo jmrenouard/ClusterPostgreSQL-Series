@@ -21,7 +21,7 @@
 
 **PostgreSQL 17 Standalone** (`pg17-standalone`) est un serveur relationnel mono-instance dépourvu de standby physique, d'abonné logique, de coordinateur externe ou de consensus par quorum. Dans cette étude, il sert de **ligne de base empirique sans réplication** pour l'ensemble des comparatifs multi-nœuds.
 
-En supprimant les allers-retours réseau, l'envoi du WAL, le décodage logique et les verrous distribués, `pg17-standalone` isole le **plafond matériel et moteur** : la latence locale de `fsync` sur le journal WAL ($L_{\text{disque}}$) et le débit MVCC sous verrous de ligne. Les pénalités de réplication sur la Suite A (ex. `-52,8 %` en streaming synchrone LAN à `409.48 TPS`, et `-93,4 %` en synchrone WAN `25 ms` à `57.0 TPS` par rapport au standalone à `866.82 TPS`, soit `-86,1 %` par rapport au synchrone LAN à `409.48 TPS`) sont mesurées à partir de cette référence.
+En supprimant les allers-retours réseau, l'envoi du WAL, le décodage logique et les verrous distribués, `pg17-standalone` isole le **plafond matériel et moteur** : la latence locale de `fsync` sur le journal WAL ($L_{\text{disque}}$) et le débit MVCC sous verrous de ligne. Les pénalités de réplication sur la Suite A partent de cette référence (`-52,8 %` en streaming synchrone LAN à `409.48 TPS`). En synchrone WAN `25 ms` (`57.0 TPS`), le débit chute de `-93,4 %` vs standalone (`866.82 TPS`, soit `-86,1 %` vs LAN).
 
 ---
 
@@ -97,7 +97,7 @@ Tests exécutés à `pg_scale = 2` (`retries_40001 = 0`). Seules les latences `A
 | `E4_sysbench_point_select` | 16 / 12s | 143147.96 | 143147.96 | 0.11 / 0 / 0.27 | 1718999 (0) | 0 | `PASS` |
 | `H_append_only_insert` | 8 / 12s | 3108.22 | N/A | 2.556 / 0.768 / 3.481 | 37246 (0) | 0 | `PASS_SINGLE_PRIMARY` |
 
-*(Les `tx_failed` `112` en `E` et `192` en `E3` sont des `ignored errors` Sysbench sous contention d'index ; zéro erreur `SQLSTATE` sous `pgbench`.)*
+*(Les `tx_failed` `112` en `E` et `192` en `E3` sont des `ignored errors` Sysbench sous contention d'index. Zéro erreur `SQLSTATE` sous `pgbench`.)*
 
 ### Tableau B — Balayage de concurrence (`results/benchmark_concurrency_sweep.csv`, `8s` RW)
 
@@ -152,7 +152,7 @@ Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf 
 
 - **Niveau de maintenance :** **Niveau S (Cœur)** -- `postgres/postgres` (`3446` commits/12m, `22894` stars, `6123` forks, `58` committeurs miroir).
 - **Fraîcheur / Actualité :** **Actuel -- Actif au quotidien** -- Dernier push `2026-11-20T16:52:40Z`, `3446` commits/12m, dernière version `REL_19_0`.
-- **Maintenabilité opérationnelle :** **Risque faible** -- Gouvernance cœur multi-éditeurs ; le `SPOF` mono-nœud reste structurel.
+- **Maintenabilité opérationnelle :** **Risque faible** -- Gouvernance cœur multi-éditeurs, où le `SPOF` mono-nœud reste structurel.
 
 ---
 
