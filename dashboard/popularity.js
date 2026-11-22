@@ -5,6 +5,8 @@
   const $ = (id) => document.getElementById(id);
   const $$ = (s) => document.querySelectorAll(s);
   const { el, attachHover, fmtNum, fmtTick, logTicks, linTicks, esc } = window.LPCharts;
+  const { kc, rw, exportCSV: saveCSV, sortRows } = window.LPUtil;
+  const POP_NUM = new Set(["stars", "forks", "total_commits", "commits_12m", "contributors"]);
 
   const pack = window.LP_POPULARITY || { cols: [], rows: [] };
   const COLS = pack.cols || [];
@@ -32,8 +34,7 @@
   const st = { lang: "en", scale: "log", met1: "stars", met2: "commits_12m", vit: "ALL", q: "", sort: "stars", dir: -1, wired: false };
 
   function popTip(r) {
-    const rw = (k, v, cls) => `<div class="tt-row"><span class="tt-k">${k}</span><span class="${cls || "tt-v"}">${v}</span></div>`;
-    const num = (v) => (v === "" || v === "N/A" ? "N/A" : Number(v).toLocaleString());
+    const num = (v) => { const n = Number(v); return v === "" || v === "N/A" || !Number.isFinite(n) ? esc(v || "N/A") : n.toLocaleString(); };
     return `<div class="tt-title">${esc(r.project_name)}</div>` +
       rw("Repo", esc(r.github_repo || "N/A")) +
       rw("Org (Repos)", r.git_account !== "N/A" ? `${esc(r.git_account)} (${num(r.account_public_repos)})` : "Proprietary") +
@@ -107,32 +108,23 @@
   }
 
   function renderKPIs() {
-    const fr = st.lang === "fr";
-    const pub = ROWS.filter((r) => r.vitality !== "Proprietary");
-    const topS = pub.reduce((a, b) => (+b.stars > +a.stars ? b : a), pub[0]);
-    const topC = pub.reduce((a, b) => (+b.commits_12m > +a.commits_12m ? b : a), pub[0]);
+    const fr = st.lang === "fr", pub = ROWS.filter((r) => r.vitality !== "Proprietary");
+    const topS = pub.length ? pub.reduce((a, b) => ((+b.stars || 0) > (+a.stars || 0) ? b : a)) : null;
+    const topC = pub.length ? pub.reduce((a, b) => ((+b.commits_12m || 0) > (+a.commits_12m || 0) ? b : a)) : null;
     const cnt = (v) => ROWS.filter((r) => r.vitality === v).length;
-    const kc = (c, l, v, s) => `<div class="kpi-card ${c}"><div class="kpi-label">${esc(l)}</div><div class="kpi-val">${v}</div><div class="kpi-sub">${s}</div></div>`;
     $("pop-kpi-grid").innerHTML = [
       kc("", fr ? "Solutions suivies" : "Tracked Solutions", `${ROWS.length}`, `${pub.length} GitHub &middot; ${cnt("Proprietary")} ${fr ? "Propri\u00e9taires" : "Proprietary"}`),
-      kc("kpi-amber", fr ? "Plus \u00e9toil\u00e9" : "Most Starred", topS ? `${fmtNum(topS.stars)} \u2605` : "N/A", topS ? `${esc(topS.short_name)} (${Number(topS.forks).toLocaleString()} forks)` : "-"),
-      kc("kpi-ok", fr ? "Top v\u00e9locit\u00e9 12m" : "Top 12m Velocity", topC ? `${Number(topC.commits_12m).toLocaleString()} / 12m` : "N/A", topC ? `${esc(topC.short_name)} (${Number(topC.contributors).toLocaleString()} contrib.)` : "-"),
+      kc("kpi-amber", fr ? "Plus \u00e9toil\u00e9" : "Most Starred", topS ? `${fmtNum(topS.stars)} \u2605` : "N/A", topS ? `${esc(topS.short_name)} (${(+topS.forks || 0).toLocaleString()} forks)` : "-"),
+      kc("kpi-ok", fr ? "Top v\u00e9locit\u00e9 12m" : "Top 12m Velocity", topC ? `${(+topC.commits_12m || 0).toLocaleString()} / 12m` : "N/A", topC ? `${esc(topC.short_name)} (${(+topC.contributors || 0).toLocaleString()} contrib.)` : "-"),
       kc("kpi-err", fr ? "Vitalit\u00e9 maintenance" : "Maintenance Vitality", `${cnt("Active")} Active`, `${cnt("Low")} Low &middot; ${cnt("Dormant")} Dormant &middot; ${cnt("Proprietary")} Prop.`),
     ].join("");
   }
 
   function renderTable() {
     const c = st.sort, d = st.dir, loc = st.lang === "fr" ? "fr-FR" : "en-US";
-    const numCols = new Set(["stars", "forks", "total_commits", "commits_12m", "contributors"]);
-    const sr = [...filteredRows()].sort((a, b) => {
-      if (numCols.has(c)) {
-        const av = a[c] === "" ? -1 : Number(a[c]), bv = b[c] === "" ? -1 : Number(b[c]);
-        return (av - bv) * d;
-      }
-      return String(a[c] ?? "").localeCompare(String(b[c] ?? "")) * d;
-    });
+    const sr = sortRows(filteredRows(), c, d, POP_NUM);
     $$("#pop-table th[data-psort]").forEach((th) => th.classList.toggle("sorted", th.dataset.psort === c));
-    const fmt = (v) => (v === "" || v === "N/A" ? '<span class="badge badge-na">N/A</span>' : Number(v).toLocaleString(loc));
+    const fmt = (v) => { if (v === "" || v === "N/A") return '<span class="badge badge-na">N/A</span>'; const n = Number(v); return Number.isFinite(n) ? n.toLocaleString(loc) : esc(v); };
     $("pop-tbody").innerHTML = sr.map((r) => {
       const repoHtml = r.github_repo && r.github_repo !== "N/A"
         ? `<a class="repo-link" href="https://github.com/${esc(r.github_repo)}" target="_blank" rel="noopener">${esc(r.github_repo)}</a>`
@@ -193,15 +185,7 @@
   }
 
   function exportCSV() {
-    const cols = [...COLS, "vitality"];
-    const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-    const csv = [cols.map(q).join(","), ...filteredRows().map((r) => cols.map((c) => q(r[c])).join(","))].join("\n") + "\n";
-    const a = Object.assign(document.createElement("a"), {
-      href: URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" })),
-      download: "cluster_pg_ecosystem_popularity.csv",
-    });
-    a.click();
-    URL.revokeObjectURL(a.href);
+    return saveCSV("cluster_pg_ecosystem_popularity.csv", [...COLS, "vitality"], filteredRows());
   }
 
   window.LPPopularity = { render, exportCSV, count: ROWS.length };
