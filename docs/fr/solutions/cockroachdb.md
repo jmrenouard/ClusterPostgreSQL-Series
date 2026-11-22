@@ -11,7 +11,7 @@
 | **ID Catalogue** | `#6` (`CockroachDB v24.3.0 Pebble Raft (#6)` dans `results/functional_limits_matrix.csv`) |
 | **Topologie Benchmark** | `cockroach` (`results/*.csv`) |
 | **Famille / Niveau** | `T5` / `Niveau 5` — SQL distribué à consensus |
-| **Versions** | `CockroachDB v24.3.0`, PG-wire `13.0.0` (moteur SQL Go *clean-room* + Pebble LSM) |
+| **Versions** | `CockroachDB v24.3.0` (V1/V2) / `v25.4.21` (V5 `latest-v25.4`), PG-wire `13.0.0` (moteur SQL Go *clean-room* + Pebble LSM) |
 | **Profil CAP / PACELC** | `CP / PC-EC` (`3 (RF=3 SQL)` — Multi-Raft par *range* de `64 MiB` `RF=3`, HLC bornée) |
 | **Licence / Déploiement** | BSL 1.1 / Enterprise (fonctions soumises à licence) / 3 conteneurs (`docker-compose-cockroach.yml`) |
 
@@ -39,20 +39,20 @@ flowchart TB
     N1 <-->|"Multi-Raft Ranges 64 MiB + HLC + 2PC parallèle"| N3
 ```
 
-Les tirs multi-écrivains (`B1`–`D`, `H`) sollicitent `crdb_node1` et `crdb_node2` (`user=root`) tandis que `crdb_node3` participe au quorum Raft (`conv_chk` vérifie les 3 nœuds ; `tc netem` retarde `crdb_node2` et `crdb_node3`).
+Les tirs multi-écrivains (`B1`–`D`, `H`) sollicitent `crdb_node1` et `crdb_node2` (`user=root`) tandis que `crdb_node3` participe au quorum Raft (`conv_chk` vérifie les 3 nœuds. `tc netem` retarde `crdb_node2` et `crdb_node3`).
 
 ---
 
 ## 3. Principes de fonctionnement et modes d'implémentation
 
-1. **Ranges Multi-Raft & commits parallèles :** Les ranges (`64 MiB`) répliquent par Raft (`RF = 3`) avec HLC, posant les intentions MVCC en parallèle du quorum pour économiser un RTT face au 2PC séquentiel.
+1. **Ranges Multi-Raft & commits parallèles :** Les ranges (`64 MiB`) répliquent par Raft (`RF = 3`) avec horloges HLC. Les écritures posent les intentions MVCC en parallèle du quorum pour économiser un RTT face au 2PC séquentiel.
 2. **Modèle de latence de commit :**
 
 $$
 L_{\text{N5-crdb-1range}} \approx L_{\text{disque-leaseholder}} + \text{RTT}_{\text{quorum-Raft}}, \qquad L_{\text{N5-crdb-2PC}} \approx L_{\text{disque}} + 2 \cdot \text{RTT}_{\text{quorum-Raft}} + T_{\text{attente-intent}}
 $$
 
-3. **Reprises `SERIALIZABLE` vs `READ COMMITTED` & `unique_rowid()` :** Le mode `SERIALIZABLE` lève `40001` (`WriteTooOldError`) sous contention (`44`/`87`/`96` reprises en `A`/`B1`/`B2` ; `685` échecs dans `E_sysbench_oltp_rw` sans reprise). `SERIAL` génère par défaut `unique_rowid()` non ordonné (`17.72 ms` `L1`, `rowid` masqué `L2`).
+3. **Reprises `SERIALIZABLE` vs `READ COMMITTED` & `unique_rowid()` :** Le mode `SERIALIZABLE` lève `40001` (`WriteTooOldError`) sous contention (`44`/`87`/`96` reprises en `A`/`B1`/`B2`. `685` échecs dans `E_sysbench_oltp_rw` sans reprise). `SERIAL` génère par défaut `unique_rowid()` non ordonné (`17.72 ms` `L1`, `rowid` masqué `L2`).
 
 | Mode / Fonction | Portée | Mécanique et stratégie de clés | Impact conflit / bascule | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
@@ -95,7 +95,7 @@ Tests à `pg_scale = 2`. Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` s
 | `H_append_only_insert` | 8 / 12s | 734.6 | N/A | 10.861 / 4.993 / 17.335 | 8813 (0) | 0 | `PASS_CONVERGED` |
 | `F_wan_netem_25ms` | 8 / 15s | 10.06 | N/A | 715.768 / 1072.655 / 2930.542 | 167 (0) | 0 | `PASS_NETEM_25MS` |
 
-*(Reprises `retries_40001` mesurées : `A=44`, `B1=87`, `B2=96`, `F_wan_netem_25ms=14`, `0` ailleurs ; `E` note `685` échecs sans reprise client.)*
+*(Reprises `retries_40001` mesurées : `A=44`, `B1=87`, `B2=96`, `F_wan_netem_25ms=14`, `0` ailleurs. `E` note `685` échecs sans reprise client.)*
 
 ### Tableau B — Balayages concurrence & WAN (`benchmark_concurrency_sweep.csv`, `benchmark_wan_sweep.csv`)
 
@@ -110,7 +110,7 @@ Tests à `pg_scale = 2`. Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` s
 | `F_wan_netem_25ms` (15s) | 25 ms | 10.06 | 715.768 / 1072.655 / 2930.542 | 167 | `PASS_NETEM_25MS` |
 | `F_wan_netem_50ms` (12s) | 50 ms | 4.53 | 1430.517 / 1325.619 / 4453.735 | 65 | `PASS_NETEM_50MS` |
 
-*(Reprises `retries_40001` mesurées : `G_conc_c1..c32 = 0/5/26/64/88` ; `F_wan_netem_10ms/25ms/50ms = 16/14/5`.)*
+*(Reprises `retries_40001` mesurées : `G_conc_c1..c32 = 0/5/26/64/88` et `F_wan_netem_10ms/25ms/50ms = 16/14/5`.)*
 
 ### Tableau C — Limites fonctionnelles (`F1`, `L1–L8`) et sondes étendues (`T11–T18`)
 
@@ -144,6 +144,8 @@ Tests à `pg_scale = 2`. Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` s
 | **Image & Ressources** | `cockroachdb/cockroach:v24.3.0`, `mem_limit: 1280m`, `--cache=256MiB`, `--max-sql-memory=256MiB`, pont `crdb_net` |
 | **Options & Setup** | `start --insecure --join=crdb_node1..3:26257`, `cockroach init`, `SHOW ZONE CONFIGURATION` (`num_replicas=3`), `hid INT8 DEFAULT unique_rowid() PRIMARY KEY` sur `pgbench_history`. |
 
+> **Mise à niveau V5 (`v25.4.21` / `cockroach-rc`) :** `docker-compose-cockroach.yml` utilise désormais `cockroachdb/cockroach:latest-v25.4` (`v25.4.21`), `mem_limit: 3072m` et HAProxy `:15480` (rôle `bench`, voir [Chapitre 13](../13_optimisation_production_et_benchmarks_realistes.md)).
+
 ## 6. Popularité GitHub, présence Git et vitalité de maintenance (`results/project_popularity.csv`)
 
 Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf `N/A`) :
@@ -154,7 +156,7 @@ Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf 
 
 - **Niveau de maintenance :** **Niveau A (OSS Actif)** -- `cockroachdb/cockroach` totalise `7 574` commits/12m (`118 999` total, `1 123` contributeurs, `32 639` stars, `8 029` issues).
 - **Fraîcheur / Actualité :** **À jour -- Vélocité élevée** -- Dernier push `2026-11-18T18:29:46Z`, `7 574` commits/12m, dernière version `v25.2.29`.
-- **Maintenabilité opérationnelle :** **Modéré** -- Forte vélocité Go (`BSL 1.1` ; SPDX `NOASSERTION`) ; impose des reprises `40001` et exclut les extensions C PG.
+- **Maintenabilité opérationnelle :** **Modéré** -- Forte vélocité Go (`BSL 1.1`, SPDX `NOASSERTION`), impose des reprises `40001` et exclut les extensions C PG.
 
 ---
 

@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-204 - Align CockroachDB FR V5 Spec & Fix STE Compliance (`#581`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#581` (`docs/issue-581-cockroach-fr-ch01-en`)
+- **Request / Changes / Result**: Added CockroachDB V5 `v25.4.21`/`3072m` upgrade block and fixed all 6 STE mixed-mode errors (`0 errors`) in `docs/fr/solutions/cockroachdb.md` (`13,940` B < `14,000` B) while preserving historical `v24.3.0` Tier 1-5 parity; `make test` (`31/31`) and `make lint` pass.
+
 ### ACT-203 - Add CockroachDB V5 Spec in EN, Remove `eventuellement` in FR & Fix STE (`#579`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#579` (`docs/issue-579-cockroach-v5-modals`)
 - **Request / Changes / Result**: Added CockroachDB V5 `v25.4.21`/`3072m` upgrade note and fixed all 6 STE errors in `docs/en/solutions/cockroachdb.md` (`13,960` B), and removed all 3 `eventuellement` occurrences in `docs/fr/03a_catalogue_natif_et_extensions.md` and `docs/fr/solutions/yt_cluster_lite.md`; `make test` (`31/31`) and `make lint` pass.
