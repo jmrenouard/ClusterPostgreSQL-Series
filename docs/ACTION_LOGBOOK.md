@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-202 - Fix ASD-STE100 Compliance & Add Diataxis Links in Chapter 07 FR (`#577`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#577` (`docs/issue-577-ch07-fr-ste`)
+- **Request / Changes / Result**: Refactored `docs/fr/07_guide_de_choix_et_architecture_cible.md` to 0 STE mixed-mode errors (removed `potentiellement`/`via`, semicolons, and >25-word sentences) and added Diataxis cross-links while preserving Mermaid IDs and metrics; `make test` (`31/31`) and `make lint` pass.
+
 ### ACT-201 - Fix ASD-STE100 Compliance & Add Diataxis Links in Chapter 07 EN (`#575`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#575` (`docs/issue-575-ch07-en-ste`)
 - **Request / Changes / Result**: Refactored `docs/en/07_decision_framework_and_production_guide.md` to 0 STE mixed-mode errors (removed `should`/`may`/`via`, semicolons, and >25-word sentences) and added Diataxis cross-links while preserving Mermaid IDs and metrics; `make test` (`31/31`) and `make lint` pass.
