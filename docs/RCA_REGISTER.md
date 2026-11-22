@@ -302,6 +302,9 @@
 - **Assumption**: `dashboard/pacelc_engine.js` computes transparent additive scores (`0-100`) from live empirical `tps`, `balance_drift`, and `verified_sqlstates`; in `baseline` mode, `pgedge-delta-apply` uses its own `D_hot_conflict` `0` drift while inheriting `pgedge` `A`/`F_wan` throughput.
 - **Impact & Removal Condition**: Every bonus/penalty is exposed verbatim in `reasons[]`; removable if standalone WAN runs are added for `pgedge-delta-apply` (already native in V5 `optimized` `pgedge`).
 
+### APP-013 - Optional Node.js Execution Guard in `tests/test_pacelc_selector.py`
+- **Date / Action**: `2026-11-22` (`ACT-188`) | **Approximation**: Python-level catalog/command/sheet parity tests always run; JS engine and UI runtime assertions run automatically when `node` is on `PATH` and cleanly `skipTest` on Python-only runners without Node.js.
+
 ## 4. Unimplemented Ideas & Future Roadmap (`IDEA-XXX`)
 
 ### IDEA-001 - Automated Cross-Topology `pgbench` & `sysbench` Matrix
