@@ -3,19 +3,14 @@
 
 from __future__ import annotations
 
-import csv
 import math
 import pathlib
 import sys
-from collections import defaultdict
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from chart_meta import COL, SCOL, SLAB, TOPOS
-from generate_charts import RES_DIR, draw_bars as draw_base_bars, fnum, fval, load_data, plt
-from generate_charts_v3 import NAN, glog, save
+from chart_meta import COL, TOPOS, fnum, fval, load_csv_idx, log_axis, plt, resolve_e1, save_fig
+from generate_charts import draw_bars as draw_base_bars
 from matplotlib.patches import Patch
-
-OPT_CSV = RES_DIR / "benchmark_optimized.csv"
 
 OPT_ORD = [
     "pg17-standalone", "pg17-async-streaming", "pg17-sync-streaming", "pg17-logical", "pg-birep",
@@ -61,13 +56,11 @@ FOOT_12 = "LightPath | ClusterPostgreSQL-Series | Baseline (301 rows, PG_SCALE=2
 FOOT_13 = "LightPath | ClusterPostgreSQL-Series | Production-Tuned V5 Panorama (18 topologies, 318 rows, PG_SCALE=20, 4x25k Sysbench)"
 
 
-def load_optimized() -> dict[str, dict[str, dict[str, str]]]:
-    """Load results/benchmark_optimized.csv keyed by (topology, suite)."""
-    idx: dict[str, dict[str, dict[str, str]]] = defaultdict(dict)
-    with OPT_CSV.open(encoding="utf-8", newline="") as fh:
-        for r in csv.DictReader(fh):
-            idx[r["topology"].strip()][r["suite"].strip()] = r
-    return idx
+def _row_for(topo_map: dict[str, dict[str, str]], suite: str) -> dict[str, str]:
+    """Resolve suite row supporting both E1_ and legacy E_ Sysbench keys."""
+    if suite in ("E_sysbench_oltp_rw", "E1_sysbench_oltp_rw"):
+        return topo_map.get("E1_sysbench_oltp_rw") or topo_map.get("E_sysbench_oltp_rw", {})
+    return topo_map.get(suite, {})
 
 
 def has_drift(row: dict[str, str]) -> bool:
@@ -81,14 +74,13 @@ def has_drift(row: dict[str, str]) -> bool:
 
 def draw_c12_panel(ax: plt.Axes, base: dict, opt: dict, suite: str, title: str, pills: dict) -> None:
     """Draw one Baseline vs Production-Tuned Log10 panel across all 18 topologies."""
-    xs = list(range(len(OPT_ORD)))
-    w = 0.39
+    xs, w = list(range(len(OPT_ORD))), 0.39
     vals_all: list[float] = []
     new_slots: list[int] = []
     na_slots: list[int] = []
     for i, topo in enumerate(OPT_ORD):
-        brow = base[topo].get(suite, {}) if topo != "cockroach-rc" else {}
-        orow = opt[topo].get(suite, {})
+        brow = _row_for(base[topo], suite) if topo != "cockroach-rc" else {}
+        orow = _row_for(opt[topo], suite)
         bv, ov = fnum(brow.get("tps")), fnum(orow.get("tps"))
         b_bad, o_bad = has_drift(brow), has_drift(orow)
         b_col = "#fca5a5" if b_bad else "#64748b"
@@ -118,7 +110,7 @@ def draw_c12_panel(ax: plt.Axes, base: dict, opt: dict, suite: str, title: str, 
             ax.text(i, max(bv, ov) * mul, tag, ha="center", va="bottom", fontsize=5.9, weight="bold", color=tc,
                     bbox={"boxstyle": "round,pad=0.20", "fc": fc, "ec": ec, "lw": 0.75})
 
-    glog(ax, "y")
+    log_axis(ax, "y")
     ax.set_title(title, fontsize=9.8, pad=8)
     ax.set_ylabel("TPS (Log10)", fontsize=8.8)
     lo = max(10 ** math.floor(math.log10(min(vals_all)) - 0.15), 0.7) if vals_all else 1.0
@@ -146,12 +138,12 @@ def chart_12(base: dict, opt: dict) -> None:
     ]
     fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 0.922), ncol=4, fontsize=8.6)
     fig.subplots_adjust(top=0.875, bottom=0.085, hspace=0.24, wspace=0.14)
-    save(
+    save_fig(
         fig,
         "chart_12_baseline_vs_optimized_log.png",
         "Baseline (PG_SCALE=2) vs Production-Tuned (PG_SCALE=20) Across 18 Topologies (Log10)",
         "Durable fsync=on | Tuned PG18/Logical/Raft deliver 1.7x-7.3x speedups; pgEdge delta_apply removes -279k LWW drift; CRDB RC removes 40001 retries",
-        FOOT_12,
+        FOOT_12, sub_y=0.942, foot_y=0.008,
     )
     print("Rendered chart_12_baseline_vs_optimized_log.png")
 
@@ -194,25 +186,26 @@ def draw_c13_sweep(ax: plt.Axes, opt: dict, title: str, xlab: str, steps: list[t
         vals_all.extend(y for _, y in pts)
         endpoints.append((pts[-1][1], f"{SHORT_LBL[topo]}: {fval(pts[-1][1])}", col))
 
-    glog(ax, "y")
+    log_axis(ax, "y")
     ax.set_title(title, fontsize=9.8, pad=10)
     ax.set_ylabel("TPS (Log10)", fontsize=8.8)
     ax.set_xlabel(xlab, fontsize=8.8, color="#334155")
-    lo = max(10 ** math.floor(math.log10(min(vals_all)) - 0.2), lo_floor)
-    hi = max(vals_all) * 2.2
-    ax.set_ylim(lo, hi)
-    for y_orig, y_lbl, txt, col in spread_bidir(endpoints, lo * 1.15, hi * 0.86, 0.082):
-        ax.annotate(
-            txt, xy=(xr, y_orig), xytext=(xr + 0.22, y_lbl),
-            fontsize=6.6, color=col, weight="bold", va="center",
-            arrowprops={"arrowstyle": "-", "color": col, "lw": 0.65, "alpha": 0.65, "shrinkA": 2, "shrinkB": 2},
-        )
+    if vals_all:
+        lo = max(10 ** math.floor(math.log10(min(vals_all)) - 0.2), lo_floor)
+        hi = max(vals_all) * 2.2
+        ax.set_ylim(lo, hi)
+        for y_orig, y_lbl, txt, col in spread_bidir(endpoints, lo * 1.15, hi * 0.86, 0.082):
+            ax.annotate(
+                txt, xy=(xr, y_orig), xytext=(xr + 0.22, y_lbl),
+                fontsize=6.6, color=col, weight="bold", va="center",
+                arrowprops={"arrowstyle": "-", "color": col, "lw": 0.65, "alpha": 0.65, "shrinkA": 2, "shrinkB": 2},
+            )
     ax.set_xticks(range(len(steps)))
     ax.set_xticklabels([lb for _, lb in steps], fontsize=8.4, weight="semibold")
     ax.set_xlim(-0.15, xr + right_pad)
 
 
-def chart_13(opt: dict) -> None:
+def chart_13(opt: dict, e1: str = "E_sysbench_oltp_rw") -> None:
     """Render chart_13_optimized_all_topologies_log.png across all 18 topologies."""
     fig = plt.figure(figsize=(21.5, 14.5))
     gs = fig.add_gridspec(2, 2, height_ratios=[0.95, 1.12], hspace=0.40, wspace=0.18)
@@ -220,7 +213,7 @@ def chart_13(opt: dict) -> None:
     ax_conc = fig.add_subplot(gs[1, 0])
     ax_wan = fig.add_subplot(gs[1, 1])
 
-    core_suites = ["A_single_rw", "B1_disjoint_rw", "C_multinode_ro", "E_sysbench_oltp_rw", "H_append_only_insert"]
+    core_suites = ["A_single_rw", "B1_disjoint_rw", "C_multinode_ro", e1, "H_append_only_insert"]
     draw_base_bars(ax_top, OPT_ORD, core_suites, opt, "tps", "TPS (Log10)", "A. Core Workloads Across All 18 Production-Tuned Topologies (Log10 TPS)")
     ax_top.set_xticklabels([SHORT_LBL[t] for t in OPT_ORD], rotation=22, ha="right", fontsize=8.2, weight="semibold")
 
@@ -229,24 +222,27 @@ def chart_13(opt: dict) -> None:
     draw_c13_sweep(ax_conc, opt, "B. Concurrency Scaling Sweep (c=1..32, 18 Topologies)", "Concurrent Clients", conc_steps, 1.55, 10.0)
     draw_c13_sweep(ax_wan, opt, "C. WAN Netem Latency Sweep (0-50 ms, 16 Multi-Node Topologies)", "WAN RTT Delay (tc netem)", wan_steps, 1.25, 0.8)
 
-    fig.legend(*ax_conc.get_legend_handles_labels(), loc="lower center", ncol=6, fontsize=8.0, bbox_to_anchor=(0.5, 0.025))
+    handles, labels = ax_conc.get_legend_handles_labels()
+    if handles:
+        fig.legend(handles, labels, loc="lower center", ncol=6, fontsize=8.0, bbox_to_anchor=(0.5, 0.025))
     fig.subplots_adjust(top=0.885, bottom=0.125)
-    save(
+    save_fig(
         fig,
         "chart_13_optimized_all_topologies_log.png",
         "Production-Tuned 18-Topology Panorama: Core Suites, Concurrency & WAN Sweep (PG_SCALE=20, Log10)",
         "All 18 topologies tuned under durable fsync=on | PG18 + pgEdge CRDT + CRDB (Serializable & RC) + YT Cluster (cc=half & async)",
-        FOOT_13,
+        FOOT_13, sub_y=0.942, foot_y=0.008,
     )
     print("Rendered chart_13_optimized_all_topologies_log.png")
 
 
 def main() -> None:
     """Build V5 baseline-vs-optimized and 18-topology panorama charts."""
-    base, _ = load_data()
-    opt = load_optimized()
+    base, base_su = load_csv_idx()
+    opt, opt_su = load_csv_idx(("benchmark_optimized.csv",), overwrite=True)
+    e1 = resolve_e1(opt_su or base_su, "E_sysbench_oltp_rw")
     chart_12(base, opt)
-    chart_13(opt)
+    chart_13(opt, e1)
 
 
 if __name__ == "__main__":
