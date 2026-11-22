@@ -31,13 +31,13 @@
 
 ### Architecture & Internals
 
-YugabyteDB pairs a **forked PostgreSQL C query layer (`YSQL`)** with a C++ distributed transactional storage engine (**`DocDB`**) modeled on Google Spanner. Tables are automatically hash- or range-sharded into **tablets**; each tablet forms an independent **Raft consensus group** (typically Replication Factor `RF = 3`) persisted on **RocksDB** LSM-trees rather than PostgreSQL heap files. Every node accepts reads and writes simultaneously (active-active entry), routing operations transparently to the owning tablet Raft leader.
+YugabyteDB pairs a **forked PostgreSQL C query layer (`YSQL`)** with a C++ distributed transactional storage engine (**`DocDB`**) modeled on Google Spanner. Tables shard automatically by hash or range into **tablets**. Each tablet forms a **Raft consensus group** (typical Replication Factor `RF = 3`) backed by **RocksDB** LSM-trees. Every node accepts reads and writes simultaneously (active-active entry), routing operations transparently to the owning tablet Raft leader.
 
 ### Concurrency, HLC, DDL & Limits
 
-- **Hybrid Logical Clocks (HLC) & Isolation:** HLC combines physical time (bounded by `--max_clock_skew_usec`, default `500 ms`) with logical counters to order transactions cluster-wide. Under `READ COMMITTED`, YugabyteDB supports **Wait-on-Conflict (Pessimistic)** locking; under `REPEATABLE READ` and `SERIALIZABLE`, conflicting transactions abort with **`SQLSTATE 40001`**, requiring application retry logic.
-- **PG Compatibility:** Because YSQL reuses PostgreSQL's C parser, planner, and PL/pgSQL executor, triggers, views, stored procedures, `pg_trgm`, `uuid-ossp`, and `pgvector` work cleanly; only storage-coupled internals (`VACUUM`, `CTID` assumptions, raw heap extensions) differ.
-- **Quorum Limits (`PC/EC`):** Survives 1-of-3 node loss with `RPO = 0`; losing 2-of-3 nodes halts tablet writes/linearizable reads immediately.
+- **Hybrid Logical Clocks (HLC) & Isolation:** HLC combines physical time (bounded by `--max_clock_skew_usec`, default `500 ms`) with logical counters to order transactions cluster-wide. Under `READ COMMITTED`, YugabyteDB uses **Wait-on-Conflict (Pessimistic)** locking. Under `REPEATABLE READ` and `SERIALIZABLE`, conflicting transactions abort with **`SQLSTATE 40001`** and require client retries.
+- **PG Compatibility:** YSQL reuses PostgreSQL's C parser, planner, and PL/pgSQL executor, so triggers, views, `pg_trgm`, `uuid-ossp`, and `pgvector` work cleanly. Only storage-coupled internals (`VACUUM`, `CTID`, heap extensions) differ.
+- **Quorum Limits (`PC/EC`):** Survives 1-of-3 node loss with `RPO = 0`. Losing 2-of-3 nodes halts tablet writes and linearizable reads immediately.
 
 ---
 
@@ -49,13 +49,13 @@ YugabyteDB pairs a **forked PostgreSQL C query layer (`YSQL`)** with a C++ distr
 
 ### Architecture & Internals
 
-CockroachDB implements a **clean-room Go SQL engine** speaking the PostgreSQL wire protocol (`pgwire`), layered over a monotonic KV store backed by **Pebble** (a Go LSM engine) and **Multi-Raft** per 64 MiB **Range**. Each range elects a **Leaseholder** that coordinates strongly consistent reads locally without Raft disk rounds while writes replicate synchronously across the range's Raft quorum.
+CockroachDB implements a **clean-room Go SQL engine** speaking PostgreSQL wire protocol (`pgwire`). It stores ranges per 64 MiB **Range** over **Pebble** (Go LSM) and **Multi-Raft**. Each range elects a **Leaseholder** that coordinates strongly consistent reads locally without Raft disk rounds while writes replicate synchronously across the range's Raft quorum.
 
 ### Concurrency, Multi-Region & Limits
 
 - **Strict `SERIALIZABLE` & `40001` Retries:** CockroachDB defaults globally to **`SERIALIZABLE`** isolation. Concurrent updates to the same row or overlapping predicate ranges raise **`SQLSTATE 40001`** (`RETRY_WRITE_TOO_OLD`), making client-side retry loops mandatory.
 - **Geo-Distributed Primitives:** Native SQL syntax (`ALTER DATABASE ... SURVIVE REGION FAILURE`, `REGIONAL BY ROW`, `GLOBAL` tables) places leaseholders close to users or replicates read-mostly lookup tables broadly.
-- **PG Ecosystem Divergence:** Not a PostgreSQL engine fork — zero support for PostgreSQL C extensions (`PostGIS` partial parity only, no `pg_stat_statements` PG parity), non-trivial PL/pgSQL/stored-procedure gaps, and `SERIAL` defaults to `unique_rowid()` (unordered 64-bit IDs) to prevent monotonic range hotspots.
+- **PG Ecosystem Divergence:** Not a PG kernel fork, so it lacks C extensions (`PostGIS` is partial, no `pg_stat_statements` parity) and has PL/pgSQL gaps. `SERIAL` defaults to `unique_rowid()` (unordered 64-bit IDs) to avoid range hotspots.
 
 ---
 
@@ -67,11 +67,11 @@ CockroachDB implements a **clean-room Go SQL engine** speaking the PostgreSQL wi
 
 ### Architecture & Internals
 
-Citus is a pure PostgreSQL extension transforming standard PostgreSQL 17 instances into a **Coordinator + Worker** horizontally sharded cluster (`citus_add_node`). Tables are classified as **Hash-Distributed** (partitioned across worker shards by a distribution column such as `account_id`), **Reference Tables** (replicated across all workers via 2PC), or Coordinator-local tables. **Citus MX** propagates shard metadata to workers so applications can issue queries against any node.
+Citus is a pure PostgreSQL extension transforming standard PostgreSQL 17 instances into a **Coordinator + Worker** horizontally sharded cluster (`citus_add_node`). Tables are classified as **Hash-Distributed** (partitioned across worker shards by a distribution column such as `account_id`), **Reference Tables** (replicated across all workers with 2PC), or Coordinator-local tables. **Citus MX** propagates shard metadata to workers so applications can issue queries against any node.
 
 ### Concurrency, `0A000` Constraint & Limits
 
-- **Distributed 2PC:** Single-shard DML executes directly on one worker with native PG latency. Multi-shard updates and Reference Table writes enforce atomicity via **Two-Phase Commit (`PREPARE TRANSACTION` / `COMMIT PREPARED`)**, requiring `max_prepared_transactions > 0`.
+- **Distributed 2PC:** Single-shard DML executes directly on one worker with native PG latency. Multi-shard updates and Reference Table writes enforce atomicity with **Two-Phase Commit (`PREPARE TRANSACTION` / `COMMIT PREPARED`)**, requiring `max_prepared_transactions > 0`.
 - **Hard Schema Limit (`SQLSTATE 0A000`):** Every `PRIMARY KEY` or `UNIQUE` constraint on a distributed table **must include the distribution column**, or creation fails with `SQLSTATE 0A000`. Cross-shard foreign keys are restricted to colocated tables or reference tables.
 - **Availability:** Without streaming HA replicas behind every worker, losing a single worker renders its shards unavailable even though healthy workers and reference reads keep running.
 
@@ -85,12 +85,12 @@ Citus is a pure PostgreSQL extension transforming standard PostgreSQL 17 instanc
 
 ### Architecture & Internals
 
-Derived from NTT's **Postgres-XC**, this lineage splits PostgreSQL into stateless **Coordinators**, sharded **Datanodes**, and a centralized **Global Transaction Manager (GTM)** issuing cluster-wide transaction IDs (`GXID`) and global MVCC snapshots for consistent distributed 2PC reads and writes.
+Derived from NTT's **Postgres-XC**, this lineage splits PostgreSQL into stateless **Coordinators** and sharded **Datanodes**. A central **Global Transaction Manager (GTM)** issues cluster `GXID` identifiers and MVCC snapshots for distributed 2PC.
 
 ### Status & Structural Bottlenecks
 
-- **Maintenance Status:** **Postgres-XC** is retired; **Postgres-XL** has been dormant/unmaintained since ~2018 (frozen on PG 10); **OpenTenBase** (Tencent's active fork of TBase) remains the sole actively maintained open-source descendant.
-- **GTM Bottleneck:** Every distributed query and transaction contacts the **GTM** (partially buffered via GTM-Proxy). Across WAN links, GTM network trips amplify latency sharply, making this family better suited to intra-DC OLAP/HTAP MPP than geo-distributed active-active OLTP.
+- **Maintenance Status:** **Postgres-XC** is retired, and **Postgres-XL** stayed dormant since ~2018 (frozen on PG 10). **OpenTenBase** (Tencent's fork of TBase) remains the sole active open-source descendant.
+- **GTM Bottleneck:** Every distributed query and transaction contacts the **GTM** (partially buffered through GTM-Proxy). Across WAN links, GTM network trips amplify latency sharply, making this family better suited to intra-DC OLAP/HTAP MPP than geo-distributed active-active OLTP.
 
 ---
 
@@ -102,7 +102,7 @@ Derived from NTT's **Postgres-XC**, this lineage splits PostgreSQL into stateles
 
 ### Architecture & Internals
 
-**Bucardo 5** is an external Perl daemon (`bucardo`) using **PL/Perl** triggers and shadow delta tables (`bucardo_delta`, `bucardo_track`) installed inside each participating PostgreSQL database. Multi-master `sync` tasks group databases as bidirectional sources (`dbgroup` with `db1:source, db2:source`) and wake via PostgreSQL `LISTEN/NOTIFY` or polling intervals.
+**Bucardo 5** is an external Perl daemon (`bucardo`) using **PL/Perl** triggers and shadow delta tables (`bucardo_delta`, `bucardo_track`) installed inside each participating PostgreSQL database. Multi-master `sync` tasks group databases as bidirectional sources (`dbgroup` with `db1:source, db2:source`) and wake on PostgreSQL `LISTEN/NOTIFY` or polling intervals.
 
 ### Conflicts, PK Constraint & Limits
 
@@ -120,7 +120,7 @@ Derived from NTT's **Postgres-XC**, this lineage splits PostgreSQL into stateles
 
 ### Architecture & Internals
 
-Written in Java, **SymmetricDS** captures row mutations via database triggers into internal staging tables (`sym_data`), groups them into `sym_outgoing_batch` payloads, and pushes batches over HTTP/HTTPS across multi-tier hub-and-spoke or mesh topologies.
+Written in Java, **SymmetricDS** captures row changes with triggers into staging tables (`sym_data`). It packs rows into `sym_outgoing_batch` payloads and pushes batches over HTTP/HTTPS across hub-and-spoke or mesh links.
 
 ### Conflicts & Limits
 

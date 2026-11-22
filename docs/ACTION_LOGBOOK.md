@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-213 - Refactor Chapter 03b EN Part 1 (#5-#10) for STE Compliance (`#599`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#599` (`docs/issue-599-ch03b-en-p1`)
+- **Request / Changes / Result**: Refactored Part 1 (`#5-#10`, L1-131) of `docs/en/03b_solutions_distributed_triggers_cloud.md` to 0 STE errors / 0 `via` / 0 forbidden modals in Part 1; `make test` (`31/31`) and `make lint` pass.
+
 ### ACT-212 - Refactor Chapter 03a FR Part 2 (#15-#18) for 0 STE Errors (`#597`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#597` (`docs/issue-597-ch03a-fr-p2`)
 - **Request / Changes / Result**: Refactored Part 2 (`#15-#18`, L103-162) of `docs/fr/03a_catalogue_natif_et_extensions.md` to full-file `0` STE errors (`18 warnings`, 0 `via`/weak modals); `make test` (`31/31`) and `make lint` pass.
