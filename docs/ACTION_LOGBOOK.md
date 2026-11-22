@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-219 - Complete Chapter 08 EN Section 3 and Refactor Chapter 11 EN (`#611`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#611` (`docs/issue-611-ch08-en-sec3-ch11-en`)
+- **Request / Changes / Result**: Completed `docs/en/08_limits_and_failure_modes.md` Section 3 (`0` STE errors full-file) and refactored `docs/en/11_ecosystem_popularity_and_vitality.md` (`0` STE errors, `0` `via`, `0` forbidden modals); Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
+
 ### ACT-218 - Refactor Chapter 08 EN Sections 1-2 for STE Compliance (`#609`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#609` (`docs/issue-609-ch08-en-complete`)
 - **Request / Changes / Result**: Refactored Sections 1-2 (before `## 3. Extended Empirical Matrix`) of `docs/en/08_limits_and_failure_modes.md` to 0 STE errors, 0 `via`, and 0 forbidden modals in Sections 1-2 (Section 3 deferred to keep diff < 14,800 B); Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
