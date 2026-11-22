@@ -6,13 +6,14 @@ from __future__ import annotations
 import csv
 import pathlib
 import sys
-from collections import defaultdict
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from generate_charts import OUT_DIR as OUT, RES_DIR as RES, fnum, ftick, fval, plt
+from chart_meta import (
+    BKW, NAN, RES_DIR, fnum, fval, inum,
+    load_csv_idx, log_axis, plt, resolve_e1, save_fig,
+)
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
-from matplotlib.ticker import FuncFormatter
 
 PG17 = ("benchmark_summary.csv", "benchmark_extended_workloads.csv", "benchmark_wan_sweep.csv")
 OVR = {"postgres-core": "PostgreSQL Core*", "pgpool2": "PgPool-II*", "spanner-pgadapter": "Spanner PGAdapter"}
@@ -41,45 +42,26 @@ SUITES = [
     ("E_sysbench_oltp_rw", "E1: Sysbench RW"), ("E3_sysbench_oltp_wo", "E3: Sysbench WO"),
     ("H_append_only_insert", "H: Append Insert"), ("F_wan_netem_25ms", "F: WAN 25ms"),
 ]
-FOOT = "LightPath | ClusterPostgreSQL-Series | Live GitHub API Snapshot (2026-11-20 UTC)"
-BKW, NAN = {"ec": "#fff", "lw": 0.4}, float("nan")
-
-
-def inum(v: object) -> int | None:
-    s = str(v or "").strip()
-    return None if not s or s.upper() == "N/A" else int(float(s))
-
-
-def glog(ax: plt.Axes, axis: str) -> None:
-    if axis in ("x", "both"):
-        ax.set_xscale("log")
-        ax.xaxis.set_major_formatter(FuncFormatter(ftick))
-    if axis in ("y", "both"):
-        ax.set_yscale("log")
-        ax.yaxis.set_major_formatter(FuncFormatter(ftick))
-    ax.grid(True, "major", axis, color="#cbd5e1", lw=0.78)
-    ax.grid(True, "minor", axis, color="#e2e8f0", lw=0.45, ls=":")
 
 
 def top(ax: plt.Axes, ti: str, pad: int, hnd: list | None = None, nc: int = 2, fs: float = 7.6) -> None:
+    """Attach centered above-axes legend and subplot title."""
     ax.set_title(ti, size=9.8, pad=pad)
     kw = {"loc": "lower center", "bbox_to_anchor": (0.5, 1.012), "ncol": nc, "fontsize": fs}
     ax.legend(handles=hnd, **kw) if hnd else ax.legend(**kw)
 
 
-def save(fig: plt.Figure, fn: str, ti: str, sub: str, foot: str = FOOT) -> None:
-    fig.suptitle(ti, size=12.6, weight="bold", color="#0f172a", y=0.985)
-    fig.text(0.5, 0.942, sub, ha="center", va="top", size=8.4, color="#475569")
-    fig.text(0.99, 0.008, foot, ha="right", va="bottom", size=7.3, color="#64748b", style="italic")
-    OUT.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT / fn, dpi=180, bbox_inches="tight", facecolor="#fff")
-    plt.close(fig)
-
-
-def load_pop() -> list[dict]:
+def load_pop() -> tuple[list[dict], str]:
+    """Load popularity rows and dynamic snapshot date from project_popularity.csv."""
     rows: list[dict] = []
-    with (RES / "project_popularity.csv").open(encoding="utf-8", newline="") as fh:
+    snap_date = "unknown"
+    pop_csv = RES_DIR / "project_popularity.csv"
+    if not pop_csv.is_file():
+        return rows, snap_date
+    with pop_csv.open(encoding="utf-8", newline="") as fh:
         for r in csv.DictReader(fh):
+            if snap_date == "unknown" and r.get("snapshot_utc", "").strip():
+                snap_date = r["snapshot_utc"].strip()[:10]
             s = inum(r.get("stars"))
             if s is None:
                 continue
@@ -92,17 +74,21 @@ def load_pop() -> list[dict]:
             rows.append({"id": sid, "nm": OVR.get(sid, r["project_name"].split(" (")[0].strip()),
                          "s": s, "f": g("forks"), "t": g("total_commits"),
                          "m": m, "n": g("contributors"), "p": p[:7] if len(p) >= 7 else "N/A", "c": c, "v": v})
-    return rows
+    return rows, snap_date
 
 
 def h_setup(ax: plt.Axes, ys: list[int], nms: list[str], xlim: tuple[float, float], xl: str) -> None:
-    glog(ax, "x")
+    """Configure horizontal Log10 bar subplot axes."""
+    log_axis(ax, "x")
     ax.set(xlim=xlim, yticks=ys, xlabel=xl)
     ax.set_yticklabels(nms, size=8.2, weight="semibold")
     ax.invert_yaxis()
 
 
-def chart_08(rows: list[dict]) -> None:
+def chart_08(rows: list[dict], foot: str) -> None:
+    """Render chart_08_popularity_stars_forks_log.png."""
+    if not rows:
+        return
     rr = sorted(rows, key=lambda r: r["s"], reverse=True)
     ys, h, hh = list(range(len(rr))), 0.38, 0.19
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(16.8, 9.1), gridspec_kw={"width_ratios": [1.16, 1.0]})
@@ -136,16 +122,20 @@ def chart_08(rows: list[dict]) -> None:
         a2.scatter(s, yp, s=62, color=col if f else "#fff", marker=mk, ec="#fff" if f else col, lw=0.9 if f else 1.6, zorder=4)
         dx, dy, hc = OFF.get(r["id"], (8, 6, "l"))
         a2.annotate(lbl, (s, yp), (dx, dy), textcoords="offset points", size=7.2, weight="semibold", ha=HA[hc], va="center", arrowprops=arw, zorder=5)
-    glog(a2, "both")
+    log_axis(a2, "both")
     a2.set(xlim=(8, 95000), ylim=(1.5, 16000), xlabel="GitHub Stars (Log10)", ylabel="GitHub Forks (Log10)")
     top(a2, "(b) Stars vs Forks by Git Presence Category", 40, [Line2D([0], [0], marker=m, color="w", label=k, markerfacecolor=c, markersize=7.0) for k, (c, m) in CAT.items()], 3, 7.2)
 
     fig.subplots_adjust(top=0.81, bottom=0.10, wspace=0.20)
-    save(fig, "chart_08_popularity_stars_forks_log.png", "PostgreSQL Clustering Ecosystem Popularity: Stars & Forks (Log10)",
-         f"{len(rr)} public GitHub repos (* = mirror of git.postgresql.org; forks=0 on floor); 3 proprietary engines (EDB PGD, Aurora Limitless, Spanner/AlloyDB) excluded")
+    save_fig(fig, "chart_08_popularity_stars_forks_log.png", "PostgreSQL Clustering Ecosystem Popularity: Stars & Forks (Log10)",
+             f"{len(rr)} public GitHub repos (* = mirror of git.postgresql.org; forks=0 on floor); 3 proprietary engines (EDB PGD, Aurora Limitless, Spanner/AlloyDB) excluded",
+             foot=foot, sub_y=0.942, foot_y=0.008)
 
 
-def chart_09(rows: list[dict]) -> None:
+def chart_09(rows: list[dict], foot: str) -> None:
+    """Render chart_09_popularity_commits_activity_log.png."""
+    if not rows:
+        return
     rr = sorted(rows, key=lambda r: (r["m"], r["t"]), reverse=True)
     ys, h, hh = list(range(len(rr))), 0.38, 0.19
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(16.8, 8.9), sharey=True, gridspec_kw={"width_ratios": [1.14, 1.0]})
@@ -168,21 +158,21 @@ def chart_09(rows: list[dict]) -> None:
     for y, r in zip(ys, rr):
         cnt, v = r["n"], r["v"]
         a2.text(max(cnt, 1) * 1.15, y, f"{cnt:,}{'*' if r['id'] == 'postgres-core' else ''} | {r['p']} [{v}]", va="center", size=7.0, color=VIT[v], weight="bold")
-    glog(a2, "x")
+    log_axis(a2, "x")
     a2.set(xlim=(1, 75000), xlabel="Contributors (Log10 Scale)")
     top(a2, "(b) Contributors, Last Push & Maintenance Vitality", 28, [Patch(fc=c, ec="#fff", label=k) for k, c in VIT.items()], 4, 7.5)
 
     fig.subplots_adjust(top=0.83, bottom=0.10, wspace=0.06)
-    save(fig, "chart_09_popularity_commits_activity_log.png", "PostgreSQL Ecosystem Development Velocity & Maintenance Vitality (Log10)",
-         f"{len(rr)} public GitHub repos | 12m cadence: Active (>=30/yr), Maintenance (1-29/yr), Dormant/Archived-like (0/12m); * = mirror committers")
+    save_fig(fig, "chart_09_popularity_commits_activity_log.png", "PostgreSQL Ecosystem Development Velocity & Maintenance Vitality (Log10)",
+             f"{len(rr)} public GitHub repos | 12m cadence: Active (>=30/yr), Maintenance (1-29/yr), Dormant/Archived-like (0/12m); * = mirror committers",
+             foot=foot, sub_y=0.942, foot_y=0.008)
 
 
 def chart_10() -> None:
-    idx: dict[str, dict] = defaultdict(dict)
-    for p in [*(RES / n for n in PG17), RES / "benchmark_pg18.csv"]:
-        with p.open(encoding="utf-8", newline="") as fh:
-            for r in csv.DictReader(fh):
-                idx[r["topology"].strip()].setdefault(r["suite"].strip(), r)
+    """Render chart_10_pg18_vs_pg17_log.png."""
+    idx, su_set = load_csv_idx((*PG17, "benchmark_pg18.csv"))
+    e1 = resolve_e1(su_set, "E_sysbench_oltp_rw")
+    suites = [(e1 if k == "E_sysbench_oltp_rw" else k, lb) for k, lb in SUITES]
 
     fig, axes = plt.subplots(2, 6, figsize=(18.8, 9.8), sharey="row", sharex="col")
     xs, w = list(range(len(PAIRS))), 0.37
@@ -191,7 +181,7 @@ def chart_10() -> None:
     pill = {"boxstyle": "round,pad=0.22", "fc": "#dcfce7", "ec": "#16a34a", "lw": 0.75}
     vkw = {"ha": "center", "va": "bottom", "rotation": 90}
 
-    for ci, (su, slab) in enumerate(SUITES):
+    for ci, (su, slab) in enumerate(suites):
         for ri, (fld, hero, ylo, yhi, mul) in enumerate((("tps", ht, 18.0, 420000.0, 1.18), ("lat_p95_ms", hp, 0.14, 2600.0, 1.22))):
             ax = axes[ri, ci]
             v17 = [fnum(idx[a].get(su, {}).get(fld)) for _, a, _ in PAIRS]
@@ -209,7 +199,7 @@ def chart_10() -> None:
                 if (ci, i) in hero:
                     tag, ym = hero[(ci, i)]
                     ax.text(i, max(a, b) * ym, tag, ha="center", va="bottom", size=6.5, weight="bold", color="#065f46", bbox=pill)
-            glog(ax, "y")
+            log_axis(ax, "y")
             ax.set(xlim=(-0.62, 4.62), ylim=(ylo, yhi), xticks=xs)
             if ri == 0:
                 ax.set_title(slab, size=9.4, pad=8)
@@ -223,15 +213,17 @@ def chart_10() -> None:
     hnd.append(Patch(fc="#dcfce7", ec="#16a34a", label="PG 18.6 Hero Gain (TPS speedup / p95 drop)"))
     fig.legend(handles=hnd, loc="upper center", bbox_to_anchor=(0.5, 0.915), ncol=3, fontsize=8.4)
     fig.subplots_adjust(top=0.84, bottom=0.10, hspace=0.14, wspace=0.14)
-    save(fig, "chart_10_pg18_vs_pg17_log.png", "PostgreSQL 18.6 vs PostgreSQL 17.11 Head-to-Head (5 Native Topologies, Log10)",
-         "Top: Log10 TPS (higher is better) | Bottom: Log10 p95 Latency ms (lower is better) | Native uuidv7() & substream=p drive 1.7x-3.3x gains",
-         "LightPath | ClusterPostgreSQL-Series | Empirical Docker PoC: PG 18.6 (87 rows) vs PG 17.11")
+    save_fig(fig, "chart_10_pg18_vs_pg17_log.png", "PostgreSQL 18.6 vs PostgreSQL 17.11 Head-to-Head (5 Native Topologies, Log10)",
+             "Top: Log10 TPS (higher is better) | Bottom: Log10 p95 Latency ms (lower is better) | Native uuidv7() & substream=p drive 1.7x-3.3x gains",
+             "LightPath | ClusterPostgreSQL-Series | Empirical Docker PoC: PG 18.6 (87 rows) vs PG 17.11", sub_y=0.942, foot_y=0.008)
 
 
 def main() -> None:
-    pop = load_pop()
-    chart_08(pop)
-    chart_09(pop)
+    """Build Wave-3 popularity and PG 18.6 vs PG 17.11 charts."""
+    pop, snap_date = load_pop()
+    foot = f"LightPath | ClusterPostgreSQL-Series | Live GitHub API Snapshot ({snap_date} UTC)"
+    chart_08(pop, foot)
+    chart_09(pop, foot)
     chart_10()
     print(f"Rendered 3 Wave-3 charts ({len(pop)} GitHub repos + 5 PG18 vs PG17 topologies).")
 
