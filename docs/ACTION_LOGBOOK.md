@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-217 - Complete Chapter 09 EN Part 2 and Refactor Chapter 08 EN Part 2 (`#607`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#607` (`docs/issue-607-ch09-en-p2-ch08-en-p2`)
+- **Request / Changes / Result**: Completed `docs/en/09_benchmarks_methodology_and_charts.md` Sections 5-6 (full-file 0 STE errors) and refactored `docs/en/08_limits_and_failure_modes.md` Section 4 (0 STE errors/modals/`via` in Sec 4); Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
+
 ### ACT-216 - Complete Chapter 03b FR Part 2 and Refactor Chapter 09 EN Part 1 (`#605`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#605` (`docs/issue-605-ch03b-fr-p2-ch09-en-p1`)
 - **Request / Changes / Result**: Completed `docs/fr/03b_catalogue_distribue_triggers_cloud.md` Part 2 (`#11-#14`, full-file 0 STE errors) and refactored `docs/en/09_benchmarks_methodology_and_charts.md` Sections 1-4 (0 STE errors/modals/`via` in Part 1); Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
