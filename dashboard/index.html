@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ClusterPostgreSQL-Series | PostgreSQL Clustering &amp; Multi-Master Benchmark Explorer</title>
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="pacelc.css">
 </head>
 <body>
 <header class="topbar">
@@ -36,6 +37,7 @@
     <button type="button" class="tab-btn active" data-tab="bench" data-fr="Benchmarks &amp; Graphiques Log10">Benchmarks &amp; Log10 Charts</button>
     <button type="button" class="tab-btn" data-tab="matrix" data-fr="Matrice Fonctionnelle &amp; Limites (L1-L8 / T11-T18 / PG 18.6 / YT)">Functional &amp; Limits Matrix (L1-L8 / T11-T18 / PG 18.6 / YT)</button>
     <button type="button" class="tab-btn" data-tab="popularity" data-fr="Popularit&#233; &amp; Vitalit&#233; &#201;cosyst&#232;me">Ecosystem Popularity &amp; Vitality</button>
+    <button type="button" class="tab-btn" data-tab="pacelc" data-fr="S&#233;lecteur PACELC">PACELC Selector</button>
     <span id="meta-stamp" class="meta-stamp"></span>
   </nav>
 
@@ -129,6 +131,7 @@
       <div class="table-wrap"><table id="matrix-table" class="data-table matrix-table"><thead id="matrix-thead"></thead><tbody id="matrix-tbody"></tbody></table></div>
     </div>
   </section>
+  <section id="panel-pacelc" class="hidden"></section>
 
   <section id="panel-popularity" class="hidden">
     <div id="pop-kpi-grid" class="kpi-grid"></div>
@@ -159,6 +162,7 @@
 <script src="data_bench_pg18.js"></script><script src="data_bench_yt.js"></script>
 <script src="data_bench_opt_1.js"></script><script src="data_bench_opt_2.js"></script><script src="data_bench_opt_3.js"></script><script src="data_bench_opt_4.js"></script>
 <script src="data_matrix.js"></script><script src="data_matrix_ext.js"></script><script src="data_matrix_pg18.js"></script><script src="data_popularity.js"></script>
+<script src="data_pacelc.js"></script><script src="pacelc_engine.js"></script><script src="pacelc_ui.js"></script>
 <script src="charts.js"></script><script src="popularity.js"></script><script src="matrix.js"></script><script src="opt.js"></script><script src="app.js"></script>
 </body>
 </html>

@@ -107,6 +107,7 @@
 
   function exportCSV() {
     if (st.tab === "popularity" && W.LPPopularity) return W.LPPopularity.exportCSV();
+    if (st.tab === "pacelc") return W.LPPacelcUI?.exportCSV();
     if (st.tab === "bench" && st.dataset === "compare" && Opt) return Opt.exportCompareCSV(BASE_IDX, st, Opt.OPT_T, e1S(Opt.OPT_S));
     const isB = st.tab === "bench", cols = isB ? BCOLS : MAT[st.mtab].cols, rows = isB ? fBench() : MAT[st.mtab].rows.filter((r) => st.sel.has(r.topology));
     const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
@@ -120,13 +121,13 @@
     $$("[data-fr]").forEach((e) => { if (!e.dataset.en) e.dataset.en = e.textContent; e.textContent = st.lang === "fr" ? e.dataset.fr : e.dataset.en; });
     if (Opt) Opt.syncUI(st.dataset, st.lang);
     $$("[data-lang]").forEach((b) => b.classList.toggle("active", b.dataset.lang === st.lang));
-    const isBench = st.tab === "bench", isMat = st.tab === "matrix", isPop = st.tab === "popularity";
-    [["main-controls", isPop], ["bench-controls", !isBench], ["panel-bench", !isBench], ["panel-matrix", !isMat], ["panel-popularity", !isPop]].forEach(([id, h]) => $(id).classList.toggle("hidden", h));
+    const t = st.tab, isBench = t === "bench", isMat = t === "matrix", p = t === "popularity", c = t === "pacelc";
+    [["main-controls", p || c], ["bench-controls", !isBench], ["panel-bench", !isBench], ["panel-matrix", !isMat], ["panel-popularity", !p], ["panel-pacelc", !c]].forEach(([i, h]) => $(i).classList.toggle("hidden", h));
     if (isBench) {
       if (st.dataset === "compare" && Opt) Opt.renderCompare(BASE_IDX, st, Opt.OPT_T, e1S(Opt.OPT_S));
       else { const r = fBench(); renderKPIs(r); renderCharts(); renderTable(r); }
     } else if (isMat && W.LPMatrix) W.LPMatrix.render(st);
-    else if (W.LPPopularity) W.LPPopularity.render(st.lang);
+    else if (c) W.LPPacelcUI?.render(st, renderAll); else W.LPPopularity?.render(st.lang);
   }
 
   document.addEventListener("DOMContentLoaded", () => {

@@ -237,6 +237,11 @@
 - **Rejected Approach**: Combining `legacy_triggers` (4-row Section 6 + `#16` scrub), `pg18_native_clustering`, and `yt_cluster_lite` EN/FR updates into a single PR 8 (`~22,000` unified diff chars) or a 2-PR split putting both Wave-4 alignments in one PR (`~13,800-14,200` chars).
 - **Reason**: Breached the `< 15,000`-char PR diff cap (`AGENTS.md`) or exceeded the `~13,500`-char split threshold. Split M4 PR 8 into three sequential 1-slug atomic PRs (PR 8a, PR 8b, PR 8c), keeping each diff under `10,500` chars while preserving `en_shape == fr_shape`.
 
+### IMP-012 - Inlining PACELC UI & Styles Inside `index.html` / `app.js`
+- **Date / Action**: `2026-11-22` (`ACT-187`)
+- **Rejected Approach**: Embedding PACELC controls/cards inline in `index.html` (`13.6 KB`) and `app.js` (`13.9 KB`).
+- **Reason**: Breached the `< 14,000` B per-file cap; isolated into `pacelc_ui.js` and `pacelc.css` with delegated events.
+
 ## 3. Current Approximations & Simplifying Assumptions (`APP-XXX`)
 
 ### APP-001 - Ephemeral Local Laboratory Credentials
