@@ -1,0 +1,11 @@
+/* PACELC Selector styles (zero CDN). */
+.p-c,.p-cs{display:grid;grid-template-columns:repeat(auto-fit,minmax(var(--m,195px),1fr));gap:8px}
+.p-cs{--m:240px;margin:8px 0}
+.p-c .seg{flex-wrap:wrap}
+.p-h{border-top:4px solid var(--cyan)}.p-h.p-w{border-top-color:var(--amber)}.p-h.p-e{border-top-color:var(--err)}
+.p-sc{font:800 1.4rem/1 inherit;font-variant-numeric:tabular-nums;color:var(--navy)}
+.p-cv{margin:6px 0;padding-left:18px;font-size:.8rem;color:var(--ink-muted)}
+.p-cm{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--navy);color:#e2e8f0;padding:6px 9px;border-radius:6px;font:600 .73rem monospace}
+.p-cm code{overflow-x:auto;white-space:nowrap}
+.p-cp{border:1px solid #0ea5e980;background:#0ea5e933;color:#e0f2fe;border-radius:6px;padding:3px 8px;font:600 .72rem inherit;cursor:pointer;flex:none}
+.p-cp:hover{background:var(--cyan);color:var(--navy)}

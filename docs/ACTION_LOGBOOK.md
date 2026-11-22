@@ -26,6 +26,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-187 - Add PACELC Selector Tab & Styles (`#500`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#500` (`feat/issue-500-pacelc-dashboard-ui`)
+- **Request / Changes / Result**: Added `dashboard/pacelc_ui.js`, `dashboard/pacelc.css`, and minimal wiring in `dashboard/{index.html,app.js}` for bilingual `data-tab="pacelc"` selector, copyable lab commands, tab jump, and CSV export; logged `IMP-012`; all files `< 14,000` B, `node --check`, `make test` (`21/21`), `make lint` pass.
+
 ### ACT-186 - Implement Pure-JS PACELC Scoring Engine (`#498`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#498` (`feat/issue-498-pacelc-scoring-engine`)
 - **Request / Changes / Result**: Added `dashboard/pacelc_engine.js` (`window.LPPacelcEngine`, browser + Node.js, zero CDN, `< 8,000` B) ranking all 17 topologies + V5/CRDT variants across 4 PACELC inputs (`rpo`, `wanRttMs`, `conflictRate`, `tco`) and both `baseline`/`optimized` datasets from live `LP_BENCH_*` and `LP_MATRIX_*`; logged `APP-012`; `node --check`, `make test` (`21/21` OK), and `make lint` pass.
