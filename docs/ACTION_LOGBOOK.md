@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-207 - Fix ASD-STE100 Compliance in Chapter 02 EN (`#587`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#587` (`docs/issue-587-ch02-en-bucardo-ste`)
+- **Request / Changes / Result**: Refactored `docs/en/02_theoretical_foundations_cap_pacelc_conflicts.md` to 0 STE mixed-mode errors (0 `may`/`via`/semicolons, `<= 25` words/sentence) while keeping LaTeX math compliant; `make test` (`31/31`) and `make lint` pass.
+
 ### ACT-206 - Fix ASD-STE100 Compliance in Chapter 01 FR & `pg17_standalone` Sheets (`#585`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#585` (`docs/issue-585-ch01-fr-standalone-ste`)
 - **Request / Changes / Result**: Refactored `docs/fr/01_synthese_et_taxonomie.md` and `docs/{en,fr}/solutions/pg17_standalone.md` to 0 STE mixed-mode errors while preserving Tier 1-5 parity; `make test` (`31/31`) and `make lint` pass.
