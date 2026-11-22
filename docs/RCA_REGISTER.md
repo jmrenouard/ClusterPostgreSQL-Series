@@ -194,6 +194,13 @@
 - **Applied Change / Fix**: Added a `W.LPUtil || {}` defensive guard with compact local fallback helpers inside `dashboard/opt.js` (`11,976` B `< 14,000` B cap) while leaving `tests/test_pacelc_selector.py` unmodified.
 - **Result & Non-Regression Test**: Both `test_pacelc_selector.py` and `test_dashboard_js_syntax_and_unit_behavior` (`31/31` OK) plus Chrome CDP UI checks pass without skipping.
 
+### RCA-028 - Stale 11-Topology Counts, CockroachDB Version Drift & STE Structural Violations
+- **Date / Action**: `2026-11-22` (`ACT-196`..`ACT-198`, Issues `#565`, `#567`, `#569`)
+- **Observed Symptom**: Documentation audit found stale 11-topology and CockroachDB `v24.x`-only counts in `stacks/README.md`, >20/25-word sentences, semicolons, forbidden modals, French `eventuellement`, and multi-line HTML/chart blocks failing `ste_check.py`.
+- **Root Cause Analysis**: Incremental updates across benchmark waves updated Compose stacks and CSVs without a unified STE procedural/mixed check or centralized stack/version cross-reference across `README*.md`, `stacks/README.md`, and `docs/`.
+- **Applied Change / Fix**: Updated `stacks/README.md` to 13 Compose stacks / 18 active topologies (`cockroachdb/cockroach:latest-v25.4` active + `v24.3.0` V1/V2 note) and refactored `README.md`, `README.fr.md`, and `stacks/README.md` to 0 STE procedural errors.
+- **Result & Non-Regression Test**: Windows `unittest` (`31/31`) and WSL `make test lint check-math check-security` pass across PRs `#566`, `#568`, and `#569`.
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters
@@ -259,6 +266,9 @@
 
 ### IMP-014 - Creating a Separate `dashboard/util.js` File Beyond `< 14 KB` `index.html` & Manifest Caps
 - **Date / Action**: `2026-11-22` (`ACT-194`, PR `#550`) | **Rejected**: Adding a new standalone `dashboard/util.js` script tag instead of colocating `window.LPUtil` inside `dashboard/matrix.js` (`4,986` B) loaded ahead of `popularity.js`/`opt.js`/`app.js` risked pushing `dashboard/index.html` (`13,893` B) over `14,000` B and breaking offline manifest lists.
+
+### IMP-015 - Bundling `README.md`, `README.fr.md` & `stacks/README.md` STE Refactors in One PR
+- **Date / Action**: `2026-11-22` (`ACT-196`..`ACT-198`, PRs `#566`, `#568`, `#569`) | **Rejected**: Combining `README.md` (`14.4 KB` diff), `README.fr.md` (`14.3 KB` diff), and `stacks/README.md` (`3.2 KB` diff) exceeded the `< 15,000`-char PR diff limit due to `-U3` unified diff context on long catalog/synthesis lines. Split into three sequential atomic PRs.
 
 ## 3. Current Approximations & Simplifying Assumptions (`APP-XXX`)
 
