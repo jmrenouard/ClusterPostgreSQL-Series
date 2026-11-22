@@ -6,7 +6,7 @@
 
 > **Auteur** : Jean-Marie Renouard (`jmrenouard`) | **Soutenu par** : [LightPath](https://www.lightpath.fr) | **Licence** : MIT | [English Version (`README.md`)](README.md)
 
-Étude d'ingénierie reproductible sur **16 solutions PostgreSQL** (7 familles, **19 fiches d'architecture**) et **18 topologies Docker opérationnelles** (`10` PG 17/distribuées + `5` PostgreSQL 18.6 + `2` YT Cluster 1.21.3 + `cockroach-rc` via [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.1`, `13` piles), incluant **18 tests fonctionnels/limites (`L1–L8` + `T11–T18`)** plus les sondes PG 18.6 AIO/`uuidv7()`/conflits et `T_REVERT` YT Cluster, **628 mesures empiriques brutes** (**310 baseline `PG_SCALE=2`** / **301 dédupliquées** + **318 V5 optimisées `PG_SCALE=20`** : `pgbench -M prepared`, `sysbench`, `tc netem 10/25/50 ms`, `c=1..32`), **22 entrées de télémétrie GitHub** (`19` dépôts publics + `3` fermés/managés), **13 graphiques `log10`** et l'[**Explorateur HTML interactif hors-ligne (`dashboard/index.html`)**](dashboard/index.html).
+Étude d'ingénierie reproductible sur **16 solutions PostgreSQL** (7 familles, **19 fiches d'architecture**) et **18 topologies Docker opérationnelles** (`10` PG 17/distribuées + `5` PostgreSQL 18.6 + `2` YT Cluster 1.21.3 + `cockroach-rc` via [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.2`, `13` piles), incluant **18 tests fonctionnels/limites (`L1–L8` + `T11–T18`)** plus les sondes PG 18.6 AIO/`uuidv7()`/conflits et `T_REVERT` YT Cluster, **628 mesures empiriques brutes** (**310 baseline `PG_SCALE=2`** / **301 dédupliquées** + **318 V5 optimisées `PG_SCALE=20`** : `pgbench -M prepared`, `sysbench`, `tc netem 10/25/50 ms`, `c=1..32`), **22 entrées de télémétrie GitHub** (`19` dépôts publics + `3` fermés/managés), **13 graphiques `log10`** et l'[**Explorateur HTML interactif hors-ligne (`dashboard/index.html`)**](dashboard/index.html).
 
 ---
 
@@ -129,7 +129,7 @@ Les piles opérationnelles, la suite étendue (`T11–T18`) et les benchmarks V2
 ### Commandes `Makefile` essentielles
 
 ```bash
-make init-env        # Initialise le sous-module Git env/multi-db-docker-env (13 piles; harnais v2.6.1)
+make init-env        # Initialise le sous-module Git env/multi-db-docker-env (13 piles; harnais v2.6.2)
 make test && make lint  # Valide gouvernance, sécurité, LaTeX, 13 graphiques, Bash et 13 Compose
 cp .env.example .env
 make build-bench-image  # Construit multi-db-pgbench-sysbench:latest (scripts/Dockerfile.bench)
@@ -138,7 +138,7 @@ make bench-all && make bench-pg18 && make bench-yt-cluster && make bench-optimiz
 make pages-build && make pages-check  # Génère et vérifie le bundle statique hors-ligne GitHub Pages (_site/)
 ```
 
-### Piles Docker disponibles (`env/multi-db-docker-env` `v2.6.1` — voir [`stacks/README.md`](stacks/README.md))
+### Piles Docker disponibles (`env/multi-db-docker-env` `v2.6.2` — voir [`stacks/README.md`](stacks/README.md))
 
 - `pg17-baseline` / `pg-streaming` / `pg-logical` (Standalone, Streaming Async/Sync, Logique Uni PG 17)
 - `pg-birep` (`#1` PG 17 natif `origin = none`), `pgedge-spock` (`#2` Spock 5 + Snowflake), `bucardo` (`#9` Bucardo 5.6)
