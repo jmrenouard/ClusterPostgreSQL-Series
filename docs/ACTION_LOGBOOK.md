@@ -26,6 +26,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-186 - Implement Pure-JS PACELC Scoring Engine (`#498`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#498` (`feat/issue-498-pacelc-scoring-engine`)
+- **Request / Changes / Result**: Added `dashboard/pacelc_engine.js` (`window.LPPacelcEngine`, browser + Node.js, zero CDN, `< 8,000` B) ranking all 17 topologies + V5/CRDT variants across 4 PACELC inputs (`rpo`, `wanRttMs`, `conflictRate`, `tco`) and both `baseline`/`optimized` datasets from live `LP_BENCH_*` and `LP_MATRIX_*`; logged `APP-012`; `node --check`, `make test` (`21/21` OK), and `make lint` pass.
+
 ### ACT-185 - Generate PACELC Catalog Metadata Bundle (`#496`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#496` (`feat/issue-496-pacelc-catalog-bundle`)
 - **Request / Changes / Result**: Added `scripts/pacelc_catalog.py` (`4,929` B), wired `scripts/build_dashboard.py` to emit `dashboard/data_pacelc.js` (`5,342` B, `window.LP_PACELC_CATALOG`, 17 topologies + 2 variants), logged `APP-011`; `make dashboard && make test && make lint` + `node --check` pass.

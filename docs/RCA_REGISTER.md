@@ -294,6 +294,11 @@
 - **Assumption**: `dashboard/data_pacelc.js` stores compact `cols`/`rows`, `sheet_prefix` + `sheet_slug`, and bilingual caveat keys without duplicating raw `LP_BENCH_*` / `LP_MATRIX_*` data.
 - **Impact & Removal Condition**: Keeps files `< 10 KB` and PR diffs `< 15 KB` while ensuring live CSV parity.
 
+### APP-012 - Deterministic PACELC Heuristic Weights & Parent Metric Inheritance
+- **Date / Action**: `2026-11-22` (`ACT-186`)
+- **Assumption**: `dashboard/pacelc_engine.js` computes transparent additive scores (`0-100`) from live empirical `tps`, `balance_drift`, and `verified_sqlstates`; in `baseline` mode, `pgedge-delta-apply` uses its own `D_hot_conflict` `0` drift while inheriting `pgedge` `A`/`F_wan` throughput.
+- **Impact & Removal Condition**: Every bonus/penalty is exposed verbatim in `reasons[]`; removable if standalone WAN runs are added for `pgedge-delta-apply` (already native in V5 `optimized` `pgedge`).
+
 ## 4. Unimplemented Ideas & Future Roadmap (`IDEA-XXX`)
 
 ### IDEA-001 - Automated Cross-Topology `pgbench` & `sysbench` Matrix
