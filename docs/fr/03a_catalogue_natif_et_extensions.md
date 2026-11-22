@@ -25,12 +25,12 @@ Ce chapitre analyse les solutions directement ancrées dans le noyau ou l'API C 
 **Fiche dédiée :** [#1 — PG 17 Réplication logique bidirectionnelle native (`pg-birep`)](solutions/pg17_bidirectional_logical.md)
 
 ### Architecture et mécanismes internes
-Depuis PostgreSQL 16, le cœur natif permet de créer une réplication logique bidirectionnelle sans boucle infinie grâce au paramètre de souscription `origin = none`. Lorsqu'un éditeur décode son WAL (`wal_level = logical` via le plugin `pgoutput`), chaque transaction reçue d'un pair porte un identifiant d'origine dans `pg_replication_origin`. En configurant `CREATE SUBSCRIPTION ... WITH (origin = none)`, l'*apply worker* du destinataire n'émet vers ses propres abonnés que les transactions générées localement (`origin IS NULL`). L'activation de `track_commit_timestamp = on` permet de tracer l'horodatage de validation des tuples.
+Depuis PostgreSQL 16, le cœur natif permet de créer une réplication logique bidirectionnelle sans boucle infinie grâce au paramètre de souscription `origin = none`. Lorsqu'un éditeur décode son WAL (`wal_level = logical` avec `pgoutput`), chaque transaction reçue d'un pair porte un identifiant d'origine dans `pg_replication_origin`. En configurant `CREATE SUBSCRIPTION ... WITH (origin = none)`, l'*apply worker* du destinataire n'émet vers ses propres abonnés que les transactions générées localement (`origin IS NULL`). L'activation de `track_commit_timestamp = on` permet de tracer l'horodatage de validation des tuples.
 
 ### Conflits, DDL et séquences
-- **Conflits** : PostgreSQL 17 ne propose pas de résolution automatique des conflits Write-Write ou Insert-Insert. Dès qu'une insertion distante viole une clé primaire ou un index `UNIQUE`, le worker lève `SQLSTATE 23505` (`duplicate key value`) et **interrompt la souscription** (`apply_error_count` incrémenté dans `pg_stat_subscription_stats`). L'administrateur doit supprimer la ligne conflictuelle ou sauter le LSN fautif via `ALTER SUBSCRIPTION ... SKIP (lsn = '...')`.
+- **Conflits** : PostgreSQL 17 ne propose pas de résolution automatique des conflits Write-Write ou Insert-Insert. Dès qu'une insertion distante viole une clé primaire ou un index `UNIQUE`, le worker lève `SQLSTATE 23505` (`duplicate key value`) et **interrompt la souscription** (`apply_error_count` incrémenté dans `pg_stat_subscription_stats`). L'administrateur doit supprimer la ligne conflictuelle ou sauter le LSN fautif avec `ALTER SUBSCRIPTION ... SKIP (lsn = '...')`.
 - **Tables sans clé primaire** : Avec `REPLICA IDENTITY DEFAULT`, un `INSERT` est répliqué, mais tout `UPDATE` ou `DELETE` est bloqué côté éditeur avec `SQLSTATE 55000`. Une clé primaire (ou `REPLICA IDENTITY FULL`, très coûteux en WAL) est obligatoire.
-- **DDL et séquences** : Aucun DDL (`CREATE TABLE`, `ALTER TABLE`) n'est propagé automatiquement, hormis `TRUNCATE` si inclus dans la publication. Les valeurs de séquences `SERIAL`/`IDENTITY` ne sont pas répliquées en mode multi-maîtres sous PG 17 ; il faut recourir à des séquences à pas décalés (`INCREMENT BY N START WITH k`) ou à des UUID.
+- **DDL et séquences** : Aucun DDL (`CREATE TABLE`, `ALTER TABLE`) n'est propagé automatiquement, hormis `TRUNCATE` si inclus dans la publication. Les séquences `SERIAL`/`IDENTITY` ne se répliquent pas en multi-maîtres sous PG 17. Utilisez des séquences à pas décalés (`INCREMENT BY N START WITH k`) ou des UUID.
 
 ### Bilan (#1)
 - **Avantages** : 100 % open-source, aucune extension tierce, compatibilité native complète avec PostgreSQL 17, surcharge nulle en écriture locale.
@@ -46,11 +46,11 @@ Depuis PostgreSQL 16, le cœur natif permet de créer une réplication logique b
 **pgEdge** assemble un écosystème open-source (licence PostgreSQL) conçu pour le multi-maîtres géo-distribué sur PG 16/17 autour de trois extensions C :
 1. **`spock`** : moteur de réplication logique multi-nœuds (successeur open-source de `pglogical`).
 2. **`snowflake`** : générateur d'identifiants 64 bits sans coordination globale combinant horodatage, compteur séquentiel et `snowflake.node` (1 à 1023).
-3. **`lolor`** : réplication des *Large Objects* PostgreSQL (`pg_largeobject`) via une table dédiée contournant l'absence de décodage logique natif des LOB.
+3. **`lolor`** : réplication des *Large Objects* (`pg_largeobject`) dans une table dédiée contournant l'absence de décodage logique natif des LOB.
 
 ### Conflits, DDL et Delta-Apply CRDT
-- **Résolution LWW** : `spock.conflict_resolution = 'last_update_wins'` compare le `commit_timestamp` local et distant ; le perdant est consigné dans `spock.exception_log` selon `spock.exception_behaviour` (`transdiscard`, `discard`, `sub_disable`) sans figer le pipeline logique.
-- **Delta-Apply CRDT** : Sur des colonnes numériques déclarées en résolution delta, Spock capture l'image *avant* et *après* dans le WAL afin de rejouer uniquement l'écart $\Delta = v_{\text{new}} - v_{\text{old}}$ sur le pair. Deux écritures concurrentes `+100` et `-30` sur un solde initial de `1000` convergent ainsi exactement vers `1070`, éliminant le *Lost Update* classique du LWW.
+- **Résolution LWW** : `spock.conflict_resolution = 'last_update_wins'` compare le `commit_timestamp` local et distant. Le perdant est consigné dans `spock.exception_log` (`transdiscard`, `discard`, `sub_disable`) sans figer le flux.
+- **Delta-Apply CRDT** : Sur colonnes numériques delta, Spock capture les images *avant* et *après* dans le WAL. Il rejoue l'écart $\Delta = v_{\text{new}} - v_{\text{old}}$ sur le pair. Deux écritures concurrentes `+100` et `-30` sur un solde initial de `1000` convergent ainsi exactement vers `1070`, éliminant le *Lost Update* classique du LWW.
 - **Auto-DDL** : Avec `spock.enable_ddl_replication = on`, les commandes DDL sont capturées par déclencheur d'événement et propagées automatiquement aux pairs du *repset*.
 
 ### Bilan (#2)
@@ -68,7 +68,7 @@ Développé historiquement par 2ndQuadrant, **pglogical 2** a préfiguré la ré
 
 ### Conflits, DDL et séquences
 - **Conflits** : Le paramètre `pglogical.conflict_resolution` offre cinq modes (`error`, `apply_remote`, `keep_local`, `last_update_wins`, `first_update_wins`), s'appuyant sur `track_commit_timestamp = on`. Aucun mécanisme *Delta-Apply* CRDT n'existe nativement : les opérations `balance = balance + delta` concurrentes subissent le *Lost Update* en mode LWW.
-- **DDL et séquences** : La propagation DDL n'est pas transparente ; elle exige d'encapsuler explicitement les ordres dans `pglogical.replicate_ddl_command('...')`. Les séquences peuvent être synchronisées périodiquement mais restent exposées aux collisions sans décalage par pas.
+- **DDL et séquences** : La propagation DDL n'est pas transparente. Elle exige d'encapsuler les ordres dans `pglogical.replicate_ddl_command('...')`. Les séquences peuvent être synchronisées périodiquement mais restent exposées aux collisions sans décalage par pas.
 
 ### Bilan (#3)
 - **Avantages** : Historique éprouvé, filtrage fin par lignes/colonnes et compatibilité sur d'anciennes versions PostgreSQL (migrations majeures sans interruption).
@@ -92,7 +92,7 @@ PGD étend le noyau PostgreSQL (ou *EDB Postgres Extended*) par une couche de co
   - **Write-Lead** : toutes les écritures d'une table ou d'un groupe convergent vers un leader Raft élu, éliminant les conflits Write-Write tout en assurant une reprise automatisée.
   - **Eager All-Node** : validation synchrone globale garantissant l'absence totale de conflit au prix de la latence RTT multi-nœuds.
   - **CAMO (*Commit At Most Once*)** : protège les transactions contre le double envoi client lors d'une coupure en cours de commit.
-- **DDL et séquences** : Propagation DDL automatique coordonnée par verrous distribués Raft (nécessitant l'atteinte du quorum pour valider un `ALTER TABLE`), et `bdr.global_sequences` (`snowflakeid` recommandé, `galloc` par lots alloués via Raft et `timeshard` hérité).
+- **DDL et séquences** : Propagation DDL automatique coordonnée par verrous distribués Raft (nécessitant l'atteinte du quorum pour valider un `ALTER TABLE`), et `bdr.global_sequences` (`snowflakeid` recommandé, `galloc` par lots alloués par Raft et `timeshard` hérité).
 
 ### Bilan (#4)
 - **Avantages** : Plateforme multi-maîtres PostgreSQL la plus complète du marché sur le plan fonctionnel (Raft + CRDT + CAMO + Auto-DDL + proxy intégré).
