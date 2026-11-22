@@ -26,7 +26,7 @@ The harness instantiates **13 Docker Compose stacks** covering **18 active bench
 
 | Compose Stack | Architecture (#) | Active Topologies (18 Total) | Core Image Basis | Key Lab Configuration |
 | :--- | :--- | :--- | :--- | :--- |
-| `pg-standalone`, `patroni`, `pg-streaming` | #15 Control Baselines | `pg17-standalone`, `pg17-async-streaming`, `pg17-sync-streaming` (plus Patroni HA) | `postgres:17`, Patroni + `etcd` | Single-writer WAL baseline (`synchronous_commit=on` / `remote_apply`) |
+| `pg17-baseline`, `pg-streaming` (plus `patroni` HA) | #15 Control Baselines | `pg17-standalone`, `pg17-async-streaming`, `pg17-sync-streaming` (plus Patroni HA) | `postgres:17`, Patroni + `etcd` | Single-writer WAL baseline (`synchronous_commit=on` / `remote_apply`) |
 | `pg-logical` | #16 Native Uni-Logical | `pg17-logical` | `postgres:17` | Native `CREATE PUBLICATION` / `SUBSCRIPTION` uni-directional stream |
 | `pg-birep` | #1 Native Bidirectional | `pg-birep` | `postgres:17` + HAProxy | `wal_level=logical`, `origin=none`, stepped seq (`+2`), `track_commit_timestamp=on` |
 | `pgedge` | #2 pgEdge / Spock v5 | `pgedge` (plus V1/V2 `pgedge-delta-apply`) | PG 17 + `spock 5.0.14` + `snowflake` | 3-node mesh, `last_update_wins`, `enable_ddl_replication=on`, `delta_apply` probe |
@@ -96,7 +96,7 @@ After `F1–F10` and `L1–L8` complete cleanly, each cluster runs standardized 
 - **Suite E — `sysbench` OLTP (`--db-driver=pgsql`):** Cross-validates `oltp_read_write`, `oltp_read_only`, and `oltp_write_only` multi-table range scans and point lookups outside `pgbench` biases.
 - **Suites H, F_wan & G_conc (`V2–V5`):** Measure append-only `INSERT` scaling (`H`), `tc netem 10/25/50 ms` WAN delay (`F_wan`), and tuned concurrency scaling (`G_conc`, `PG_SCALE=20`).
 
-*Chapter [06](06_empirical_test_and_benchmark_results.md), [Chapter 12](12_postgresql_18_clustering_and_benchmarks.md), and [Chapter 13](13_production_tuning_and_realistic_benchmarks.md) report all empirical measurements from Suites A–H and Protocols F/L verbatim.*
+*[Chapter 06](06_empirical_test_and_benchmark_results.md), [Chapter 12](12_postgresql_18_clustering_and_benchmarks.md), and [Chapter 13](13_production_tuning_and_realistic_benchmarks.md) report all empirical measurements from Suites A–H and Protocols F/L verbatim.*
 
 ---
 
