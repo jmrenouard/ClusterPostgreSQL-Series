@@ -49,7 +49,7 @@ class _LinkCollector(HTMLParser):
             val = amap.get(a, "")
             if not val:
                 continue
-            if t in {"script", "link"} and a in {"src", "href"} and EXT_RX.match(val):
+            if t in {"script", "link", "img"} and a in {"src", "href"} and EXT_RX.match(val):
                 self.cdn.append(f"<{t} {a}={val}>")
             elif not SKIP_RX.match(val):
                 self.rel.append(val)
@@ -68,8 +68,8 @@ def _copy_tree(src: pathlib.Path, dst: pathlib.Path) -> int:
 
 def build_pages_bundle(out_dir: pathlib.Path = DEFAULT_OUT) -> dict[str, int]:
     """Stage _site/ with .nojekyll, index.html redirect, dashboard/, and assets/."""
-    out, root_res = out_dir.resolve(), ROOT.resolve()
-    if out == out.parent or root_res == out or root_res.is_relative_to(out):
+    out = out_dir.resolve()
+    if out == out.parent or any(out == d.resolve() or d.resolve().is_relative_to(out) for d in (ROOT, DASH_DIR, ASSETS_DIR)):
         raise ValueError(f"Refusing unsafe output directory: {out}")
     if not (DASH_DIR / "index.html").is_file():
         raise FileNotFoundError(f"Missing dashboard entrypoint: {DASH_DIR / 'index.html'}")
