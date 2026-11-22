@@ -6,8 +6,13 @@ import csv
 import json
 import pathlib
 import re
+import subprocess
+import sys
+import tempfile
 import unittest
 import xml.etree.ElementTree as ET
+from collections import defaultdict
+from unittest import mock
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
@@ -213,6 +218,16 @@ class TestBenchmarkArtifacts(unittest.TestCase):
         self.assertEqual(meta["popularity_count"], 22)
         self.assertGreaterEqual(meta["row_count"], 170)
 
+        bench_shards: list[list[object]] = []
+        for fname, var in (("data_bench.js", "LP_BENCH_ROWS_1"), ("data_bench_2.js", "LP_BENCH_ROWS_2"), ("data_bench_3.js", "LP_BENCH_ROWS_3")):
+            sh_txt = (DASH / fname).read_text(encoding="utf-8")
+            m_sh = re.search(rf"window\.{var}=(\[.*\]);", sh_txt)
+            self.assertIsNotNone(m_sh, f"Missing {var} in {fname}")
+            rows_chunk = json.loads(m_sh.group(1))
+            self.assertGreater(len(rows_chunk), 0, f"Empty shard stub in {fname}")
+            bench_shards.extend(rows_chunk)
+        self.assertEqual(len(bench_shards), meta["row_count"])
+
         pg18_js = (DASH / "data_bench_pg18.js").read_text(encoding="utf-8")
         m18 = re.search(r"window\.LP_BENCH_ROWS_PG18=(\[.*\]);", pg18_js)
         self.assertIsNotNone(m18, "Missing LP_BENCH_ROWS_PG18 in data_bench_pg18.js")
@@ -371,8 +386,131 @@ class TestBenchmarkArtifacts(unittest.TestCase):
         self.assertIn("jmrenouard/multi-db-docker-env", gm_txt)
 
         mk_txt = (ROOT / "Makefile").read_text(encoding="utf-8")
-        for tok in ("MDB_DIR", "init-env:", "charts:", "dashboard:"):
+        for tok in ("MDB_DIR", "init-env:", "build-bench-image:", "charts:", "dashboard:", "bench-optimized:", "BENCH_OUT_CSV=", "BENCH_LOG_DIR=", "reports/*.md"):
             self.assertIn(tok, mk_txt, f"Missing Makefile token: {tok}")
+
+        self.assertTrue((SCRIPTS / "setup_pg17_baseline.sh").is_file(), "setup_pg17_baseline.sh must be preserved")
+        legacy = (
+            "bench_pg_multimaster.sh", "bench_pg_lib.py",
+            "setup_birep.sh", "setup_bucardo.sh", "setup_citus.sh", "setup_cockroach.sh", "setup_pgedge.sh", "setup_yugabyte.sh",
+            "test_bucardo.sh", "test_citus.sh", "test_cockroach.sh", "test_pg_birep.sh", "test_pgedge.sh", "test_yugabyte.sh",
+        )
+        leftovers = [n for n in legacy if (SCRIPTS / n).exists()]
+        self.assertEqual(leftovers, [], f"Shadowed legacy scripts remain in scripts/: {leftovers}")
+
+    def test_build_dashboard_parse_num_and_shard_rows(self) -> None:
+        """Verify parse_num rejects non-finite floats and shard_rows balances shards evenly."""
+        sys.path.insert(0, str(SCRIPTS))
+        try:
+            import build_dashboard as bd
+        finally:
+            if str(SCRIPTS) in sys.path:
+                sys.path.remove(str(SCRIPTS))
+
+        for bad in ("NaN", "nan", "inf", "-inf", "Infinity", "-Infinity"):
+            val = bd.parse_num(bad)
+            self.assertIsInstance(val, str)
+            self.assertEqual(json.dumps(val, allow_nan=False), json.dumps(bad))
+        self.assertEqual(bd.parse_num("N/A"), "")
+        self.assertEqual(bd.parse_num("42"), 42)
+        self.assertEqual(bd.parse_num("-71063"), -71063)
+        self.assertEqual(bd.parse_num("1.2346"), 1.235)
+
+        self.assertEqual(bd.shard_rows([], 10500), [[], [], []])
+        one = bd.shard_rows([["t0", "s0", 1]], 10500)
+        self.assertEqual(sum(len(s) for s in one), 1)
+        rows = [[f"topo-{i % 10}", f"suite-{i}", 8, 15, 100.5 + i, 200.0, 1.2, 2.3, 1000, 0, "PASS", 0] for i in range(90)]
+        shards = bd.shard_rows(rows, 10500)
+        self.assertEqual(len(shards), 3)
+        self.assertTrue(all(len(s) > 0 for s in shards), f"Empty shard in {[len(s) for s in shards]}")
+        self.assertEqual([r for s in shards for r in s], rows)
+        lens = [len(json.dumps(s, separators=(",", ":"))) for s in shards]
+        self.assertLess(max(lens) - min(lens), 600, f"Unbalanced shard byte sizes: {lens}")
+
+    def test_collect_popularity_redirects_pagination_and_timeout(self) -> None:
+        """Verify 301 redirect JSON body handling, Link pagination regex, and gh timeout guard."""
+        sys.path.insert(0, str(SCRIPTS))
+        try:
+            import collect_popularity as cp
+        finally:
+            if str(SCRIPTS) in sys.path:
+                sys.path.remove(str(SCRIPTS))
+
+        raw_double = (
+            "HTTP/2 301 \r\nLocation: https://api.github.com/repositories/1/commits\r\n\r\n"
+            '{"message":"Moved Permanently"}\r\n\r\n'
+            'HTTP/2 200 \r\nLink: <https://api.github.com/repositories/1/commits?page=42>; rel="last"\r\n\r\n'
+            '[{"sha":"abc"}]'
+        )
+        hdr1, body1 = cp.split_http_response(raw_double)
+        self.assertIn("HTTP/2 200", hdr1)
+        self.assertIn("page=42", hdr1)
+        self.assertEqual(body1, '[{"sha":"abc"}]')
+
+        raw_single = (
+            "HTTP/1.1 301 Moved Permanently\nLocation: /new\n\n"
+            '{"message":"Moved"}\n'
+            'HTTP/1.1 200 OK\nLink: <https://api.github.com/x?per_page=1&page=19>; rel="last"\n\n[]'
+        )
+        hdr2, body2 = cp.split_http_response(raw_single)
+        self.assertIn("HTTP/1.1 200 OK", hdr2)
+        self.assertEqual(cp.LAST_PAGE_RE.search(hdr2).group(1), "19")
+        self.assertEqual(body2, "[]")
+
+        with mock.patch.object(cp.subprocess, "run", side_effect=subprocess.TimeoutExpired(["gh", "api", "x"], 30)) as m_run:
+            rc, out, err = cp.run_gh(["api", "repos/a/b"])
+        self.assertEqual(rc, 124)
+        self.assertEqual(out, "")
+        self.assertIn("timed out", err)
+        self.assertEqual(m_run.call_args.kwargs.get("timeout"), 30)
+
+        with mock.patch.object(cp, "run_gh", return_value=(0, raw_double, "")):
+            self.assertEqual(cp.count_paginated("repos/old/repo/commits?per_page=1"), "42")
+        with mock.patch.object(cp, "run_gh", return_value=(124, "", "timeout")):
+            self.assertEqual(cp.count_paginated("repos/old/repo/commits?per_page=1"), "N/A")
+
+    def test_chart_generators_meta_guards_and_snapshot_date(self) -> None:
+        """Verify shared chart helpers, E1_/E_ resolution, empty guards, and dynamic snapshot date."""
+        sys.path.insert(0, str(SCRIPTS))
+        try:
+            import chart_meta as cm
+            import generate_charts as gc
+            import generate_charts_v3 as v3
+            import generate_charts_v5 as v5
+        finally:
+            if str(SCRIPTS) in sys.path:
+                sys.path.remove(str(SCRIPTS))
+
+        self.assertEqual(cm.resolve_e1({"A_single_rw", "E1_sysbench_oltp_rw", "E_sysbench_oltp_rw"}), "E1_sysbench_oltp_rw")
+        self.assertEqual(cm.resolve_e1({"A_single_rw", "E_sysbench_oltp_rw"}), "E_sysbench_oltp_rw")
+        self.assertEqual(cm.resolve_e1({"A_single_rw"}), "")
+
+        self.assertEqual(cm.inum("0"), 0)
+        self.assertEqual(cm.inum("42"), 42)
+        for bad in ("", "N/A", "NaN", "inf", "-Infinity", "abc"):
+            self.assertIsNone(cm.inum(bad))
+            self.assertEqual(cm.fnum(bad), 0.0)
+
+        gc.chart_07({})
+        v3.chart_08([], "foot")
+        v3.chart_09([], "foot")
+        fig, ax = cm.plt.subplots()
+        try:
+            v5.draw_c13_sweep(ax, defaultdict(dict), "T", "X", [("A_single_rw", "0 ms"), ("F_wan_netem_10ms", "10 ms")], 1.0, 1.0)
+        finally:
+            cm.plt.close(fig)
+
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            tmp_res = pathlib.Path(tmp)
+            (tmp_res / "project_popularity.csv").write_text(
+                "solution_id,project_name,git_present,git_role,stars,forks,total_commits,commits_12m,contributors,pushed_at,snapshot_utc\n"
+                "demo,Demo (#1),Yes,Primary,100,20,50,12,4,2026-11-21T00:00:00Z,2027-01-15T09:30:00Z\n",
+                encoding="utf-8",
+            )
+            with mock.patch.object(v3, "RES_DIR", tmp_res):
+                rows, snap_date = v3.load_pop()
+            self.assertEqual(len(rows), 1)
+            self.assertEqual(snap_date, "2027-01-15")
 
 
 if __name__ == "__main__":
