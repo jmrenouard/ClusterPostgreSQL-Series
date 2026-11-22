@@ -60,6 +60,8 @@ Measured sequentially in the same isolated Docker harness on `PostgreSQL 18.6 (D
 
 Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser (zero CDN, offline-ready, EN/FR switcher, **Baseline `PG_SCALE=2` (`301` rows) / Production-Tuned `PG_SCALE=20` (`318` rows) dataset toggle**, Before-vs-After `compare` view, 18-topology presets incl. `YT vs Multi-Master`, default `log10` / linear toggle, `L1-L8` / `T11-T18` / `PG 18.6` / `YT` matrix tabs, Ecosystem Popularity tab with 22 entries, and CSV export) or browse the full **13-chart gallery** and Master Traceability Matrix across [Chapter 09](docs/en/09_benchmarks_methodology_and_charts.md) (`chart_01`-`07`), [Chapter 11](docs/en/11_ecosystem_popularity_and_vitality.md) (`chart_08`-`09`), [Chapter 12](docs/en/12_postgresql_18_clustering_and_benchmarks.md) (`chart_10`), [Chapter 06 §7–§8](docs/en/06_empirical_test_and_benchmark_results.md) (`chart_11`), and [**Chapter 13 — Production Tuning (`PG_SCALE=20`)**](docs/en/13_production_tuning_and_realistic_benchmarks.md) (`chart_12`-`13`):
 
+> **Live GitHub Pages & PACELC Architecture Selector:** Browse the hosted [**GitHub Pages Benchmark Explorer**](https://jmrenouard.github.io/ClusterPostgreSQL-Series/) (Pages workflow tracked in `#506`) or open the **PACELC Selector** tab locally to score all 17 topologies + V5/CRDT variants across `RPO`, `WAN RTT`, write conflicts, and `TCO` with copyable `Makefile` / `./mdb` commands and EN/FR sheet links.
+
 ![Log10 Throughput All Suites](assets/charts/chart_01_tps_log_all_suites.png)
 ![Log10 Latency All Suites](assets/charts/chart_02_latency_log_all_suites.png)
 ![Streaming vs Logical vs Multi-Master Log10](assets/charts/chart_06_streaming_vs_logical_vs_mm.png)
@@ -158,6 +160,7 @@ make test && make lint
 cp .env.example .env
 make up-pgedge && make test-pgedge && make down-pgedge
 make bench-all && make bench-pg18 && make bench-yt-cluster && make popularity && make charts && make dashboard
+make pages-build && make pages-check  # Stage & verify offline GitHub Pages bundle in _site/
 # (cd env/multi-db-docker-env && ./mdb bench pg-optimized)  # Produces results/benchmark_optimized.csv (318 rows)
 ```
 

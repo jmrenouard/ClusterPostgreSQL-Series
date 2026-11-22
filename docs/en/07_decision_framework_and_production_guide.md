@@ -109,3 +109,13 @@ When greenfield or upgrading teams evaluate **[#17 PostgreSQL 18.6 Native Cluste
 | **Low-TPS reversible zero-drift PG 18 extension** | **[#18 YT Cluster](solutions/yt_cluster_lite.md)** *(lab / niche)* | Fits unmodified PG 18 needing zero-drift active-active (`0` drift via `55409`/`40001`), high local reads (`48.8K`/`165.5K`), and `DROP EXTENSION` reversibility (`T_REVERT`). **Not** for high-TPS OLTP: `20.63`-`41.45 TPS` 2PC write ceiling (`2.25` @ `25ms` WAN, `86 rows/s` bulk), `SAVEPOINT` rollback `0A000`, `cursor-stability`-only self-run Jepsen, closed `ytserv` (PolyForm/Commercial), and `bus factor = 1`. |
 
 **Upgrade Guardrails (`PG 16/17 -> 18.6`):** Mount Docker volumes at `/var/lib/postgresql` (`PGDATA=/var/lib/postgresql/18/docker`), enable checksums before `pg_upgrade` (`pg_checksums --enable`), benchmark `io_method=sync` vs `worker` on pure hot-RAM micro-OLTP (`-10.3%` IPC trade-off), and whitelist `io_uring` in container seccomp before enabling it.
+
+---
+
+## 7. Interactive PACELC Architecture Selector & GitHub Pages Explorer
+
+Apply the decision tree directly against empirical data in the **PACELC Selector** tab of [`dashboard/index.html`](../../dashboard/index.html) (or on [GitHub Pages](https://jmrenouard.github.io/ClusterPostgreSQL-Series/) once workflow `#506` is active):
+
+- **4 Empirical Inputs:** `RPO` (`0` vs `>0`), `WAN RTT` (`0`/`10`/`25`/`50 ms`), `Write Conflicts` (`Single`, `UUIDv7`, `CRDT`, `High`), and `TCO` (`Low`/`Med`/`High`), synced with `Baseline (S=2)` / `V5 Tuned (S=20)`.
+- **Transparent Evidence:** Ranks all 17 topologies + V5/CRDT variants (`0-100`), flags observed LWW drift (`-71K` to `-531K`) as `INCOMPATIBLE` under high contention, surfaces `SQLSTATE` caveats (`23505`, `40001`, `0A000`, `55409`), and provides copyable `make` / `./mdb` commands plus Bench/Matrix/Sheet links.
+- **Static Bundle Check:** Run `make dashboard && make pages-build && make pages-check` to build and verify `_site/`.

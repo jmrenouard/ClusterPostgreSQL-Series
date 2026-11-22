@@ -50,6 +50,8 @@ Mesures séquentielles dans le même harnais Docker isolé sur `PostgreSQL 18.6 
 
 Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne dans tout navigateur (**bascule Baseline `PG_SCALE=2` (`301` lignes) / Optimisé Production `PG_SCALE=20` (`318` lignes)**, vue comparée Avant/Après `compare`, sélecteur 18 topologies dont `YT vs Multi-Maître`, bascule `log10`/linéaire, interface EN/FR, matrices `L1–L8` / `T11–T18` / `PG 18.6` / `YT`, onglet Popularité à 22 entrées, export CSV) ou consultez les **13 graphiques** et la matrice de traçabilité complète dans les [Chapitre 09](docs/fr/09_methodologie_benchmarks_et_graphiques.md) (`chart_01`–`07`), [Chapitre 11](docs/fr/11_popularite_et_vitalite_ecosysteme.md) (`chart_08`–`09`), [Chapitre 12](docs/fr/12_clustering_postgresql_18_et_benchmarks.md) (`chart_10`), [Chapitre 06 §7–§8](docs/fr/06_resultats_tests_et_benchmarks.md) (`chart_11`) et [**Chapitre 13 — Optimisation Production (`PG_SCALE=20`)**](docs/fr/13_optimisation_production_et_benchmarks_realistes.md) (`chart_12`–`13`) :
 
+> **Explorateur GitHub Pages & Sélecteur PACELC :** Accédez à l'[**Explorateur GitHub Pages**](https://jmrenouard.github.io/ClusterPostgreSQL-Series/) (workflow Pages suivi dans `#506`) ou ouvrez l'onglet **Sélecteur PACELC** en local pour classer les 17 topologies + variantes V5/CRDT selon `RPO`, `WAN RTT`, conflits d'écriture et `TCO`, avec commandes `Makefile` / `./mdb` copiables et liens fiches EN/FR.
+
 ![Débit Log10 toutes suites](assets/charts/chart_01_tps_log_all_suites.png)
 ![Latence Log10 toutes suites](assets/charts/chart_02_latency_log_all_suites.png)
 ![Streaming vs Logique vs Multi-Maîtres Log10](assets/charts/chart_06_streaming_vs_logical_vs_mm.png)
@@ -132,6 +134,7 @@ make test && make lint  # Valide gouvernance, sécurité, LaTeX, 13 graphiques, 
 cp .env.example .env
 make up-pgedge && make test-pgedge && make down-pgedge
 make bench-all && make bench-pg18 && make bench-yt-cluster && make popularity && make charts && make dashboard
+make pages-build && make pages-check  # Génère et vérifie le bundle statique hors-ligne GitHub Pages (_site/)
 # (cd env/multi-db-docker-env && ./mdb bench pg-optimized)  # Génère results/benchmark_optimized.csv (318 lignes)
 ```
 
