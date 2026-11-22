@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-197 - Fix ASD-STE100 Compliance in `README.fr.md` (`#567`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#567` (`docs/issue-567-ste-readme-fr`)
+- **Request / Changes / Result**: Refactored `README.fr.md` prose, lists, chart spacing, and LightPath logo markup to 0 STE errors (`ste_check.py --mode procedural --lang fr --no-vocab`) while keeping catalog and CSV parity; `make test` (`31/31`) and `make lint` pass.
+
 ### ACT-196 - Fix ASD-STE100 Compliance in `README.md` (`#565`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#565` (`docs/issue-565-ste-readmes-stacks`)
 - **Request / Changes / Result**: Refactored `README.md` prose, lists, chart spacing, and LightPath logo markup to 0 STE errors (`ste_check.py --mode procedural --lang en --no-vocab`) while keeping catalog and CSV parity; `make test` (`31/31`) and `make lint` pass.

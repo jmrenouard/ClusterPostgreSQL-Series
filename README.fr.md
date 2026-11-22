@@ -6,13 +6,13 @@
 
 > **Auteur** : Jean-Marie Renouard (`jmrenouard`) | **Soutenu par** : [LightPath](https://www.lightpath.fr) | **Licence** : MIT | [English Version (`README.md`)](README.md)
 
-Étude d'ingénierie reproductible sur **16 solutions PostgreSQL** (7 familles, **19 fiches d'architecture**) et **18 topologies Docker opérationnelles** (`10` PG 17/distribuées + `5` PostgreSQL 18.6 + `2` YT Cluster 1.21.3 + `cockroach-rc` via [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.2`, `13` piles), incluant **18 tests fonctionnels/limites (`L1–L8` + `T11–T18`)** plus les sondes PG 18.6 AIO/`uuidv7()`/conflits et `T_REVERT` YT Cluster, **628 mesures empiriques brutes** (**310 baseline `PG_SCALE=2`** / **301 dédupliquées** + **318 V5 optimisées `PG_SCALE=20`** : `pgbench -M prepared`, `sysbench`, `tc netem 10/25/50 ms`, `c=1..32`), **22 entrées de télémétrie GitHub** (`19` dépôts publics + `3` fermés/managés), **13 graphiques `log10`** et l'[**Explorateur HTML interactif hors-ligne (`dashboard/index.html`)**](dashboard/index.html).
+Ce dépôt présente une étude comparative de **16 solutions PostgreSQL** (7 familles, **19 fiches**) et **18 topologies Docker** (`10` PG 17/distribuées, `5` PostgreSQL 18.6, `2` YT Cluster 1.21.3, `cockroach-rc` via [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.2`, `13` piles). La suite couvre **18 sondes (`L1–L8`, `T11–T18`)**, PG 18.6 AIO, `uuidv7()`, conflits et `T_REVERT` YT Cluster. Nous publions **628 mesures brutes** (**310 baseline `PG_SCALE=2`** / **301 dédupliquées** + **318 V5 `PG_SCALE=20`**). Le dépôt inclut **22 entrées de télémétrie GitHub** (`19` publics + `3` fermés/managés), **13 graphiques `log10`** et [**`dashboard/index.html`**](dashboard/index.html).
 
 ---
 
 ## 1. Synthèse des résultats empiriques (`PG_SCALE = 2`)
 
-Tous les tests ont été exécutés séquentiellement sur hôte Docker WSL2 (20 vCPU, 16,4 Go RAM) à l'intérieur d'un pont réseau Docker isolé (sans biais NAT Windows), avec clé primaire artificielle sur `pgbench_history`.
+Nous avons exécuté les tests séquentiellement sur hôte Docker WSL2 (20 vCPU, 16,4 Go RAM) dans un pont isolé sans biais NAT. Une clé primaire artificielle protège `pgbench_history`.
 
 | Topologie | Famille (`#`) | Suite A : Single RW (TPS) | Suite B2 : Overlap RW (TPS) | Suite D : Hot 50c (TPS) | Dérive solde (`Suite D`) | Suite E : `sysbench` (TPS) | Suite F : `netem 25ms` (TPS) | Limites `SQLSTATE` vérifiées |
 |:---|:---|---:|---:|---:|---:|---:|---:|:---|
@@ -42,32 +42,40 @@ Mesures séquentielles dans le même harnais Docker isolé sur `PostgreSQL 18.6 
 | **`yt-cluster`** (`#18` `cc=half`) | 20,63 | 10,69 (`0`) | 67,76 (`0`) | 28,48 (`12`) | 110,53 | 2,25 | `0A000`, `40001`, `55409`, `57P03` (`T_REVERT` OK) |
 | **`yt-cluster-async`** (`#18` `nodes>=0`) | 41,45 | 55,03 (`0`) | 163,01 (`0`) | 124,05 (`34`) | 224,93 | 4,78 | `40001`, `55000`, `55409` (`2,0x-5,1x` vs `half`, dérive `0`) |
 
-*Note : `yt-cluster` / `yt-cluster-async` exécutés sur 3 nœuds `dbinvent/yt:1.21.3` (PG 18.7 + `yt_cluster 1.21` / `ytserv`, `results/benchmark_yt_cluster.csv`, `36` lignes sur les 18 suites ; voir [Fiche #18](docs/fr/solutions/yt_cluster_lite.md) et [Chapitre 06 §7](docs/fr/06_resultats_tests_et_benchmarks.md)).*
+*Note : `yt-cluster` / `yt-cluster-async` exécutés sur 3 nœuds `dbinvent/yt:1.21.3` (PG 18.7 + `yt_cluster 1.21` / `ytserv`, `results/benchmark_yt_cluster.csv`, `36` lignes sur 18 suites). Voir [Fiche #18](docs/fr/solutions/yt_cluster_lite.md) et [Chapitre 06 §7](docs/fr/06_resultats_tests_et_benchmarks.md).*
 
 ---
 
 ## 1b. Explorateur HTML interactif et graphiques logarithmiques (`log10`)
 
-Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne dans tout navigateur (**bascule Baseline `PG_SCALE=2` (`301` lignes) / Optimisé Production `PG_SCALE=20` (`318` lignes)**, vue comparée Avant/Après `compare`, sélecteur 18 topologies dont `YT vs Multi-Maître`, bascule `log10`/linéaire, interface EN/FR, matrices `L1–L8` / `T11–T18` / `PG 18.6` / `YT`, onglet Popularité à 22 entrées, export CSV) ou consultez les **13 graphiques** et la matrice de traçabilité complète dans les [Chapitre 09](docs/fr/09_methodologie_benchmarks_et_graphiques.md) (`chart_01`–`07`), [Chapitre 11](docs/fr/11_popularite_et_vitalite_ecosysteme.md) (`chart_08`–`09`), [Chapitre 12](docs/fr/12_clustering_postgresql_18_et_benchmarks.md) (`chart_10`), [Chapitre 06 §7–§8](docs/fr/06_resultats_tests_et_benchmarks.md) (`chart_11`) et [**Chapitre 13 — Optimisation Production (`PG_SCALE=20`)**](docs/fr/13_optimisation_production_et_benchmarks_realistes.md) (`chart_12`–`13`) :
+Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne (**bascule `PG_SCALE=2` (`301` lignes) / `PG_SCALE=20` (`318` lignes)**, vue `compare`). Explorez les 18 topologies (`YT vs Multi-Maître`), l'échelle `log10`, les matrices (`L1–L8`, `T11–T18`, `PG 18.6`, `YT`), Popularité (22 entrées) et l'export CSV. Consultez les **13 graphiques** aux chapitres [09](docs/fr/09_methodologie_benchmarks_et_graphiques.md), [11](docs/fr/11_popularite_et_vitalite_ecosysteme.md), [12](docs/fr/12_clustering_postgresql_18_et_benchmarks.md), [06 §7–§8](docs/fr/06_resultats_tests_et_benchmarks.md) et [**13 (`PG_SCALE=20`)**](docs/fr/13_optimisation_production_et_benchmarks_realistes.md).
 
 > **Explorateur GitHub Pages & Sélecteur PACELC :** Accédez à l'[**Explorateur GitHub Pages**](https://jmrenouard.github.io/ClusterPostgreSQL-Series/) (workflow Pages suivi dans `#506`) ou ouvrez l'onglet **Sélecteur PACELC** en local pour classer les 17 topologies + variantes V5/CRDT selon `RPO`, `WAN RTT`, conflits d'écriture et `TCO`, avec commandes `Makefile` / `./mdb` copiables et liens fiches EN/FR.
 
 ![Débit Log10 toutes suites](assets/charts/chart_01_tps_log_all_suites.png)
+
 ![Latence Log10 toutes suites](assets/charts/chart_02_latency_log_all_suites.png)
+
 ![Streaming vs Logique vs Multi-Maîtres Log10](assets/charts/chart_06_streaming_vs_logical_vs_mm.png)
+
 ![Popularité Écosystème Étoiles et Forks Log10](assets/charts/chart_08_popularity_stars_forks_log.png)
+
 ![Commits et Vitalité Écosystème Log10](assets/charts/chart_09_popularity_commits_activity_log.png)
+
 ![Comparatif PostgreSQL 18.6 vs PostgreSQL 17.11 Log10](assets/charts/chart_10_pg18_vs_pg17_log.png)
+
 ![Comparatif YT Cluster vs Multi-Maîtres et Raft Log10](assets/charts/chart_11_yt_cluster_vs_multimaster_log.png)
+
 ![Comparatif Log10 Baseline vs Optimisé](assets/charts/chart_12_baseline_vs_optimized_log.png)
+
 ![Panorama Log10 Optimisé sur 18 Topologies](assets/charts/chart_13_optimized_all_topologies_log.png)
 
 > **Synthèse V5 Optimisé (`PG_SCALE=20`, `318` lignes, `fsync=on`, `v2.6.1`) :** L'activation des réglages durables (`fillfactor=90`, `wal_compression=lz4`, PG 18/YT `io_method=worker`/`4`, `-M prepared`, chauffe `5s`, Spock `delta_apply`, Citus 1-shard, Yugabyte `RC + CACHE 1000` + HAProxy `:15470`, CockroachDB `v25.4` HAProxy `:15480` + rôle `bench` `cockroach-rc`, YT `YT_MAX_PREPARED=300` + `ytctl` parallèle + affinité Leader + hook Lua `55409`) propulse `pg18-birep` `G_c32` à `4 163,31 TPS`, maintient `pgedge` à **`0` dérive** (`2 125,19 TPS` `D`), accélère CockroachDB `v25.4` de **`7,32x`** en `A` (`307,95 TPS`) avec `0` retry `40001` pour `cockroach-rc` en `sysbench` (`153,70 TPS`), et porte `yt-cluster-async` `E4` à **`189 286,48 TPS`** (`0` dérive) — voir [Chapitre 13](docs/fr/13_optimisation_production_et_benchmarks_realistes.md).
 
 ### Trois conclusions clés
-1. **L'illusion de la performance asynchrone** : En écriture concurrente sur des clés partagées (`B2` et `D`), les solutions asynchrones LWW sans CRDT perdent silencieusement jusqu'à **50,8 %** des mises à jour (`bucardo`: `-531 620`) ou divergent (`pg-birep`: `-71 063`). Seul **`spock.delta_apply`** (`#2`) préserve une dérive `0` à 1 837,64 TPS sur compteurs numériques.
-2. **Le mur physique de la latence WAN** : L'injection de 25 ms de latence (`Suite F`) effondre tous les moteurs **PC/EC** (`yugabyte` à 5,78 TPS, `cockroach` à 10,06 TPS, `citus` à 21,67 TPS, `pg17-sync-streaming` à 57,00 TPS), tandis que les piles asynchrones **PA/EL** restent entre 646 et 824 TPS localement.
-3. **La robustesse du mono-primaire** : Hors besoin impératif d'écriture multi-régions à faible latence ou de sharding horizontal massif, **Patroni + etcd + HAProxy (`#15`)** demeure le seul modèle offrant 100 % de compatibilité PostgreSQL (`PostGIS`, `pgvector`, `SERIAL`, `LISTEN/NOTIFY`, `pg_advisory_lock`, PITR `pgBackRest`) sans conflit Write-Write.
+1. **L'illusion de la performance asynchrone** : En écriture concurrente (`B2` et `D`), les solutions LWW sans CRDT perdent jusqu'à **50,8 %** des mises à jour (`bucardo`: `-531 620`). Le mode natif `pg-birep` diverge aussi (`-71 063`). Seul **`spock.delta_apply`** (`#2`) préserve une dérive `0` à 1 837,64 TPS sur compteurs numériques.
+2. **Le mur physique de la latence WAN** : L'injection de 25 ms de latence (`Suite F`) effondre les moteurs **PC/EC** (`yugabyte` à 5,78 TPS, `cockroach` à 10,06 TPS). `citus` chute à 21,67 TPS et `pg17-sync-streaming` à 57,00 TPS. À l'inverse, les piles asynchrones **PA/EL** restent entre 646 et 824 TPS localement.
+3. **La robustesse du mono-primaire** : Hors besoin impératif d'écriture multi-régions ou de sharding massif, **Patroni + etcd + HAProxy (`#15`)** reste optimal. Il garantit 100 % de compatibilité PostgreSQL (`PostGIS`, `pgvector`, `SERIAL`, `LISTEN/NOTIFY`, `pg_advisory_lock`, PITR `pgBackRest`) sans conflit Write-Write.
 
 ---
 
@@ -94,7 +102,7 @@ Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne dans tout n
 
 ## 2b. Catalogue des solutions et fiches techniques (`19` fiches FR + EN)
 
-Chaque solution étudiée dispose d'une fiche technique dédiée d'environ 1 à 2 pages A4 en français (`docs/fr/solutions/`) et en anglais (`docs/en/solutions/`) incluant schémas Mermaid, principes internes, modes d'implémentation, forces/faiblesses et métriques vérifiées (ou références d'exclusion architecturale).
+Chaque solution étudiée dispose d'une fiche technique d'environ 1 à 2 pages A4 en français (`docs/fr/solutions/`) et en anglais (`docs/en/solutions/`). Chaque fiche inclut des schémas Mermaid, les principes internes, les modes d'implémentation, les forces/faiblesses et les métriques vérifiées.
 
 > **Désambiguïsation des ID (`#16` vs `#14`) :** `pg17-logical` porte l'ID **`#16`** (`N3`, réplication logique unidirectionnelle native), tandis que **`#14`** est réservé aux systèmes historiques à triggers (`Slony-I / Londiste / RubyRep`) ; certains tableaux CSV historiques mentionnent encore `#14 Baseline` pour `pg17-logical`.
 
@@ -124,7 +132,7 @@ Chaque solution étudiée dispose d'une fiche technique dédiée d'environ 1 à 
 
 ## 3. Démarrage rapide, sous-module `multi-db-docker-env` et `Makefile`
 
-Les piles opérationnelles, la suite étendue (`T11–T18`) et les benchmarks V2 s'appuient exclusivement sur le dépôt [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) intégré comme sous-module Git sous **`env/multi-db-docker-env`** (voir [`stacks/README.md`](stacks/README.md) pour la délégation source unique de vérité et `results/` pour les jeux de données bruts).
+Les piles opérationnelles, la suite étendue (`T11–T18`) et les benchmarks V2 s'appuient sur [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) sous **`env/multi-db-docker-env`**. Voir [`stacks/README.md`](stacks/README.md) pour la délégation source unique de vérité et `results/` pour les jeux de données bruts.
 
 ### Commandes `Makefile` essentielles
 
@@ -162,13 +170,8 @@ Les sorties brutes sont publiées dans `results/` (`benchmark_summary.csv`, `ben
 
 Cette série technique open-source indépendante est réalisée par **Jean-Marie Renouard** (`jmrenouard`) sous licence [MIT](LICENSE), avec le soutien technique de **LightPath** :
 
-<p align="center">
-  <sub>Soutenu par</sub><br>
-  <a href="https://www.lightpath.fr">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="assets/lightpath-logo-dark.svg">
-      <source media="(prefers-color-scheme: light)" srcset="assets/lightpath-logo-light.svg">
-      <img alt="Soutenu par LightPath" src="assets/lightpath-logo-light.svg" width="145">
-    </picture>
-  </a>
-</p>
+<p align="center"><sub>Soutenu par</sub></p>
+
+<p align="center"><a href="https://www.lightpath.fr"><img alt="Soutenu par LightPath" src="assets/lightpath-logo-light.svg#gh-light-mode-only" width="145"></a></p>
+
+<p align="center"><a href="https://www.lightpath.fr"><img alt="Soutenu par LightPath" src="assets/lightpath-logo-dark.svg#gh-dark-mode-only" width="145"></a></p>
