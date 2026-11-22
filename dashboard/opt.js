@@ -4,9 +4,15 @@
 
   const W = window, $ = (id) => document.getElementById(id);
   const { TOPOS, fmtNum, renderBarChart, renderLineChart, esc, isBad } = W.LPCharts;
-  const TL = Object.fromEntries(TOPOS.map(([k, v]) => [k, v])), TC = Object.fromEntries(TOPOS.map(([k, , c]) => [k, c])), TO = TOPOS.map(([k]) => k);
+  const U = W.LPUtil || {};
+  const TL = U.TL || Object.fromEntries(TOPOS.map(([k, v]) => [k, v]));
+  const TC = U.TC || Object.fromEntries(TOPOS.map(([k, , c]) => [k, c]));
+  const TO = U.TO || TOPOS.map(([k]) => k);
+  const upk = U.upk || ((c, r) => (r || []).map((a) => Object.fromEntries(c.map((k, i) => [k, a[i] ?? ""]))));
+  const { dot, bdg, kc, rw, exportCSV, sortRows } = U;
   const BCOLS = (W.LP_BENCH_OPT_META || W.LP_BENCH_META || {}).cols || [];
-  const OPT_ROWS = (W.LP_BENCH_OPT_ROWS || []).map((a) => Object.fromEntries(BCOLS.map((c, i) => [c, a[i] ?? ""])));
+  const OPT_ROWS = upk(BCOLS, W.LP_BENCH_OPT_ROWS);
+  const OPT_NUM = new Set(["bTps", "oTps", "ratio", "bP95", "oP95", "bDrift", "oDrift"]);
   const OPT_IDX = {};
   OPT_ROWS.forEach((r) => { (OPT_IDX[r.topology] = OPT_IDX[r.topology] || {})[r.suite] = r; });
   const OPT_T = (() => { const s = new Set(OPT_ROWS.map((r) => r.topology)); return [...TO.filter((t) => s.has(t)), ...[...s].filter((t) => !TO.includes(t)).sort()]; })();
@@ -15,10 +21,8 @@
   let baseTheadHtml = "";
   const cmpSort = { col: "oTps", dir: -1 };
   const lbl = (m, t) => (m !== "baseline" && t === "pgedge" ? "pgEdge (delta_apply)" : m !== "baseline" && t === "cockroach" ? "CockroachDB (Ser)" : TL[t] || t);
-  const dot = (t) => `<span class="dot" style="background:${TC[t] || "#64748b"}"></span>`, bdg = (c, x) => `<span class="badge ${c}">${esc(x)}</span>`;
 
   function cmpTip(p, mLbl) {
-    const rw = (k, v, cls) => `<div class="tt-row"><span class="tt-k">${k}</span><span class="${cls || "tt-v"}">${v}</span></div>`;
     const sp = p.ratio > 0 ? `${p.ratio.toFixed(2)}x (${p.pct >= 0 ? "+" : ""}${p.pct.toFixed(0)}%)` : "New RC";
     return `<div class="tt-title">${esc(lbl("optimized", p.topology))} (${esc(mLbl)})</div>` +
       rw("Suite", esc(p.suite)) + rw("Baseline TPS", p.bTps > 0 ? fmtNum(p.bTps) : "N/A (New)") + rw("Tuned TPS", fmtNum(p.oTps)) +
@@ -50,22 +54,25 @@
 
   function renderCompare(baseIdx, st, allTopos, e1Suite) {
     const fr = st.lang === "fr", pairs = buildPairs(baseIdx, st, allTopos, e1Suite);
-    const kc = (c, l, v, s) => `<div class="kpi-card ${c}"><div class="kpi-label">${esc(l)}</div><div class="kpi-val">${v}</div><div class="kpi-sub">${s}</div></div>`;
     if (!pairs.length) $("kpi-grid").innerHTML = "";
     else {
       const wr = pairs.filter((p) => p.ratio > 0), topSp = wr.length ? wr.reduce((a, b) => (b.ratio > a.ratio ? b : a)) : null;
       const pkT = pairs.reduce((a, b) => (b.oTps > a.oTps ? b : a)), fxN = pairs.filter((p) => p.fixedDrift).length, okN = pairs.filter((p) => !p.oBad).length;
+      const badN = pairs.length - okN;
+      const fxSub = fxN
+        ? esc([...new Set(pairs.filter((p) => p.fixedDrift).map((p) => lbl("optimized", p.topology)))].join(", "))
+        : badN ? (fr ? "0 nouveau correctif" : "0 newly fixed") : (fr ? "0 d\u00e9rive sur s\u00e9lection" : "All selected clean");
       $("kpi-grid").innerHTML = [
         kc("kpi-ok", fr ? "Gain max (Optimis\u00e9/Base)" : "Top Speedup (Tuned/Base)", topSp ? `${topSp.ratio.toFixed(2)}x` : "N/A", topSp ? `${esc(lbl("optimized", topSp.topology))} &middot; ${esc(topSp.suite)}` : "-"),
         kc("", fr ? "Pic TPS Optimis\u00e9 (SCALE=20)" : "Peak Tuned TPS (SCALE=20)", `${fmtNum(pkT.oTps)} TPS`, `${esc(lbl("optimized", pkT.topology))} &middot; ${esc(pkT.suite)}`),
-        kc("kpi-ok", fr ? "D\u00e9rives corrig\u00e9es" : "Integrity Fixes (0 Drift)", `${fxN} fixed`, fxN ? "pgEdge CRDT delta_apply & BiRep B2" : (fr ? "0 d\u00e9rive sur s\u00e9lection" : "All selected clean")),
-        kc(okN < pairs.length ? "kpi-amber" : "kpi-ok", fr ? "Int\u00e9grit\u00e9 Optimis\u00e9e" : "Tuned Integrity Pass", `${okN}/${pairs.length} OK`, `${pairs.length - okN} LWW D_hot/B2`),
+        kc(fxN || !badN ? "kpi-ok" : "kpi-amber", fr ? "D\u00e9rives corrig\u00e9es" : "Integrity Fixes (0 Drift)", `${fxN} fixed`, fxSub),
+        kc(badN ? "kpi-amber" : "kpi-ok", fr ? "Int\u00e9grit\u00e9 Optimis\u00e9e" : "Tuned Integrity Pass", `${okN}/${pairs.length} OK`, badN ? `${badN} LWW D_hot/B2` : "0 drift"),
       ].join("");
     }
     const cT = $("chart-tps"), cL = $("chart-lat"), ts = allTopos.filter((t) => st.sel.has(t) && OPT_IDX[t]), lf = st.lat === "p95" ? "lat_p95_ms" : "lat_avg_ms";
     $("badge-scale-tps").textContent = $("badge-scale-lat").textContent = st.scale === "log" ? "log10" : "linear";
     if (!ts.length) cT.innerHTML = cL.innerHTML = `<div class="chart-empty">${esc(fr ? "S\u00e9lectionnez au moins une solution." : "Select at least one solution above.")}</div>`;
-    else if ((st.suite === "SWEEP_CONC" || st.suite === "SWEEP_WAN") && ts.length <= 8) {
+    else if (st.suite === "SWEEP_CONC" || st.suite === "SWEEP_WAN") {
       const isC = st.suite === "SWEEP_CONC", seq = isC ? ["G_conc_c1", "G_conc_c4", "G_conc_c8", "G_conc_c16", "G_conc_c32"] : ["A_single_rw", "F_wan_netem_10ms", "F_wan_netem_25ms", "F_wan_netem_50ms"], xl = isC ? ["c=1", "c=4", "c=8", "c=16", "c=32"] : ["0 ms", "10 ms", "25 ms", "50 ms"];
       const mkL = (f) => ts.flatMap((t) => {
         const col = TC[t] || "#334155", res = [{ label: `${lbl("optimized", t)} (Tuned)`, color: col, points: seq.map((s) => { const r = OPT_IDX[t][s]; return r ? { v: +r[f], tip: `<b>${esc(lbl("optimized", t))} Tuned</b><br>${esc(s)}: ${fmtNum(r[f])}` } : null; }) }];
@@ -77,7 +84,7 @@
       renderLineChart(cT, { xLabels: xl, series: mkL("tps"), scale: st.scale, unit: "tps" });
       renderLineChart(cL, { xLabels: xl, series: mkL(lf), scale: st.scale, unit: "ms" });
     } else {
-      const su = st.suite === "SWEEP_CONC" ? "G_conc_c32" : st.suite === "SWEEP_WAN" ? "F_wan_netem_25ms" : st.suite === "CORE_ALL" ? "A_single_rw" : st.suite;
+      const su = st.suite === "CORE_ALL" ? "A_single_rw" : st.suite;
       const cats = ts.filter((t) => OPT_IDX[t][su]).map((t) => ({ key: t, label: lbl("optimized", t) }));
       const pMap = Object.fromEntries(buildPairs(baseIdx, { ...st, suite: su, qB: "" }, allTopos, e1Suite).map((p) => [p.topology, p]));
       const mkB = (f) => [
@@ -96,8 +103,7 @@
     const thead = $("bench-thead"), fr = st.lang === "fr", loc = fr ? "fr-FR" : "en-US";
     if (!baseTheadHtml) baseTheadHtml = thead.innerHTML;
     thead.innerHTML = `<tr><th data-csort="topology">${fr ? "Topologie" : "Topology"}</th><th data-csort="suite">Suite</th><th data-csort="bTps" class="num">Base TPS</th><th data-csort="oTps" class="num">${fr ? "Optim. TPS" : "Tuned TPS"}</th><th data-csort="ratio" class="num">Delta</th><th data-csort="bP95" class="num">Base p95</th><th data-csort="oP95" class="num">Tuned p95</th><th data-csort="bDrift" class="num">Base Drift</th><th data-csort="oDrift" class="num">Tuned Drift</th><th>${fr ? "Statut" : "Status"}</th></tr>`;
-    const c = cmpSort.col, d = cmpSort.dir;
-    const sr = [...pairs].sort((a, b) => (typeof a[c] === "number" ? (a[c] - b[c]) * d : String(a[c]).localeCompare(String(b[c])) * d));
+    const c = cmpSort.col, d = cmpSort.dir, sr = sortRows(pairs, c, d, OPT_NUM);
     thead.querySelectorAll("th[data-csort]").forEach((th) => { th.classList.toggle("sorted", th.dataset.csort === c); th.onclick = () => { cmpSort.dir = cmpSort.col === th.dataset.csort ? -cmpSort.dir : -1; cmpSort.col = th.dataset.csort; renderCompareTable(pairs, st); }; });
     const nf = (v, m) => Number(v || 0).toLocaleString(loc, m ? { maximumFractionDigits: m } : undefined);
     $("bench-tbody").innerHTML = sr.map((p) => {
@@ -117,12 +123,13 @@
   }
 
   function exportCompareCSV(baseIdx, st, allTopos, e1Suite) {
-    const pairs = buildPairs(baseIdx, st, allTopos, e1Suite), q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const cols = ["topology", "suite", "base_tps", "tuned_tps", "speedup_x", "base_p95_ms", "tuned_p95_ms", "base_drift", "tuned_drift", "tuned_status"];
-    const rows = pairs.map((p) => [p.topology, p.suite, p.bTps || "", p.oTps, p.ratio ? p.ratio.toFixed(3) : "", p.bP95 || "", p.oP95, p.base ? p.bDrift : "", p.oDrift, p.opt.convergence_status].map(q).join(","));
-    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob([[cols.join(","), ...rows].join("\n") + "\n"], { type: "text/csv;charset=utf-8;" })), download: "cluster_pg_before_after_delta.csv" });
-    a.click(); URL.revokeObjectURL(a.href);
+    const rows = buildPairs(baseIdx, st, allTopos, e1Suite).map((p) => [
+      p.topology, p.suite, p.bTps || "", p.oTps, p.ratio ? p.ratio.toFixed(3) : "",
+      p.bP95 || "", p.oP95, p.base ? p.bDrift : "", p.oDrift, p.opt.convergence_status,
+    ]);
+    return exportCSV("cluster_pg_before_after_delta.csv", cols, rows);
   }
 
-  W.LPOpt = { OPT_ROWS, OPT_IDX, OPT_T, OPT_S, lbl, syncUI, renderCompare, exportCompareCSV, meta: W.LP_BENCH_OPT_META || {} };
+  W.LPOpt = { OPT_ROWS, OPT_IDX, OPT_T, OPT_S, lbl, syncUI, buildPairs, renderCompare, renderCompareTable, exportCompareCSV, meta: W.LP_BENCH_OPT_META || {} };
 })();
