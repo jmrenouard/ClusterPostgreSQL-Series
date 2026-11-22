@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-216 - Complete Chapter 03b FR Part 2 and Refactor Chapter 09 EN Part 1 (`#605`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#605` (`docs/issue-605-ch03b-fr-p2-ch09-en-p1`)
+- **Request / Changes / Result**: Completed `docs/fr/03b_catalogue_distribue_triggers_cloud.md` Part 2 (`#11-#14`, full-file 0 STE errors) and refactored `docs/en/09_benchmarks_methodology_and_charts.md` Sections 1-4 (0 STE errors/modals/`via` in Part 1); Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
+
 ### ACT-215 - Refactor Chapter 03b FR Part 1 (#5-#10) for STE Compliance (`#603`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#603` (`docs/issue-603-ch03b-fr-p1`)
 - **Request / Changes / Result**: Refactored Part 1 (`#5-#10`, before `## #11 PgPool-II`) of `docs/fr/03b_catalogue_distribue_triggers_cloud.md` to 0 STE errors, 0 `via`, and 0 weak modals in Part 1; Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
