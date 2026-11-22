@@ -155,7 +155,7 @@ Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 
 - **Maintenance Level:** **Tier S (Core)** -- `postgres/postgres` (`3446` commits/12m) & `patroni/patroni` (**Tier A (Active OSS)**, `142` commits/12m, `246` contributors).
 - **Currency / Freshness:** **Current -- Daily Active** -- Last push `2026-11-20T16:52:40Z` / `2026-11-20T17:03:56Z`, `3446` / `142` commits/12m, latest release `REL_19_0` / `v4.1.5`.
-- **Operational Manageability:** **Low Risk** -- Multi-vendor core + MIT HA plane; manage `max_slot_wal_keep_size` and `etcd` quorum.
+- **Operational Manageability:** **Low Risk** -- Multi-vendor core and MIT HA plane, requiring teams to manage `max_slot_wal_keep_size` and `etcd` quorum.
 
 ---
 
