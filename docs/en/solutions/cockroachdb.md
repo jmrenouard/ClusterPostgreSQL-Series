@@ -11,7 +11,7 @@
 | **Catalog ID** | `#6` (`CockroachDB v24.3.0 Pebble Raft (#6)` in `results/functional_limits_matrix.csv`) |
 | **Benchmark Topology ID** | `cockroach` (`results/*.csv`) |
 | **Family / Tier** | `T5` — Distributed Consensus SQL (`Niveau 5`) |
-| **Versions** | `CockroachDB v24.3.0`, PG-wire `13.0.0` (Clean-room Go SQL engine + Pebble LSM) |
+| **Versions** | `CockroachDB v24.3.0` (V1/V2) / `v25.4.21` (V5 `latest-v25.4`), PG-wire `13.0.0` (Clean-room Go SQL engine + Pebble LSM) |
 | **CAP / PACELC Profile** | `CP / PC-EC` (`3 (RF=3 SQL)` — Multi-Raft per `64 MiB` Range `RF=3`, HLC bounded) |
 | **License / Deployment** | BSL 1.1 / Enterprise (licensed features) / 3 containers (`docker-compose-cockroach.yml`) |
 
@@ -19,7 +19,7 @@
 
 ## 1. Technology Description & What It Does
 
-**CockroachDB** is a distributed SQL database written in Go that implements the PostgreSQL v3 wire protocol (`pgwire` `13.0.0`) over **Pebble** (an ordered LSM key-value engine) and **Multi-Raft** consensus per `64 MiB` Range (`RF = 3`). Each range elects a **Leaseholder** that coordinates strongly consistent reads locally without Raft disk rounds while writes replicate across the range's Raft quorum.
+**CockroachDB** is a distributed SQL database written in Go that implements the PostgreSQL v3 wire protocol (`pgwire` `13.0.0`). It layers SQL over **Pebble** (ordered LSM key-value engine) and **Multi-Raft** consensus per `64 MiB` Range (`RF = 3`). Each range elects a **Leaseholder** that coordinates strongly consistent reads locally without Raft disk rounds while writes replicate across the range's Raft quorum.
 
 Unlike `#5 YugabyteDB` (forked PG 15 C engine defaulting to pessimistic `READ COMMITTED`), CockroachDB is **not** a PostgreSQL kernel fork: it defaults globally to strict **`SERIALIZABLE`** optimistic MVCC, supports zero PostgreSQL C extensions, and requires client-side `SQLSTATE 40001` retry loops under write contention.
 
@@ -39,20 +39,20 @@ flowchart TB
     N1 <-->|"Multi-Raft 64 MiB Ranges + HLC + Parallel 2PC"| N3
 ```
 
-Multi-writer runs (`B1`–`D`, `H`) drive `crdb_node1` and `crdb_node2` (`user=root`) while `crdb_node3` joins Raft quorum (`conv_chk` verifies all 3 nodes; `tc netem` delays `crdb_node2` and `crdb_node3`).
+Multi-writer runs (`B1`–`D`, `H`) drive `crdb_node1` and `crdb_node2` (`user=root`) while `crdb_node3` joins Raft quorum (`conv_chk` verifies all 3 nodes. `tc netem` delays `crdb_node2` and `crdb_node3`).
 
 ---
 
 ## 3. Operating Principles & Implementation Modes
 
-1. **Multi-Raft Ranges, Leaseholders & Parallel Commits:** Contiguous `64 MiB` ranges replicate via Raft (`RF = 3`) with HLC timestamps. Writes stage provisional MVCC intents in parallel with Raft quorum replication, saving one RTT compared to sequential 2PC.
+1. **Multi-Raft Ranges, Leaseholders & Parallel Commits:** Contiguous `64 MiB` ranges replicate with Raft (`RF = 3`) and HLC timestamps. Writes stage provisional MVCC intents in parallel with Raft quorum replication, saving one RTT compared to sequential 2PC.
 2. **Commit Latency Model:**
 
 $$
 L_{\text{T5-crdb-1range}} \approx L_{\text{disk-leaseholder}} + \text{RTT}_{\text{Raft-quorum}}, \qquad L_{\text{T5-crdb-2PC}} \approx L_{\text{disk}} + 2 \cdot \text{RTT}_{\text{Raft-quorum}} + T_{\text{intent-wait}}
 $$
 
-3. **`SERIALIZABLE` Retries vs. `READ COMMITTED` & `unique_rowid()`:** Optimistic `SERIALIZABLE` raises `40001` (`WriteTooOldError`) on conflicting updates (`44`/`87`/`96` retries in `A`/`B1`/`B2`; `685` aborted tx in retry-less `E_sysbench_oltp_rw`). Default `SERIAL` maps to unordered `unique_rowid()` (`17.72 ms` `L1`, `L2` hidden `rowid`).
+3. **`SERIALIZABLE` Retries vs. `READ COMMITTED` & `unique_rowid()`:** Optimistic `SERIALIZABLE` raises `40001` (`WriteTooOldError`) on conflicting updates (`44`/`87`/`96` retries in `A`/`B1`/`B2`. `685` aborted tx in retry-less `E_sysbench_oltp_rw`). Default `SERIAL` maps to unordered `unique_rowid()` (`17.72 ms` `L1`, `L2` hidden `rowid`).
 
 | Mode / Feature | Scope | Mechanics & Key Strategy | Conflict / Failover Impact | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
@@ -95,7 +95,7 @@ Ran at `pg_scale = 2`. Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` are 
 | `H_append_only_insert` | 8 / 12s | 734.6 | N/A | 10.861 / 4.993 / 17.335 | 8813 (0) | 0 | `PASS_CONVERGED` |
 | `F_wan_netem_25ms` | 8 / 15s | 10.06 | N/A | 715.768 / 1072.655 / 2930.542 | 167 (0) | 0 | `PASS_NETEM_25MS` |
 
-*(Recorded `retries_40001`: `A=44`, `B1=87`, `B2=96`, `F_wan_netem_25ms=14`, `0` elsewhere; `E` logged `685` failed tx without client retry.)*
+*(Recorded `retries_40001`: `A=44`, `B1=87`, `B2=96`, `F_wan_netem_25ms=14`, `0` elsewhere. `E` logged `685` failed tx without client retry.)*
 
 ### Table B — Concurrency & WAN Latency Sweeps (`benchmark_concurrency_sweep.csv`, `benchmark_wan_sweep.csv`)
 
@@ -110,7 +110,7 @@ Ran at `pg_scale = 2`. Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` are 
 | `F_wan_netem_25ms` (15s) | 25 ms | 10.06 | 715.768 / 1072.655 / 2930.542 | 167 | `PASS_NETEM_25MS` |
 | `F_wan_netem_50ms` (12s) | 50 ms | 4.53 | 1430.517 / 1325.619 / 4453.735 | 65 | `PASS_NETEM_50MS` |
 
-*(Recorded `retries_40001`: `G_conc_c1..c32 = 0/5/26/64/88`; `F_wan_netem_10ms/25ms/50ms = 16/14/5`.)*
+*(Recorded `retries_40001`: `G_conc_c1..c32 = 0/5/26/64/88` and `F_wan_netem_10ms/25ms/50ms = 16/14/5`.)*
 
 ### Table C — Functional Limits (`F1`, `L1–L8`) & Extended Probes (`T11–T18`)
 
@@ -144,6 +144,8 @@ Ran at `pg_scale = 2`. Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` are 
 | **Image & Resources** | `cockroachdb/cockroach:v24.3.0`, `mem_limit: 1280m`, `--cache=256MiB`, `--max-sql-memory=256MiB`, bridge `crdb_net` |
 | **Key Flags & Setup** | `start --insecure --join=crdb_node1..3:26257`, `cockroach init`, `SHOW ZONE CONFIGURATION` (`num_replicas=3`), `hid INT8 DEFAULT unique_rowid() PRIMARY KEY` on `pgbench_history`. |
 
+> **V5 Stack Upgrade (`v25.4.21` / `cockroach-rc`):** Active `docker-compose-cockroach.yml` upgrades to `cockroachdb/cockroach:latest-v25.4` (`v25.4.21`), `mem_limit: 3072m`, and HAProxy `:15480` (`cockroach-rc` role `bench`, see [Chapter 13](../13_production_tuning_and_realistic_benchmarks.md)).
+
 ## 6. GitHub Popularity, Git Presence & Maintenance Vitality (`results/project_popularity.csv`)
 
 Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
@@ -154,7 +156,7 @@ Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 
 - **Maintenance Level:** **Tier A (Active OSS)** -- `cockroachdb/cockroach` logs `7,574` commits/12m (`118,999` total, `1,123` contributors, `32,639` stars, `8,029` open issues).
 - **Currency / Freshness:** **Current -- High Velocity** -- Last push `2026-11-18T18:29:46Z`, `7,574` commits/12m, latest release `v25.2.29`.
-- **Operational Manageability:** **Moderate** -- High Go engineering velocity (`BSL 1.1`; `NOASSERTION` SPDX); requires `40001` retry logic and lacks PG C extensions.
+- **Operational Manageability:** **Moderate** -- High Go engineering velocity (`BSL 1.1`, `NOASSERTION` SPDX) requires `40001` retry logic and lacks PG C extensions.
 
 ---
 

@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-203 - Add CockroachDB V5 Spec in EN, Remove `eventuellement` in FR & Fix STE (`#579`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#579` (`docs/issue-579-cockroach-v5-modals`)
+- **Request / Changes / Result**: Added CockroachDB V5 `v25.4.21`/`3072m` upgrade note and fixed all 6 STE errors in `docs/en/solutions/cockroachdb.md` (`13,960` B), and removed all 3 `eventuellement` occurrences in `docs/fr/03a_catalogue_natif_et_extensions.md` and `docs/fr/solutions/yt_cluster_lite.md`; `make test` (`31/31`) and `make lint` pass.
+
 ### ACT-202 - Fix ASD-STE100 Compliance & Add Diataxis Links in Chapter 07 FR (`#577`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#577` (`docs/issue-577-ch07-fr-ste`)
 - **Request / Changes / Result**: Refactored `docs/fr/07_guide_de_choix_et_architecture_cible.md` to 0 STE mixed-mode errors (removed `potentiellement`/`via`, semicolons, and >25-word sentences) and added Diataxis cross-links while preserving Mermaid IDs and metrics; `make test` (`31/31`) and `make lint` pass.
