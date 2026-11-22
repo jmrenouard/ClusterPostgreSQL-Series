@@ -95,3 +95,13 @@ Pour arbitrer entre **[#17 Clustering Natif PostgreSQL 18.6](solutions/pg18_nati
 | **Extension PG 18 réversible dérive zéro (faible débit)** | **[#18 YT Cluster](solutions/yt_cluster_lite.md)** *(lab / niche)* | Pertinent sur PG 18 standard exigeant dérive `0` (`55409`/`40001`), fortes lectures locales (`48,8K`/`165,5K`) et réversibilité `DROP EXTENSION` (`T_REVERT`). **Inadapté** à l'OLTP intensif : plafond écriture 2PC `20,63`-`41,45 TPS` (`2,25` à `25ms` WAN, `86 lignes/s` bulk), rollback `SAVEPOINT` `0A000`, Jepsen interne limité à `cursor-stability`, `ytserv` fermé (PolyForm/Commercial) et `bus factor = 1`. |
 
 **Garde-fous d'upgrade (`PG 16/17 -> 18.6`) :** Monter les volumes Docker sur `/var/lib/postgresql` (`PGDATA=/var/lib/postgresql/18/docker`), activer les sommes de contrôle avant `pg_upgrade` (`pg_checksums --enable`), tester `io_method=sync` vs `worker` sur micro-OLTP chaud en RAM (`-10,3 %` IPC), et autoriser `io_uring` dans seccomp avant de l'activer.
+
+---
+
+## 6. Sélecteur interactif d'architecture PACELC & Explorateur GitHub Pages
+
+Appliquez cet arbre de décision sur les mesures empiriques via l'onglet **Sélecteur PACELC** de [`dashboard/index.html`](../../dashboard/index.html) (ou sur [GitHub Pages](https://jmrenouard.github.io/ClusterPostgreSQL-Series/) dès l'activation du workflow `#506`) :
+
+- **4 critères empiriques :** `RPO` (`0` vs `>0`), `WAN RTT` (`0`/`10`/`25`/`50 ms`), `Conflits` (`Mono`, `UUIDv7`, `CRDT`, `Forte`) et `TCO` (`Bas`/`Moy`/`Haut`), synchronisés avec `Baseline (S=2)` / `V5 Optimisé (S=20)`.
+- **Preuves & commandes :** Classe les 17 topologies + variantes V5/CRDT (`0-100`), marque `INCOMPATIBLE` la dérive LWW (`-71K` à `-531K`) sous forte contention, affiche les limites `SQLSTATE` (`23505`, `40001`, `0A000`, `55409`) et génère les commandes `make` / `./mdb` copiables + liens Bench/Matrice/Fiches.
+- **Vérification statique :** Exécutez `make dashboard && make pages-build && make pages-check` pour construire et contrôler `_site/`.

@@ -327,8 +327,8 @@
 - **Proposal**: Add an exponential-backoff `SQLSTATE 40001` retry wrapper for `sysbench` on CockroachDB/YugabyteDB and expand `spock.delta_apply` testing to multi-column composite counters.
 
 ### IDEA-005 - Automated GitHub Pages Publishing & PostgreSQL 18+ Native Sequence Sync Study
-- **Date / Action**: `2026-11-19` (`ACT-076`)
-- **Proposal**: Publish `dashboard/index.html` and `assets/charts/` automatically via GitHub Pages once `workflow` OAuth scope is granted (`RCA-003`), and benchmark PostgreSQL 18/19 native logical sequence synchronization against `RCA-009`.
+- **Date / Action**: `2026-11-19` (`ACT-076`), updated `2026-11-22` (`ACT-190`/`ACT-191`)
+- **Proposal**: Static `_site/` Pages bundle builder/verifier (`make pages-build`, `make pages-check`, PR `#505`) and interactive PACELC Architecture Selector (`PR #497`, `#499`, `#501`, `#503`) are now merged on `main`. Enabling `.github/workflows/pages.yml` remains tracked in open Issue `#506` pending `gh auth refresh -s workflow` (`RCA-003`), alongside future PostgreSQL 19 native logical sequence synchronization benchmarks (`RCA-009`/`RCA-018`).
 
 ### IDEA-006 - PostgreSQL 19 Native Sequence Sync & Bare-Metal `io_uring` AIO Benchmark Follow-Up
 - **Date / Action**: `2026-11-20` (`ACT-142`)
