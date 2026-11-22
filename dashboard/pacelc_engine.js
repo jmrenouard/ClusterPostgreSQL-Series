@@ -14,7 +14,7 @@
   function loadCatalog(ctx) {
     const c = ctx.LP_PACELC_CATALOG || {}, p = c.sheet_prefix || {};
     const enP = p.en || "docs/en/solutions/", frP = p.fr || "docs/fr/solutions/";
-    return { caveats: c.caveats || {}, items: upk(c.cols || [], c.rows).map((it) => ({ ...it, sheet_en: `${enP}${it.sheet_slug}.md`, sheet_fr: `${frP}${it.sheet_slug}.md` })) };
+    return { caveats: c.caveats || {}, items: upk(c.cols || [], c.rows).map((x) => ({ ...x, sheet_en: `${enP}${x.sheet_slug}.md`, sheet_fr: `${frP}${x.sheet_slug}.md` })) };
   }
 
   function indexBench(ctx, ds) {
@@ -30,8 +30,7 @@
     for (const k of ["CORE", "EXT", "PG18", "YT"]) {
       const pk = ctx[`LP_MATRIX_${k}`];
       if (!pk || !pk.cols) continue;
-      for (const r of upk(pk.cols, pk.rows)) {
-        if (!r.topology) continue;
+      for (const r of upk(pk.cols, pk.rows)) if (r.topology) {
         const s = (sets[r.topology] = sets[r.topology] || new Set());
         for (const t of String(r.verified_sqlstates || "").split(/[;, ]+/)) if (t && t.toUpperCase() !== "NONE") s.add(t);
       }
@@ -40,17 +39,11 @@
   }
 
   function benchStats(topo, bIdx, wan) {
-    const own = bIdx[topo] || {}, par = topo === "pgedge-delta-apply" ? (bIdx.pgedge || {}) : {};
-    const suite = wan > 0 ? `F_wan_netem_${wan}ms` : "A_single_rw";
-    const row = own[suite] || par[suite], aRow = own.A_single_rw || par.A_single_rw;
-    const dRow = own.D_hot_conflict, b2 = own.B2_overlap_rw;
-    const dD = dRow ? +dRow.balance_drift || 0 : 0, dB2 = b2 ? +b2.balance_drift || 0 : 0;
-    const n = (r, f) => (r && r[f] !== "" ? +r[f] : null);
-    return {
-      suite, tps: n(row, "tps"), latP95: n(row, "lat_p95_ms"), aTps: n(aRow, "tps"), dTps: n(dRow, "tps"),
-      driftD: dD, driftB2: dB2, maxDrift: Math.abs(dD) >= Math.abs(dB2) ? dD : dB2,
-      retries: Object.values(own).reduce((m, r) => Math.max(m, +r.retries_40001 || 0), 0),
-    };
+    const own = bIdx[topo] || {}, par = topo === "pgedge-delta-apply" ? (bIdx.pgedge || {}) : {}, suite = wan > 0 ? `F_wan_netem_${wan}ms` : "A_single_rw";
+    const row = own[suite] || par[suite], aRow = own.A_single_rw || par.A_single_rw, dRow = own.D_hot_conflict, b2 = own.B2_overlap_rw;
+    const n = (r, f) => { const v = r && r[f] !== "" && r[f] != null ? +r[f] : NaN; return Number.isFinite(v) ? v : null; };
+    const dD = n(dRow, "balance_drift") || 0, dB2 = n(b2, "balance_drift") || 0;
+    return { suite, tps: n(row, "tps"), latP95: n(row, "lat_p95_ms"), aTps: n(aRow, "tps"), dTps: n(dRow, "tps"), driftD: dD, driftB2: dB2, maxDrift: Math.abs(dD) >= Math.abs(dB2) ? dD : dB2, retries: Object.values(own).reduce((m, r) => Math.max(m, n(r, "retries_40001") || 0), 0) };
   }
 
   function scoreConflict(it, mode, dr, add) {
@@ -98,8 +91,8 @@
     const td = (TIER[it.tco_tier] ?? 1) - (TIER[cfg.tco] ?? 0);
     if (td <= 0) add(td === 0 && cfg.tco === "low" ? 6 : 4, `Fits ${cfg.tco} TCO`, `TCO ${cfg.tco} OK`);
     else add(td === 1 ? -9 : -18, `Exceeds ${cfg.tco} TCO (${it.nodes}n)`, `D\u00e9passe TCO (${it.nodes}n)`);
-    if (it.topology.startsWith("pg18-")) sc += 2;
-    if (p === "raft_rc") sc += 2;
+    if (it.topology.startsWith("pg18-")) add(2, "PG18 AIO+checksums");
+    if (p === "raft_rc") add(2, "V5 RC: 0 40001");
     if (p === "xa_sync" || p === "xa_async") add(-6, "APP-008: Closed ytserv, BF=1");
     if (p === "lww_trig") add(-6, "Perl triggers, low vitality");
     sc = Math.max(0, Math.min(100, Math.round(sc)));
