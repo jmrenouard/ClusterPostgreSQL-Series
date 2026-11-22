@@ -19,7 +19,7 @@ This chapter documents every **hard failure mode, `SQLSTATE` exception, and sile
 | **`XCEXF`** | `cockroach` | `CREATE TEMP TABLE` with default settings (`experimental_enable_temp_tables=off`) | **Session Error** |
 | **`42601`** | `cockroach` | `LISTEN` / `NOTIFY` syntax unsupported in Go PG-wire parser | **Unsupported Feature** |
 | **`57014`** | `cockroach` (`2/3` down) | Statement timeout during Raft majority loss (`PC/EC` cluster halt) | **Total Write/Read Outage** |
-| **`42501`** | `pgedge` (container quirk) | Default `output_plugin_libraries` lacked `spock_output` permission | **Setup Blocker Fixed via Conf** |
+| **`42501`** | `pgedge` (container quirk) | Default `output_plugin_libraries` lacked `spock_output` permission | **Setup Blocker Fixed with Conf** |
 | **`25006`** | `pg17-async/sync-streaming` | Write, `DELETE`, or `TEMP TABLE` attempted on hot standby | **Read-Only Standby Guard** |
 | **`23503`** | `bucardo` (`T13` FK race) | Immediate child `INSERT` on Node 2 before async parent sync (`0/10`) | **Cross-Node FK Violation** |
 | **`54000` / `08006`** | `pgedge` (`T14`), `citus` (`T16`) | `pgedge` image `SQL_ASCII` `chr(20013)` (`54000`); `citus` worker2 `SIGKILL` (`08006`) | **Encoding / Worker Drop** |
@@ -34,22 +34,22 @@ This chapter documents every **hard failure mode, `SQLSTATE` exception, and sile
 - **`pgedge` (`#2`):** Spock silently mapped the keyless table into the **`default_insert_only`** replication set. Local `UPDATE` (`delta=50`) and `DELETE` succeeded on `node1` (`UPDATE 1`), while peers silently kept stale values!
 - **`bucardo` (`#9`):** `validate_sync` refused initialization outright: `ERROR: Table "public.pgbench_history_nokey" must specify a primary key!`.
 - **`citus` (`#7`):** Allowed table creation, yet blocked `ALTER TABLE ... ADD PRIMARY KEY` / `SERIAL` after `create_distributed_table()` with **`SQLSTATE 0A000`**. Creating `PRIMARY KEY(aid, hid)` upfront unlocked full operations.
-- **`yugabyte` (`#5`) & `cockroach` (`#6`):** Both succeeded transparently via internal hidden keys (`rowid` auto-injected in CockroachDB `SHOW COLUMNS`).
-- **Mitigation:** Enforce explicit Primary Keys (or composite `(shard_key, id)` for Citus) across 100% of tables via CI migration checks.
+- **`yugabyte` (`#5`) & `cockroach` (`#6`):** Both succeeded natively using internal hidden keys (`rowid` auto-injected in CockroachDB `SHOW COLUMNS`).
+- **Mitigation:** Enforce explicit Primary Keys (or composite `(shard_key, id)` for Citus) across 100% of tables with CI migration checks.
 
 ### L2 — Uncoordinated `SERIAL` Primary Key Collisions
 
 - **`pg-birep` (`#1`):** Independent `SERIAL` sequences generated `id = 1` on both nodes. Replication crashed on **`SQLSTATE 23505`** (`duplicate key value violates unique constraint "uncoord_serial_pkey"`, `apply_error_count = 1`), blocking all subsequent transactions in that subscription queue.
-- **`pgedge` (`#2`) & `bucardo` (`#9`):** Neither halted—instead, both **silently overwrote** `node1`'s legitimate row (`from_n1` destroyed, `from_n2` retained; `spock.resolutions = 1`, `bucardo Conflicts = 1`).
-- **`citus` (`#7`), `yugabyte` (`#5`), `cockroach` (`#6`):** Zero collisions (`Citus` `1.62 ms` single coord seq; `Yugabyte` `1.89 ms` cache=1 / `1.98 ms` cache=100; `Cockroach` `unique_rowid()` `17.72 ms` vs Raft-serialized `SERIAL cache=1` `46.07 ms`).
+- **`pgedge` (`#2`) & `bucardo` (`#9`):** Neither halted. Both **silently overwrote** `node1`'s legitimate row (`from_n1` lost, `from_n2` retained, `spock.resolutions = 1`, `bucardo Conflicts = 1`).
+- **`citus` (`#7`), `yugabyte` (`#5`), `cockroach` (`#6`):** Zero collisions occurred (`Citus` `1.62 ms` coord seq, `Yugabyte` `1.89 ms` cache=1 / `1.98 ms` cache=100, `Cockroach` `unique_rowid()` `17.72 ms` vs `SERIAL cache=1` `46.07 ms`).
 - **Mitigation:** Mandate `snowflake` IDs, stepped `INCREMENT BY N` offsets, `unique_rowid()`, or UUIDv7 globally.
 
 ### L3 — Non-Commutative Lost Updates (`balance = balance + delta`)
 
 - **Async LWW Failure:** Under competing updates (`+100` and `-30` from `1000.00`, expected `1070.00`), `pg-birep` diverged (`node1 = 970.00`, `node2 = 1100.00`), while `pgedge` LWW and `bucardo_latest` converged to **`970.00`** (silently destroying `+100`). In Suite D (`50` hot accounts), drift exploded to **`-71,063`** (`pg-birep`), **`-278,698`** (`pgedge`), and **`-531,620`** (`bucardo`).
 - **`spock.delta_apply` Fix (`#2`):** Configuring `log_old_value=true, delta_apply_function=spock.delta_apply` converged all 3 nodes to exact `1070.00` (functional test) and **`0` drift** across `27,545` hot-row commits in Suite D (`1,837.64 TPS`).
-- **Consensus Retry (`#5`, `#6`, `#7`):** CockroachDB (`SERIALIZABLE`) triggered `9x` raw `40001` (`WriteTooOldError`), converging to `1100` after `27` automated retries; YugabyteDB (`REPEATABLE READ`) hit `8x` raw `40001` (`33` retries -> `1100`); Citus (`READ COMMITTED`) serialized cleanly (`1100`), raising `40001` only under `REPEATABLE READ`.
-- **Mitigation:** Never rely on LWW for financial balances or counters; use `spock.delta_apply` CRDTs or `40001`-retried consensus engines.
+- **Consensus Retry (`#5`, `#6`, `#7`):** CockroachDB (`SERIALIZABLE`) triggered `9x` raw `40001` (`WriteTooOldError`) and reached `1100` after `27` retries. YugabyteDB (`REPEATABLE READ`) hit `8x` `40001` (`33` retries -> `1100`), while Citus (`READ COMMITTED`) serialized cleanly (`1100`, `40001` only under `REPEATABLE READ`).
+- **Mitigation:** Never rely on LWW for financial balances or counters. Use `spock.delta_apply` CRDTs or `40001`-retried consensus engines.
 
 ### L4 — Secondary `UNIQUE(email)` Constraint Collisions
 
@@ -58,11 +58,11 @@ This chapter documents every **hard failure mode, `SQLSTATE` exception, and sile
 - **`pgedge` (`#2`):** Under default `spock.exception_behaviour = transdiscard` (`check_all_uc_indexes = off`), Spock logged `23505` (`exception_log = 1`), discarded the remote transaction, and left **`node1 = u1` vs `node2 = u2` permanently diverged**!
 - **`citus` (`#7`):** Rejected `UNIQUE(email)` outright on distributed tables unless the distribution column was included (`UNIQUE(dist_key, email)`), returning **`SQLSTATE 0A000`**.
 - **`yugabyte` (`#5`) & `cockroach` (`#6`):** Enforced global `UNIQUE` cleanly (`23505` rejected on the second writer at commit time).
-- **Mitigation:** Include shard/tenant keys in `UNIQUE` indexes on Citus; treat secondary `UNIQUE` keys in async meshes via central reservation or accept Raft consensus latency.
+- **Mitigation:** Include shard or tenant keys in Citus `UNIQUE` indexes. Handle secondary `UNIQUE` keys in async meshes with central reservation or accept Raft consensus latency.
 
 ### L5 — DDL Propagation, `TRUNCATE` & `SAVEPOINT` Limits
 
-- **`pg-birep` (`#1`) & `bucardo` (`#9`):** `ALTER TABLE ADD COLUMN` **did not propagate** (risking tuple schema mismatch on subsequent inserts), though `TRUNCATE TABLE` propagated via logical/trigger handlers.
+- **`pg-birep` (`#1`) & `bucardo` (`#9`):** `ALTER TABLE ADD COLUMN` **did not propagate** (risking tuple schema mismatch on subsequent inserts), though `TRUNCATE TABLE` propagated across logical and trigger handlers.
 - **`pgedge` (`#2`):** `enable_ddl_replication=on` automatically replicated `ALTER TABLE` and `TRUNCATE` to `node2`/`node3`.
 - **`citus`, `yugabyte`, `cockroach`:** DDL propagated cluster-wide AND transactional DDL with `SAVEPOINT` / `ROLLBACK TO SAVEPOINT` succeeded across all three tested engines.
 
@@ -80,14 +80,14 @@ This chapter documents every **hard failure mode, `SQLSTATE` exception, and sile
 
 ### L7 — Offline Node WAL Slot Bloat & Delta Queue Retention
 
-- Stopping one peer node left surviving nodes writable in all `AP` systems (`pg-birep` retained **`54,432 B`** WAL in `pg_replication_slots`; `pgedge` retained **`309,560 B`**; `bucardo` queued **`8` delta rows** in `bucardo.delta_public_accounts`), converging `5/5` rows cleanly upon restart. Unbounded outages risk exhausting primary disk unless `max_slot_wal_keep_size` is configured!
+- Stopping one peer left surviving nodes writable across `AP` stacks (`pg-birep` held `54,432 B`, `pgedge` `309,560 B`, `bucardo` `8` rows in `bucardo.delta_public_accounts`), converging `5/5` rows on restart. Unbounded outages risk exhausting primary disk unless `max_slot_wal_keep_size` caps retention!
 - On `citus`, stopping `worker2` kept reference-table reads and `worker1` shards online while failing queries hitting `worker2` shards until recovery. On `pg17-sync-streaming`, stopping the synchronous standby blocked primary commits (`RPO=0` guarantee).
 
 ### L8 — Majority Quorum Loss (`2/3` Down) & WAN RTT Collapse
 
 - **1-of-3 Down:** Both `yugabyte` (`RF=3`) and `cockroach` (`RF=3`) survived `node2` termination cleanly with **`RPO = 0`** (`balance = 500` readable across survivors).
-- **2-of-3 Down:** Terminating `node3` stripped Raft majority (`1/3 < 2/3`). Both clusters **halted completely** (`yugabyte` connection timeout; `cockroach` **`SQLSTATE 57014`** query timeout) until quorum returned—proving strict `PC/EC` behavior.
-- **WAN RTT Amplification (Suite F):** Adding `25 ms` egress delay (`~50 ms` RTT) dropped `pg17-sync-streaming` to `57.00 TPS` (`-86.1%`), `citus` to `21.67 TPS` (`-93.0%`), `cockroach` to `10.06 TPS` (`-76.1%`), and `yugabyte` to `5.78 TPS` (`-96.7%`).
+- **2-of-3 Down:** Terminating `node3` stripped Raft majority (`1/3 < 2/3`). Both clusters **halted completely** (`yugabyte` connection timeout, `cockroach` **`SQLSTATE 57014`** timeout) until quorum returned, proving strict `PC/EC` behavior.
+- **WAN RTT Amplification (Suite F):** Adding `25 ms` egress delay (`~50 ms` RTT) dropped `pg17-sync-streaming` to `57.00 TPS` (`-86.1%`). It also cut `citus` (`21.67`, `-93.0%`), `cockroach` (`10.06`, `-76.1%`), and `yugabyte` (`5.78 TPS`, `-96.7%`).
 
 ---
 
