@@ -3,106 +3,37 @@
 
 from __future__ import annotations
 
-import csv
 import math
 import pathlib
 import re
 import sys
-from collections import defaultdict
-
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from chart_meta import COL, CSVS, LBL, ORD, SCOL, SLAB, TOPOS
+from chart_meta import (
+    COL, LBL, ORD, OUT_DIR, RES_DIR, SCOL, SLAB, fms, fnum, ftick, fval,
+    load_csv_idx, log_axis, plt, resolve_e1, save_fig,
+)
+from matplotlib.ticker import FuncFormatter
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
-RES_DIR = ROOT / "results"
-OUT_DIR = ROOT / "assets" / "charts"
-
-plt.rcParams.update({
-    "figure.facecolor": "#fff", "axes.facecolor": "#f8fafc", "axes.edgecolor": "#cbd5e1",
-    "axes.spines.top": False, "axes.spines.right": False, "axes.axisbelow": True,
-    "xtick.color": "#1e293b", "ytick.color": "#1e293b", "xtick.labelsize": 8.0,
-    "ytick.labelsize": 8.0, "axes.titleweight": "bold", "axes.labelweight": "bold",
-    "legend.facecolor": "#fff", "legend.edgecolor": "#e2e8f0",
-})
-
-
-def fnum(v: object) -> float:
-    try:
-        x = float(str(v).strip())
-        return x if math.isfinite(x) else 0.0
-    except (ValueError, TypeError):
-        return 0.0
-
-
-def fval(v: float) -> str:
-    if v <= 0:
-        return "0"
-    if v >= 1e6:
-        return f"{v / 1e6:.2f}M"
-    if v >= 1e4:
-        return f"{v / 1e3:.1f}k"
-    return f"{v / 1e3:.2f}k" if v >= 1e3 else (f"{v:.0f}" if v >= 100 else (f"{v:.1f}" if v >= 10 else f"{v:.2f}"))
-
-
-def fms(v: float) -> str:
-    return f"{v / 1e3:.2f}s" if v >= 1e3 else f"{fval(v)}ms"
-
-
-def ftick(x: float, _p: int) -> str:
-    if x <= 0:
-        return "0"
-    for lim, sfx in ((1e6, "M"), (1e3, "k")):
-        if x >= lim:
-            v = x / lim
-            return f"{int(v)}{sfx}" if abs(v - round(v)) < 1e-6 else f"{v:g}{sfx}"
-    return f"{int(x)}" if x >= 1 and abs(x - round(x)) < 1e-6 else f"{x:g}"
-
-
-def load_data() -> tuple[dict, set[str]]:
-    idx: dict[str, dict[str, dict[str, str]]] = defaultdict(dict)
-    su: set[str] = set()
-    for name in CSVS:
-        p = RES_DIR / name
-        if p.is_file():
-            with p.open(encoding="utf-8", newline="") as fh:
-                for r in csv.DictReader(fh):
-                    t, s = r["topology"].strip(), r["suite"].strip()
-                    idx[t].setdefault(s, r)
-                    su.add(s)
-    return idx, su
+load_data = load_csv_idx
 
 
 def get_topos(idx: dict, delta: bool = False) -> list[str]:
+    """Return ordered topology list present in idx."""
     seen = set(idx)
     out = [t for t in ORD if t in seen and (delta or t != "pgedge-delta-apply")]
     return out + [t for t in sorted(seen) if t not in out and (delta or t != "pgedge-delta-apply")]
 
 
 def log_y(ax: plt.Axes, yl: str, ti: str, pad: int = 10) -> None:
-    ax.set_yscale("log")
-    ax.yaxis.set_major_formatter(FuncFormatter(ftick))
-    ax.grid(True, "major", "y", color="#cbd5e1", lw=0.8, alpha=0.8)
-    ax.grid(True, "minor", "y", color="#e2e8f0", lw=0.5, ls=":", alpha=0.7)
+    """Configure Log10 Y-axis with label and title."""
+    log_axis(ax, "y")
     ax.set_ylabel(yl, fontsize=9, color="#0f172a")
     ax.set_title(ti, fontsize=9.8, color="#0f172a", pad=pad)
 
 
-def save_fig(fig: plt.Figure, fn: str, ti: str, sub: str) -> None:
-    fig.suptitle(ti, fontsize=12.4, weight="bold", color="#0f172a", y=0.985)
-    fig.text(0.5, 0.938, sub, ha="center", va="top", fontsize=8.4, color="#475569")
-    fig.text(0.99, 0.01, "LightPath | ClusterPostgreSQL-Series | 17-Topology Benchmarks (PG 17/18 + YT)", ha="right", va="bottom", fontsize=7.2, color="#64748b", style="italic")
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    fig.savefig(OUT_DIR / fn, dpi=180, bbox_inches="tight", facecolor="#fff")
-    plt.close(fig)
-
-
 def draw_bars(ax: plt.Axes, topos: list[str], su: list[str], idx: dict, fld: str, yl: str, ti: str) -> None:
+    """Draw grouped Log10 bar chart across topologies and suites."""
     ns, av, xs = max(len(su), 1), [], list(range(len(topos)))
     w = min(0.84 / ns, 0.24)
     rot = 88 if (ns >= 4 and len(topos) >= 10) else (72 if ns >= 3 else (45 if ns == 2 else 0))
@@ -123,6 +54,7 @@ def draw_bars(ax: plt.Axes, topos: list[str], su: list[str], idx: dict, fld: str
 
 
 def spread(items: list, gap: float = 0.085) -> list:
+    """Shift closely clustered log10 endpoint labels upward to avoid collisions."""
     s = sorted([(math.log10(max(y, 1e-6)), t, c) for y, t, c in items], key=lambda p: p[0])
     for i in range(1, len(s)):
         if s[i][0] - s[i - 1][0] < gap:
@@ -131,6 +63,7 @@ def spread(items: list, gap: float = 0.085) -> list:
 
 
 def draw_sweep(idx: dict, xl: list[str], seq: list[str], xlab: str, fn: str, ti: str, sub: str, ann: bool = False) -> None:
+    """Render side-by-side Log10 TPS and Avg Latency sweep line charts."""
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(17.2, 7.0))
     et, el = [], []
     for t in get_topos(idx):
@@ -160,7 +93,10 @@ def draw_sweep(idx: dict, xl: list[str], seq: list[str], xlab: str, fn: str, ti:
 
 
 def chart_07(idx: dict) -> None:
+    """Render chart_07_integrity_vs_throughput.png for Suite D hot-row contention."""
     topos = [t for t in get_topos(idx, True) if "D_hot_conflict" in idx[t]]
+    if not topos:
+        return
     dr = [idx[t]["D_hot_conflict"] for t in topos]
     tps, rd = [fnum(r.get("tps")) for r in dr], [fnum(r.get("balance_drift")) for r in dr]
     ad = [abs(d) for d in rd]
@@ -174,14 +110,14 @@ def chart_07(idx: dict) -> None:
         ax.set_xlabel(xl, fontsize=9)
         ax.set_title(ti, fontsize=9.6, pad=8)
     a1.barh(ys, tps, color=["#16a34a" if ok else "#dc2626" for ok in oks], ec="#fff", height=0.64)
-    a1.set_xlim(10, max(tps) * 11.0)
+    a1.set_xlim(10, max(max(tps, default=0.0) * 11.0, 100.0))
     a1.set_yticks(ys)
     a1.set_yticklabels([LBL.get(t, t) for t in topos], fontsize=8.2, weight="semibold")
     a1.invert_yaxis()
     for y, v, ok in zip(ys, tps, oks):
-        a1.text(v * 1.12, y, f"{fval(v)} TPS ({'0 drift' if ok else 'LOST'})", va="center", fontsize=7.3, color="#166534" if ok else "#991b1b", weight="bold")
+        a1.text(max(v, 10.0) * 1.12, y, f"{fval(v)} TPS ({'0 drift' if ok else 'LOST'})", va="center", fontsize=7.3, color="#166534" if ok else "#991b1b", weight="bold")
     a2.barh(ys, [d or 0 for d in ad], color=["#dc2626" if d > 0 else "#16a34a" for d in ad], ec="#fff", height=0.64)
-    a2.set_xlim(1, max(max(ad), 1e3) * 18.0)
+    a2.set_xlim(1, max(max(ad, default=0.0), 1e3) * 18.0)
     for y, r, d in zip(ys, rd, ad):
         a2.text(1.5 if d == 0 else d * 1.25, y, "0 (EXACT)" if d == 0 else f"{'-' if r < 0 else '+'}{int(d):,} drift", va="center", fontsize=7.4, color="#166534" if d == 0 else "#991b1b", weight="bold")
     fig.subplots_adjust(top=0.85, bottom=0.11, wspace=0.07)
@@ -189,9 +125,10 @@ def chart_07(idx: dict) -> None:
 
 
 def main() -> None:
-    idx, su = load_data()
+    """Build core charts 01-07 from merged benchmark CSVs."""
+    idx, su = load_csv_idx()
     topos = get_topos(idx)
-    e1 = "E1_sysbench_oltp_rw" if "E1_sysbench_oltp_rw" in su else ("E_sysbench_oltp_rw" if "E_sysbench_oltp_rw" in su else "")
+    e1 = resolve_e1(su)
     pk = lambda q: [s for s in q if s and s in su]
     sc = pk(("A_single_rw", "B1_disjoint_rw", "C_multinode_ro", e1, "H_append_only_insert"))
     sl = pk(("A_single_rw", "B1_disjoint_rw", "C_multinode_ro", e1, "F_wan_netem_25ms"))
