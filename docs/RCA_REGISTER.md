@@ -180,6 +180,20 @@
 - **Applied Change / Fix**: Built modular `v2.6.1` `bench_pg_optimized_runner.sh` (`fillfactor=90`, `lz4` WAL, PG 18/YT `io_method=worker/4`, `-M prepared`, `WARMUP_S=5`, Spock `delta_apply` + drain, Citus `colocate_with=>'pgbench_accounts'`, Yugabyte `50k` chunked inserts + `RC` + `CACHE 1000` + HAProxy `:15470`, CRDB `v25.4` HAProxy `:15480` + `bench` role, YT `YT_MAX_PREPARED=300` + `ytctl` parallel tokens + Leader affinity + Lua `55409`/`40001`/`40P01` hook); documented in Ch. `13`, `06 Section 8`, `09`, `README*` with `chart_12`/`chart_13`.
 - **Result & Non-Regression Test**: `318/318` sequential rows collected (`results/benchmark_optimized.csv`), `0` drift on `pgedge`, `sync`, Raft, Citus, and YT (`317/318` `tx_failed=0`, only `yt-cluster-async | D` `tx_failed=1`), monotonic WAN sweeps across all 8 WAN-enabled consensus/sync stacks, and `make test && make lint` pass.
 
+### RCA-026 - Dashboard Sharding Imbalance, Collector 301/Timeout Traps & Chart E1/Empty Regressions
+- **Date / Action**: `2026-11-22` (`ACT-193`/`ACT-194`, PRs `#530`-`#560`)
+- **Observed Symptom**: Baseline dashboard sharding skewed toward early shards, `collect_popularity.py` parsed intermediate HTTP `301` redirect JSON and risked hanging without `gh` timeouts, `generate_charts*.py` failed on empty data or hardcoded `E1_` vs `E_` suite names, `charts.js` duplicated integer ticks and collided >4 sweep endpoint labels, and `app.js` left CSV cells/tooltips unescaped.
+- **Root Cause Analysis**: Greedy single-threshold sharding filled shards unevenly; `gh api -i` prepends intermediate HTTP headers/bodies on moved repos; chart generators duplicated parsing helpers instead of sharing validated routines; dashboard scripts duplicated formatting/sorting without boundary escaping.
+- **Applied Change / Fix**: Implemented byte-balanced 3-way `shard_rows` (`55+56+67=178` rows) + `math.isfinite` `parse_num`, `split_http_response` + `run_gh(..., timeout=30)`, shared `scripts/chart_meta.py`, shared `window.LPUtil` helpers, tick dedup & endpoint Y-spacing, XSS/CSV formula escaping, and Python/Node unit guards (`tests/test_benchmark_artifacts.py`).
+- **Result & Non-Regression Test**: Regenerated `chart_08..13` + balanced shards (`178` + `318` rows), `31/31` unit tests (Windows + WSL), Node VM harness, `make pages-check`, and Chrome headless CDP E2E pass.
+
+### RCA-027 - Stripped-Script PACELC Test Regression on Standalone `LPUtil` Consumer (`opt.js`)
+- **Date / Action**: `2026-11-22` (`ACT-194`, PR `#554`)
+- **Observed Symptom**: `tests/test_pacelc_selector.py` (`test_js_scoring_engine_and_ui_in_node`) failed when `opt.js` unconditionally destructured `window.LPUtil` because line 100 omits `matrix.js` when loading `index.html` scripts into Node VM.
+- **Root Cause Analysis**: Defining `window.LPUtil` inside `matrix.js` introduced an implicit runtime dependency when another test evaluates `opt.js` without `matrix.js`.
+- **Applied Change / Fix**: Added a `W.LPUtil || {}` defensive guard with compact local fallback helpers inside `dashboard/opt.js` (`11,976` B `< 14,000` B cap) while leaving `tests/test_pacelc_selector.py` unmodified.
+- **Result & Non-Regression Test**: Both `test_pacelc_selector.py` and `test_dashboard_js_syntax_and_unit_behavior` (`31/31` OK) plus Chrome CDP UI checks pass without skipping.
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters
@@ -239,6 +253,12 @@
 
 ### IMP-012 - Inlining PACELC UI & Styles Inside `index.html` / `app.js`
 - **Date / Action**: `2026-11-22` (`ACT-187`) | **Rejected**: Inlining PACELC controls/cards into `index.html`/`app.js` breached `< 14,000` B per-file cap; isolated into `pacelc_ui.js` and `pacelc.css`.
+
+### IMP-013 - Bulk Reshuffling of All Audited Files, Legacy Removals & Test Suites in One PR
+- **Date / Action**: `2026-11-22` (`ACT-192`..`ACT-194`) | **Rejected**: Landing the full Ponytail audit diff (`~85 KB` across 25 modified files, 14 deletions, charts, shards, and `16.7 KB` `test_benchmark_artifacts.py`) in monolithic commits or overwriting `origin/main` PACELC/Pages features breached the `< 15,000`-char PR diff cap and would regress `#497`-`#508`. Split into sequential `< 14,800` B PRs (`#510`-`#562`) preserving Pages/PACELC.
+
+### IMP-014 - Creating a Separate `dashboard/util.js` File Beyond `< 14 KB` `index.html` & Manifest Caps
+- **Date / Action**: `2026-11-22` (`ACT-194`, PR `#550`) | **Rejected**: Adding a new standalone `dashboard/util.js` script tag instead of colocating `window.LPUtil` inside `dashboard/matrix.js` (`4,986` B) loaded ahead of `popularity.js`/`opt.js`/`app.js` risked pushing `dashboard/index.html` (`13,893` B) over `14,000` B and breaking offline manifest lists.
 
 ## 3. Current Approximations & Simplifying Assumptions (`APP-XXX`)
 
@@ -307,6 +327,9 @@
 
 ### APP-014 - Static Root Redirect for GitHub Pages Bundle (`_site/index.html`)
 - **Date / Action**: `2026-11-22` (`ACT-189`) | **Approximation**: `_site/index.html` uses zero-CDN HTML meta-refresh plus JS/anchor redirect to `dashboard/index.html` so `dashboard/` preserves `../assets/` relative paths identically across local `file://` opens and GitHub Pages hosting.
+
+### APP-015 - Conditional Node.js Skip Guard in `test_dashboard_js_syntax_and_unit_behavior`
+- **Date / Action**: `2026-11-22` (`ACT-194`, PR `#560`) | **Approximation**: `test_dashboard_js_syntax_and_unit_behavior` skips gracefully via `shutil.which("node")` only on Python-only runners lacking Node.js (`APP-013`), while active Windows (`v26`) and WSL (`v24`) developer/CI runtimes execute all `31/31` assertions non-skipped.
 
 ## 4. Unimplemented Ideas & Future Roadmap (`IDEA-XXX`)
 

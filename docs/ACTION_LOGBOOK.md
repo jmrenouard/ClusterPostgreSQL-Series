@@ -18,6 +18,7 @@
 | **Phase 9** | Wave 5: 18-Suite `yt-cluster-async`, 17-Topology Charts 01-07 + `chart_11`, Benchmark Traceability & `v2.4.1` | 36-row YT Cluster empirical matrix, 17-topology `chart_01-07` + `chart_11`, 301-row offline dashboard (`yt_vs_mm`), Ch. 06 Section 7 & Ch. 09 Traceability Matrix, submodule `v2.4.1` | Complete | `make test && make lint` |
 | **Phase 10** | V5 Production Tuning & Realistic Scale Benchmarks (`PG_SCALE=20`, `18` Topologies, `318` Rows, `v2.6.1`) | `results/benchmark_optimized.csv` (`318` rows), `chart_12` & `chart_13`, dual-dataset offline dashboard (`301` + `318`), Chapter 13 EN/FR, Ch. 06 Section 8, Ch. 09 Matrix, `README*` & governance updates | Complete | `make charts && make dashboard && make test && make lint` |
 | **Phase 11** | Interactive PACELC Selector & GitHub Pages Explorer (`#496-#507`) | PACELC catalog/engine/UI, Node+parity tests, `make pages-build`/`pages-check`, EN/FR docs; `.github/workflows/pages.yml` tracked in `#506` (`RCA-003`) | Complete (`#506` pending `workflow` scope) | `make dashboard && make pages-build && make pages-check && make test && make lint` |
+| **Phase 12** | Ponytail Quality Audit, Chart/Dashboard Refactoring, Unit Hardening & Submodule `v2.6.2` (`#509-#563`) | Audited Makefile targets, pruned 14 shadowed scripts, fixed collector/builder/chart bugs, extracted `LPUtil`, regenerated charts/shards, reconciled PACELC hooks, added Python/Node unit tests, bumped submodule `v2.6.2` | Complete | `make test && make lint && make pages-check` |
 
 ## 1. Ongoing Actions (`IN PROGRESS`)
 
@@ -26,6 +27,22 @@
 | *None* | - | - | - | All tracked actions archived below once verified. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-195 - Bump Submodule to `v2.6.2` & Update Living Governance Registers (`#561-#563`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#561-#563` (`docs/issue-563-audit-governance-registers`)
+- **Request / Changes / Result**: Bumped `env/multi-db-docker-env` to `1dc6fa80` (`v2.6.2`, PR `#562`), aligned `README.md`/`README.fr.md` harness version references, and logged `Phase 12`, `ACT-192..195`, `RCA-026..027`, `IMP-013..014`, `APP-015` (Issue `#563`); `make test` (`31/31`) and `make lint` pass.
+
+### ACT-194 - Refactor Dashboard UI, Reconcile PACELC Hooks & Harden Unit/Node Tests (`#549-#560`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#549-#560` (`test/issue-559-dashboard-js-unit-harness`)
+- **Request / Changes / Result**: Extracted shared `window.LPUtil` (`matrix.js` loaded before `popularity.js`/`opt.js`/`app.js`), fixed XSS escaping, linear tick dedup, >8 sweep labels, `SWEEP_CONC` compare rendering, CSV formula escaping, and standalone `LPUtil` guard in `opt.js` (`RCA-027`); merged `#501` PACELC UI hooks in `index.html`/`app.js` (< `14,000` B per file) and added Python + Node VM unit tests (`31/31` non-skipped) in `tests/test_benchmark_artifacts.py` (PRs `#550`-`#560`).
+
+### ACT-193 - Harden Popularity Collector, Dashboard Builder & Chart Generators (`#529-#548`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#529-#548` (`fix/issue-547-regen-opt-shard1`)
+- **Request / Changes / Result**: Extracted `scripts/chart_meta.py` (`resolve_e1`, `inum`, `fnum`, `OUT_DIR`/`RES_DIR`), fixed 301 redirect bodies, `Link` pagination, and 30s `gh` timeout in `collect_popularity.py`, guarded `math.isfinite` and balanced 3-shard `shard_rows` (`55+56+67=178` rows) in `build_dashboard.py`, fixed empty/sweep guards and dynamic snapshot dates in `generate_charts*.py`, and regenerated `chart_08..13` + balanced shards (PRs `#530`-`#548`).
+
+### ACT-192 - Audit Makefile Entry Points & Prune 14 Shadowed Legacy Scripts (`#509-#528`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#509-#528` (`chore/issue-527-prune-test-yugabyte`)
+- **Request / Changes / Result**: Reconciled `Makefile` (`build-bench-image`, `bench-optimized`, `bench-yt-cluster` overrides, `bench-all` fallback, `reports/*.md` clean) with `#505` Pages targets and removed 14 shadowed `scripts/*.sh/.py` files while preserving `setup_pg17_baseline.sh` (PRs `#510`-`#528`).
 
 ### ACT-191 - Document GitHub Pages Explorer & PACELC Selector in EN/FR Docs (`#507`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#507` (`docs/issue-507-pages-pacelc-docs`)
