@@ -21,7 +21,7 @@
 
 **Bucardo 5** is an external asynchronous Perl replication daemon (`Bucardo 5.6.0`) that orchestrates multi-master and primary-replica PostgreSQL synchronization without custom C WAL output plugins. Instead of decoding WAL streams, Bucardo installs `PL/pgSQL` `bucardo_delta*` triggers that record modified primary keys into shadow `bucardo.delta_*` tables inside each participating database.
 
-When a `LISTEN/NOTIFY` kick or polling timer fires, `bucardo_daemon` (MCP/CTL/KID workers) pulls delta keys from peers in a `dbgroup` (`db1:source db2:source`), resolves conflicts via `bucardo_latest`, and merges rows asynchronously. In the PoC, `bucardo_node1` hosts both user data and the `bucardo` metadata database (`plperlu`), creating a structural metadata coupling on node 1.
+When a `LISTEN/NOTIFY` kick or timer fires, `bucardo_daemon` (MCP/CTL/KID) pulls delta keys from `dbgroup` peers (`db1:source db2:source`). It resolves conflicts with `bucardo_latest` and merges rows asynchronously. In the PoC, `bucardo_node1` hosts both user data and the `bucardo` metadata database (`plperlu`), creating a structural metadata coupling on node 1.
 
 ---
 
@@ -67,7 +67,7 @@ $$
 | Strengths | Weaknesses & Operational Traps |
 | :--- | :--- |
 | **Fast Disjoint & `sysbench` Local Writes:** `1,078.9 TPS` (`B1`), `1,232.84 TPS` (`E`), `1,607.89 TPS` (`E3`), `53,731.92 TPS` (`C`), and `0` drift on `B1`/`E`/`H`. | **Extreme Hot-Row Drift (`D`/`B2`/`L3`):** `D_hot_conflict` loses `-531,620` (`50.8%` of `1,046,798`); `B2` drifts `+123,679`; `L3` loses `+100` (`970.00`). |
-| **Trigger Portability Across PG Versions:** Works via `PL/pgSQL` + `plperlu` without WAL decoding slots or core `pgoutput` (`wal_level` independent). | **Polling Lag (`T15`) & FK Race Failure (`T13`):** `p50=548.74 ms` / `p95=1,275.25 ms` (300x–500x slower than WAL) causes `0/10` (`23503x10`) in `T13`. |
+| **Trigger Portability Across PG Versions:** Works with `PL/pgSQL` + `plperlu` without WAL decoding slots or core `pgoutput` (`wal_level` independent). | **Polling Lag (`T15`) & FK Race Failure (`T13`):** `p50=548.74 ms` / `p95=1,275.25 ms` (300x–500x slower than WAL) causes `0/10` (`23503x10`) in `T13`. |
 | **WAN-Resilient Commits & Bulk Speed:** Holds `763.23 TPS` at `25 ms` WAN (`612.56` at `50 ms`), `42,536 rows/s` bulk (`T11`, `139.1 ms`), and `5/5` outage catch-up (`L7`). | **Metadata SPOF (`T16`) & Sync Stall (`L4`):** `bucardo` DB lives on `node1` (`SIGKILL` ends `post_restart=20/21`); `L4` `23505` stalls `sync_mm` to `Bad (Error=7)`. |
 | **Strict Pre-Sync PK Guard (`L2`):** `validate_sync` refuses keyless tables immediately instead of silently skipping `UPDATE`/`DELETE` like Spock. | **No Auto-DDL (`L5`), Write Amp & `E` Noise:** `ALTER TABLE` does not propagate; delta tables inflate `VACUUM`; `sysbench` `112` (`E`) / `193` (`E3`) = Lua collision noise. |
 
@@ -93,7 +93,7 @@ Ran at `pg_scale = 2` (`retries_40001 = 0`). Only `Avg`, `Stddev` (`0` for `sysb
 | `H_append_only_insert` | 8 / 12s | 1105.99 | N/A | 7.222 / 1.98 / 10.472 | 13255 (0) | 0 | `PASS_CONVERGED` |
 | `F_wan_netem_25ms` | 8 / 15s | 763.23 | N/A | 10.466 / 8.486 / 27.255 | 11444 (0) | 0 | `PASS_NETEM_25MS` |
 
-*(Divergence details: `B2` `exp=662527`, `n1/n2=786206`; `D` `exp=1046798`, `n1/n2=515178`.)*
+*(Divergence details: `B2` `exp=662527`, `n1/n2=786206`. `D` `exp=1046798`, `n1/n2=515178`.)*
 
 ### Table B — Concurrency & WAN Latency Sweeps (`benchmark_concurrency_sweep.csv`, `benchmark_wan_sweep.csv`)
 

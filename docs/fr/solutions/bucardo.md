@@ -19,9 +19,9 @@
 
 ## 1. Description de la technologie et rôle
 
-**Bucardo 5** est un démon Perl asynchrone externe (`Bucardo 5.6.0`) qui orchestre la réplication multi-maîtres et primaire-réplica sous PostgreSQL sans plugin C WAL. Au lieu de décoder le WAL, Bucardo installe des triggers `PL/pgSQL` `bucardo_delta*` qui enregistrent les clés primaires modifiées dans des tables ombres `bucardo.delta_*` sur chaque base.
+**Bucardo 5** est un démon Perl asynchrone externe (`Bucardo 5.6.0`) qui orchestre la réplication multi-maîtres sous PostgreSQL sans plugin C WAL. Bucardo installe des triggers `PL/pgSQL` `bucardo_delta*` qui consignent les clés primaires modifiées dans `bucardo.delta_*`.
 
-Sur signal `LISTEN/NOTIFY` ou timer de scrutation, `bucardo_daemon` (processus MCP/CTL/KID) extrait les deltas depuis les pairs d'un `dbgroup` (`db1:source db2:source`), arbitre les conflits via `bucardo_latest` et fusionne les lignes. Dans le PoC, `bucardo_node1` héberge à la fois les données et la base de métadonnées `bucardo` (`plperlu`), créant un couplage structurel sur le nœud 1.
+Sur signal `LISTEN/NOTIFY` ou timer, `bucardo_daemon` (MCP/CTL/KID) extrait les deltas depuis un `dbgroup` (`db1:source db2:source`). Il arbitre les conflits avec `bucardo_latest` et fusionne les lignes. Dans le PoC, `bucardo_node1` héberge à la fois les données et la base de métadonnées `bucardo` (`plperlu`), créant un couplage structurel sur le nœud 1.
 
 ---
 
@@ -93,7 +93,7 @@ Tests à `pg_scale = 2` (`retries_40001 = 0`). Seules `Avg`, `Stddev` (`0` pour 
 | `H_append_only_insert` | 8 / 12s | 1105.99 | N/A | 7.222 / 1.98 / 10.472 | 13255 (0) | 0 | `PASS_CONVERGED` |
 | `F_wan_netem_25ms` | 8 / 15s | 763.23 | N/A | 10.466 / 8.486 / 27.255 | 11444 (0) | 0 | `PASS_NETEM_25MS` |
 
-*(Détails dérive : `B2` `exp=662527`, `n1/n2=786206` ; `D` `exp=1046798`, `n1/n2=515178`.)*
+*(Détails dérive : `B2` `exp=662527`, `n1/n2=786206`. `D` `exp=1046798`, `n1/n2=515178`.)*
 
 ### Tableau B — Balayages concurrence & WAN (`benchmark_concurrency_sweep.csv`, `benchmark_wan_sweep.csv`)
 

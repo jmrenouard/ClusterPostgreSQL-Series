@@ -155,7 +155,7 @@ Statement broadcast breaks silently whenever SQL produces different values acros
 
 ### History & Architecture
 
-AWS previously launched **Aurora Multi-Master (v1)** on MySQL (never GA on Aurora PostgreSQL, retired completely in 2024) because cross-writer shared-page invalidation caused severe abort storms under contention. AWS replaced that concept with **Aurora PostgreSQL Limitless Database** (GA 2024): a two-tier sharded engine decoupling **Transaction Routers** from **Data Access Shards** over Aurora's multi-AZ distributed storage, using **AWS Time Sync Service** hardware clocks and 2PC for globally consistent reads and distributed commits. Vendor lock-in and cross-shard 2PC latency remain the primary constraints.
+AWS previously launched **Aurora Multi-Master (v1)** on MySQL (never GA on Aurora PostgreSQL, retired completely in 2024) because cross-writer shared-page invalidation caused severe abort storms under contention. AWS replaced that design with **Aurora PostgreSQL Limitless Database** (GA 2024). It splits **Transaction Routers** from **Data Access Shards** over multi-AZ storage, using **AWS Time Sync Service** and 2PC for distributed commits. Vendor lock-in and cross-shard 2PC latency remain the primary constraints.
 
 ---
 
@@ -167,7 +167,7 @@ AWS previously launched **Aurora Multi-Master (v1)** on MySQL (never GA on Auror
 
 ### Spanner vs AlloyDB Disambiguation
 
-- **Cloud Spanner (PostgreSQL Interface):** Achieves **External Consistency** across continents via **Multi-Paxos** splits and **TrueTime** (GPS + atomic clocks bounding global uncertainty $\varepsilon < 7\text{ ms}$). Writes wait out $2\varepsilon$ before releasing locks (`commit-wait`), guaranteeing linearizable timestamps without cross-region read locks. However, Spanner's PG Interface supports only a subset of PostgreSQL SQL/types (zero C extensions, limited PL/pgSQL).
+- **Cloud Spanner (PostgreSQL Interface):** Achieves **External Consistency** across continents using **Multi-Paxos** splits and **TrueTime** (GPS + atomic clocks bounding global uncertainty $\varepsilon < 7\text{ ms}$). Writes wait out $2\varepsilon$ before releasing locks (`commit-wait`), guaranteeing linearizable timestamps without cross-region read locks. However, Spanner's PG Interface supports only a subset of PostgreSQL SQL/types (zero C extensions, limited PL/pgSQL).
 - **Google Cloud AlloyDB:** **Not active-active multi-master.** AlloyDB uses a **single primary compute writer** paired with disaggregated Log-Processing Storage and elastic read pools. It belongs in architectural matrices purely to prevent misclassifying shared-storage HA as multi-writer active-active.
 
 ---
@@ -180,6 +180,6 @@ AWS previously launched **Aurora Multi-Master (v1)** on MySQL (never GA on Auror
 
 ### Technical Heritage & Retirement Status
 
-- **RubyRep:** Ruby-based bidirectional table-diff and trigger sync; unmaintained, CPU-bound, unsafe for high-concurrency OLTP.
-- **Slony-I:** C/SQL trigger replication designed in the 2000s before PG 9.0 streaming replication; **strictly single-origin per replication set** (not multi-master).
-- **Londiste (Skytools):** Python daemon consuming `PgQ` trigger queues; scalable batch shipping in its era, now superseded by core PG 10+ `pgoutput` logical replication. None of these three should be selected for new production deployments.
+- **RubyRep:** Ruby bidirectional table-diff and trigger sync. Unmaintained, CPU-bound, and unsafe for concurrent OLTP.
+- **Slony-I:** C/SQL trigger replication built before PG 9.0 streaming replication. Strictly single-origin per replication set, not multi-master.
+- **Londiste (Skytools):** Python daemon draining `PgQ` trigger queues. Superseded by core PG 10+ `pgoutput` logical replication, so avoid all three in production.
