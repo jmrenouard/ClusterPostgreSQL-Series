@@ -25,17 +25,16 @@
 
   function fmtTick(v, unit) {
     if (v <= 0) return "0";
-    if (unit === "ms" && v >= 1e3) return (v / 1e3).toFixed(0) + "s";
+    if (unit === "ms" && v >= 1e3) return +(v / 1e3).toFixed(2) + "s";
     let s;
-    if (v >= 1e6) s = (v / 1e6).toFixed(0) + "M";
-    else if (v >= 1e3) s = (v / 1e3).toFixed(0) + "k";
-    else if (v >= 1) s = String(Math.round(v * 100) / 100);
-    else s = String(v);
+    if (v >= 1e6) s = +(v / 1e6).toFixed(2) + "M";
+    else if (v >= 1e3) s = +(v / 1e3).toFixed(2) + "k";
+    else s = String(v >= 1 ? +v.toFixed(2) : +v.toFixed(4));
     return unit === "ms" ? s + "ms" : s;
   }
 
   function logTicks(minVal, maxVal, isMs) {
-    const lo = Math.min(isMs ? -1 : 0, Math.floor(Math.log10(Math.max(minVal, isMs ? 0.1 : 1))));
+    const lo = Math.min(isMs ? -1 : 0, Math.floor(Math.log10(Math.max(minVal, isMs ? 0.01 : 0.1))));
     const hi = Math.max(lo + 1, Math.ceil(Math.log10(Math.max(maxVal * 1.35, isMs ? 10 : 100))));
     const ticks = [];
     for (let e = lo; e <= hi; e++) ticks.push(Math.pow(10, e));
@@ -110,7 +109,7 @@
     const allVals = [];
     series.forEach((s) => s.values.forEach((pt) => { if (pt && pt.v > 0) allVals.push(pt.v); }));
     if (!categories.length || !allVals.length) {
-      container.innerHTML = `<div class="chart-empty">${emptyMsg || "No data for current selection."}</div>`;
+      container.innerHTML = `<div class="chart-empty">${esc(emptyMsg || "No data for current selection.")}</div>`;
       return;
     }
     const W = 680, H = 355, M = { t: series.length > 1 ? 36 : 18, r: 16, b: 84, l: 62 };
@@ -154,7 +153,7 @@
     const allVals = [];
     series.forEach((s) => s.points.forEach((pt) => { if (pt && pt.v > 0) allVals.push(pt.v); }));
     if (!xLabels.length || !allVals.length) {
-      container.innerHTML = `<div class="chart-empty">${emptyMsg || "No sweep points for selection."}</div>`;
+      container.innerHTML = `<div class="chart-empty">${esc(emptyMsg || "No sweep points for selection.")}</div>`;
       return;
     }
     const W = 680, H = 355, M = { t: 20, r: 58, b: 64, l: 62 };
@@ -181,9 +180,16 @@
       const lbl = unit === "ms" && last.pt.v >= 1000 ? (last.pt.v / 1000).toFixed(2) + "s" : fmtNum(last.pt.v) + (unit === "ms" ? "ms" : "");
       endLabels.push({ x: last.x + 7, y: last.y + 3.5, color: s.color, text: lbl });
     });
+    const minY = M.t + 10, maxY = ax.baseY + 4, nL = endLabels.length;
+    const gap = nL > 1 ? Math.min(10.5, (maxY - minY) / (nL - 1)) : 10.5;
     endLabels.sort((a, b) => a.y - b.y);
-    for (let i = 1; i < endLabels.length; i++) if (endLabels[i].y - endLabels[i - 1].y < 10.5) endLabels[i].y = endLabels[i - 1].y + 10.5;
-    endLabels.forEach((p) => svg.appendChild(el("text", { x: p.x, y: Math.min(ax.baseY + 4, p.y), fill: p.color, "font-size": 9.1, "font-weight": 700 }, p.text)));
+    if (nL) endLabels[0].y = Math.max(minY, endLabels[0].y);
+    for (let i = 1; i < nL; i++) if (endLabels[i].y - endLabels[i - 1].y < gap) endLabels[i].y = endLabels[i - 1].y + gap;
+    if (nL && endLabels[nL - 1].y > maxY) {
+      endLabels[nL - 1].y = maxY;
+      for (let i = nL - 2; i >= 0; i--) if (endLabels[i + 1].y - endLabels[i].y < gap) endLabels[i].y = endLabels[i + 1].y - gap;
+    }
+    endLabels.forEach((p) => svg.appendChild(el("text", { x: p.x, y: Math.max(minY, Math.min(maxY, p.y)), fill: p.color, "font-size": 9.1, "font-weight": 700 }, p.text)));
     container.appendChild(svg);
   }
 
@@ -229,13 +235,13 @@
   const isBad = (r) => Number(r.balance_drift || 0) !== 0 || /DIVERGED|LOST_UPDATE/i.test(String(r.convergence_status || ""));
   const TL = Object.fromEntries(TOPOS.map(([k, v]) => [k, v]));
   function makeTip(r) {
-    const b = isBad(r), d = Number(r.balance_drift || 0);
-    const rw = (k, v, cls) => `<div class="tt-row"><span class="tt-k">${k}</span><span class="${cls || "tt-v"}">${v}</span></div>`;
+    const b = isBad(r), d = Number(r.balance_drift || 0), tx = Number(r.tx_committed || 0);
+    const rw = (k, v, cls) => `<div class="tt-row"><span class="tt-k">${esc(k)}</span><span class="${cls || "tt-v"}">${v}</span></div>`;
     return `<div class="tt-title">${esc(TL[r.topology] || r.topology)}</div>` +
       rw("Suite", esc(r.suite)) + rw("TPS", fmtNum(r.tps)) +
       rw("Avg/p95", `${fmtNum(r.lat_avg_ms)} / ${fmtNum(r.lat_p95_ms)} ms`) +
-      rw("TX/40001", `${Number(r.tx_committed || 0).toLocaleString()} / ${r.retries_40001 || 0}`) +
-      rw("Status", `${esc(r.convergence_status || "PASS")} (${d || "0 drift"})`, b ? "tt-bad" : "tt-ok");
+      rw("TX/40001", `${Number.isFinite(tx) ? tx.toLocaleString() : esc(r.tx_committed)} / ${esc(r.retries_40001 || 0)}`) +
+      rw("Status", `${esc(r.convergence_status || "PASS")} (${esc(Number.isFinite(d) ? d || "0 drift" : r.balance_drift || "0 drift")})`, b ? "tt-bad" : "tt-ok");
   }
 
   window.LPCharts = { el, attachHover, fmtNum, fmtTick, logTicks, linTicks, renderBarChart, renderLineChart, TOPOS, SNAME, esc, isBad, makeTip };
