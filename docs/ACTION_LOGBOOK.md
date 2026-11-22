@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-210 - Refactor Chapter 03a EN Part 2 (#15-#18) for 0 STE Errors (`#593`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#593` (`docs/issue-593-ch03a-en-p2`)
+- **Request / Changes / Result**: Refactored Part 2 (`#15-#18`) of `docs/en/03a_solutions_native_and_extensions.md` to 0 STE mixed-mode errors (`0 errors, 59 warnings`, 0 `via`/modals) while keeping all metrics intact; `make test` (`31/31`) and `make lint` pass.
+
 ### ACT-209 - Refactor Chapter 03a EN Part 1 (#1-#4) for ASD-STE100 (`#591`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#591` (`docs/issue-591-ch03a-en-p1`)
 - **Request / Changes / Result**: Refactored Part 1 (`#1-#4`) of `docs/en/03a_solutions_native_and_extensions.md` to eliminate semicolons, `via`, and >25-word sentences while keeping links and metrics intact; `make test` (`31/31`) and `make lint` pass.
