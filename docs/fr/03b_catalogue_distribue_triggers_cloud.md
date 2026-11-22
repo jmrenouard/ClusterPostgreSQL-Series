@@ -100,7 +100,7 @@ Sous forte contention, les transactions concurrentes reçoivent `SQLSTATE 40001`
 
 **Fiche dédiée :** [#12 — AWS Aurora PostgreSQL Limitless (& MM v1)](solutions/aws_aurora_limitless.md)
 
-**Distinction architecturale** : L'ancien service **Aurora Multi-Master** (historiquement limité à MySQL 5.6 et désormais retiré par AWS) n'a jamais proposé de multi-écrivains symétrique sur PostgreSQL. Pour la mise à l'échelle horizontale des écritures PostgreSQL, AWS propose **Aurora PostgreSQL Limitless Database** : des routeurs sans état distribuent les transactions vers des *shards* PostgreSQL synchronisés par une horloge distribuée AWS et stockés sur le stockage distribué multi-AZ Aurora. En scénario multi-régions, **Aurora Global Database** repose sur un unique écrivain primaire complété par le *Write Forwarding* (acheminant les écritures depuis une région secondaire vers le primaire via réseau privé AWS). Architecture propriétaire strictement liée au cloud AWS.
+**Distinction architecturale** : L'ancien service **Aurora Multi-Master** (historiquement limité à MySQL 5.6 et désormais retiré par AWS) n'a jamais proposé de multi-écrivains symétrique sur PostgreSQL. Pour la mise à l'échelle horizontale des écritures PostgreSQL, AWS propose **Aurora PostgreSQL Limitless Database** : des routeurs sans état distribuent les transactions vers des *shards* PostgreSQL synchronisés par une horloge distribuée AWS et stockés sur le stockage distribué multi-AZ Aurora. En scénario multi-régions, **Aurora Global Database** repose sur un unique écrivain primaire complété par le *Write Forwarding* (acheminant les écritures depuis une région secondaire vers le primaire sur réseau privé AWS). Architecture propriétaire strictement liée au cloud AWS.
 
 ---
 
@@ -108,7 +108,7 @@ Sous forte contention, les transactions concurrentes reçoivent `SQLSTATE 40001`
 
 **Fiche dédiée :** [#13 — GCP Spanner (PG Interface) & AlloyDB](solutions/gcp_spanner_alloydb.md)
 
-**Google Cloud Spanner** associe consensus **Paxos** synchrone et horloges atomiques/GPS **TrueTime** ($\epsilon_{\text{clock}} < 7\text{ ms}$) pour garantir une **cohérence externe** globale sans anomalie de lecture périmée ni conflit silencieux. Son interface **PostgreSQL dialect** expose le protocole filaire et une syntaxe SQL proche de PostgreSQL, mais sans compatibilité avec les extensions C PostgreSQL (`PostGIS`, `pg_trgm` natif), les triggers avancés ou PL/pgSQL complet, et à un coût managé élevé. **AlloyDB for PostgreSQL** accélère quant à lui l'architecture mono-primaire grâce à un stockage désagrégé optimisé (*log-processing storage*) et des pools de lecture élastiques (plus *AlloyDB Omni* en conteneur), sans offrir d'écriture multi-maîtres symétrique.
+**Google Cloud Spanner** associe **Paxos** synchrone et horloges **TrueTime** ($\epsilon_{\text{clock}} < 7\text{ ms}$) pour une **cohérence externe** globale sans conflit. Son interface **PostgreSQL dialect** expose le protocole filaire et un SQL proche de PostgreSQL. Elle exclut toutefois les extensions C (`PostGIS`, `pg_trgm`), les triggers avancés et PL/pgSQL complet, à coût élevé. **AlloyDB for PostgreSQL** accélère le mono-primaire avec un stockage désagrégé (*log-processing storage*) et des pools de lecture élastiques, sans écriture multi-maîtres.
 
 ---
 
@@ -117,6 +117,6 @@ Sous forte contention, les transactions concurrentes reçoivent `SQLSTATE 40001`
 **Fiche dédiée :** [#14 — Systèmes historiques à triggers (EOL)](solutions/legacy_triggers.md)
 
 Ces trois outils illustrent la génération antérieure à PostgreSQL 9.4 (avant l'arrivée des *logical decoding plugins*) :
-- **RubyRep** : outil Ruby open-source de comparaison et réplication bidirectionnelle asynchrone par triggers ; projet abandonné, limité par le coût de l'interpréteur et les verrous de table lors du rattrapage.
-- **Slony-I** : réplication asynchrone mono-maître vers cascades de réplicas par triggers C/SQL ; fiable historiquement pour des montées de version PG sans arrêt, mais incapable d'écriture multi-maîtres.
+- **RubyRep** : outil Ruby open-source de comparaison et réplication bidirectionnelle par triggers. Abandonné, limité par l'interpréteur et les verrous au rattrapage.
+- **Slony-I** : réplication asynchrone mono-maître vers cascades de réplicas par triggers C/SQL. Fiable pour les migrations PG historiques, mais inapte au multi-maîtres.
 - **Londiste (Skytools)** : file asynchrone **PgQ** par triggers SQL, conçue pour le mono-maître asynchrone et certaines topologies en étoile, aujourd'hui supplantée par la réplication logique native et Spock.

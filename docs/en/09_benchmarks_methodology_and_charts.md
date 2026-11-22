@@ -8,7 +8,7 @@
 
 ## 1. Execution Harness & Controlled Isolation
 
-All **628 raw benchmark rows** (**310 baseline rows** at `PG_SCALE=2` / **301 deduplicated** across **17 topologies**, plus **318 V5 production-tuned rows** at `PG_SCALE=20` across **18 topologies** incl. `cockroach-rc`) are generated sequentially on a 20-vCPU, 16.4 GiB WSL2 Docker host via four runners under `env/multi-db-docker-env` (`v2.4.1` -> **`v2.6.1`**):
+Four runners under `env/multi-db-docker-env` (`v2.4.1` -> **`v2.6.1`**) generate **628 raw benchmark rows** sequentially on a 20-vCPU, 16.4 GiB WSL2 Docker host. They collect **310 baseline rows** at `PG_SCALE=2` (**301 deduplicated** across **17 topologies**) plus **318 V5 tuned rows** at `PG_SCALE=20` across **18 topologies** (incl. `cockroach-rc`):
 - `scripts/bench_pg_v2_runner.sh`: **187 rows** across 10 PG 17 & Distributed SQL topologies (`results/benchmark_summary.csv` `70`, `results/benchmark_extended_workloads.csv` `40`, `results/benchmark_wan_sweep.csv` `27`, `results/benchmark_concurrency_sweep.csv` `50`).
 - `scripts/bench_pg18_runner.sh`: **87 rows** across 5 PG 18.6 native topologies (`results/benchmark_pg18.csv`).
 - `scripts/bench_yt_runner.sh`: **36 rows** (`18` `yt-cluster` `cc=half` + `18` `yt-cluster-async` `cc=nodes>=0`) on 3-node PG 18.7 (`results/benchmark_yt_cluster.csv`).
@@ -16,7 +16,7 @@ All **628 raw benchmark rows** (**310 baseline rows** at `PG_SCALE=2` / **301 de
 
 - **One-Stack Isolation:** Exactly one cluster runs at a time (`up -> setup -> warm-up -> suites -> down -v`) to eliminate RAM/NVMe noise across RocksDB, Pebble, `ytserv`, and PostgreSQL `shared_buffers`.
 - **Zero NAT Skew:** `pgbench` and `sysbench` execute inside an ephemeral `bench_client` container (`multi-db-pgbench-sysbench:latest`) attached directly to each cluster's internal Docker bridge (`--cap-add NET_ADMIN`).
-- **Dataset Parity & Reconciliation:** Baseline suites run at `PG_SCALE = 2` (`200,000` `pgbench_accounts`, `20` `pgbench_tellers`, `2` `pgbench_branches`, `sysbench 4x10k`), whereas V5 tuned runs scale 10x to `PG_SCALE = 20` (`2,000,000` accounts, `sysbench 4x25k`). Between write suites, `reset_ds()` zeroes balances and truncates `pgbench_history`; `conv_chk()` then verifies `SUM(abalance) - SUM(delta)` on every node (`balance_drift`).
+- **Dataset Parity & Reconciliation:** Baseline suites run at `PG_SCALE = 2` (`200,000` `pgbench_accounts`, `20` `pgbench_tellers`, `2` `pgbench_branches`, `sysbench 4x10k`), whereas V5 tuned runs scale 10x to `PG_SCALE = 20` (`2,000,000` accounts, `sysbench 4x25k`). Between write suites, `reset_ds()` zeroes balances and truncates `pgbench_history`. Next, `conv_chk()` verifies `SUM(abalance) - SUM(delta)` on every node (`balance_drift`).
 - **Exact Tail Latency (`p95`):** Per-transaction logs (`pgbench -l`) yield exact mean, stddev, and 95th percentile (`lat_p95_ms`).
 
 ---
@@ -56,26 +56,26 @@ All `pgbench` runs use `-n -r --max-tries=100 --failures-detailed -l` to count c
 
 Cross-validation runs `sysbench --db-driver=pgsql --tables=4 --table-size=10000` across four Lua workloads: **`E_sysbench_oltp_rw`** (`oltp_read_write`, `8` threads, `15–20 s`), **`E2_sysbench_oltp_ro`** (`oltp_read_only`, `8` threads, `12 s`), **`E3_sysbench_oltp_wo`** (`oltp_write_only`, `8` threads, `12 s`), and **`E4_sysbench_point_select`** (`oltp_point_select`, `16` threads, `12 s`).
 
-- **Critical `40001` & Async `55000` Handling:** Unlike MySQL runs using `--mysql-ignore-errors=all`, stock `sysbench --db-driver=pgsql` lacks `SQLSTATE 40001` retry loops (`685` ignored errors alongside `902` commits on CockroachDB `E`, vs `0` errors on YugabyteDB `READ COMMITTED` `128.24 TPS`). On `yt-cluster-async`, reusing post-`E` `sbtest` tables triggered `SQLSTATE 55000` (`recon` row blocked); fresh per-suite `prep_sb()` yielded **`133.55 TPS` (`E3`)**. Point-select (`E4`) peaked at **`177,442.88 TPS`** (`0.09 ms` avg) on `yt-cluster-async` and **`148,022.41 TPS`** on `pg17-async-streaming` vs `11,557–19,831 TPS` on distributed engines.
+- **Critical `40001` & Async `55000` Handling:** Unlike MySQL runs using `--mysql-ignore-errors=all`, stock `sysbench --db-driver=pgsql` lacks `SQLSTATE 40001` retry loops (`685` ignored errors alongside `902` commits on CockroachDB `E`, vs `0` errors on YugabyteDB `READ COMMITTED` `128.24 TPS`). On `yt-cluster-async`, reusing post-`E` `sbtest` tables triggered `SQLSTATE 55000` (`recon` row blocked). Fresh per-suite `prep_sb()` yielded **`133.55 TPS` (`E3`)**. Point-select (`E4`) peaked at **`177,442.88 TPS`** (`0.09 ms` avg) on `yt-cluster-async` and **`148,022.41 TPS`** on `pg17-async-streaming` vs `11,557–19,831 TPS` on distributed engines.
 
 ### 3.3 WAN Latency Injection (`F_wan_netem_10ms / 25ms / 50ms`)
 
-WAN RTT physics are emulated via Linux `tc qdisc netem` inside peer/standby/worker/voter network namespaces (`~20`, `~50`, and `~100 ms` effective RTT), cleaned up deterministically via `tc qdisc del dev eth0 root` (in YT Cluster `r_wan`, targeting a deterministic non-Leader node `wn` prevents Leader-affinity bypass):
+Linux `tc qdisc netem` emulates WAN RTT (`~20`, `~50`, and `~100 ms`) inside peer network namespaces. Deterministic cleanup runs `tc qdisc del dev eth0 root`. In YT Cluster `r_wan`, targeting a non-Leader node `wn` prevents Leader-affinity bypass:
 
 ```bash
 docker run --rm --network container:<peer> --cap-add NET_ADMIN \
   multi-db-pgbench-sysbench:latest tc qdisc replace dev eth0 root netem delay 25ms
 ```
 
-Under `50 ms` egress delay (`~100 ms` RTT), `PC/EC` and `ytserv` engines dropped to **`25.79 TPS`** (`pg17-sync-streaming`), **`8.84 TPS`** (`citus`), **`4.53 TPS`** (`cockroach`), **`3.06 TPS`** (`yugabyte`), **`2.90 TPS`** (`yt-cluster-async`), and **`1.41 TPS`** (`yt-cluster`), whereas `PA/EL` async topologies sustained `612.56–782.57 TPS` (`pg18-birep` `782.57`, `pgedge` `687.00`).
+Under `50 ms` egress delay (`~100 ms` RTT), `PC/EC` and `ytserv` dropped to **`25.79 TPS`** (`pg17-sync-streaming`), **`8.84`** (`citus`), **`4.53`** (`cockroach`), **`3.06`** (`yugabyte`), **`2.90`** (`yt-cluster-async`), and **`1.41 TPS`** (`yt-cluster`). Meanwhile, `PA/EL` async stacks held `612.56–782.57 TPS` (`pg18-birep` `782.57`, `pgedge` `687.00`).
 
 ---
 
 ## 4. Why Logarithmic (`log10`) Scales Are Mathematically Mandatory
 
 Across all **310 raw benchmark rows**, measurements span **over five orders of magnitude**:
-- **Throughput (`TPS`):** `1.41 TPS` (`yt-cluster`, `F_wan_netem_50ms`) to `177,442.88 TPS` (`yt-cluster-async`, `E4_sysbench_point_select`) — dynamic ratio $R_{\text{TPS}} = 177{,}442.88 / 1.41 \approx 125{,}846\times$ ($5.10$ decades; core `pgbench` `2.25` to `55,614.16 TPS` spans $4.39$ decades).
-- **Latency (`ms`):** `0.090 ms` (`yt-cluster-async` `E4` avg; `0.110 ms` PG 17 `E4`) to `12,893.483 ms` (`yt-cluster-async`, `F_wan_netem_50ms` `p95`; `5,474.705 ms` on `yugabyte`) — dynamic ratio $R_{\text{lat}} = 12{,}893.483 / 0.090 \approx 143{,}261\times$ ($5.16$ decades).
+- **Throughput (`TPS`):** `1.41 TPS` (`yt-cluster`, `F_wan_netem_50ms`) to `177,442.88 TPS` (`yt-cluster-async`, `E4_sysbench_point_select`) — dynamic ratio $R_{\text{TPS}} = 177{,}442.88 / 1.41 \approx 125{,}846\times$ ($5.10$ decades, and `pgbench` `2.25` to `55,614.16 TPS` spans $4.39$ decades).
+- **Latency (`ms`):** `0.090 ms` (`yt-cluster-async` `E4` avg, `0.110 ms` PG 17 `E4`) to `12,893.483 ms` (`yt-cluster-async`, `F_wan_netem_50ms` `p95`, `5,474.705 ms` on `yugabyte`) — dynamic ratio $R_{\text{lat}} = 12{,}893.483 / 0.090 \approx 143{,}261\times$ ($5.16$ decades).
 
 The decade span $D_{\text{decades}}$ and visual distance $\Delta y_{\log}$ between any two engines $(v_1, v_2)$ obey:
 
