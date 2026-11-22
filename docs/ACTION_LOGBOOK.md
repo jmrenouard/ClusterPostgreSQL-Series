@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-196 - Fix ASD-STE100 Compliance in `README.md` (`#565`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#565` (`docs/issue-565-ste-readmes-stacks`)
+- **Request / Changes / Result**: Refactored `README.md` prose, lists, chart spacing, and LightPath logo markup to 0 STE errors (`ste_check.py --mode procedural --lang en --no-vocab`) while keeping catalog and CSV parity; `make test` (`31/31`) and `make lint` pass.
+
 ### ACT-195 - Bump Submodule to `v2.6.2` & Update Living Governance Registers (`#561-#563`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#561-#563` (`docs/issue-563-audit-governance-registers`)
 - **Request / Changes / Result**: Bumped `env/multi-db-docker-env` to `1dc6fa80` (`v2.6.2`, PR `#562`), aligned `README.md`/`README.fr.md` harness version references, and logged `Phase 12`, `ACT-192..195`, `RCA-026..027`, `IMP-013..014`, `APP-015` (Issue `#563`); `make test` (`31/31`) and `make lint` pass.

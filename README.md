@@ -6,7 +6,7 @@
 
 **Author:** Jean-Marie Renouard (`jmrenouard`) | **Supported by:** [LightPath](https://www.lightpath.fr) | **License:** [MIT](LICENSE) | **Version française :** [README.fr.md](README.fr.md)
 
-A rigorous engineering study, 36-criterion comparative matrix, reproducible Docker Compose labs (powered by [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.2`, `13` Compose stacks), 18-test empirical failure-mode catalog (`L1-L8` + `T11-T18`) plus PostgreSQL 18.6 AIO/`uuidv7()`/conflict and YT Cluster `T_REVERT` probes, **628 raw `pgbench` / `sysbench` / `tc netem` benchmark rows** (**310 baseline `PG_SCALE=2`** / **301 deduplicated** + **318 V5 production-tuned `PG_SCALE=20` rows** across **18 live PostgreSQL topologies** incl. `cockroach-rc`, `16` solutions / `19` architecture sheets), **22 GitHub ecosystem popularity telemetry rows** (`19` public repos + `3` closed/managed), **13 `log10` charts**, and a dual-dataset offline [**Interactive HTML Benchmark Explorer (`dashboard/index.html`)**](dashboard/index.html).
+This repository provides a comparative PostgreSQL study, a 36-criterion matrix, and 13 Docker Compose labs ([`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.2`). The harness runs 18 functional/limit probes (`L1-L8`, `T11-T18`) plus PG 18.6 AIO, `uuidv7()`, conflict, and YT `T_REVERT` checks. We collected **628 raw benchmark rows** (**310 baseline `PG_SCALE=2`** / **301 deduplicated** + **318 V5 tuned `PG_SCALE=20`** `pgbench`/`sysbench`/`tc netem`) across **18 live PostgreSQL topologies** (`cockroach-rc` included, `16` solutions / `19` architecture sheets). The repo also stores **22 GitHub popularity rows** (`19` repos + `3` closed/managed), **13 `log10` charts**, and [**`dashboard/index.html`**](dashboard/index.html).
 
 ---
 
@@ -14,8 +14,8 @@ A rigorous engineering study, 36-criterion comparative matrix, reproducible Dock
 
 PostgreSQL is built on a **single-writer WAL engine** (`LSN`, `XID`, `ProcArray`, local heap pages). Turning PostgreSQL into an "active-active multi-master" system forces an unavoidable trade-off along the **PACELC** spectrum:
 
-- **Asynchronous Logical & Trigger Meshes (`PA/EL`):** Commit locally at sub-15 ms latency even under `50 ms` WAN RTT (`647–824 TPS`), yet lose updates (`-71K` to `-531K` drift in 50-key contention tests) or stall on `SQLSTATE 23505` unless configured with **CRDT Delta-Apply** (`spock.delta_apply` achieved `1,837.64 TPS` with **`0` drift**).
-- **Distributed Consensus Raft/Paxos (`PC/EC`):** Guarantee `RPO = 0` and zero lost updates (`0` drift), while paying cross-node RTT penalties (`-76%` to `-97%` TPS drop under simulated `25 ms` one-way WAN delay) and requiring application-level `SQLSTATE 40001` retry loops (`sysbench` failed `685` of `1,587` total attempts on CockroachDB without retries).
+- **Asynchronous Logical & Trigger Meshes (`PA/EL`):** Nodes commit locally under `15 ms` even with `50 ms` WAN RTT (`647–824 TPS`). Contended workloads lose updates (`-71K` to `-531K` drift) or stall on `23505`. **CRDT Delta-Apply** avoids this (`spock.delta_apply` reached `1,837.64 TPS` with **`0` drift**).
+- **Distributed Consensus Raft/Paxos (`PC/EC`):** Raft guarantees `RPO = 0` and `0` drift. Cross-node RTT cuts throughput (`-76%` to `-97%` under `25 ms` WAN delay). Clients need `SQLSTATE 40001` retries (`sysbench` failed `685` of `1,587` attempts on CockroachDB).
 - **Single-Primary HA Control (`#15 Patroni + etcd`):** Remains the lowest-TCO, zero-conflict optimal choice for 80%+ of OLTP workloads.
 
 ---
@@ -52,24 +52,32 @@ Measured sequentially in the same isolated Docker harness on `PostgreSQL 18.6 (D
 | **`yt-cluster`** (`#18` `cc=half`) | `20.63` | `10.69` (`0`) | `67.76` (`0`) | `28.48` (`12`) | `110.53` | `2.25` | `0A000`; `40001`; `55409`; `57P03` (`T_REVERT` OK) |
 | **`yt-cluster-async`** (`#18` `nodes>=0`) | `41.45` | `55.03` (`0`) | `163.01` (`0`) | `124.05` (`34`) | `224.93` | `4.78` | `40001`; `55000`; `55409` (`2.0x-5.1x` vs `half`, `0` drift) |
 
-*Note: `yt-cluster` / `yt-cluster-async` ran on 3-node `dbinvent/yt:1.21.3` (PG 18.7 + `yt_cluster 1.21` / `ytserv`, `results/benchmark_yt_cluster.csv`, `36` rows across all 18 suites; see [Solution #18](docs/en/solutions/yt_cluster_lite.md) and [Chapter 06 §7](docs/en/06_empirical_test_and_benchmark_results.md)).*
+*Note: `yt-cluster` / `yt-cluster-async` ran on 3-node `dbinvent/yt:1.21.3` (PG 18.7 + `yt_cluster 1.21` / `ytserv`, `results/benchmark_yt_cluster.csv`, `36` rows across 18 suites). See [Solution #18](docs/en/solutions/yt_cluster_lite.md) and [Chapter 06 §7](docs/en/06_empirical_test_and_benchmark_results.md).*
 
 ---
 
 ## Interactive Benchmark Explorer & Logarithmic Charts (`log10`)
 
-Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser (zero CDN, offline-ready, EN/FR switcher, **Baseline `PG_SCALE=2` (`301` rows) / Production-Tuned `PG_SCALE=20` (`318` rows) dataset toggle**, Before-vs-After `compare` view, 18-topology presets incl. `YT vs Multi-Master`, default `log10` / linear toggle, `L1-L8` / `T11-T18` / `PG 18.6` / `YT` matrix tabs, Ecosystem Popularity tab with 22 entries, and CSV export) or browse the full **13-chart gallery** and Master Traceability Matrix across [Chapter 09](docs/en/09_benchmarks_methodology_and_charts.md) (`chart_01`-`07`), [Chapter 11](docs/en/11_ecosystem_popularity_and_vitality.md) (`chart_08`-`09`), [Chapter 12](docs/en/12_postgresql_18_clustering_and_benchmarks.md) (`chart_10`), [Chapter 06 §7–§8](docs/en/06_empirical_test_and_benchmark_results.md) (`chart_11`), and [**Chapter 13 — Production Tuning (`PG_SCALE=20`)**](docs/en/13_production_tuning_and_realistic_benchmarks.md) (`chart_12`-`13`):
+Open [**`dashboard/index.html`**](dashboard/index.html) offline in any browser with zero CDN dependencies and an EN/FR switcher. Toggle **Baseline `PG_SCALE=2` (`301` rows)** vs **Tuned `PG_SCALE=20` (`318` rows)**, or open `compare`. Use 18-topology presets (`YT vs Multi-Master`), `log10`/linear axes, `L1-L8`/`T11-T18`/`PG 18.6`/`YT` tabs, Popularity (`22` rows), and CSV export. Browse the **13 charts** in [Chapter 09](docs/en/09_benchmarks_methodology_and_charts.md) (`chart_01`-`07`), [Chapter 11](docs/en/11_ecosystem_popularity_and_vitality.md) (`chart_08`-`09`), and [Chapter 12](docs/en/12_postgresql_18_clustering_and_benchmarks.md) (`chart_10`). See [Chapter 06 §7–§8](docs/en/06_empirical_test_and_benchmark_results.md) (`chart_11`) and [**Chapter 13 (`PG_SCALE=20`)**](docs/en/13_production_tuning_and_realistic_benchmarks.md) (`chart_12`-`13`).
 
 > **Live GitHub Pages & PACELC Architecture Selector:** Browse the hosted [**GitHub Pages Benchmark Explorer**](https://jmrenouard.github.io/ClusterPostgreSQL-Series/) (Pages workflow tracked in `#506`) or open the **PACELC Selector** tab locally to score all 17 topologies + V5/CRDT variants across `RPO`, `WAN RTT`, write conflicts, and `TCO` with copyable `Makefile` / `./mdb` commands and EN/FR sheet links.
 
 ![Log10 Throughput All Suites](assets/charts/chart_01_tps_log_all_suites.png)
+
 ![Log10 Latency All Suites](assets/charts/chart_02_latency_log_all_suites.png)
+
 ![Streaming vs Logical vs Multi-Master Log10](assets/charts/chart_06_streaming_vs_logical_vs_mm.png)
+
 ![Ecosystem Popularity Stars and Forks Log10](assets/charts/chart_08_popularity_stars_forks_log.png)
+
 ![Ecosystem Commits and Maintenance Vitality Log10](assets/charts/chart_09_popularity_commits_activity_log.png)
+
 ![PostgreSQL 18.6 vs PostgreSQL 17.11 Head-to-Head Log10](assets/charts/chart_10_pg18_vs_pg17_log.png)
+
 ![YT Cluster vs Active-Active Multi-Master and Raft Log10](assets/charts/chart_11_yt_cluster_vs_multimaster_log.png)
+
 ![Log10 Baseline vs Production-Tuned Throughput](assets/charts/chart_12_baseline_vs_optimized_log.png)
+
 ![Log10 Production-Tuned Panorama Across All 18 Topologies](assets/charts/chart_13_optimized_all_topologies_log.png)
 
 > **V5 Production-Tuned Highlight (`PG_SCALE=20`, `318` rows, `fsync=on`, `v2.6.1`):** Applying durable tunings (`fillfactor=90`, `wal_compression=lz4`, PG 18/YT `io_method=worker`/`4`, `-M prepared`, `5s` warm-up, Spock `delta_apply`, Citus 1-shard colocation, Yugabyte `RC + CACHE 1000` + HAProxy `:15470`, CockroachDB `v25.4` HAProxy `:15480` + non-root `bench` `cockroach-rc`, YT `YT_MAX_PREPARED=300` + parallel `ytctl` + Leader affinity + Lua `55409` hook) drives `pg18-birep` `G_c32` to `4,163.31 TPS`, keeps `pgedge` at **`0` drift** (`2,125.19 TPS` `D`), lifts CockroachDB `v25.4` **`7.32x`** on `A` (`307.95 TPS`) and `cockroach-rc` to `0` `40001` retries in `sysbench` (`153.70 TPS`), and accelerates `yt-cluster-async` `E4` to **`189,286.48 TPS`** (`0` drift) — see [Chapter 13](docs/en/13_production_tuning_and_realistic_benchmarks.md).
@@ -99,7 +107,7 @@ Open [**`dashboard/index.html`**](dashboard/index.html) directly in any browser 
 
 ## Solutions Catalog & Architecture Sheets (`19` EN + FR Deep Dives)
 
-Every solution evaluated in this study has a dedicated ~1–2 A4 architecture sheet in English (`docs/en/solutions/`) and French (`docs/fr/solutions/`) with Mermaid diagrams, operating principles, implementation modes, strengths/weaknesses, and verified metrics or architectural exclusion baselines.
+Every evaluated solution has an EN (`docs/en/solutions/`) and FR (`docs/fr/solutions/`) sheet. Each sheet provides Mermaid diagrams, modes, strengths, weaknesses, and verified metrics or exclusion baselines.
 
 > **Catalog ID Disambiguation (`#16` vs `#14`):** `pg17-logical` uses **`#16`** (`T3`, native uni-directional logical replication), whereas **`#14`** is reserved for Legacy Trigger Systems (`Slony-I / Londiste / RubyRep`); legacy CSV tables tag `pg17-logical` as `#14 Baseline`.
 
@@ -129,7 +137,7 @@ Every solution evaluated in this study has a dedicated ~1–2 A4 architecture sh
 
 ## Reproducible Lab Stacks, `multi-db-docker-env` Submodule & `Makefile`
 
-The operational PoC topologies, extended test runners (`T11–T18`), and V2 benchmark harnesses rely exclusively on [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) mounted as a Git submodule at **`env/multi-db-docker-env`** (see [`stacks/README.md`](stacks/README.md) for the single-source-of-truth mapping and `results/` for raw CSV/JSON datasets):
+PoC topologies, `T11–T18` suites, and V2 benchmarks use [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) (`env/multi-db-docker-env`). See [`stacks/README.md`](stacks/README.md) and `results/` for mappings and raw CSV/JSON data:
 
 | Submodule Compose (`env/multi-db-docker-env/`) | Topology | Primary Images |
 | :--- | :--- | :--- |
@@ -169,22 +177,17 @@ make pages-build && make pages-check  # Stage & verify offline GitHub Pages bund
 ## Governance, Security & Honest Scope
 
 - **Living Registers:** Every engineering decision, bug RCA, dead-end, and simplification is tracked in [`docs/ACTION_LOGBOOK.md`](docs/ACTION_LOGBOOK.md) and [`docs/RCA_REGISTER.md`](docs/RCA_REGISTER.md).
-- **Credential Hygiene:** Repository files contain zero real passwords or host paths; lab containers read ephemeral defaults from [`.env.example`](.env.example).
-- **Threats to Validity:** Local Docker benchmarks share one 20-vCPU / 16.4 GiB NVMe host; WAN effects were modeled via `tc netem` egress delay (`25 ms`), not independent intercontinental failure domains (see [Chapter 05](docs/en/05_poc_architectures_and_test_protocol.md)).
+- **Credential Hygiene:** Repository files hold zero real passwords or host paths. Containers read defaults from [`.env.example`](.env.example).
+- **Threats to Validity:** Local benchmarks share one 20-vCPU / 16.4 GiB NVMe host. We modeled WAN delay via `tc netem` (`25 ms`), not separate regions (see [Chapter 05](docs/en/05_poc_architectures_and_test_protocol.md)).
 
 ---
 
 ## Support & Attribution
 
-This independent open-source technical series is created by **Jean-Marie Renouard** (`jmrenouard`) under the [MIT License](LICENSE), with engineering and infrastructure support from **LightPath**:
+**Jean-Marie Renouard** (`jmrenouard`) authors this series under the [MIT License](LICENSE). **LightPath** provides engineering and infrastructure support:
 
-<p align="center">
-  <sub>Supported by</sub><br>
-  <a href="https://www.lightpath.fr">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="assets/lightpath-logo-dark.svg">
-      <source media="(prefers-color-scheme: light)" srcset="assets/lightpath-logo-light.svg">
-      <img alt="Supported by LightPath" src="assets/lightpath-logo-light.svg" width="145">
-    </picture>
-  </a>
-</p>
+<p align="center"><sub>Supported by</sub></p>
+
+<p align="center"><a href="https://www.lightpath.fr"><img alt="Supported by LightPath" src="assets/lightpath-logo-light.svg#gh-light-mode-only" width="145"></a></p>
+
+<p align="center"><a href="https://www.lightpath.fr"><img alt="Supported by LightPath" src="assets/lightpath-logo-dark.svg#gh-dark-mode-only" width="145"></a></p>
