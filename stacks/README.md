@@ -1,8 +1,8 @@
 # Docker PoC Stacks — Delegated to `env/multi-db-docker-env`
 
-All operational Docker Compose topologies, cluster initialization scripts, functional/limits suites (`L1`–`L8` and `T11`–`T18`), and V1/V2 benchmark harnesses are maintained in a **single source of truth**: the [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) Git submodule mounted at [`../env/multi-db-docker-env`](../env/multi-db-docker-env).
+The [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) Git submodule at [`../env/multi-db-docker-env`](../env/multi-db-docker-env) maintains all Compose topologies, initialization scripts, and test suites. It covers 18 active topologies across 13 Compose stacks (plus V1/V2 `pgedge-delta-apply`).
 
-Duplicate compose and setup copies previously kept under `stacks/<topology>/` have been removed to eliminate drift (`IMP-004`).
+We removed duplicate compose and setup copies from `stacks/<topology>/` to eliminate drift (`IMP-004`).
 
 ## Quick Start
 
@@ -10,7 +10,7 @@ Duplicate compose and setup copies previously kept under `stacks/<topology>/` ha
 # 1. Initialize the multi-db-docker-env Git submodule
 make init-env
 
-# 2. List all 13 PostgreSQL compose stacks (covering all 17 benchmarked topologies)
+# 2. List all 13 PostgreSQL Compose stacks (covering 18 active topologies)
 make stacks
 
 # 3. Start, initialize, test, and tear down any topology via Makefile
@@ -29,12 +29,12 @@ make bench-all && make bench-pg18 && make bench-yt-cluster && make bench-optimiz
 | `pg-streaming` | `docker-compose-pg-streaming.yml` | `pg17-async-streaming` |
 | `pg-logical` | `docker-compose-pg-logical.yml` | `pg17-logical` |
 | `pg-birep` | `docker-compose-pg-birep.yml` | `pg-birep` |
-| `pgedge` | `docker-compose-pgedge.yml` | `pgedge` (Spock 5.0.14) |
+| `pgedge` | `docker-compose-pgedge.yml` | `pgedge` (Spock 5.0.14; V1/V2 `pgedge-delta-apply`) |
 | `bucardo` | `docker-compose-bucardo.yml` | `bucardo` (5.6.0) |
 | `citus` | `docker-compose-citus.yml` | `citus` (14.2.0) |
-| `yugabyte` | `docker-compose-yugabyte.yml` | `yugabyte` (2026.1.3.0 RF=3) |
-| `cockroach` | `docker-compose-cockroach.yml` | `cockroach` (v24.3.0 RF=3) |
+| `yugabyte` | `docker-compose-yugabyte.yml` | `yugabyte` (2026.1.3.0 RF=3 + HAProxy `:15470`) |
+| `cockroach` | `docker-compose-cockroach.yml` | `cockroach` (`v25.4` RF=3 + HAProxy `:15480`), `cockroach-rc` (V1/V2 baseline: `v24.3.0`) |
 | `pg18-streaming` | `docker-compose-pg18-streaming.yml` | `pg18-standalone`, `pg18-async-streaming`, `pg18-sync-streaming` (PG 18.6) |
 | `pg18-logical` | `docker-compose-pg18-logical.yml` | `pg18-logical` (PG 18.6) |
 | `pg18-birep` | `docker-compose-pg18-birep.yml` | `pg18-birep` (PG 18.6 `origin=none` + `uuidv7()`) |
-| `yt-cluster` | `docker-compose-yt-cluster.yml` | `yt-cluster` (`cc=half`), `yt-cluster-async` (`cc=0`, YT Cluster `1.21.3`, `v2.4.0`) |
+| `yt-cluster` | `docker-compose-yt-cluster.yml` | `yt-cluster` (`cc=half`), `yt-cluster-async` (`cc=0`, YT Cluster `1.21.3`) |

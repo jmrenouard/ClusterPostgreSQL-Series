@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-198 - Update `stacks/README.md` to 18 Topologies & Fix STE Compliance (`#569`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#569` (`docs/issue-569-stacks-18-topologies`)
+- **Request / Changes / Result**: Updated `stacks/README.md` to document all 13 Compose stacks and 18 topologies (CockroachDB `v25.4` active stack + `v24.3.0` V1/V2 note) with 0 STE procedural errors; logged `RCA-028` and `IMP-015`; `make test` (`31/31`) and `make lint` pass.
+
 ### ACT-197 - Fix ASD-STE100 Compliance in `README.fr.md` (`#567`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#567` (`docs/issue-567-ste-readme-fr`)
 - **Request / Changes / Result**: Refactored `README.fr.md` prose, lists, chart spacing, and LightPath logo markup to 0 STE errors (`ste_check.py --mode procedural --lang fr --no-vocab`) while keeping catalog and CSV parity; `make test` (`31/31`) and `make lint` pass.
