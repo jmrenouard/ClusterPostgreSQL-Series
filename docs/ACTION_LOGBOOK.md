@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-215 - Refactor Chapter 03b FR Part 1 (#5-#10) for STE Compliance (`#603`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#603` (`docs/issue-603-ch03b-fr-p1`)
+- **Request / Changes / Result**: Refactored Part 1 (`#5-#10`, before `## #11 PgPool-II`) of `docs/fr/03b_catalogue_distribue_triggers_cloud.md` to 0 STE errors, 0 `via`, and 0 weak modals in Part 1; Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
+
 ### ACT-214 - Refactor Chapter 03b EN Part 2 (#11-#14) and Bucardo Sheets for 0 STE Errors (`#601`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#601` (`docs/issue-601-ch03b-en-p2-bucardo`)
 - **Request / Changes / Result**: Refactored Part 2 (`#11-#14`) of `docs/en/03b_solutions_distributed_triggers_cloud.md` and `docs/{en,fr}/solutions/bucardo.md` to 0 STE mixed-mode errors, 0 `via`, and 0 forbidden modals; Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
