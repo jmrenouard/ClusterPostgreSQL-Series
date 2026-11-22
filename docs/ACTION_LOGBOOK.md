@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-218 - Refactor Chapter 08 EN Sections 1-2 for STE Compliance (`#609`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#609` (`docs/issue-609-ch08-en-complete`)
+- **Request / Changes / Result**: Refactored Sections 1-2 (before `## 3. Extended Empirical Matrix`) of `docs/en/08_limits_and_failure_modes.md` to 0 STE errors, 0 `via`, and 0 forbidden modals in Sections 1-2 (Section 3 deferred to keep diff < 14,800 B); Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
+
 ### ACT-217 - Complete Chapter 09 EN Part 2 and Refactor Chapter 08 EN Part 2 (`#607`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#607` (`docs/issue-607-ch09-en-p2-ch08-en-p2`)
 - **Request / Changes / Result**: Completed `docs/en/09_benchmarks_methodology_and_charts.md` Sections 5-6 (full-file 0 STE errors) and refactored `docs/en/08_limits_and_failure_modes.md` Section 4 (0 STE errors/modals/`via` in Sec 4); Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
