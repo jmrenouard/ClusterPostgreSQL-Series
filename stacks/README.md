@@ -15,6 +15,10 @@ make stacks
 
 # 3. Start, initialize, test, and tear down any topology via Makefile
 make up-pgedge && make setup-pgedge && make test-pgedge && make down-pgedge
+
+# 4. Build the shared benchmark client image and run benchmarks (V1/V2, PG 18.6, YT, V5 Scale=20)
+make build-bench-image
+make bench-all && make bench-pg18 && make bench-yt-cluster && make bench-optimized
 ```
 
 ## Topology Mapping (`env/multi-db-docker-env`)

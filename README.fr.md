@@ -132,10 +132,10 @@ Les piles opérationnelles, la suite étendue (`T11–T18`) et les benchmarks V2
 make init-env        # Initialise le sous-module Git env/multi-db-docker-env (13 piles; harnais v2.6.1)
 make test && make lint  # Valide gouvernance, sécurité, LaTeX, 13 graphiques, Bash et 13 Compose
 cp .env.example .env
+make build-bench-image  # Construit multi-db-pgbench-sysbench:latest (scripts/Dockerfile.bench)
 make up-pgedge && make test-pgedge && make down-pgedge
-make bench-all && make bench-pg18 && make bench-yt-cluster && make popularity && make charts && make dashboard
+make bench-all && make bench-pg18 && make bench-yt-cluster && make bench-optimized && make popularity && make charts && make dashboard
 make pages-build && make pages-check  # Génère et vérifie le bundle statique hors-ligne GitHub Pages (_site/)
-# (cd env/multi-db-docker-env && ./mdb bench pg-optimized)  # Génère results/benchmark_optimized.csv (318 lignes)
 ```
 
 ### Piles Docker disponibles (`env/multi-db-docker-env` `v2.6.1` — voir [`stacks/README.md`](stacks/README.md))
