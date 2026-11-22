@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-212 - Refactor Chapter 03a FR Part 2 (#15-#18) for 0 STE Errors (`#597`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#597` (`docs/issue-597-ch03a-fr-p2`)
+- **Request / Changes / Result**: Refactored Part 2 (`#15-#18`, L103-162) of `docs/fr/03a_catalogue_natif_et_extensions.md` to full-file `0` STE errors (`18 warnings`, 0 `via`/weak modals); `make test` (`31/31`) and `make lint` pass.
+
 ### ACT-211 - Refactor Chapter 03a FR Part 1 (#1-#4) for STE Compliance (`#595`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#595` (`docs/issue-595-ch03ab-fr-p1`)
 - **Request / Changes / Result**: Refactored Part 1 (`#1-#4`, L1-102) of `docs/fr/03a_catalogue_natif_et_extensions.md` to 0 STE errors / 0 `via` / 0 weak modals in Part 1 while keeping PR diff under 14,800 B; `make test` (`31/31`) and `make lint` pass.
