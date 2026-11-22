@@ -26,6 +26,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-189 - Add Makefile GitHub Pages Static Bundle Builder & Verifier (`#504`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#504` (`feat/issue-504-pages-bundle-builder`)
+- **Request / Changes / Result**: Added `scripts/build_pages.py` (stdlib-only `_site/` builder + `--check` offline/CDN/link/hygiene verifier), wired `make pages-build`, `make pages-check`, and `make clean` in `Makefile`, ignored `_site/` in `.gitignore`, and added `tests/test_pages_bundle.py`; logged `APP-014`; `make pages-build && make pages-check && make clean`, `make test` (`27/27` OK), and `make lint` pass.
+
 ### ACT-188 - Add Automated PACELC Selector Unit & Parity Tests (`#502`)
 - **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#502` (`test/issue-502-pacelc-selector-tests`)
 - **Request / Changes / Result**: Extended `tests/test_benchmark_artifacts.py` (`EXPECTED_DASH_FILES` + HTML tokens) and added `tests/test_pacelc_selector.py` validating 17+2 catalog parity, Makefile/`./mdb` targets, EN/FR sheet paths, canonical S1-S4 Node.js scoring, drift rejection, score transparency across all 32 input matrices, and mock-DOM UI flows; logged `APP-013`; `make test` (`24/24` OK) and `make lint` pass.

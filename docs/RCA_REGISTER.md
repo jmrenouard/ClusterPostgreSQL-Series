@@ -305,6 +305,9 @@
 ### APP-013 - Optional Node.js Execution Guard in `tests/test_pacelc_selector.py`
 - **Date / Action**: `2026-11-22` (`ACT-188`) | **Approximation**: Python-level catalog/command/sheet parity tests always run; JS engine and UI runtime assertions run automatically when `node` is on `PATH` and cleanly `skipTest` on Python-only runners without Node.js.
 
+### APP-014 - Static Root Redirect for GitHub Pages Bundle (`_site/index.html`)
+- **Date / Action**: `2026-11-22` (`ACT-189`) | **Approximation**: `_site/index.html` uses zero-CDN HTML meta-refresh plus JS/anchor redirect to `dashboard/index.html` so `dashboard/` preserves `../assets/` relative paths identically across local `file://` opens and GitHub Pages hosting.
+
 ## 4. Unimplemented Ideas & Future Roadmap (`IDEA-XXX`)
 
 ### IDEA-001 - Automated Cross-Topology `pgbench` & `sysbench` Matrix

@@ -5,7 +5,7 @@ export PYTHONDONTWRITEBYTECODE := 1
 MDB_DIR ?= env/multi-db-docker-env
 PG_STACKS := pg17-baseline pg-streaming pg-logical pg-birep pgedge bucardo citus cockroach yugabyte pg18-streaming pg18-logical pg18-birep yt-cluster
 
-.PHONY: help init-env stacks test check-math check-security lint charts popularity dashboard test-pg-extended bench-all bench-pg18 bench-yt-cluster clean
+.PHONY: help init-env stacks test check-math check-security lint charts popularity dashboard pages-build pages-check test-pg-extended bench-all bench-pg18 bench-yt-cluster clean
 
 help: ## Show targets
 	@awk 'BEGIN {FS = ":.*##"; printf "\nTargets:\n"} /^[a-zA-Z0-9_%-]+:.*##/ { printf "  %-18s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -36,6 +36,12 @@ popularity: ## Collect live GitHub ecosystem popularity telemetry into results/p
 
 dashboard: ## Rebuild offline HTML benchmark explorer bundles in dashboard/
 	python3 scripts/build_dashboard.py
+
+pages-build: ## Build offline static GitHub Pages bundle in _site/
+	python3 scripts/build_pages.py
+
+pages-check: ## Verify _site/ GitHub Pages bundle links, zero-CDN, and hygiene
+	python3 scripts/build_pages.py --check
 
 lint: ## Lint repo Bash scripts and all 13 submodule PostgreSQL Compose files
 	@find . \( -path './.git' -o -path './env' \) -prune -o -name '*.sh' -type f -print0 | xargs -0 -r bash -n
@@ -98,6 +104,7 @@ bench-yt-cluster: ## Run YT Cluster 1.21.3 benchmark suite via $(MDB_DIR) and re
 	BENCH_OUT_DIR="$(CURDIR)/results" bash "$(MDB_DIR)/scripts/bench_yt_runner.sh"
 	$(MAKE) charts dashboard
 
-clean: ## Clean caches, logs, and generated reports
+clean: ## Clean caches, logs, generated reports, and _site/
 	python3 -c "import pathlib,shutil;[shutil.rmtree(p,ignore_errors=True) for p in pathlib.Path('.').rglob('*') if p.name in {'__pycache__','.pytest_cache'} and 'env' not in p.parts]"
+	rm -rf _site
 	rm -f reports/*.html *.log
