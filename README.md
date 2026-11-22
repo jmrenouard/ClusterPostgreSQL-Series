@@ -6,7 +6,7 @@
 
 **Author:** Jean-Marie Renouard (`jmrenouard`) | **Supported by:** [LightPath](https://www.lightpath.fr) | **License:** [MIT](LICENSE) | **Version française :** [README.fr.md](README.fr.md)
 
-A rigorous engineering study, 36-criterion comparative matrix, reproducible Docker Compose labs (powered by [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.1`, `13` Compose stacks), 18-test empirical failure-mode catalog (`L1-L8` + `T11-T18`) plus PostgreSQL 18.6 AIO/`uuidv7()`/conflict and YT Cluster `T_REVERT` probes, **628 raw `pgbench` / `sysbench` / `tc netem` benchmark rows** (**310 baseline `PG_SCALE=2`** / **301 deduplicated** + **318 V5 production-tuned `PG_SCALE=20` rows** across **18 live PostgreSQL topologies** incl. `cockroach-rc`, `16` solutions / `19` architecture sheets), **22 GitHub ecosystem popularity telemetry rows** (`19` public repos + `3` closed/managed), **13 `log10` charts**, and a dual-dataset offline [**Interactive HTML Benchmark Explorer (`dashboard/index.html`)**](dashboard/index.html).
+A rigorous engineering study, 36-criterion comparative matrix, reproducible Docker Compose labs (powered by [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.2`, `13` Compose stacks), 18-test empirical failure-mode catalog (`L1-L8` + `T11-T18`) plus PostgreSQL 18.6 AIO/`uuidv7()`/conflict and YT Cluster `T_REVERT` probes, **628 raw `pgbench` / `sysbench` / `tc netem` benchmark rows** (**310 baseline `PG_SCALE=2`** / **301 deduplicated** + **318 V5 production-tuned `PG_SCALE=20` rows** across **18 live PostgreSQL topologies** incl. `cockroach-rc`, `16` solutions / `19` architecture sheets), **22 GitHub ecosystem popularity telemetry rows** (`19` public repos + `3` closed/managed), **13 `log10` charts**, and a dual-dataset offline [**Interactive HTML Benchmark Explorer (`dashboard/index.html`)**](dashboard/index.html).
 
 ---
 
@@ -149,7 +149,7 @@ The operational PoC topologies, extended test runners (`T11–T18`), and V2 benc
 ### Common Commands
 
 ```bash
-# Initialize the multi-db-docker-env Git submodule (13 Compose stacks; v2.6.1 benchmark harness)
+# Initialize the multi-db-docker-env Git submodule (13 Compose stacks; v2.6.2 benchmark harness)
 make init-env
 make help
 
