@@ -12,8 +12,9 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DASH, SCRIPTS, SUBMOD = ROOT / "dashboard", ROOT / "scripts", ROOT / "env" / "multi-db-docker-env"
-if str(SCRIPTS) not in sys.path:
-    sys.path.insert(0, str(SCRIPTS))
+for _p in (SCRIPTS, ROOT / "tests"):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
 
 import pacelc_catalog  # noqa: E402
 from test_benchmark_artifacts import CORE_TOPOLOGIES, PG18_TOPOLOGIES, YT_TOPOLOGIES  # noqa: E402
@@ -72,6 +73,10 @@ class TestPacelcSelector(unittest.TestCase):
                 self.assertIsNotNone(m_t, f"Bad make target {tok} ({topo})")
                 action, stack = m_t.group(1), m_t.group(2)
                 self.assertIn(stack, pg_stacks)
+                if action == "setup" and sub_ready:
+                    u = stack.replace("-", "_")
+                    has_s = any((SUBMOD / "scripts" / u).glob("setup_*.sh")) or (SCRIPTS / f"setup_{u}.sh").is_file()
+                    self.assertTrue(has_s, f"Missing setup script for {stack} ({topo})")
                 if action == "test":
                     self.assertNotEqual(stack, "pg17-baseline")
                     if sub_ready:
@@ -99,7 +104,7 @@ const el = () => ({ dataset: {}, style: {}, textContent: "", innerHTML: "", valu
   addEventListener(e, f) { on[e] = f; }, appendChild: (c) => c, select() {}, remove() {}, click() { dl = this; } });
 const host = el(), btns = (k, vs) => vs.map((v) => { const b = el(); b.dataset[k] = v; return b; });
 const tB = btns("tab", ["bench", "matrix", "popularity", "pacelc"]), mB = btns("mtab", ["core", "ext", "pg18", "yt"]), dB = btns("dataset", ["baseline", "optimized", "compare"]);
-const ctx = { window: {}, console, setTimeout, URL: { createObjectURL: () => "blob:t", revokeObjectURL() {} }, Blob: class { constructor(p) { this.t = p.join(""); } },
+const ctx = { window: {}, console, setTimeout: () => 0, URL: { createObjectURL: () => "blob:t", revokeObjectURL() {} }, Blob: class { constructor(p) { this.t = p.join(""); } },
   document: { body: el(), getElementById: (i) => (i === "panel-pacelc" ? host : null),
     querySelectorAll: (s) => ({ "[data-tab]": tB, "[data-mtab]": mB, "[data-dataset]": dB }[s] || []),
     querySelector: () => null, createElement: el, execCommand: (c) => (copies++, c === "copy") }, navigator: {} };
@@ -150,7 +155,7 @@ clk({ j: "bench:pgedge-delta-apply" });
 a.strictEqual(st.tab, "bench"); a.strictEqual(st.dataset, "baseline"); a(st.sel.has("pgedge-delta-apply") && st.sel.has("pgedge")); a.strictEqual(redrawn, 1);
 ctx.LPPacelcUI.exportCSV(); a(dl && dl.download === "pacelc_baseline.csv");
 """
-        proc = subprocess.run([node, "-e", js, str(DASH)], capture_output=True, text=True, check=False)
+        proc = subprocess.run([node, "-e", js, str(DASH)], capture_output=True, text=True, check=False, timeout=30)
         self.assertEqual(proc.returncode, 0, f"Node PACELC test failed:\n{proc.stdout}\n{proc.stderr}")
 
 
