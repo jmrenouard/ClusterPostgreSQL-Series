@@ -8,7 +8,7 @@
 
 ## 1. CAP and PACELC Classification
 
-Eric Brewer's **CAP Theorem** states that during a network partition (`P`), a distributed data store must sacrifice either linearizable **Consistency (`C`)** or total **Availability (`A`)**. Because partitions are intermittent while wide-area network latency is permanent, Daniel Abadi's **PACELC Theorem** refines this trade-off: **if (`P`)**, choose **`A` or `C`**; **else (`E`)** during normal operation, choose **Latency (`L`) or Consistency (`C`)**.
+Eric Brewer's **CAP Theorem** states that during a partition (`P`), a distributed store sacrifices either **Consistency (`C`)** or **Availability (`A`)**. Because partitions are intermittent while WAN latency stays constant, Daniel Abadi's **PACELC Theorem** adds two cases. **If (`P`)**, choose **`A` or `C`**. **Else (`E`)**, choose **Latency (`L`) or Consistency (`C`)**.
 
 PostgreSQL multi-master engines split sharply across the PACELC plane:
 
@@ -39,15 +39,15 @@ Under **Last-Write-Wins (LWW)**, logical replication carries the full post-image
 ### 2.2 Insert-Insert Primary Key & Secondary `UNIQUE` Collisions
 
 - **Surrogate Primary Key Collision**: Two nodes using independent `SERIAL` or `GENERATED ALWAYS AS IDENTITY` sequences (`1, 2, 3...`) simultaneously generate `id = 42` for two unrelated business entities. Even LWW destroys one customer record or halts the apply worker (`SQLSTATE 23505`).
-- **Secondary `UNIQUE` Index Collision**: Even with globally unique PKs (UUIDv7, Snowflake), two users on `Node A` and `Node B` may register the same `email = 'alice@example.org'` concurrently. Because each node holds a distinct PK (`pk_A != pk_B`), **two conflicting rows now violate the `UNIQUE(email)` constraint**. Core PostgreSQL logical apply workers immediately crash-loop on `23505`; LWW policies must delete one entire valid user row to restore index integrity.
+- **Secondary `UNIQUE` Index Collision**: Even with unique PKs (UUIDv7, Snowflake), two users on `Node A` and `Node B` can register `email = 'alice@example.org'` concurrently. Because each node holds a distinct PK (`pk_A != pk_B`), **two conflicting rows violate `UNIQUE(email)`**. Core PostgreSQL apply workers crash-loop on `23505`. LWW policies delete one valid user row to restore index integrity.
 
 ### 2.3 Update-Delete & Tombstone Races
 
-`Node A` updates row `id = 7` (`status = 'SHIPPED'`) at $t_1$, while `Node B` issues `DELETE FROM orders WHERE id = 7` at $t_2$. When `Node A`'s `UPDATE` arrives at `Node B`, the target row no longer exists (`update_missing`). Conversely, if `Node B` deletes first and `Node A`'s update arrives without tombstone metadata, naive conflict handlers either ignore the update (silent divergence if order matters) or resurrect a deleted entity.
+`Node A` updates row `id = 7` (`status = 'SHIPPED'`) at $t_1$, while `Node B` issues `DELETE FROM orders WHERE id = 7` at $t_2$. When `Node A`'s `UPDATE` arrives at `Node B`, the target row no longer exists (`update_missing`). Conversely, if `Node B` deletes first and `Node A`'s update arrives without tombstones, naive handlers break state. They either drop the update or resurrect a deleted row.
 
 ### 2.4 Foreign-Key Dependency Inversion
 
-Parent `customer_id = 10` exists on both nodes. `Node A` executes `DELETE FROM customers WHERE id = 10` (locally valid because no child orders exist on `Node A` yet). Concurrently, `Node B` executes `INSERT INTO orders (id, customer_id) VALUES (900, 10)` (locally valid because customer `10` still exists on `Node B`). Replicating `DELETE` to `Node B` triggers a **Foreign Key violation (`23503`)**, whereas replicating `INSERT` to `Node A` also triggers **`23503`** — creating a **cyclic apply deadlock** across both replication streams.
+Parent `customer_id = 10` exists on both nodes. `Node A` executes `DELETE FROM customers WHERE id = 10` (locally valid because no child orders exist on `Node A` yet). Concurrently, `Node B` executes `INSERT INTO orders (id, customer_id) VALUES (900, 10)` (locally valid because customer `10` still exists on `Node B`). Replicating `DELETE` to `Node B` triggers a **Foreign Key violation (`23503`)**. Replicating `INSERT` to `Node A` triggers **`23503`** too, creating a **cyclic apply deadlock** across both streams.
 
 ---
 
@@ -55,7 +55,7 @@ Parent `customer_id = 10` exists on both nodes. `Node A` executes `DELETE FROM c
 
 ### 3.1 Recovery Point (`RPO`) and Recovery Time (`RTO`) Bounds
 
-For an asynchronous logical or streaming topology with network replication lag $\Delta t_{\text{repl\_lag}}$ and apply queue depth $Q_{\text{apply}}$ processed at rate $\mu_{\text{apply}}$, data at risk upon sudden ungraceful node loss is bounded below by:
+Consider an async topology with replication lag $\Delta t_{\text{repl\_lag}}$ and apply queue $Q_{\text{apply}}$ drained at rate $\mu_{\text{apply}}$. Upon sudden node loss, data at risk satisfies:
 
 $$
 \text{RPO}_{\text{async}} \ge \Delta t_{\text{repl\_lag}} + \frac{Q_{\text{apply}}}{\mu_{\text{apply}}}, \quad \text{RPO}_{\text{quorum}} = 0
@@ -77,7 +77,7 @@ $$
 L_{\text{commit}} = 2 \cdot \text{RTT}_{\text{quorum}} + L_{\text{disk}} + L_{\text{coord}}
 $$
 
-where $\text{RTT}_{\text{quorum}}$ is the round-trip time from the transaction coordinator to the nearest majority quorum of voters, $L_{\text{disk}}$ is local `fsync` latency, and $L_{\text{coord}}$ is CPU/serialization overhead. As an analytical illustration: across two regions separated by $\text{RTT}_{\text{quorum}} = 80\text{ ms}$ with $L_{\text{disk}} = 1\text{ ms}$ and $L_{\text{coord}} = 0.5\text{ ms}$, single-row commit latency cannot drop below $L_{\text{commit}} = 161.5\text{ ms}$ ($\approx 6.2\text{ sequential commits/s}$ per client thread) regardless of CPU count.
+Here $\text{RTT}_{\text{quorum}}$ is the round-trip time from the coordinator to the nearest voter majority. $L_{\text{disk}}$ is local `fsync` latency and $L_{\text{coord}}$ is serialization overhead. As an analytical illustration: across two regions separated by $\text{RTT}_{\text{quorum}} = 80\text{ ms}$ with $L_{\text{disk}} = 1\text{ ms}$ and $L_{\text{coord}} = 0.5\text{ ms}$, single-row commit latency cannot drop below $L_{\text{commit}} = 161.5\text{ ms}$ ($\approx 6.2\text{ sequential commits/s}$ per client thread) regardless of CPU count.
 
 ### 3.3 Clock-Skew Vulnerability Window in LWW & HLC
 
@@ -87,7 +87,7 @@ $$
 \Delta t_{\text{skew}} = |\text{clock}_A - \text{clock}_B| + 2\varepsilon_{\text{NTP}}
 $$
 
-If Client 1 updates row $r$ on `Node A`, observes the confirmation, and triggers Client 2 to overwrite row $r$ on `Node B` within $\Delta t < \Delta t_{\text{skew}}$, `Node B`'s physical clock can lag `Node A`'s timestamp. LWW then chooses Client 1's older write over Client 2's causally newer write, violating linearizability silently. Distributed SQL engines mitigate this via **Hybrid Logical Clocks (HLC)** (aborting or advancing timestamps when drift exceeds `--max_clock_skew`, e.g., $500\text{ ms}$) or Google's **TrueTime** commit-wait (`wait(2 * epsilon)` where $\varepsilon < 7\text{ ms}$).
+Suppose Client 1 updates row $r$ on `Node A`, sees confirmation, and Client 2 overwrites $r$ on `Node B` within $\Delta t < \Delta t_{\text{skew}}$. `Node B`'s physical clock can lag `Node A`, so LWW keeps Client 1's older write and breaks linearizability. Distributed SQL engines mitigate this with **Hybrid Logical Clocks (HLC)** (`--max_clock_skew`, e.g., $500\text{ ms}$) or **TrueTime** commit-wait (`wait(2 * epsilon)`, $\varepsilon < 7\text{ ms}$).
 
 ### 3.4 Birthday-Paradox Collision Probability Under Async Multi-Master
 
