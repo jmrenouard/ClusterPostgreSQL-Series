@@ -255,7 +255,7 @@
 - **Date / Action**: `2026-11-22` (`ACT-187`) | **Rejected**: Inlining PACELC controls/cards into `index.html`/`app.js` breached `< 14,000` B per-file cap; isolated into `pacelc_ui.js` and `pacelc.css`.
 
 ### IMP-013 - Bulk Reshuffling of All Audited Files, Legacy Removals & Test Suites in One PR
-- **Date / Action**: `2026-11-22` (`ACT-192`..`ACT-194`) | **Rejected**: Landing the full Ponytail audit diff (`~85 KB` across 25 modified files, 14 deletions, charts, shards, and `16.7 KB` `test_benchmark_artifacts.py`) in monolithic commits or overwriting `origin/main` PACELC/Pages features breached the `< 15,000`-char PR diff cap and would regress `#497`-`#508`. Split into sequential `< 14,800` B PRs (`#510`-`#562`) preserving Pages/PACELC.
+- **Date / Action**: `2026-11-22` (`ACT-192`..`ACT-194`) | **Rejected**: Landing the full Ponytail audit diff (`~85 KB` across 25 modified files, 14 deletions, charts, shards, and `~16.7 KB` `test_benchmark_artifacts.py` diff) in monolithic commits or overwriting `origin/main` PACELC/Pages features breached the `< 15,000`-char PR diff cap and would regress `#497`-`#508`. Split into sequential `< 14,800` B PRs (`#510`-`#562`) preserving Pages/PACELC.
 
 ### IMP-014 - Creating a Separate `dashboard/util.js` File Beyond `< 14 KB` `index.html` & Manifest Caps
 - **Date / Action**: `2026-11-22` (`ACT-194`, PR `#550`) | **Rejected**: Adding a new standalone `dashboard/util.js` script tag instead of colocating `window.LPUtil` inside `dashboard/matrix.js` (`4,986` B) loaded ahead of `popularity.js`/`opt.js`/`app.js` risked pushing `dashboard/index.html` (`13,893` B) over `14,000` B and breaking offline manifest lists.

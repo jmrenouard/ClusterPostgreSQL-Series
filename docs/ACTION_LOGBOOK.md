@@ -37,11 +37,11 @@
 - **Request / Changes / Result**: Extracted shared `window.LPUtil` (`matrix.js` loaded before `popularity.js`/`opt.js`/`app.js`), fixed XSS escaping, linear tick dedup, >8 sweep labels, `SWEEP_CONC` compare rendering, CSV formula escaping, and standalone `LPUtil` guard in `opt.js` (`RCA-027`); merged `#501` PACELC UI hooks in `index.html`/`app.js` (< `14,000` B per file) and added Python + Node VM unit tests (`31/31` non-skipped) in `tests/test_benchmark_artifacts.py` (PRs `#550`-`#560`).
 
 ### ACT-193 - Harden Popularity Collector, Dashboard Builder & Chart Generators (`#529-#548`)
-- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#529-#548` (`fix/issue-547-regen-opt-shard1`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#529-#548` (`chore/issue-547-refresh-opt-meta-timestamp`)
 - **Request / Changes / Result**: Extracted `scripts/chart_meta.py` (`resolve_e1`, `inum`, `fnum`, `OUT_DIR`/`RES_DIR`), fixed 301 redirect bodies, `Link` pagination, and 30s `gh` timeout in `collect_popularity.py`, guarded `math.isfinite` and balanced 3-shard `shard_rows` (`55+56+67=178` rows) in `build_dashboard.py`, fixed empty/sweep guards and dynamic snapshot dates in `generate_charts*.py`, and regenerated `chart_08..13` + balanced shards (PRs `#530`-`#548`).
 
 ### ACT-192 - Audit Makefile Entry Points & Prune 14 Shadowed Legacy Scripts (`#509-#528`)
-- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#509-#528` (`chore/issue-527-prune-test-yugabyte`)
+- **Date**: `2026-11-22` | **Status**: `COMPLETED` | **Issue / Branch**: `#509-#528` (`chore/issue-527-drop-shadowed-test-yugabyte`)
 - **Request / Changes / Result**: Reconciled `Makefile` (`build-bench-image`, `bench-optimized`, `bench-yt-cluster` overrides, `bench-all` fallback, `reports/*.md` clean) with `#505` Pages targets and removed 14 shadowed `scripts/*.sh/.py` files while preserving `setup_pg17_baseline.sh` (PRs `#510`-`#528`).
 
 ### ACT-191 - Document GitHub Pages Explorer & PACELC Selector in EN/FR Docs (`#507`)
