@@ -156,12 +156,12 @@ make help
 # Run unit tests (security, math, 13 charts, dual-dataset 18-topology dashboard) and Compose/Bash lint
 make test && make lint
 
-# Run topology lifecycle, benchmarks (V1/V2 + PG 18.6 + YT; V5 Scale=20 via multi-db-docker-env), charts, and dashboard
+# Run topology lifecycle, benchmarks (V1/V2 + PG 18.6 + YT + V5 Scale=20), charts, and dashboard
 cp .env.example .env
+make build-bench-image  # Build multi-db-pgbench-sysbench:latest from scripts/Dockerfile.bench
 make up-pgedge && make test-pgedge && make down-pgedge
-make bench-all && make bench-pg18 && make bench-yt-cluster && make popularity && make charts && make dashboard
+make bench-all && make bench-pg18 && make bench-yt-cluster && make bench-optimized && make popularity && make charts && make dashboard
 make pages-build && make pages-check  # Stage & verify offline GitHub Pages bundle in _site/
-# (cd env/multi-db-docker-env && ./mdb bench pg-optimized)  # Produces results/benchmark_optimized.csv (318 rows)
 ```
 
 ---

@@ -5,13 +5,16 @@ export PYTHONDONTWRITEBYTECODE := 1
 MDB_DIR ?= env/multi-db-docker-env
 PG_STACKS := pg17-baseline pg-streaming pg-logical pg-birep pgedge bucardo citus cockroach yugabyte pg18-streaming pg18-logical pg18-birep yt-cluster
 
-.PHONY: help init-env stacks test check-math check-security lint charts popularity dashboard pages-build pages-check test-pg-extended bench-all bench-pg18 bench-yt-cluster clean
+.PHONY: help init-env stacks build-bench-image test check-math check-security lint charts popularity dashboard pages-build pages-check test-pg-extended bench-all bench-pg18 bench-yt-cluster bench-optimized clean
 
 help: ## Show targets
 	@awk 'BEGIN {FS = ":.*##"; printf "\nTargets:\n"} /^[a-zA-Z0-9_%-]+:.*##/ { printf "  %-18s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
 init-env: ## Initialize and update the multi-db-docker-env Git submodule
 	git submodule update --init --recursive
+
+build-bench-image: ## Build shared pgbench/sysbench/psycopg Docker image from scripts/Dockerfile.bench
+	docker build -f scripts/Dockerfile.bench -t multi-db-pgbench-sysbench:latest scripts
 
 stacks: ## List available PostgreSQL PoC topologies in $(MDB_DIR)
 	@echo "Topologies ($(MDB_DIR)): $(PG_STACKS)"
@@ -90,7 +93,14 @@ test-%: ## Run functional/limit test suite for topology <name> via $(MDB_DIR)
 
 bench-all: ## Run V1 + V2 PostgreSQL benchmark suites via $(MDB_DIR) and rebuild charts & dashboard
 	@test -d "$(MDB_DIR)" || { echo "Submodule missing; run 'make init-env' first."; exit 1; }
-	BENCH_OUT_DIR="$(CURDIR)/results" bash "$(MDB_DIR)/scripts/bench_pg_multimaster.sh"
+	@if grep -q 'BENCH_OUT_DIR' "$(MDB_DIR)/scripts/bench_pg_multimaster.sh"; then \
+		BENCH_OUT_DIR="$(CURDIR)/results" bash "$(MDB_DIR)/scripts/bench_pg_multimaster.sh"; \
+	else \
+		bash "$(MDB_DIR)/scripts/bench_pg_multimaster.sh" && \
+		mkdir -p "$(CURDIR)/results/logs" && \
+		cp -f "$(MDB_DIR)/reports/pg_benchmarks/benchmark_summary.csv" "$(CURDIR)/results/benchmark_summary.csv" && \
+		{ cp -f "$(MDB_DIR)/reports/pg_benchmarks/logs/"*.log "$(CURDIR)/results/logs/" 2>/dev/null || true; }; \
+	fi
 	BENCH_OUT_DIR="$(CURDIR)/results" bash "$(MDB_DIR)/scripts/bench_pg_v2_runner.sh"
 	$(MAKE) charts dashboard
 
@@ -101,10 +111,15 @@ bench-pg18: ## Run PostgreSQL 18.6 benchmark suite via $(MDB_DIR) and rebuild ch
 
 bench-yt-cluster: ## Run YT Cluster 1.21.3 benchmark suite via $(MDB_DIR) and rebuild charts & dashboard
 	@test -d "$(MDB_DIR)" || { echo "Submodule missing; run 'make init-env' first."; exit 1; }
-	BENCH_OUT_DIR="$(CURDIR)/results" bash "$(MDB_DIR)/scripts/bench_yt_runner.sh"
+	BENCH_OUT_CSV="$(CURDIR)/results/benchmark_yt_cluster.csv" BENCH_LOG_FILE="$(CURDIR)/results/logs/yt-cluster-benchmark.log" bash "$(MDB_DIR)/scripts/bench_yt_runner.sh"
+	$(MAKE) charts dashboard
+
+bench-optimized: ## Run V5 production-tuned PG_SCALE=20 benchmark suite via $(MDB_DIR) and rebuild charts & dashboard
+	@test -d "$(MDB_DIR)" || { echo "Submodule missing; run 'make init-env' first."; exit 1; }
+	BENCH_OUT_CSV="$(CURDIR)/results/benchmark_optimized.csv" BENCH_LOG_DIR="$(CURDIR)/results/logs_optimized" bash "$(MDB_DIR)/scripts/bench_pg_optimized_runner.sh"
 	$(MAKE) charts dashboard
 
 clean: ## Clean caches, logs, generated reports, and _site/
 	python3 -c "import pathlib,shutil;[shutil.rmtree(p,ignore_errors=True) for p in pathlib.Path('.').rglob('*') if p.name in {'__pycache__','.pytest_cache'} and 'env' not in p.parts]"
 	rm -rf _site
-	rm -f reports/*.html *.log
+	rm -f reports/*.html reports/*.md *.log
