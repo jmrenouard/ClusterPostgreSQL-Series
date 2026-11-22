@@ -2,7 +2,7 @@
 
 > **Auteur** : Jean-Marie Renouard (`jmrenouard`) - [LightPath](https://www.lightpath.fr) | **Licence** : MIT
 
-Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le sharding MPP (`#7`–`#8`), la capture par triggers et proxys (`#9`–`#11`, `#14`) et les services cloud managés (`#12`–`#13`).
+Ce chapitre présente les moteurs SQL distribués (`#5`–`#6`), le sharding MPP (`#7`–`#8`), les triggers et proxys (`#9`–`#11`, `#14`). Il couvre aussi les offres cloud managées (`#12`–`#13`).
 
 ## Fiches d'architecture détaillées (périmètre `03b`)
 
@@ -27,7 +27,9 @@ Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le
 
 **Architecture** : YugabyteDB réutilise directement les couches supérieures de PostgreSQL en C (parseur, optimiseur et exécuteur SQL) au sein du moteur **YSQL**, adossé au système de stockage distribué **DocDB** (C++, basé sur RocksDB/LSM). Chaque table est fragmentée en *tablets* répliqués de façon synchrone par **Raft** (facteur de réplication `RF = 3` standard) avec horloges hybrides **HLC** (*Hybrid Logical Clocks*).
 
-**Concurrence et limites** : Le consensus Raft élimine les conflits asynchrones et garantit `RPO = 0` lors de la perte d'un nœud sur trois, au prix d'un arrêt total de quorum si deux nœuds sur trois tombent (`PC/EC`). Supporte `Serializable`, `Snapshot` et `Read Committed` (mode wait-on-conflict). Sous forte contention sur une même ligne, les transactions concurrentes reçoivent `SQLSTATE 40001` (*serialization/conflict error*) et requièrent une boucle de ré-essai côté client. La réutilisation du code PostgreSQL autorise de nombreuses extensions (`pg_trgm`, `uuid-ossp`, `pgvector`), bien que les sémantiques distribuées restent soumises au coût RTT inter-nœuds et à une empreinte RAM élevée par processus.
+**Concurrence et limites** : Le consensus Raft élimine les conflits asynchrones et assure `RPO = 0` si un nœud sur trois tombe. Le quorum gèle si deux nœuds sur trois tombent (`PC/EC`). Supporte `Serializable`, `Snapshot` et `Read Committed` (mode wait-on-conflict).
+
+Sous forte contention, les transactions concurrentes reçoivent `SQLSTATE 40001` et demandent des reprises client. La base SQL PostgreSQL autorise `pg_trgm`, `uuid-ossp` et `pgvector`, tout en restant soumise au RTT inter-nœuds et à la RAM.
 
 ---
 
@@ -37,7 +39,7 @@ Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le
 
 **Architecture** : Écrit en Go, CockroachDB implémente le protocole filaire PostgreSQL v3 par-dessus un moteur clé-valeur ordonné **Pebble**. Les données sont découpées en *ranges* contigus (64 à 512 Mio) répliqués par **Raft**, avec un *leaseholder* chargé des lectures locales cohérentes et de la coordination des écritures.
 
-**Concurrence et limites** : Par défaut en isolation stricte `SERIALIZABLE` (avec option `READ COMMITTED` en v24.x), CockroachDB assure une linéarisabilité multi-régions via HLC et écritures d'intentions 2PC. Toute contention concurrente ou ambiguïté d'horloge déclenche `SQLSTATE 40001`, imposant des ré-essais applicatifs explicites. Des clauses natives (`SURVIVAL GOAL = ZONE | REGION`, `REGIONAL BY ROW`) optimisent le placement des *leaseholders*. En contrepartie, **aucune extension C PostgreSQL n'est compatible** (`PostGIS` absent, seul un module spatial Go partiel est fourni), `LISTEN/NOTIFY` est remplacé par des `CHANGEFEED` Kafka/webhook, et l'absence de stockage WAL classique rompt la compatibilité avec les outils de sauvegarde PG (`pgBackRest`).
+**Concurrence et limites** : Par défaut en isolation stricte `SERIALIZABLE` (avec option `READ COMMITTED` en v24.x), CockroachDB assure une linéarisabilité multi-régions avec HLC et écritures d'intentions 2PC. Toute contention concurrente ou ambiguïté d'horloge déclenche `SQLSTATE 40001`, imposant des ré-essais applicatifs explicites. Des clauses natives (`SURVIVAL GOAL = ZONE | REGION`, `REGIONAL BY ROW`) optimisent le placement des *leaseholders*. En contrepartie, **aucune extension C PostgreSQL ne fonctionne** (`PostGIS` absent, seul un module Go partiel existe). `CHANGEFEED` Kafka/webhook remplace `LISTEN/NOTIFY`, et l'absence de WAL rompt la compatibilité `pgBackRest`.
 
 ---
 
@@ -46,8 +48,8 @@ Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le
 **Fiche dédiée :** [#7 — Citus (`citus`)](solutions/citus.md)
 
 **Architecture** : Extension C open-source (AGPLv3) pour PostgreSQL 17 distribuant les requêtes entre un **coordinateur** et des nœuds **workers**. Les tables se classent en trois catégories :
-1. **Tables distribuées** : partitionnées par hachage sur une colonne clé (`create_distributed_table`) ; les requêtes filtrant sur cette clé ciblent un shard unique sans 2PC.
-2. **Tables de référence** : répliquées intégralement sur tous les workers et maintenues synchrones via **2PC** (`create_reference_table`).
+1. **Tables distribuées** : partitionnées par hachage sur une colonne clé (`create_distributed_table`). Les requêtes filtrant cette clé ciblent un shard unique sans 2PC.
+2. **Tables de référence** : répliquées sur tous les workers et synchronisées par **2PC** (`create_reference_table`).
 3. **Tables locales** : résidentes sur le coordinateur seul. Le mode **Citus MX** permet d'exposer aussi les workers comme points d'entrée SQL.
 
 **Limites vérifiables** : Toute clé primaire ou index `UNIQUE` sur une table distribuée doit contenir la colonne de distribution, faute de quoi Citus rejette la création avec `SQLSTATE 0A000`. Une table sans clé primaire est tolérée en insertion mais reste impossible à indexer en contrainte partielle sans clé de sharding. Enfin, Citus n'assure pas la réplication inter-workers par défaut : la perte d'un worker bloque l'accès à ses shards jusqu'à son redémarrage (d'où la nécessité d'associer chaque worker à une HA Patroni en production).
@@ -58,7 +60,7 @@ Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le
 
 **Fiche dédiée :** [#8 — OpenTenBase / Postgres-XL / XC (Référence architecturale)](solutions/opentenbase_pgxl.md)
 
-**Architecture** : Famille MPP *shared-nothing* composée de coordinateurs sans état, de *datanodes* PostgreSQL et d'un **GTM (*Global Transaction Manager*)** centralisant l'attribution des `GXID` et des instantanés MVCC globaux pour maintenir une cohérence ACID distribuée par 2PC.
+**Architecture** : Famille MPP *shared-nothing* combinant coordinateurs sans état et *datanodes* PostgreSQL. Un **GTM (*Global Transaction Manager*)** centralise les `GXID` et instantanés MVCC pour assurer l'ACID distribué par 2PC.
 
 **Statut et limites** : Le GTM introduit un point de contention critique sous fort taux de transactions courtes (chaque `BEGIN`/`COMMIT` sollicitant le GTM par réseau). **Postgres-XC** et **Postgres-XL** sont aujourd'hui considérés comme abandonnés/gelés sur d'anciens noyaux PG 9.x/10. **OpenTenBase** (maintenu par la communauté, fork PG 10–11 avec rétroportages) demeure pertinent pour l'entreposage analytique HTAP/MPP massif, mais peu adapté à l'OLTP géo-distribué léger.
 
@@ -68,9 +70,9 @@ Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le
 
 **Fiche dédiée :** [#9 — Bucardo 5 (`bucardo`)](solutions/bucardo.md)
 
-**Architecture** : Daemon Perl externe pilotant une réplication asynchrone par lots via des déclencheurs `PL/pgSQL` générés automatiquement sur chaque table surveillée. Chaque modification alimente une table tampon `bucardo_delta` sur la base source, tandis qu'une base de contrôle requiert `PL/Perl`.
+**Architecture** : Daemon Perl externe pilotant une réplication par lots avec des déclencheurs `PL/pgSQL` générés sur chaque table. Chaque modification alimente une table tampon `bucardo_delta` sur la base source, tandis qu'une base de contrôle requiert `PL/Perl`.
 
-**Conflits et limites** : Supporte les topologies multi-maîtres (`dbgroup` à plusieurs sources) avec résolution configurable (`bucardo_latest`, `bucardo_source`, `bucardo_target`, `bucardo_skip`). Limites majeures : obligation stricte d'une clé primaire ou unique sur chaque table (les tables sans PK sont ignorées ou refusées), amplification I/O d'écriture (chaque `INSERT`/`UPDATE`/`DELETE` déclenche une écriture supplémentaire dans `bucardo_delta` nécessitant des purges `VACUUM` fréquentes), latence de réplication liée au cycle d'interrogation et absence totale de propagation DDL.
+**Conflits et limites** : Supporte les topologies multi-maîtres (`dbgroup` à plusieurs sources) avec résolution configurable (`bucardo_latest`, `bucardo_source`, `bucardo_target`, `bucardo_skip`). Limites majeures : chaque table exige une PK ou clé unique, et chaque écriture alimente `bucardo_delta` (nécessitant des `VACUUM` fréquents). La scrutation ajoute une latence visible et le DDL ne se propage pas.
 
 ---
 
@@ -78,9 +80,9 @@ Ce chapitre présente les moteurs SQL distribués à consensus (`#5`–`#6`), le
 
 **Fiche dédiée :** [#10 — SymmetricDS (Référence architecturale)](solutions/symmetricds.md)
 
-**Architecture** : Plateforme Java asynchrone capturant les changements via triggers SQL vers une table `sym_data`, encapsulés en lots compressés transmis par HTTP/HTTPS.
+**Architecture** : Plateforme Java asynchrone capturant les changements par triggers SQL vers `sym_data`, puis poussant les lots par HTTP/HTTPS.
 
-**Cas d'usage et limites** : Référence incontournable lorsque l'architecture exige une synchronisation **hétérogène** (PostgreSQL vers MySQL, Oracle, SQL Server ou SQLite) ou une connectivité intermittente de type *Edge / Retail* avec résilience hors-ligne prolongée. En revanche, la double écriture par triggers et la sérialisation HTTP créent une latence et un surcoût CPU prohibitifs pour un cœur OLTP homogène PostgreSQL à fort débit.
+**Cas d'usage et limites** : Référence incontournable lorsque l'architecture exige une synchronisation **hétérogène** (PostgreSQL vers MySQL, Oracle, SQL Server ou SQLite) ou une connectivité intermittente de type *Edge / Retail* avec résilience hors-ligne prolongée. En revanche, la double écriture par triggers et HTTP ajoutent latence et charge CPU. Ce coût pénalise un cœur OLTP homogène PostgreSQL.
 
 ---
 
