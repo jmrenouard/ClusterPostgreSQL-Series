@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 import pathlib
 from datetime import datetime, timezone
 
@@ -61,12 +62,14 @@ BENCH_FIELDS = [
 
 
 def parse_num(val: str) -> float | int | str:
-    """Convert numeric strings cleanly while preserving N/A and labels."""
+    """Convert numeric strings cleanly while preserving N/A, labels, and non-finite strings."""
     s = (val or "").strip()
     if not s or s.upper() == "N/A":
         return ""
     try:
         f = float(s)
+        if not math.isfinite(f):
+            return s
         if f.is_integer() and "." not in s:
             return int(f)
         return round(f, 3)
@@ -122,18 +125,33 @@ def dump_js_chunk(var_name: str, payload: object, header: str) -> str:
     return f"/* {header} */\nwindow.{var_name}={body};\n"
 
 
-def shard_rows(rows: list[list[object]], max_bytes: int) -> list[list[list[object]]]:
-    """Split row arrays into up to 3 balanced shards under max_bytes each."""
-    shards: list[list[list[object]]] = [[], [], []]
-    idx = 0
-    cur_bytes = 256
-    for row in rows:
-        r_len = len(json.dumps(row, ensure_ascii=True, separators=(",", ":"))) + 1
-        if idx < 2 and shards[idx] and cur_bytes + r_len > max_bytes:
-            idx += 1
-            cur_bytes = 128
-        shards[idx].append(row)
-        cur_bytes += r_len
+def shard_rows(rows: list[list[object]], max_bytes: int = MAX_SHARD_BYTES, n_shards: int = 3) -> list[list[list[object]]]:
+    """Split row arrays evenly by byte size across balanced shards."""
+    shards: list[list[list[object]]] = [[] for _ in range(n_shards)]
+    if not rows:
+        return shards
+    sizes = [len(json.dumps(r, ensure_ascii=True, separators=(",", ":"))) + 1 for r in rows]
+    overheads = [400] + [90] * (n_shards - 1)
+    pos = 0
+    n = len(rows)
+    for idx in range(n_shards):
+        if pos >= n:
+            break
+        if idx == n_shards - 1:
+            shards[idx] = rows[pos:]
+            break
+        rem_shards = n_shards - idx
+        rem_bytes = sum(sizes[pos:]) + sum(overheads[idx:])
+        budget = rem_bytes / rem_shards
+        cur = overheads[idx]
+        max_pos = min(n, max(pos + 1, n - (rem_shards - 1)))
+        while pos < max_pos:
+            r_len = sizes[pos]
+            if shards[idx] and cur + r_len > budget and (cur + r_len - budget) >= (budget - cur):
+                break
+            shards[idx].append(rows[pos])
+            cur += r_len
+            pos += 1
     return shards
 
 

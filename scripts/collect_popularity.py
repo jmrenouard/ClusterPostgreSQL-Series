@@ -134,6 +134,7 @@ CATALOG: list[tuple[str, str, str, str, str | None]] = [
 ]
 
 LAST_PAGE_RE = re.compile(r"[?&]page=(\d+)>;\s*rel=\"last\"")
+HTTP_STATUS_RE = re.compile(r"(?m)^[ \t]*HTTP/\S*\s+\d{3}\b")
 TAG_GRAPHQL = (
     'query($o:String!,$n:String!){repository(owner:$o,name:$n){'
     'refs(refPrefix:"refs/tags/",first:1,orderBy:{field:TAG_COMMIT_DATE,direction:DESC})'
@@ -141,17 +142,21 @@ TAG_GRAPHQL = (
 )
 
 
-def run_gh(args: list[str]) -> tuple[int, str, str]:
+def run_gh(args: list[str], timeout: int = 30) -> tuple[int, str, str]:
     """Run gh CLI command and return (returncode, stdout, stderr)."""
-    proc = subprocess.run(
-        ["gh", *args],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
-    return proc.returncode, proc.stdout, proc.stderr
+    try:
+        proc = subprocess.run(
+            ["gh", *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+            timeout=timeout,
+        )
+        return proc.returncode, proc.stdout, proc.stderr
+    except subprocess.TimeoutExpired as exc:
+        return 124, "", f"gh command timed out after {timeout}s: {exc}"
 
 
 def gh_json(endpoint: str) -> dict | list | None:
@@ -168,14 +173,10 @@ def gh_json(endpoint: str) -> dict | list | None:
 def split_http_response(raw: str) -> tuple[str, str]:
     """Split gh api -i response into final HTTP headers and body."""
     normalized = raw.replace("\r\n", "\n")
-    parts = normalized.split("\n\n")
-    # Skip any intermediate redirect header blocks before the final HTTP status.
-    idx = 0
-    while idx + 1 < len(parts) and parts[idx + 1].startswith("HTTP/"):
-        idx += 1
-    headers = parts[idx]
-    body = "\n\n".join(parts[idx + 1 :]).strip()
-    return headers, body
+    matches = list(HTTP_STATUS_RE.finditer(normalized))
+    tail = normalized[matches[-1].start() :] if matches else normalized
+    headers, _, rest = tail.partition("\n\n")
+    return headers, rest.strip()
 
 
 def count_paginated(endpoint: str) -> str:
