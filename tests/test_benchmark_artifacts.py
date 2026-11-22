@@ -6,6 +6,7 @@ import csv
 import json
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -511,6 +512,148 @@ class TestBenchmarkArtifacts(unittest.TestCase):
                 rows, snap_date = v3.load_pop()
             self.assertEqual(len(rows), 1)
             self.assertEqual(snap_date, "2027-01-15")
+
+    def test_dashboard_js_syntax_and_unit_behavior(self) -> None:
+        """Run node --check and targeted JS unit checks when Node.js is available."""
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("node runtime not found on PATH")
+
+        for js_path in sorted(DASH.glob("*.js")):
+            proc = subprocess.run([node, "--check", str(js_path)], capture_output=True, text=True, check=False)
+            self.assertEqual(proc.returncode, 0, f"node --check failed for {js_path.name}: {proc.stderr}")
+
+        js_harness = r"""
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const vm = require("node:vm");
+
+const dash = process.argv[1];
+function makeEl(id, tag) {
+  const node = {
+    id: id || "", tagName: tag || "DIV", children: [], style: {}, dataset: {},
+    attrs: {}, _html: "", textContent: "", value: "ALL",
+    classList: { toggle() {}, add() {}, remove() {} },
+    setAttribute(k, v) { this.attrs[k] = String(v); },
+    appendChild(c) { this.children.push(c); return c; },
+    addEventListener() {},
+    querySelectorAll() { return []; },
+    querySelector() { return null; },
+    click() {},
+  };
+  Object.defineProperty(node, "innerHTML", {
+    get() { return this._html; },
+    set(v) { this._html = String(v); this.children = []; },
+  });
+  return node;
+}
+function makeCtx(extra = {}) {
+  const els = new Map();
+  const getEl = (id) => { if (!els.has(id)) els.set(id, makeEl(id)); return els.get(id); };
+  const ctx = {
+    console, Set, Map, Array, Object, Number, String, Boolean, Math, JSON, RegExp, Date, Error,
+    Blob: class Blob { constructor(parts) { this.parts = parts; } },
+    URL: { createObjectURL: () => "blob:1", revokeObjectURL() {} },
+    document: {
+      getElementById: getEl,
+      querySelectorAll: () => [],
+      querySelector: () => null,
+      createElement: (t) => makeEl("", t),
+      createElementNS: (_ns, t) => makeEl("", t),
+      addEventListener() {},
+    },
+    innerWidth: 1280, innerHeight: 800,
+    ...extra,
+  };
+  ctx.window = ctx;
+  ctx.globalThis = ctx;
+  vm.createContext(ctx);
+  return { ctx, getEl };
+}
+function loadFiles(ctx, names) {
+  for (const n of names) vm.runInContext(fs.readFileSync(path.join(dash, n), "utf8"), ctx, { filename: n });
+}
+
+// 1. LPCharts, LPUtil, LPMatrix
+const c1 = makeCtx({
+  LP_MATRIX_CORE: { cols: ["topology", "f1_health"], rows: [["citus", "PASS: ok"], ["pgedge", "LIMIT: lww"]] },
+  LP_MATRIX_EXT: { cols: [], rows: [] }, LP_MATRIX_PG18: { cols: [], rows: [] }, LP_MATRIX_YT: { cols: [], rows: [] },
+});
+loadFiles(c1.ctx, ["charts.js", "matrix.js"]);
+const { LPCharts, LPUtil, LPMatrix } = c1.ctx;
+
+assert.equal(LPCharts.esc('<img src=x onerror="1">'), "&lt;img src=x onerror=&quot;1&quot;&gt;");
+const tip = LPCharts.makeTip({ topology: "pg17-standalone", suite: "A", tps: 100, lat_avg_ms: 1, lat_p95_ms: 2, tx_committed: 10, retries_40001: "<img src=x>", convergence_status: "PASS", balance_drift: 0 });
+assert.ok(tip.includes("&lt;img src=x&gt;") && !tip.includes("<img src=x>"), "makeTip must escape retries_40001");
+const emptyBox = makeEl("empty");
+LPCharts.renderBarChart(emptyBox, { categories: [], series: [], scale: "log", unit: "tps", emptyMsg: "<svg onload=1>" });
+assert.ok(emptyBox.innerHTML.includes("&lt;svg") && !emptyBox.innerHTML.includes("<svg "), "emptyMsg must be escaped");
+assert.equal(LPCharts.fmtTick(1500, "ms"), "1.5s");
+assert.equal(LPCharts.fmtTick(1500, "tps"), "1.5k");
+const linLabels = LPCharts.linTicks(1500).ticks.map((v) => LPCharts.fmtTick(v, "ms"));
+assert.equal(new Set(linLabels).size, linLabels.length, "Linear ticks must not print duplicate labels");
+assert.equal(LPCharts.logTicks(0.08, 2.5, true).lo, 0.01);
+const denseBox = makeEl("dense");
+LPCharts.renderLineChart(denseBox, {
+  xLabels: ["0 ms", "50 ms"], scale: "log", unit: "tps",
+  series: [1.8, 1.9, 2.0, 2.1].map((v, i) => ({ label: "t" + i, color: "#000", points: [{ v: 100, tip: "a" }, { v, tip: "b" }] })),
+});
+const endYs = denseBox.children[0].children.filter((c) => c.tagName === "text" && Number(c.attrs.x) > 625).map((c) => Number(c.attrs.y));
+assert.equal(endYs.length, 4);
+assert.ok(new Set(endYs.map((y) => Math.round(y * 10))).size === 4, "Bottom sweep endpoint labels must not overlap");
+
+assert.equal(LPUtil.csvCell("=cmd|'calc'!A0"), '"\'=cmd|\'calc\'!A0"');
+assert.equal(LPUtil.csvCell("+SUM(A1)"), '"\'+SUM(A1)"');
+assert.equal(LPUtil.csvCell("@SUM(A1)"), '"\'@SUM(A1)"');
+assert.equal(LPUtil.csvCell("\tcmd"), '"\'\tcmd"');
+assert.equal(LPUtil.csvCell("-71063"), '"-71063"');
+
+const asc = LPUtil.sortRows([{ v: 100 }, { v: "" }, { v: 20 }, { v: NaN }, { v: "N/A" }], "v", 1, new Set(["v"]));
+assert.equal(JSON.stringify(asc.slice(0, 2).map((r) => r.v)), "[20,100]");
+const dsc = LPUtil.sortRows([{ v: 100 }, { v: "" }, { v: 20 }, { v: NaN }], "v", -1, new Set(["v"]));
+assert.equal(JSON.stringify(dsc.slice(0, 2).map((r) => r.v)), "[100,20]");
+
+const mRows = LPMatrix.filteredRows({ mtab: "core", sel: new Set(["nonexistent"]), qM: "citus" });
+assert.equal(mRows.length, 1);
+assert.equal(mRows[0].topology, "citus");
+
+// 2. LPPopularity empty & proprietary-only guards
+for (const popPack of [
+  { cols: ["solution_id", "project_name", "stars", "commits_12m", "pushed_at"], rows: [] },
+  { cols: ["solution_id", "project_name", "stars", "commits_12m", "pushed_at"], rows: [["edb", "EDB PGD", "N/A", "N/A", "N/A"]] },
+]) {
+  const cp = makeCtx({ LP_POPULARITY: popPack });
+  loadFiles(cp.ctx, ["charts.js", "matrix.js", "popularity.js"]);
+  cp.ctx.LPPopularity.render("en");
+  assert.ok(cp.getEl("pop-kpi-grid").innerHTML.includes("N/A"));
+  assert.ok(cp.getEl("pop-chart-1").innerHTML.includes("No public GitHub repos"));
+}
+
+// 3. LPOpt compare KPIs & >8 sweep curves
+const ten = ["pg17-standalone", "pg17-async-streaming", "pg17-sync-streaming", "pg17-logical", "pg-birep", "pg18-standalone", "pg18-async-streaming", "pg18-sync-streaming", "pg18-logical", "bucardo"];
+const cols = ["topology", "suite", "clients", "duration_s", "tps", "qps", "lat_avg_ms", "lat_p95_ms", "tx_committed", "retries_40001", "convergence_status", "balance_drift"];
+const optRows = [];
+const baseIdx = {};
+for (const t of ten) {
+  baseIdx[t] = {};
+  for (const [su, st] of [["G_conc_c1", "PASS_CONVERGED"], ["G_conc_c32", "PASS_CONVERGED"], ["B2_overlap_rw", t === "bucardo" ? "EXPECTED_LIMITATION_LOST_UPDATE" : "PASS_CONVERGED"]]) {
+    const dr = t === "bucardo" && su === "B2_overlap_rw" ? -21842 : 0;
+    optRows.push([t, su, 8, 15, 500, 1000, 2.0, 4.0, 5000, 0, st, dr]);
+    baseIdx[t][su] = { topology: t, suite: su, tps: 250, lat_avg_ms: 4.0, lat_p95_ms: 8.0, convergence_status: st, balance_drift: dr };
+  }
+}
+const co = makeCtx({ LP_BENCH_OPT_META: { cols, pg_scale: 20 }, LP_BENCH_OPT_ROWS: optRows });
+loadFiles(co.ctx, ["charts.js", "matrix.js", "opt.js"]);
+co.ctx.LPOpt.renderCompare(baseIdx, { lang: "en", dataset: "compare", scale: "log", lat: "both", suite: "B2_overlap_rw", sel: new Set(["bucardo"]), qB: "" }, ten, "E_sysbench_oltp_rw");
+assert.ok(co.getEl("kpi-grid").innerHTML.includes("0 newly fixed"));
+assert.ok(!co.getEl("kpi-grid").innerHTML.includes("All selected clean"));
+co.ctx.LPOpt.renderCompare(baseIdx, { lang: "en", dataset: "compare", scale: "log", lat: "both", suite: "SWEEP_CONC", sel: new Set(ten), qB: "" }, ten, "E_sysbench_oltp_rw");
+const svg = co.getEl("chart-tps").children[0];
+assert.ok(svg && svg.children.some((c) => c.tagName === "path"), "SWEEP_CONC with >8 topologies must render line paths");
+"""
+        proc = subprocess.run([node, "-e", js_harness, str(DASH)], capture_output=True, text=True, check=False)
+        self.assertEqual(proc.returncode, 0, f"JS unit harness failed:\n{proc.stdout}\n{proc.stderr}")
 
 
 if __name__ == "__main__":
