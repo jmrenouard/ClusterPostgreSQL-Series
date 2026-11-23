@@ -14,6 +14,7 @@
 | **Versions** | `PostgreSQL 17.12` (`postgres:17` + `postgresql-plperl-17`), `Bucardo 5.6.0` (`debian:trixie-slim`) |
 | **Profil CAP / PACELC** | `AP / PA-EL` — réplication multi-maîtres asynchrone par triggers |
 | **Licence / Déploiement** | BSD License / PostgreSQL License / 3 conteneurs (`docker-compose-bucardo.yml`) |
+| **TDE / Chiffrement au repos** | Absent cœur PG ; `bucardo.delta_*` en clair sans LUKS OS sur données/contrôle + TLS ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 

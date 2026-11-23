@@ -14,6 +14,7 @@
 | **Versions** | `Slony-I 2.2.x` (C/PLpgSQL); `Skytools 3 / Londiste + PGQ` (Python/C, EOL); `RubyRep 1.2.x` (JRuby, abandoned) |
 | **CAP / PACELC Profile** | `PA/EL` — asynchronous trigger/queue capture (`Slony`/`Londiste` single-origin; `RubyRep` fragile bi-dir) |
 | **License / Deployment** | Open Source (BSD / ISC / MIT) / In-DB row triggers + shadow queue tables + external `slon`/`londiste`/`rubyrep` daemon |
+| **TDE / Encryption at Rest** | None in core PG; `_slony`/`pgq` queues plain on disk (`LUKS` + migrate off EOL; [Ch. 14](../14_transparent_data_encryption_tde.md)) |
 
 ---
 
