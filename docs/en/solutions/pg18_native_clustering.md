@@ -21,7 +21,7 @@
 
 ## 1. Overview & Operating Principles (PG 16 vs PG 17 vs PG 18)
 
-**PostgreSQL 18.6** modernizes core database storage, I/O scheduling, and logical replication without altering fundamental replication physics. It introduces an **Asynchronous I/O (AIO) subsystem** (`io_method=worker`, `io_workers=3`), enables **`data_checksums=on`** by default at `initdb`, moves Docker's data layout to `PGDATA=/var/lib/postgresql/18/docker`, ships native RFC 9562 **`uuidv7()`** for coordination-free active-active primary keys, defaults logical apply to **`substream=p`** (parallel streaming), supports **`publish_generated_columns=stored`** (`s`), and expands **`pg_stat_subscription_stats`** to **7 `confl_*` counters** including `confl_multiple_unique_conflicts`.
+**PostgreSQL 18.6** modernizes core database storage, I/O scheduling, and logical replication without altering fundamental replication physics. It adds an **AIO subsystem** (`io_method=worker`, `io_workers=3`), enables **`data_checksums=on`** at `initdb`, and uses `PGDATA=/var/lib/postgresql/18/docker`. It also ships RFC 9562 **`uuidv7()`**, defaults to **`substream=p`**, supports **`publish_generated_columns=stored`**, and tracks **7 `confl_*` counters**.
 
 In controlled `pg18-standalone` A/B probes, we measure the AIO latency shift $\Delta_{\text{AIO}}$ and PG 18 vs PG 17 throughput speedup $S_{18/17}$ as:
 
@@ -29,7 +29,7 @@ $$
 \Delta_{\text{AIO}} = \frac{t_{\text{worker}} - t_{\text{sync}}}{t_{\text{sync}}} \times 100\%, \qquad S_{18/17} = \frac{\text{TPS}_{\text{PG18}}}{\text{TPS}_{\text{PG17}}}
 $$
 
-- **AIO A/B Reality:** `io_method=worker` cut cold post-checkpoint scans by **$-18.5\%$** (`829.4 ms` vs `1,018.3 ms` `sync`), while warm OS-cached reads (`385.0 ms` vs `352.5 ms`) and small `fsync` `pgbench` commits (`290.75` vs `323.98 TPS`) reflect modest worker-IPC and `data_checksums=on` overhead. `io_method=io_uring` fails with `EPERM` under default Docker seccomp.
+- **AIO A/B Reality:** `io_method=worker` cut cold scans by **$-18.5\%$** (`829.4 ms` vs `1,018.3 ms` `sync`). Warm cached reads (`385.0 ms` vs `352.5 ms`) and small commits (`290.75` vs `323.98 TPS`) reflect worker-IPC and `data_checksums=on` overhead. `io_method=io_uring` fails with `EPERM` under default Docker seccomp.
 - **Active-Active `uuidv7()` & Honest Native Boundaries:** `uuidv7()` achieved **50/50 dual-node active-active convergence** (`0` `SQLSTATE 23505`, `0` B-tree inversions), outperforming naive `SERIAL`. However, **logical sequence replication is still absent in PostgreSQL 18.6**: `FOR ALL SEQUENCES` and `REFRESH SEQUENCES` raise **`SQLSTATE 42601`** (deferred to PostgreSQL 19), leaving subscriber sequences at `1|false` -> `SQLSTATE 23505` until manual `setval()`. Automatic LWW/CRDT and DDL replication remain absent.
 
 | Capability / Default | PostgreSQL 16 | PostgreSQL 17 (`17.11`) | PostgreSQL 18 (`18.6`) |
@@ -116,7 +116,7 @@ Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 
 - **Maintenance Level:** **Tier S (Core)** + **Tier A (Active OSS)** -- `postgres/postgres` (`3446`/12m, `58*` mirror committers per `APP-007`, not total patch authors) and `patroni/patroni` (`142`/12m, `246` contributors, `68` issues).
 - **Currency / Freshness:** **Current -- Daily Active** -- Last push `2026-11-20T16:52:40Z` / `2026-11-20T17:03:56Z`, `3446` / `142` commits/12m, latest releases `REL_19_0` / `v4.1.5`.
-- **Operational Manageability:** **Low Risk** -- Multi-vendor core + MIT HA; adapt `PGDATA=/var/lib/postgresql/18/docker`, `io_uring` seccomp, and `setval()` runbooks until PG 19.
+- **Operational Manageability:** **Low Risk** -- Multi-vendor core and MIT HA. Update `PGDATA=/var/lib/postgresql/18/docker`, `io_uring` seccomp, and `setval()` runbooks until PG 19.
 
 ---
 

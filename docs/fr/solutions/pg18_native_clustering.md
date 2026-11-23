@@ -21,7 +21,7 @@
 
 ## 1. Présentation et principes de fonctionnement (PG 16 vs PG 17 vs PG 18)
 
-**PostgreSQL 18.6** modernise le stockage, les E/S et la réplication logique sans changer la physique de la réplication. Il ajoute un **sous-système AIO** (`io_method=worker`, `io_workers=3`), active **`data_checksums=on`** à l'`initdb`, place Docker sous `PGDATA=/var/lib/postgresql/18/docker`, intègre **`uuidv7()`** (RFC 9562) pour les PK actif-actif, active **`substream=p`**, ajoute **`publish_generated_columns=stored`** (`s`) et étend **`pg_stat_subscription_stats`** à **7 compteurs `confl_*`** dont `confl_multiple_unique_conflicts`.
+**PostgreSQL 18.6** modernise le stockage, les E/S et la réplication logique sans changer la physique de la réplication. Il ajoute l'**AIO** (`io_method=worker`, `io_workers=3`), active **`data_checksums=on`** à l'`initdb` et place Docker sous `PGDATA=/var/lib/postgresql/18/docker`. Il fournit aussi **`uuidv7()`** (RFC 9562), active **`substream=p`**, ajoute **`publish_generated_columns=stored`** et suit **7 compteurs `confl_*`**.
 
 Sur les sondes A/B (`pg18-standalone`), l'écart AIO $\Delta_{\text{AIO}}$ et le gain $S_{18/17}$ s'écrivent :
 
@@ -29,7 +29,7 @@ $$
 \Delta_{\text{AIO}} = \frac{t_{\text{worker}} - t_{\text{sync}}}{t_{\text{sync}}} \times 100\%, \qquad S_{18/17} = \frac{\text{TPS}_{\text{PG18}}}{\text{TPS}_{\text{PG17}}}
 $$
 
-- **Réalité A/B AIO :** `io_method=worker` réduit les scans froids de **$-18,5\%$** (`829.4 ms` vs `1,018.3 ms` `sync`), tandis que le cache OS chaud (`385.0 ms` vs `352.5 ms`) et `pgbench` (`290.75` vs `323.98 TPS`) paient un léger surcoût IPC et `data_checksums=on`. `io_method=io_uring` échoue (`EPERM`) sous le seccomp Docker par défaut.
+- **Réalité A/B AIO :** `io_method=worker` réduit les scans froids de **$-18,5\%$** (`829.4 ms` vs `1,018.3 ms` `sync`). Le cache chaud (`385.0 ms` vs `352.5 ms`) et `pgbench` (`290.75` vs `323.98 TPS`) paient le surcoût IPC et `data_checksums=on`. `io_method=io_uring` échoue (`EPERM`) sous le seccomp Docker par défaut.
 - **`uuidv7()` et limites natives :** `uuidv7()` converge à **50/50 en actif-actif** (`0` `SQLSTATE 23505`, `0` inversion B-tree) vs `SERIAL`. Mais **la sync logique des séquences reste absente en PG 18.6** : `FOR ALL SEQUENCES` et `REFRESH SEQUENCES` lèvent **`SQLSTATE 42601`** (reporté à PG 19), laissant l'abonné à `1|false` -> `SQLSTATE 23505` sans `setval()`. Aucun LWW/CRDT ni DDL auto.
 
 | Capacité / Défaut | PostgreSQL 16 | PostgreSQL 17 (`17.11`) | PostgreSQL 18 (`18.6`) |
@@ -116,7 +116,7 @@ Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf 
 
 - **Niveau de maintenance :** **Niveau S (Cœur)** + **Niveau A (OSS Actif)** -- `postgres/postgres` (`3446`/12m, `58*` committeurs miroir selon `APP-007`) et `patroni/patroni` (`142`/12m, `246` contributeurs, `68` issues).
 - **Fraîcheur / Actualité :** **À jour -- Actif au quotidien** -- Dernier push `2026-11-20T16:52:40Z` / `2026-11-20T17:03:56Z`, `3446` / `142` commits/12m, dernières versions `REL_19_0` / `v4.1.5`.
-- **Maintenabilité opérationnelle :** **Risque faible** -- Cœur multi-éditeurs + HA MIT ; adapter `PGDATA=/var/lib/postgresql/18/docker`, seccomp (`io_uring`) et `setval()` jusqu'à PG 19.
+- **Maintenabilité opérationnelle :** **Risque faible** -- Cœur multi-éditeurs et HA MIT. Adapter `PGDATA=/var/lib/postgresql/18/docker`, seccomp (`io_uring`) et `setval()` jusqu'à PG 19.
 
 ---
 
