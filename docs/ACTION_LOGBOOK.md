@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-228 - Refactor Chapter 11 FR for 0 STE Errors (`#629`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#629` (`docs/issue-629-ch11-fr`)
+- **Request / Changes / Result**: Refactored `docs/fr/11_popularite_et_vitalite_ecosysteme.md` for full-file 0 STE mixed-mode errors, 0 `via`, and 0 weak modals while keeping GitHub popularity figures, charts, and anchors intact; Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-227 - Refactor Chapter 10 FR for 0 STE Errors (`#627`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#627` (`docs/issue-627-ch10-fr`)
 - **Request / Changes / Result**: Refactored `docs/fr/10_comparatif_streaming_logique_multimaster.md` for full-file 0 STE mixed-mode errors, 0 `via`, and 0 weak modals while keeping comparisons, Mermaid diagrams, and anchors intact; Windows unittest and WSL `make test lint check-math check-security` pass.
