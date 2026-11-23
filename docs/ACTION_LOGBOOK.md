@@ -29,6 +29,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-256 - Configure MkDocs Material Theme, KaTeX, and Diataxis Navigation (`#685`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#685` (`feat/issue-685-mkdocs-material-config`)
+- **Request / Changes / Result**: Added `mkdocs.yml` (`site_url: https://postgresql-cluster.lightpath.fr/`, LightPath indigo/cyan Material theme, KaTeX, Mermaid, GFM TOC, Diataxis 4-quadrant navigation covering all 72 Markdown docs plus `dashboard/index.html`), `docs/javascripts/katex.js`, and `docs/stylesheets/extra.css`; `mkdocs build --strict`, Windows `35/35`, and WSL `make test lint check-math check-security pages-check` pass (`< 14,800` B PR diff).
+
 ### ACT-255 - Add MkDocs Hooks, Docs Dependencies, and Gitignore Entry (`#683`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#683` (`feat/issue-683-mkdocs-material-config`)
 - **Request / Changes / Result**: Added `requirements-docs.txt`, `site/` to `.gitignore`, and `scripts/mkdocs_hooks.py` (`gfm_slugify`, virtual root overviews, `assets/`/`dashboard/` staging, alert conversion, relative link/HTML `src` rewriting); Windows `35/35` and WSL `make test lint check-math check-security pages-check` pass (`< 14,800` B PR diff, `< 14,000` B script cap).
