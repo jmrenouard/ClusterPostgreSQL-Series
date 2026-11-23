@@ -19,7 +19,7 @@
 
 ## 1. Technology Description & What It Does
 
-**PgPool-II** is a C-based PostgreSQL wire-protocol middleware proxy (`libpq` compatible) positioned between application clients and backend PostgreSQL servers. It provides connection pooling (`num_init_children * max_pool`), SQL-parsed read/write query routing, automated backend health checks, failover hooks, online node recovery (`pcp_recovery_node`), and optional **Watchdog** cluster quorum across multiple proxy instances.
+**PgPool-II** is a C-based PostgreSQL wire-protocol middleware proxy (`libpq` compatible) positioned between application clients and backend PostgreSQL servers. It adds pooling (`num_init_children * max_pool`), SQL read/write routing, health checks, and failover hooks. It also supports online node recovery (`pcp_recovery_node`) and optional **Watchdog** quorum.
 
 Crucially, PgPool-II spans fundamentally incompatible replication modes that must never be conflated. In modern production deployments (**Streaming Replication Mode**, matching the companion Docker PoC), PgPool-II fronts a **single writable primary** plus read-only WAL standbys (`not multi-master`). Only its legacy **Native Replication Mode** (SQL statement broadcast) and **Snapshot Isolation (SI) Mode** attempt multi-node active writes at the proxy layer.
 
@@ -45,14 +45,14 @@ flowchart TB
 
 ## 3. Operating Principles & Implementation Modes
 
-1. **Connection Pooling & SQL Parser Routing:** PgPool-II pre-forks `num_init_children` (`32` in PoC) worker processes, each caching up to `max_pool` (`4`) backend user/database tuples (`connection_cache = on`). In `streaming_replication` mode with `load_balance_mode = on`, its SQL parser directs `INSERT`/`UPDATE`/`DELETE`/DDL and explicit `BEGIN` write transactions to the primary while balancing read-only `SELECT`s across nodes within `sr_check_period` (`5 s`) lag limits.
+1. **Connection Pooling & SQL Parser Routing:** PgPool-II pre-forks `num_init_children` (`32` in PoC) worker processes, each caching up to `max_pool` (`4`) backend user/database tuples (`connection_cache = on`). In `streaming_replication` with `load_balance_mode = on`, its parser sends writes, DDL, and `BEGIN` blocks to the primary. It balances read-only `SELECT`s within `sr_check_period` (`5 s`) lag limits.
 2. **Statement-Broadcast vs. Streaming Latency Model:**
 
 $$
 L_{\text{PgPool-Stream-RW}} \approx L_{\text{disk}} + L_{\text{proxy}}, \qquad L_{\text{PgPool-Broadcast/SI}} \approx L_{\text{disk}} + \text{RTT}_{\text{max-backend}} + L_{\text{lock/SI}}
 $$
 
-3. **Watchdog Quorum & Online Recovery:** Production clusters run `>= 3` PgPool-II nodes with `use_watchdog = on` to avoid a single-proxy SPOF and split-brain failover, using `pcp_recovery_node` (`pg_basebackup`) to re-attach failed standbys automatically.
+3. **Watchdog Quorum & Recovery:** Production needs `>= 3` PgPool-II nodes with `use_watchdog = on` to eliminate single-proxy SPOF. Then `pcp_recovery_node` runs `pg_basebackup` to rebuild failed standbys.
 
 | Mode (`backend_clustering_mode`) | Write Topology | Mechanics & Key Strategy | Conflict / Non-Determinism / RPO | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
@@ -77,7 +77,7 @@ $$
 
 ## 5. Architectural Exclusion, PoC Spec & Reference Baseline
 
-**Why `#11 PgPool-II` Was Not Live-Benchmarked:** In `ClusterPostgreSQL-Series` (`Makefile` `PG_STACKS`, `stacks/README.md`), the 10 live-benchmarked stacks isolate core replication engines (`#15b Patroni`, `pg17-async-streaming`, `pg17-sync-streaming`, `#1`–`#9`) without mixing middleware proxy overhead or deprecated statement-broadcast anomalies into `results/*.csv`. Meanwhile, the companion PoC (`env/multi-db-docker-env/docker-compose-pgpool.yml`) validates functional `streaming_replication` (`pgpool/pgpool:4.6`, `num_init_children=32`, `max_pool=4`, `connection_cache=on`, `load_balance_mode=on`, `sr_check_period=5`, `health_check_period=10`, `health_check_max_retries=3`, `failover_on_backend_error=off`, `pg_node1..3` on `5611..5613`, HAProxy `5100`/`5101`/`8406`). Zero synthetic TPS or latency values are invented for `#11` (and 99th-percentile latency is not recorded in `results/`).
+**Why `#11 PgPool-II` Was Not Live-Benchmarked:** The `Makefile` `PG_STACKS` benchmarks isolate core engines (`#15b`, `#1`–`#9`) without mixing proxy cost into `results/*.csv`. Meanwhile, the companion PoC (`env/multi-db-docker-env/docker-compose-pgpool.yml`) validates functional `streaming_replication` (`pgpool/pgpool:4.6`, `num_init_children=32`, `max_pool=4`, `connection_cache=on`, `load_balance_mode=on`, `sr_check_period=5`, `health_check_period=10`, `health_check_max_retries=3`, `failover_on_backend_error=off`, `pg_node1..3` on `5611..5613`, HAProxy `5100`/`5101`/`8406`). Zero synthetic TPS or latency values are invented for `#11` (and 99th-percentile latency is not recorded in `results/`).
 
 Instead, PgPool-II's streaming vs. multi-node write behavior anchors directly onto the live-benchmarked baselines in `results/benchmark_summary.csv`:
 
@@ -99,7 +99,7 @@ Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 
 - **Maintenance Level:** **Tier B (Niche)** -- The `pgpool/pgpool2` mirror logs `140` commits/12m (`4,627` total, `35` mirror committers per `APP-007`, `448` stars, `89` open issues).
 - **Currency / Freshness:** **Current -- Steady** -- Last push `2026-11-18T04:00:10Z`, `140` commits/12m, latest release `V4_7_3`.
-- **Operational Manageability:** **Moderate** -- Steady C proxy (`Pgpool-II` / `NOASSERTION` SPDX); use streaming mode with Watchdog quorum and avoid deprecated statement broadcast.
+- **Operational Manageability:** **Moderate** -- Steady C proxy (`Pgpool-II` license, `NOASSERTION` SPDX). Use streaming mode with Watchdog quorum and avoid statement broadcast.
 
 ---
 

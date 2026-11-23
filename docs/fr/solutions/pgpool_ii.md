@@ -19,7 +19,7 @@
 
 ## 1. Description de la technologie et rôle
 
-**PgPool-II** est un proxy middleware écrit en C compatible avec le protocole filaire PostgreSQL (`libpq`), intercalé entre les applications et les serveurs PostgreSQL. Il assure le pooling de connexions (`num_init_children * max_pool`), le routage lecture/écriture par analyse SQL, la détection de pannes, les scripts de bascule, la réintégration en ligne (`pcp_recovery_node`) et un quorum **Watchdog** multi-proxys.
+**PgPool-II** est un proxy middleware écrit en C compatible avec le protocole filaire PostgreSQL (`libpq`), intercalé entre les applications et les serveurs PostgreSQL. Il assure le pooling (`num_init_children * max_pool`), le routage R/W, les sondes santé et la bascule. Il gère aussi `pcp_recovery_node` et le quorum **Watchdog** multi-proxys.
 
 Point critique : PgPool-II couvre des modes de réplication incompatibles qu'il ne faut jamais confondre. En production moderne (**mode Streaming Replication**, utilisé dans le PoC Docker compagnon), PgPool-II pilote un **primaire unique** et des standbys en lecture seule (`pas multi-maîtres`). Seuls ses modes historiques **Native Replication** (diffusion d'instructions SQL) et **Snapshot Isolation (SI)** tentent l'écriture multi-nœuds côté proxy.
 
@@ -27,7 +27,7 @@ Point critique : PgPool-II couvre des modes de réplication incompatibles qu'il 
 
 ## 2. Architecture et flux de données
 
-Dans `env/multi-db-docker-env/docker-compose-pgpool.yml`, `haproxy_pgpool` (`10.8.0.100`) expose RW (`:5100`), RO (`:5101`) et stats (`:8406`) vers `pgpool` (`10.8.0.20:9999`), qui répartit les requêtes sur `pg_node1..3` (`10.8.0.11..13:5432`) en mode `streaming_replication` (la production ajoute un anneau Watchdog à 3 proxys) :
+Dans `docker-compose-pgpool.yml`, `haproxy_pgpool` (`10.8.0.100`) expose `:5100`/`:5101`/`:8406` vers `pgpool` (`10.8.0.20:9999`). Celui-ci répartit les requêtes sur `pg_node1..3` en mode `streaming_replication` :
 
 ```mermaid
 flowchart TB
@@ -45,14 +45,14 @@ flowchart TB
 
 ## 3. Principes de fonctionnement et modes d'implémentation
 
-1. **Pooling et routage par parseur SQL :** PgPool-II pré-forke `num_init_children` (`32` dans le PoC) processus, chacun conservant jusqu'à `max_pool` (`4`) connexions backend par couple utilisateur/base (`connection_cache = on`). En `streaming_replication` avec `load_balance_mode = on`, le parseur envoie `INSERT`/`UPDATE`/`DELETE`/DDL et transactions `BEGIN` d'écriture au primaire tout en équilibrant les `SELECT` dans la limite de retard `sr_check_period` (`5 s`).
+1. **Pooling et routage par parseur SQL :** PgPool-II pré-forke `num_init_children` (`32` dans le PoC) processus, chacun conservant jusqu'à `max_pool` (`4`) connexions backend par couple utilisateur/base (`connection_cache = on`). En `streaming_replication` avec `load_balance_mode = on`, le parseur envoie écritures, DDL et `BEGIN` au primaire. Il répartit les `SELECT` sous le seuil de retard `sr_check_period` (`5 s`).
 2. **Modèle de latence Streaming vs Diffusion :**
 
 $$
 L_{\text{PgPool-Stream-RW}} \approx L_{\text{disque}} + L_{\text{proxy}}, \qquad L_{\text{PgPool-Diffusion/SI}} \approx L_{\text{disque}} + \text{RTT}_{\text{max-backend}} + L_{\text{verrou/SI}}
 $$
 
-3. **Quorum Watchdog et réintégration en ligne :** En production, `>= 3` nœuds PgPool-II avec `use_watchdog = on` suppriment le SPOF proxy et les bascules split-brain, tandis que `pcp_recovery_node` (`pg_basebackup`) resynchronise un standby déchu.
+3. **Quorum Watchdog et reprise :** En production, `>= 3` nœuds PgPool-II avec `use_watchdog = on` évitent le SPOF proxy. Ensuite `pcp_recovery_node` lance `pg_basebackup` pour reconstruire un standby.
 
 | Mode (`backend_clustering_mode`) | Topologie d'écriture | Mécanique et stratégie | Conflit / Non-déterminisme / RPO | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
@@ -77,7 +77,7 @@ $$
 
 ## 5. Exclusion architecturale, spécification PoC et base de référence
 
-**Pourquoi `#11 PgPool-II` n'a pas été benchmarké en direct :** Dans `ClusterPostgreSQL-Series` (`Makefile` `PG_STACKS`, `stacks/README.md`), les 10 stacks benchmarkées isolent les moteurs de réplication natifs (`#15b Patroni`, `pg17-async-streaming`, `pg17-sync-streaming`, `#1`–`#9`) sans mélanger le coût d'un proxy middleware ni la diffusion SQL déconseillée dans `results/*.csv`. Le PoC compagnon (`env/multi-db-docker-env/docker-compose-pgpool.yml`) valide uniquement le mode fonctionnel `streaming_replication` (`pgpool/pgpool:4.6`, `num_init_children=32`, `max_pool=4`, `connection_cache=on`, `load_balance_mode=on`, `sr_check_period=5`, `health_check_period=10`, `health_check_max_retries=3`, `failover_on_backend_error=off`, `pg_node1..3` sur `5611..5613`, HAProxy `5100`/`5101`/`8406`). Aucun chiffre synthétique de TPS ou latence n'est inventé pour `#11` (et la latence au 99e percentile n'est pas enregistrée dans `results/`).
+**Pourquoi `#11 PgPool-II` reste hors benchmark direct :** Les stacks `PG_STACKS` isolent les moteurs de réplication natifs (`#15b`, `#1`–`#9`) sans coût proxy dans `results/*.csv`. Le PoC compagnon (`env/multi-db-docker-env/docker-compose-pgpool.yml`) valide uniquement le mode fonctionnel `streaming_replication` (`pgpool/pgpool:4.6`, `num_init_children=32`, `max_pool=4`, `connection_cache=on`, `load_balance_mode=on`, `sr_check_period=5`, `health_check_period=10`, `health_check_max_retries=3`, `failover_on_backend_error=off`, `pg_node1..3` sur `5611..5613`, HAProxy `5100`/`5101`/`8406`). Aucun chiffre synthétique de TPS ou latence n'est inventé pour `#11` (et la latence au 99e percentile n'est pas enregistrée dans `results/`).
 
 Les profils Streaming vs écriture multi-nœuds de PgPool-II s'ancrent directement sur les références mesurées de `results/benchmark_summary.csv` :
 
@@ -99,7 +99,7 @@ Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf 
 
 - **Niveau de maintenance :** **Niveau B (Niche)** -- Le miroir `pgpool/pgpool2` enregistre `140` commits/12m (`4 627` total, `35` committeurs miroir selon `APP-007`, `448` stars, `89` issues).
 - **Fraîcheur / Actualité :** **À jour -- Régulier** -- Dernier push `2026-11-18T04:00:10Z`, `140` commits/12m, dernière version `V4_7_3`.
-- **Maintenabilité opérationnelle :** **Modéré** -- Proxy C régulier (licence Pgpool / SPDX `NOASSERTION`) ; privilégier le mode streaming avec Watchdog et proscrire la diffusion SQL.
+- **Maintenabilité opérationnelle :** **Modéré** -- Proxy C régulier (licence Pgpool, SPDX `NOASSERTION`). Utiliser le mode streaming avec Watchdog et proscrire la diffusion SQL.
 
 ---
 

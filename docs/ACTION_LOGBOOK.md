@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-241 - Refactor pgpool_ii EN/FR Sheets (`#655`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#655` (`docs/issue-655-pgpool-ii`)
+- **Request / Changes / Result**: Refactored `docs/{en,fr}/solutions/pgpool_ii.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-240 - Refactor yugabytedb EN/FR Sheets (`#653`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#653` (`docs/issue-653-yugabytedb`)
 - **Request / Changes / Result**: Refactored `docs/{en,fr}/solutions/yugabytedb.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.
