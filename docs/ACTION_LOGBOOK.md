@@ -20,6 +20,7 @@
 | **Phase 11** | Interactive PACELC Selector & GitHub Pages Explorer (`#496-#507`) | PACELC catalog/engine/UI, Node+parity tests, `make pages-build`/`pages-check`, EN/FR docs; `.github/workflows/pages.yml` tracked in `#506` (`RCA-003`) | Complete (`#506` pending `workflow` scope) | `make dashboard && make pages-build && make pages-check && make test && make lint` |
 | **Phase 12** | Ponytail Quality Audit, Chart/Dashboard Refactoring, Unit Hardening & Submodule `v2.6.2` (`#509-#563`) | Audited Makefile targets, pruned 14 shadowed scripts, fixed collector/builder/chart bugs, extracted `LPUtil`, regenerated charts/shards, reconciled PACELC hooks, added Python/Node unit tests, bumped submodule `v2.6.2` | Complete | `make test && make lint && make pages-check` |
 | **Phase 13** | Diataxis Portal, Repo-Wide STE Remediation, Hygiene Gate & Submodule `v2.6.3` (`#565-#681`) | Refactored `README*`, `stacks/README.md`, Ch. `01`-`13` EN/FR, and all `38` solution sheets to 0 STE errors/weak modals/prose `via`; added `docs/index.md` + `tests/test_docs_hygiene.py`; synced submodule `v2.6.3` | Complete | `make test && make lint && make check-math && make check-security && make pages-check` |
+| **Phase 14** | MkDocs Material Portal & IONOS Automated Publishing (`#683-#689`) | Configured MkDocs Material, KaTeX, Mermaid, hooks, `.htaccess` builder/verifier, `Makefile` targets, unit tests, and GitHub Actions SFTP deploy to `postgresql-cluster.lightpath.fr` | Complete | `make docs-check`, `unittest`, live HTTPS |
 
 ## 1. Ongoing Actions (`IN PROGRESS`)
 
@@ -28,6 +29,10 @@
 | *None* | - | - | - | All tracked actions archived below once verified. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-258 - Add IONOS GitHub Actions Publish Workflow and MkDocs Unit Tests (`#689`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#689` (`feat/issue-689-mkdocs-ionos-publish`)
+- **Request / Changes / Result**: Added `.github/workflows/docs-publish.yml` (IONOS SFTP deploy + HTTPS smoke checks), `tests/test_mkdocs_publishing.py`, and `Phase 14`; Windows `40/40` and WSL `make test lint check-math check-security pages-check` pass.
 
 ### ACT-257 - Add MkDocs Site Builder CLI, Makefile Targets, and RCA-030 (`#687`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#687` (`feat/issue-687-mkdocs-ionos-publish`)
