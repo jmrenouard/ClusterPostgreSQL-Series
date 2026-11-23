@@ -30,6 +30,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-264 - Add TDE Metadata Row to Batch 2 Solution Sheets (`#701`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#701` (`docs/issue-701-tde-sheets-batch-2`)
+- **Request / Changes / Result**: Added `TDE / Encryption at Rest` / `TDE / Chiffrement au repos` metadata rows linking Ch. 14 across 5 EN/FR pairs (`pgedge_spock` tightened `< 13,950` B, `pglogical2`, `edb_pgd`, `citus`, `yt_cluster_lite`); STE/STF, Windows `40/40`, MkDocs, and WSL checks pass (`< 14,800` B PR diff).
+
 ### ACT-263 - Add TDE Metadata Row to Batch 1 Solution Sheets (`#699`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#699` (`docs/issue-699-tde-sheets-batch-1`)
 - **Request / Changes / Result**: Added `TDE / Encryption at Rest` / `TDE / Chiffrement au repos` metadata rows linking Ch. 14 across 5 EN/FR pairs (`pg17_standalone`, `pg17_physical_streaming_patroni` tightened `< 13,950` B, `pg17_logical_unidirectional`, `pg17_bidirectional_logical`, `pg18_native_clustering`); STE/STF, Windows `40/40`, MkDocs, and WSL checks pass (`< 14,800` B PR diff).

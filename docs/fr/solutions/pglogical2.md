@@ -14,6 +14,7 @@
 | **Versions** | `pglogical 2.4.x` (`PG 9.4–16/17` ; statut maintenance sous PG 17) |
 | **Profil CAP / PACELC** | `AP / PA-EL` — réplication logique asynchrone (commit synchrone optionnel) |
 | **Licence / Déploiement** | PostgreSQL License (2ndQuadrant / EDB) / extension C (`shared_preload_libraries = 'pglogical'`) |
+| **TDE / Chiffrement au repos** | Absent cœur PG ; LUKS OS ou KMS disque cloud + `hostssl` + `pgBackRest` AES ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 

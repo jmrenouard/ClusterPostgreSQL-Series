@@ -16,6 +16,7 @@
 | **Mécanisme** | Triggers par table `yt_synchronize` + hook `yt_cluster.c` `XACT_EVENT_PRE_COMMIT` -> gRPC Unix -> démon Rust `ytserv` Leader `checkin` + XA `PREPARE`/`COMMIT PREPARED` (`max_prepared_transactions >= 100`) |
 | **Séparation Licence** | Cœur embarqué **MIT** (`DBinvent/yt-cluster-lite` : extension `ytpgc` + Protobuf + feuille mono-BD `yt-lite`) vs `ytserv` + `ytctl` fermés (**PolyForm Noncommercial 1.0.0 / Commercial**, [`agent.md`](https://dbinvent.com/agent.md)) |
 | **Stack Docker PoC** | `docker-compose-yt-cluster.yml` (3 nœuds actif-actif [`dbinvent/yt:1.21.3`](https://hub.docker.com/r/dbinvent/yt) `yt1`/`yt2`/`yt3`, ports `5491-5493`, `min_cluster_size=2`) |
+| **TDE / Chiffrement au repos** | Absent cœur PG 18.7 ; LUKS OS sur PG + `ytserv`, mTLS pairs + sauvegardes AES ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 

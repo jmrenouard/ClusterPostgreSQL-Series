@@ -14,6 +14,7 @@
 | **Versions** | `PostgreSQL 17.10` (`citusdata/citus:14.2.0-pg17`), `Citus 14.2.0` (`citus_version()`) |
 | **CAP / PACELC Profile** | `CP / PC-EC` (`CP (Coord SPOF / 2PC)` — single coordinator + 2PC; MX optional) |
 | **License / Deployment** | AGPLv3 (Open Source) / 3 containers (`docker-compose-citus.yml`) |
+| **TDE / Encryption at Rest** | None in OSS (`pg_tde` opt.); OS/LUKS or Azure CMK + 2PC TLS + `pgBackRest` AES ([Ch. 14](../14_transparent_data_encryption_tde.md)) |
 
 ---
 

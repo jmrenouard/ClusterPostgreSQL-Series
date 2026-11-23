@@ -14,14 +14,15 @@
 | **Versions** | `PostgreSQL 17.12` (`pgedge-postgres:17-spock5-minimal`), `Spock 5.0.14`, `Snowflake 2.6.1`, `HAProxy 2.9` (`haproxy:2.9-alpine`) |
 | **CAP / PACELC Profile** | `AP / PA-EL` — asynchronous 3-node active-active mesh (LWW or CRDT Delta-Apply) |
 | **License / Deployment** | PostgreSQL License / GPL-2.0 (HAProxy) / 4 containers (`docker-compose-pgedge.yml`) |
+| **TDE / Encryption at Rest** | None in `spock`; OS/LUKS + `verify-full` + AES repo ([Ch. 14](../14_transparent_data_encryption_tde.md)) |
 
 ---
 
 ## 1. Technology Description & What It Does
 
-**pgEdge / Spock** (`pglogical` fork, PG 15–17) runs `spock` (`5.0.14`) for mesh replication, conflicts, and auto-DDL, plus `snowflake` (`2.6.1`) for 64-bit K-sortable PKs.
+**pgEdge / Spock** (`pglogical` fork, PG 15–17) runs `spock` (`5.0.14`) for mesh, conflicts, and auto-DDL, plus `snowflake` (`2.6.1`) for 64-bit PKs.
 
-Unlike `#1 pg-birep` (halts on `23505`), Spock stays writable using `last_update_wins` (`transdiscard`) or `spock.delta_apply` CRDT. Ecosystem `lolor` (`Ch. 03a`) is unloaded and untested.
+Unlike `#1 pg-birep` (halts on `23505`), Spock uses `last_update_wins` (`transdiscard`) or `spock.delta_apply`. `lolor` (`Ch. 03a`) stays unloaded.
 
 ---
 
