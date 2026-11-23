@@ -8,7 +8,7 @@
 
 ## 1. Harnais d'exécution et isolation expérimentale
 
-Les **628 lignes brutes de benchmarks** (**310 lignes baseline** à `PG_SCALE=2` / **301 dédupliquées** sur **17 topologies**, plus **318 lignes V5 optimisées** à `PG_SCALE=20` sur **18 topologies** incl. `cockroach-rc`) sont produites séquentiellement sur hôte Docker WSL2 (20 vCPU, 16,4 Gio RAM) par quatre scripts de `env/multi-db-docker-env` (`v2.4.1` -> **`v2.6.1`**) :
+Quatre scripts de `env/multi-db-docker-env` (`v2.4.1` -> **`v2.6.1`**) produisent **628 lignes brutes** sur hôte Docker WSL2 (20 vCPU, 16,4 Gio RAM). Ils collectent **310 lignes baseline** à `PG_SCALE=2` (**301 dédupliquées**, **17 topologies**) et **318 lignes V5 optimisées** à `PG_SCALE=20` (**18 topologies**, incl. `cockroach-rc`) :
 - `scripts/bench_pg_v2_runner.sh` : **187 lignes** sur 10 topologies PG 17 et SQL distribué (`results/benchmark_summary.csv` `70`, `results/benchmark_extended_workloads.csv` `40`, `results/benchmark_wan_sweep.csv` `27`, `results/benchmark_concurrency_sweep.csv` `50`).
 - `scripts/bench_pg18_runner.sh` : **87 lignes** sur 5 topologies natives PG 18.6 (`results/benchmark_pg18.csv`).
 - `scripts/bench_yt_runner.sh` : **36 lignes** (`18` `yt-cluster` `cc=half` + `18` `yt-cluster-async` `cc=nodes>=0`) sur 3 nœuds PG 18.7 (`results/benchmark_yt_cluster.csv`).
@@ -16,7 +16,7 @@ Les **628 lignes brutes de benchmarks** (**310 lignes baseline** à `PG_SCALE=2`
 
 - **Isolation stricte :** Une seule pile tourne à la fois (`up -> setup -> chauffe -> suites -> down -v`) pour exclure toute contention RAM/NVMe entre RocksDB, Pebble, `ytserv` et `shared_buffers`.
 - **Zéro biais NAT :** `pgbench` et `sysbench` tournent dans un conteneur éphémère `bench_client` (`multi-db-pgbench-sysbench:latest`) relié au pont Docker interne de chaque cluster (`--cap-add NET_ADMIN`).
-- **Parité de jeu et réconciliation :** Les baselines tournent à `PG_SCALE = 2` (`200 000` comptes, `sysbench 4x10k`), tandis que V5 passe à `PG_SCALE = 20` (`2 000 000` comptes, `sysbench 4x25k`). Entre chaque suite d'écriture, `reset_ds()` réinitialise les soldes ; `conv_chk()` contrôle `SUM(abalance) - SUM(delta)` sur chaque nœud (`balance_drift`).
+- **Parité de jeu et réconciliation :** Les baselines tournent à `PG_SCALE = 2` (`200 000` comptes, `sysbench 4x10k`), tandis que V5 passe à `PG_SCALE = 20` (`2 000 000` comptes, `sysbench 4x25k`). Entre chaque suite d'écriture, `reset_ds()` réinitialise les soldes. Ensuite, `conv_chk()` contrôle `SUM(abalance) - SUM(delta)` sur chaque nœud (`balance_drift`).
 - **Latence exacte (`p95`) :** Les journaux par transaction (`pgbench -l`) fournissent moyenne, écart-type et 95e centile (`lat_p95_ms`).
 
 ---
@@ -56,26 +56,26 @@ Chaque suite `pgbench` utilise `-n -r --max-tries=100 --failures-detailed -l` po
 
 La validation croisée exécute `sysbench --db-driver=pgsql --tables=4 --table-size=10000` sur quatre profils Lua : **`E_sysbench_oltp_rw`** (`oltp_read_write`, `8` threads, `15–20 s`), **`E2_sysbench_oltp_ro`** (`oltp_read_only`, `8` threads, `12 s`), **`E3_sysbench_oltp_wo`** (`oltp_write_only`, `8` threads, `12 s`) et **`E4_sysbench_point_select`** (`oltp_point_select`, `16` threads, `12 s`).
 
-- **Contraste critique `40001` et `55000` asynchrone :** Contrairement à MySQL (`--mysql-ignore-errors=all`), `sysbench --db-driver=pgsql` ne ré-essaie pas `SQLSTATE 40001` (`685` erreurs pour `902` commits sous CockroachDB `E`, contre `0` erreur en `READ COMMITTED` YugabyteDB `128,24 TPS`). Sur `yt-cluster-async`, réutiliser les tables `sbtest` après `E` déclenche `SQLSTATE 55000` (`recon` bloqué) ; une préparation isolée `prep_sb()` mesure **`133,55 TPS` (`E3`)**. En `E4`, `yt-cluster-async` atteint **`177 442,88 TPS`** (`0,09 ms` moy.) et `pg17-async-streaming` **`148 022,41 TPS`** contre `11 557–19 831 TPS` en moteurs distribués.
+- **Contraste critique `40001` et `55000` asynchrone :** Contrairement à MySQL (`--mysql-ignore-errors=all`), `sysbench --db-driver=pgsql` ne ré-essaie pas `SQLSTATE 40001` (`685` erreurs pour `902` commits sous CockroachDB `E`, contre `0` erreur en `READ COMMITTED` YugabyteDB `128,24 TPS`). Sur `yt-cluster-async`, réutiliser les tables `sbtest` après `E` déclenche `SQLSTATE 55000` (`recon` bloqué). Une préparation isolée `prep_sb()` mesure **`133,55 TPS` (`E3`)**. En `E4`, `yt-cluster-async` atteint **`177 442,88 TPS`** (`0,09 ms` moy.) et `pg17-async-streaming` **`148 022,41 TPS`** contre `11 557–19 831 TPS` en moteurs distribués.
 
 ### 3.3 Injection de latence WAN (`F_wan_netem_10ms / 25ms / 50ms`)
 
-La physique WAN (`~20`, `~50` et `~100 ms` RTT) est émulée via `tc qdisc netem` sur les pairs/standby/workers/votants, puis retirée via `tc qdisc del dev eth0 root` (ciblant un nœud non-Leader déterministe `wn` dans `bench_yt_runner.sh` pour éviter le contournement Leader) :
+La physique WAN (`~20`, `~50` et `~100 ms` RTT) s'émule avec `tc qdisc netem` sur les pairs et se nettoie avec `tc qdisc del dev eth0 root`. Dans `bench_yt_runner.sh`, cibler un nœud non-Leader `wn` empêche le contournement Leader :
 
 ```bash
 docker run --rm --network container:<peer> --cap-add NET_ADMIN \
   multi-db-pgbench-sysbench:latest tc qdisc replace dev eth0 root netem delay 25ms
 ```
 
-À `50 ms` unidirectionnels (`~100 ms` RTT), les moteurs `PC/EC` et `ytserv` tombent à **`25,79 TPS`** (`pg17-sync-streaming`), **`8,84 TPS`** (`citus`), **`4,53 TPS`** (`cockroach`), **`3,06 TPS`** (`yugabyte`), **`2,90 TPS`** (`yt-cluster-async`) et **`1,41 TPS`** (`yt-cluster`), tandis que les piles `PA/EL` maintiennent `612,56–782,57 TPS` (`pg18-birep` `782,57`, `pgedge` `687,00`).
+À `50 ms` unidirectionnels (`~100 ms` RTT), `PC/EC` et `ytserv` tombent à **`25,79 TPS`** (`pg17-sync-streaming`), **`8,84`** (`citus`), **`4,53`** (`cockroach`), **`3,06`** (`yugabyte`), **`2,90`** (`yt-cluster-async`) et **`1,41 TPS`** (`yt-cluster`). En face, `PA/EL` maintient `612,56–782,57 TPS` (`pg18-birep` `782,57`, `pgedge` `687,00`).
 
 ---
 
 ## 4. Pourquoi les échelles logarithmiques (`log10`) sont indispensables
 
 Sur les **310 mesures brutes**, les écarts couvrent **plus de cinq ordres de grandeur** :
-- **Débit (`TPS`) :** de `1,41 TPS` (`yt-cluster`, `F_wan_netem_50ms`) à `177 442,88 TPS` (`yt-cluster-async`, `E4_sysbench_point_select`) — rapport $R_{\text{TPS}} = 177{,}442.88 / 1.41 \approx 125{,}846\times$ ($5,10$ décades ; `pgbench` `2,25` à `55 614,16 TPS` couvre $4,39$ décades).
-- **Latence (`ms`) :** de `0,090 ms` (`yt-cluster-async` `E4` moy. ; `0,110 ms` PG 17) à `12 893,483 ms` (`yt-cluster-async`, `F_wan_netem_50ms` `p95` ; `5 474,705 ms` sur `yugabyte`) — rapport $R_{\text{lat}} = 12{,}893.483 / 0.090 \approx 143{,}261\times$ ($5,16$ décades).
+- **Débit (`TPS`) :** de `1,41 TPS` (`yt-cluster`, `F_wan_netem_50ms`) à `177 442,88 TPS` (`yt-cluster-async`, `E4_sysbench_point_select`) — rapport $R_{\text{TPS}} = 177{,}442.88 / 1.41 \approx 125{,}846\times$ ($5,10$ décades, `pgbench` `2,25` à `55 614,16 TPS` couvrant $4,39$ décades).
+- **Latence (`ms`) :** de `0,090 ms` (`yt-cluster-async` `E4` moy., `0,110 ms` PG 17) à `12 893,483 ms` (`yt-cluster-async`, `F_wan_netem_50ms` `p95`, `5 474,705 ms` sur `yugabyte`) — rapport $R_{\text{lat}} = 12{,}893.483 / 0.090 \approx 143{,}261\times$ ($5,16$ décades).
 
 L'étendue $D_{\text{décades}}$ et la distance visuelle $\Delta y_{\log}$ entre deux mesures $(v_1, v_2)$ obéissent à :
 
@@ -89,7 +89,7 @@ Sur un axe linéaire à `55 614` ou `177 443 TPS`, une barre à `57,00 TPS` repr
 
 ## 5. Explorateur interactif, 13 graphiques logarithmiques et Matrice de traçabilité
 
-Explorez les **18 topologies**, **301 lignes baseline dédupliquées** (`310` brutes, `PG_SCALE=2`) et **318 lignes V5 optimisées** (`PG_SCALE=20`) via la bascule Baseline/Optimisé—avec **bascule `log10` / linéaire**, préréglages `YT vs Multi-Maître` et `PG 18 vs PG 17`, interface EN/FR, badges de dérive, matrices `L1–L8`, `T11–T18`, `PG 18.6`, `YT`, onglet Popularité (22 entrées) et export CSV—via [**Explorateur interactif hors-ligne (`dashboard/index.html`)**](../../dashboard/index.html).
+Explorez **18 topologies**, **301 lignes baseline dédupliquées** (`310` brutes, `PG_SCALE=2`) et **318 lignes V5 optimisées** (`PG_SCALE=20`) dans [**Explorateur interactif hors-ligne (`dashboard/index.html`)**](../../dashboard/index.html). Il inclut bascule Baseline/Optimisé, axes `log10`/linéaire, préréglages, UI EN/FR, matrices `L1–L8`/`T11–T18`/`PG 18.6`/`YT`, onglet Popularité et export CSV.
 
 ### 5.1 Matrice maîtresse de traçabilité Benchmarks -> Graphiques
 
@@ -131,7 +131,7 @@ Explorez les **18 topologies**, **301 lignes baseline dédupliquées** (`310` br
 
 ### Graphique 03 — Balayage de concurrence (`G_conc_c1..c32`, `log10`)
 ![Courbes de concurrence en Log10](../../assets/charts/chart_03_concurrency_sweep_log.png)
-*Courbes à 5 points (`c = 1..32`) sur 17 topologies : `pg17-standalone` (`801,27`) et `pg18-standalone` (`814,33`) croissent ; `cockroach` culmine à `c = 4` (`74,11`) ; `yt-cluster-async` atteint `91,68 -> 44,20 TPS` contre `28,07 -> 4,60 TPS` pour `yt-cluster` `cc=half`.*
+*Courbes à 5 points (`c = 1..32`) sur 17 topologies : `pg17-standalone` (`801,27`) et `pg18-standalone` (`814,33`) croissent. `cockroach` culmine à `c = 4` (`74,11`), et `yt-cluster-async` atteint `91,68 -> 44,20 TPS` contre `28,07 -> 4,60 TPS` pour `yt-cluster`.*
 
 ### Graphique 04 — Sensibilité RTT WAN (`tc netem 0/10/25/50 ms`, `log10`)
 ![Sensibilité WAN en Log10](../../assets/charts/chart_04_wan_netem_sweep_log.png)
@@ -143,7 +143,7 @@ Explorez les **18 topologies**, **301 lignes baseline dédupliquées** (`310` br
 
 ### Graphique 06 — Streaming vs Logique Natif vs Multi-Maîtres (`log10`)
 ![Comparatif Streaming vs Logique vs Multi-Maîtres](../../assets/charts/chart_06_streaming_vs_logical_vs_mm.png)
-*Compare les 17 topologies selon les 5 niveaux du Chapitre 10 entre PG 17, PG 18.6 (`pg18-logical` `844,10`, `pg18-birep` `747,42` WAN `25ms`), YT Cluster 1.21.3 et Raft.*
+*Compare les 17 topologies selon les 5 niveaux du Chapitre 10 : PG 17, PG 18.6 (`pg18-logical` `844,10`, `pg18-birep` `747,42`), YT 1.21.3 et Raft.*
 
 ### Graphique 07 — Intégrité des données vs Débit (Suite D Lignes Chaudes)
 ![Intégrité vs Débit Suite D](../../assets/charts/chart_07_integrity_vs_throughput.png)
@@ -154,10 +154,15 @@ Explorez les **18 topologies**, **301 lignes baseline dédupliquées** (`310` br
 ## 6. Extensions V3, V4 & V5 : Télémétrie (`chart_08`–`09`), PG 18.6 (`chart_10`), YT (`chart_11`) et Optimisation Production (`chart_12`–`13`)
 
 ![Popularité Écosystème Étoiles et Forks Log10](../../assets/charts/chart_08_popularity_stars_forks_log.png)
+
 ![Commits et Vitalité Écosystème Log10](../../assets/charts/chart_09_popularity_commits_activity_log.png)
+
 ![Comparatif PostgreSQL 18.6 vs PostgreSQL 17.11 Log10](../../assets/charts/chart_10_pg18_vs_pg17_log.png)
+
 ![Comparatif YT Cluster vs Multi-Maîtres et Raft Log10](../../assets/charts/chart_11_yt_cluster_vs_multimaster_log.png)
+
 ![Comparatif Log10 Baseline vs Optimisé](../../assets/charts/chart_12_baseline_vs_optimized_log.png)
+
 ![Panorama Log10 Optimisé sur 18 Topologies](../../assets/charts/chart_13_optimized_all_topologies_log.png)
 
 - **Vitalité écosystème (`chart_08`–`09`, [Ch. 11](11_popularite_et_vitalite_ecosysteme.md)) :** Télémétrie GitHub (`21` entrées / `19` dépôts publics sur `3+` décades) distinguant le socle `Tier A` (`postgres`, `cockroachdb`, `yugabytedb`, `citus`, `patroni`) d'extensions `Tier C` récentes comme `DBinvent/yt-cluster-lite` (`15` étoiles, `0` fork, `21` commits, `2` contributeurs).
