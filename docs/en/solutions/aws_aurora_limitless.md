@@ -19,15 +19,15 @@
 
 ## 1. Technology Description & What It Does
 
-**Amazon Aurora PostgreSQL** breaks PostgreSQL's coupled local-disk bottleneck using a **log-is-the-database** disaggregated storage architecture: compute instances stream redo/WAL records rather than 8 KiB dirty pages to a shared storage volume replicated **6 ways across 3 Availability Zones** (2 copies per AZ), committing on a **4/6 write quorum** (and recovering with a **3/6 read quorum**). Standard Aurora, however, remains strictly **single-writer**.
+**Amazon Aurora PostgreSQL** breaks the coupled local-disk bottleneck with **log-is-the-database** disaggregated storage. Compute instances stream redo/WAL records instead of 8 KiB pages to storage replicated **6 ways across 3 AZs**, committing at **4/6** quorum and recovering at **3/6**. Standard Aurora, however, remains strictly **single-writer**.
 
-To scale PostgreSQL write throughput horizontally across multiple nodes, AWS introduced **Aurora PostgreSQL Limitless Database** (GA 2024) using **DB Shard Groups** composed of stateless **Transaction Routers** and sharded PostgreSQL **Data Access Shards** coordinated via **AWS Time Sync Service** hardware clocks and Two-Phase Commit (2PC). This architecture replaces the earlier **Aurora Multi-Master v1** (Aurora MySQL 5.6 only, never GA on PostgreSQL, retired in 2024), which suffered severe shared-page invalidation abort storms across competing writers.
+To scale writes horizontally, AWS launched **Aurora PostgreSQL Limitless Database** (GA 2024) with **DB Shard Groups**. Stateless **Transaction Routers** coordinate sharded **Data Access Shards** using **AWS Time Sync Service** clocks and Two-Phase Commit (2PC). This architecture replaces the earlier **Aurora Multi-Master v1** (Aurora MySQL 5.6 only, never GA on PostgreSQL, retired in 2024), which suffered severe shared-page invalidation abort storms across competing writers.
 
 ---
 
 ## 2. Architecture & Data Flow
 
-An Aurora Limitless DB Shard Group routes SQL through stateless **Transaction Routers**, evaluates time-based MVCC snapshots via **AWS Time Sync Service**, and commits single-shard or 2PC multi-shard writes into Aurora's 6-way disaggregated storage layer:
+Aurora Limitless routes SQL through stateless **Transaction Routers** and reads MVCC timestamps from **AWS Time Sync Service**. It commits single-shard or 2PC multi-shard writes into Aurora's 6-way storage layer:
 
 ```mermaid
 flowchart TB
@@ -44,13 +44,13 @@ flowchart TB
     ST -.->|"Global DB Async Replication"| SEC["Secondary Region Read Replicas<br/>Global Write Forwarding -> Primary"]
 ```
 
-For cross-region topologies, **Aurora Global Database Write Forwarding** does not create active-active multi-master writers; instead, secondary read replicas forward DML over the AWS private backbone to the single primary writer under configurable session consistency (`eventual`, `session`, or `global`).
+Across regions, **Aurora Global Database Write Forwarding** does not create active-active writers. Secondary replicas forward DML over the AWS backbone to the single primary under configurable consistency (`eventual`, `session`, `global`).
 
 ---
 
 ## 3. Operating Principles & Implementation Modes
 
-1. **6-Way Disaggregated Storage Quorum:** Every 10 GiB protection group spans 6 storage nodes across 3 AZs. A commit waits for **4/6 write acknowledgments** (`RPO = 0` across 1 AZ + 1 node loss); crash recovery reads **3/6** segments to reconstruct latest LSN state without full-page replay.
+1. **6-Way Disaggregated Storage Quorum:** Every 10 GiB protection group spans 6 storage nodes across 3 AZs. A commit waits for **4/6 write acknowledgments** (`RPO = 0` across 1 AZ + 1 node loss). Recovery reads **3/6** segments to rebuild latest LSN state without full-page replay.
 2. **Time-Based MVCC & Commit Latency Model:** Limitless replaces cluster-wide `XID` coordination with physical timestamps bounded by **AWS Time Sync Service** ($\varepsilon_{\text{TimeSync}}$):
 
 $$
@@ -58,7 +58,7 @@ L_{\text{Aurora-Limitless}} \approx L_{\text{quorum-4/6}} + \text{RTT}_{\text{TR
 $$
 
 where $k_{\text{2PC}} = 0$ on single-shard writes and $k_{\text{2PC}} = 1$ on multi-shard 2PC writes.
-3. **Table Placement & Routing:** Tables are declared as `sharded` (`rds_aurora.limitless_create_sharded_table` on a shard key), `reference` (replicated across shards for local joins), or `standard` (single-shard).
+3. **Table Placement & Routing:** Declare tables as `sharded` (`rds_aurora.limitless_create_sharded_table`), `reference` (replicated across shards), or `standard` (single-shard).
 
 | Mode / Variant | Scope & Mechanism | Commit & Sync Path | Conflict / Failover | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
@@ -76,14 +76,14 @@ where $k_{\text{2PC}} = 0$ on single-shard writes and $k_{\text{2PC}} = 1$ on mu
 | :--- | :--- |
 | **Cloud-Native Horizontal PG Write Scaling:** DB Shard Groups scale writes past single-instance vCPU limits while keeping disaggregated 4/6 storage durability (`RPO = 0`). | **Proprietary AWS Lock-In & ACU Cost (`APP-005`):** Router + Shard ACU capacity pricing and closed AWS storage fabric cannot run on-premises or multi-cloud. |
 | **No Cluster-Wide `XID` Bottleneck:** Time Sync MVCC avoids centralized GTM serialization (`#8 OpenTenBase`) on single-shard and read-only queries. | **SQL, Extension & DDL Constraints:** Uses an allowlisted extension subset; shard keys are immutable and cross-shard features trail stock PostgreSQL 17. |
-| **Zero-I/O Backup & Fast Crash Recovery:** Log-is-the-database storage removes checkpoint storms and rebuilds state via 3/6 storage quorums in seconds. | **Multi-Shard 2PC & Cross-Region Limits:** Cross-shard transactions pay 2PC latency; Limitless targets intra-region AZs rather than multi-region active-active writes. |
+| **Zero-I/O Backup & Fast Crash Recovery:** Log-is-the-database storage removes checkpoint storms and rebuilds state from 3/6 storage quorums in seconds. | **Multi-Shard 2PC & Cross-Region Limits:** Cross-shard transactions pay 2PC latency; Limitless targets intra-region AZs rather than multi-region active-active writes. |
 | **Transparent Global Read Scaling:** Aurora Global Database pairs low-lag cross-region replicas with optional Write Forwarding for read-heavy global apps. | **Write Forwarding Latency & Stale Reads:** Forwarded writes pay cross-region RTT to the single primary; `global` consistency stalls replica reads until caught up. |
 
 ---
 
 ## 5. Architectural Exclusion (`APP-005`), Mode Comparison & Reference Baseline
 
-**Why `#12 AWS Aurora Limitless` Was Not Live-Benchmarked (`APP-005`):** Per `docs/RCA_REGISTER.md` (`APP-005`), Aurora PostgreSQL Limitless relies on AWS-proprietary storage, hypervisor Time Sync hardware, and managed cloud APIs that cannot be packaged in `env/multi-db-docker-env/`. Zero synthetic TPS or latency figures are invented here.
+**Why `#12 AWS Aurora Limitless` Was Not Live-Benchmarked (`APP-005`):** Per `docs/RCA_REGISTER.md` (`APP-005`), Limitless uses proprietary AWS storage, Time Sync clocks, and managed APIs absent from `env/multi-db-docker-env/`. Zero synthetic TPS or latency figures are invented here.
 
 Instead, Limitless maps directly onto our live-benchmarked `T5` (`PC/EC` sharded/consensus) and single-node control baselines in `results/benchmark_summary.csv` and `results/functional_limits_matrix.csv` (99th-percentile latency is not recorded in `results/`):
 

@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-245 - Refactor aws_aurora_limitless EN Sheet for 0 STE Errors (`#663`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#663` (`docs/issue-663-aurora-limitless-en`)
+- **Request / Changes / Result**: Refactored `docs/en/solutions/aws_aurora_limitless.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-244 - Refactor legacy_triggers FR Sheet for 0 STE Errors (`#661`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#661` (`docs/issue-661-legacy-triggers-fr`)
 - **Request / Changes / Result**: Refactored `docs/fr/solutions/legacy_triggers.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.
