@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-243 - Refactor legacy_triggers EN Sheet for 0 STE Errors (`#659`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#659` (`docs/issue-659-legacy-triggers-en`)
+- **Request / Changes / Result**: Refactored `docs/en/solutions/legacy_triggers.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams (FR split cleanly under diff cap); Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-242 - Refactor opentenbase_pgxl EN/FR Sheets (`#657`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#657` (`docs/issue-657-opentenbase-pgxl`)
 - **Request / Changes / Result**: Refactored `docs/{en,fr}/solutions/opentenbase_pgxl.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.
