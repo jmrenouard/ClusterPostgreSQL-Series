@@ -19,15 +19,15 @@
 
 ## 1. Description de la technologie et rôle
 
-**Amazon Aurora PostgreSQL** dépasse le goulot du disque local PostgreSQL grâce à une architecture de stockage désagrégé (*log-is-the-database*) : les nœuds de calcul n'écrivent plus de pages sales de 8 Kio mais expédient uniquement les journaux WAL vers un volume partagé répliqué **6 fois sur 3 zones de disponibilité (AZ)** (2 copies par AZ), avec un **quorum d'écriture de 4/6** (et un **quorum de lecture/réparation de 3/6**). Toutefois, l'architecture Aurora standard reste strictement **mono-écrivain**.
+**Amazon Aurora PostgreSQL** supprime le disque local couplé par un stockage désagrégé (*log-is-the-database*). Le calcul envoie uniquement le WAL vers un volume répliqué **6 fois sur 3 AZ**, avec quorum d'écriture **4/6** et lecture **3/6**. Toutefois, l'architecture Aurora standard reste strictement **mono-écrivain**.
 
-Pour passer les écritures PostgreSQL à l'échelle horizontale, AWS a lancé **Aurora PostgreSQL Limitless Database** (GA 2024) reposant sur des **DB Shard Groups** : des routeurs sans état (**Transaction Routers**) distribuent les requêtes vers des **Data Access Shards** PostgreSQL synchronisés par **AWS Time Sync Service** et le protocole **2PC**. Cette approche remplace l'ancien **Aurora Multi-Master v1** (limité à MySQL 5.6, jamais GA sur PostgreSQL et retiré en 2024), victime de tempêtes d'invalidation de pages partagées entre écrivains concurrents.
+Pour passer les écritures à l'échelle, AWS propose **Aurora PostgreSQL Limitless Database** (GA 2024) sur **DB Shard Groups**. Les **Transaction Routers** sans état pilotent les **Data Access Shards** avec **AWS Time Sync Service** et **2PC**. Cette approche remplace l'ancien **Aurora Multi-Master v1** (limité à MySQL 5.6, jamais GA sur PostgreSQL et retiré en 2024), victime de tempêtes d'invalidation de pages partagées entre écrivains concurrents.
 
 ---
 
 ## 2. Architecture et flux de données
 
-Un DB Shard Group Aurora Limitless achemine le SQL via les **Transaction Routers**, obtient les bornes MVCC auprès d'**AWS Time Sync Service** et valide en chemin court mono-shard ou en 2PC sur le stockage 6 voies :
+Aurora Limitless achemine le SQL par les **Transaction Routers** et obtient ses bornes MVCC d'**AWS Time Sync Service**. Il valide en chemin mono-shard ou en 2PC sur le stockage 6 voies :
 
 ```mermaid
 flowchart TB
@@ -50,7 +50,7 @@ flowchart TB
 
 ## 3. Principes de fonctionnement et modes d'implémentation
 
-1. **Quorum de stockage désagrégé 6 voies :** Chaque groupe de protection de 10 Gio répartit 6 segments sur 3 AZ. Tout commit attend **4/6 acquittements d'écriture** (`RPO = 0` face à la perte d'une AZ + 1 nœud) ; la reprise après panne s'appuie sur un **quorum de lecture 3/6** sans rejeu complet de pages.
+1. **Quorum de stockage désagrégé 6 voies :** Chaque groupe de protection de 10 Gio répartit 6 segments sur 3 AZ. Tout commit attend **4/6 acquittements d'écriture** (`RPO = 0` face à une perte d'AZ + 1 nœud). La reprise lit **3/6** segments sans rejeu complet de pages.
 2. **MVCC temporel et modèle de latence :** Limitless remplace le coordinateur `XID` monolithique par des horodatages physiques bornés par **AWS Time Sync Service** ($\varepsilon_{\text{TimeSync}}$) :
 
 $$
@@ -76,14 +76,14 @@ où $k_{\text{2PC}} = 0$ pour une écriture mono-shard et $k_{\text{2PC}} = 1$ p
 | :--- | :--- |
 | **Mise à l'échelle horizontale managée :** Les DB Shard Groups dépassent le plafond vCPU d'un primaire unique tout en conservant la durabilité 4/6 (`RPO = 0`). | **Verrouillage AWS & coût ACU (`APP-005`) :** Facturation ACU des routeurs + shards et stockage fermé AWS inexportable hors cloud AWS. |
 | **Absence de goulot `XID` global :** Le MVCC par Time Sync évite un coordinateur GTM central (`#8 OpenTenBase`) sur les requêtes mono-shard et lectures. | **Limites SQL, extensions et DDL :** Liste d'extensions restreinte (allowlist), clé de sharding figée et écart de parité face au noyau PG 17 standard. |
-| **Reprise rapide et sauvegardes sans I/O :** Le stockage *log-is-the-database* supprime les tempêtes de checkpoints et répare via quorum 3/6 en quelques secondes. | **Coût du 2PC et portée régionale :** Les transactions multi-shards paient le 2PC ; Limitless cible le multi-AZ intra-région, pas l'actif-actif intercontinental. |
+| **Reprise rapide et sauvegardes sans I/O :** Le stockage *log-is-the-database* supprime les tempêtes de checkpoints et répare par quorum 3/6 en quelques secondes. | **Coût du 2PC et portée régionale :** Les transactions multi-shards paient le 2PC ; Limitless cible le multi-AZ intra-région, pas l'actif-actif intercontinental. |
 | **Passage à l'échelle des lectures globales :** Aurora Global Database combine réplicas bas délai et *Write Forwarding* sans réécrire l'application. | **Latence du Write Forwarding :** Les écritures relayées paient le RTT inter-régions vers l'unique primaire ; le mode `global` bloque les lectures en retard. |
 
 ---
 
 ## 5. Exclusion architecturale (`APP-005`), comparatif des modes et base de référence
 
-**Pourquoi `#12 AWS Aurora Limitless` n'a pas été benchmarké en direct (`APP-005`) :** Selon `docs/RCA_REGISTER.md` (`APP-005`), Aurora PostgreSQL Limitless dépend du stockage propriétaire AWS, des horloges matérielles Time Sync et d'API managées impossibles à empaqueter dans `env/multi-db-docker-env/`. Aucun chiffre synthétique de TPS ou latence n'est inventé ici.
+**Pourquoi `#12 AWS Aurora Limitless` reste hors benchmark direct (`APP-005`) :** Selon `docs/RCA_REGISTER.md`, Limitless dépend du stockage AWS, de Time Sync et d'API managées absents d'`env/multi-db-docker-env/`. Aucun chiffre synthétique de TPS ou latence n'est inventé ici.
 
 Limitless se positionne directement face aux références `T5` (`PC/EC`) et au témoin mono-nœud mesurés dans `results/benchmark_summary.csv` et `results/functional_limits_matrix.csv` (la latence au 99e percentile n'est pas enregistrée dans `results/`) :
 
