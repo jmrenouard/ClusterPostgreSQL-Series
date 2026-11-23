@@ -20,14 +20,14 @@
 ## 1. Description de la technologie et rôle
 
 L'entrée `#13` regroupe deux architectures Google Cloud fondamentalement distinctes pour lever toute confusion (`Ch. 01`, `Ch. 03b`) :
-- **Google Cloud Spanner (Interface PostgreSQL)** est un moteur relationnel distribué actif-actif `PC/EC` shardé à l'échelle mondiale. En combinant **Multi-Paxos** par *split* et les horloges matérielles **TrueTime** (GPS + horloges atomiques bornant l'incertitude $\varepsilon < 7\text{ ms}$), Spanner garantit une **cohérence externe (sérialisabilité stricte)** intercontinentale. Les pilotes PostgreSQL se connectent via le proxy gRPC **`PGAdapter`** sur le dialecte PostgreSQL de Spanner.
-- **Google Cloud AlloyDB for PostgreSQL (et AlloyDB Omni)** n'est **PAS un système multi-maîtres actif-actif**. C'est un moteur PostgreSQL **mono-primaire** à haute performance reposant sur un stockage désagrégé **Log Processing Service (LPS)**, des **Read Pools** élastiques et un **moteur colonnaire** en mémoire (`AlloyDB Omni` porte cette pile en conteneur/Kubernetes auto-hébergé).
+- **Google Cloud Spanner (Interface PostgreSQL)** est un moteur relationnel distribué actif-actif `PC/EC` shardé à l'échelle mondiale. En combinant **Multi-Paxos** par *split* et les horloges matérielles **TrueTime** (GPS + horloges atomiques bornant l'incertitude $\varepsilon < 7\text{ ms}$), Spanner garantit une **cohérence externe (sérialisabilité stricte)** intercontinentale. Les pilotes PostgreSQL passent par le proxy gRPC **`PGAdapter`** sur le dialecte PostgreSQL de Spanner.
+- **Google Cloud AlloyDB for PostgreSQL (et AlloyDB Omni)** n'est **PAS un système multi-maîtres actif-actif**. C'est un moteur PostgreSQL **mono-primaire** sur un stockage désagrégé **LPS**, des **Read Pools** et un **moteur colonnaire** en mémoire. `AlloyDB Omni` déploie cette pile sur Kubernetes.
 
 ---
 
 ## 2. Architecture et flux de données
 
-Spanner coordonne les écritures globales via **PGAdapter**, leaders **Multi-Paxos**, **2PC** et **TrueTime**, tandis qu'AlloyDB concentre les écritures sur un unique primaire vers le stockage désagrégé **LPS** partagé avec les **Read Pools** :
+Spanner coordonne les écritures globales par **PGAdapter**, **Multi-Paxos**, **2PC** et **TrueTime**. AlloyDB dirige toutes les écritures d'un primaire vers le stockage **LPS** partagé avec les **Read Pools** :
 
 ```mermaid
 flowchart TB
@@ -49,19 +49,19 @@ flowchart TB
     end
 ```
 
-La frontière est nette : Spanner distribue les écritures avec sérialisabilité stricte via Paxos + TrueTime, alors qu'AlloyDB préserve le modèle mono-écrivain PostgreSQL (parité extensions/triggers) et accélère lectures et HTAP.
+Spanner distribue les écritures avec sérialisabilité stricte par Paxos et TrueTime. AlloyDB garde le modèle mono-écrivain PostgreSQL et accélère les lectures et le HTAP.
 
 ---
 
 ## 3. Principes de fonctionnement et modes d'implémentation
 
-1. **TrueTime et attente de commit (`2\varepsilon`) :** Les datacenters Google exposent un intervalle TrueTime $[t_{\text{earliest}}, t_{\text{latest}}]$ borné à $\varepsilon < 7\text{ ms}$. Avant de libérer ses verrous d'écriture, Spanner observe un **commit-wait** de $2\varepsilon$ pour garantir que toute transaction causale ultérieure reçoive un horodatage strictement supérieur, autorisant des **lectures cohérentes sans verrous** à l'échelle mondiale :
+1. **TrueTime et attente de commit (`2\varepsilon`) :** Les datacenters Google exposent un intervalle TrueTime $[t_{\text{earliest}}, t_{\text{latest}}]$ borné à $\varepsilon < 7\text{ ms}$. Avant de libérer ses verrous, Spanner observe un **commit-wait** de $2\varepsilon$ afin que toute transaction causale obtienne un horodatage supérieur. Cela permet des **lectures cohérentes sans verrou** :
 
 $$
 L_{\text{Spanner-Write}} \approx L_{\text{quorum-Paxos}} + 2 \cdot \varepsilon_{\text{TrueTime}} + k_{\text{2PC}} \cdot \text{RTT}_{\text{2PC}}, \qquad \varepsilon_{\text{TrueTime}} < 7\text{ ms}
 $$
 
-2. **Limites du dialecte PG Spanner vs LPS AlloyDB :** Spanner emploie le contrôle **Wound-Wait**, des tables entrelacées (*Interleaved*), des séquences à bits inversés et des **Change Streams** (`~65 %` de parité PG : zéro extension C, aucun trigger, PK obligatoire). À l'inverse, AlloyDB décharge les checkpoints sur le **LPS** et accélère l'OLAP dans les Read Pools via son **moteur colonnaire**.
+2. **Dialecte PG Spanner vs LPS AlloyDB :** Spanner utilise **Wound-Wait**, tables entrelacées, séquences inversées et **Change Streams** (`~65 %` PG : zéro ext. C, aucun trigger, PK requise). AlloyDB décharge les pages sur le **LPS** et accélère l'OLAP avec son **moteur colonnaire**.
 
 | Mode / Variante | Portée et mécanique | Chemin de commit et sync | Conflits / bascule | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
@@ -86,7 +86,7 @@ $$
 
 ## 5. Exclusion architecturale (`APP-005`), comparatif des modes et base de référence
 
-**Pourquoi `#13 GCP Spanner & AlloyDB` n'ont pas été benchmarkés en direct (`APP-005`) :** Selon `docs/RCA_REGISTER.md` (`APP-005`), Cloud Spanner repose sur le matériel propriétaire TrueTime (GPS/horloges atomiques) et Colossus/Borg, tandis qu'AlloyDB est un service managé GCP propriétaire (`AlloyDB Omni` étant sous licence commerciale). Aucun chiffre synthétique de TPS ou latence n'est inventé ici.
+**Pourquoi `#13 GCP Spanner & AlloyDB` restent hors benchmark direct (`APP-005`) :** Selon `docs/RCA_REGISTER.md`, Spanner repose sur le matériel TrueTime et Colossus. AlloyDB est un service managé GCP (`AlloyDB Omni` sous licence commerciale). Aucun chiffre synthétique de TPS ou latence n'est inventé ici.
 
 Dans notre base empirique (`results/benchmark_summary.csv`, `results/functional_limits_matrix.csv`), Spanner correspond à la famille `T5` (`PC/EC` Multi-Raft) et AlloyDB au mono-primaire `N1/N2` (la latence au 99e percentile n'est pas enregistrée dans `results/`) :
 
@@ -107,8 +107,8 @@ Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf 
 | **Google Cloud Spanner & AlloyDB (#13)** | `Partial (PGAdapter only; engine proprietary)` -- `Proprietary (Managed Cloud)` | N/A (Propriétaire) | N/A / N/A / N/A | N/A / N/A | N/A / N/A | N/A / Proprietary | N/A / N/A |
 | **Cloud Spanner PGAdapter (#13a)** | `Partial (Proxy only)` -- `Primary (Client Proxy; Engine Proprietary)` | [`GoogleCloudPlatform/pgadapter`](https://github.com/GoogleCloudPlatform/pgadapter) (`Org / 1545`) | 94 / 36 / 26 | 4040 / 934 | 22 / 74 | Java / `Apache-2.0` | `v0.56.4` / `2026-11-20T11:30:29Z` |
 
-- **Niveau de maintenance :** **Fermé / Cloud Managé (+ Proxy OSS)** -- Les moteurs Spanner et AlloyDB sont fermés (`N/A`) ; le proxy OSS `GoogleCloudPlatform/pgadapter` totalise `934` commits/12m (`4 040` au total, `22` contributeurs, `94` stars, `74` issues ouvertes).
-- **Fraîcheur / Actualité :** **Moteur opaque + Proxy actif** -- Push moteur `N/A` ; PGAdapter dernier push `2026-11-20T11:30:29Z`, `934` commits/12m, dernière version `v0.56.4`.
+- **Niveau de maintenance :** **Fermé / Cloud Managé (+ Proxy OSS)** -- Les moteurs Spanner et AlloyDB sont fermés (`N/A`). Le proxy OSS `GoogleCloudPlatform/pgadapter` totalise `934` commits/12m (`4 040` total, `22` contributeurs, `94` stars, `74` issues).
+- **Fraîcheur / Actualité :** **Moteur opaque + Proxy actif** -- Le push moteur est `N/A`. PGAdapter a reçu un push le `2026-11-20T11:30:29Z` (`934` commits/12m, tag `v0.56.4`).
 - **Maintenabilité opérationnelle :** **Verrouillage éditeur** -- Dépend des services managés GCP Spanner/AlloyDB (ou licence `AlloyDB Omni`), du sidecar `PGAdapter` et des limites du dialecte Spanner.
 
 ---
