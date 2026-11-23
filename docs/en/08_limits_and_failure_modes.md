@@ -95,14 +95,14 @@ This chapter documents every **hard failure mode, `SQLSTATE` exception, and sile
 
 Eight edge-case probes (`results/extended_functional_matrix.csv`, `functional_limits_matrix.csv`) add **`pg17-async-streaming`** and **`pg17-logical`** across all 10 topologies:
 
-- **`T11` Bulk 10k & Catch-Up:** `22,079` (`cockroach`) to `67,406 rows/s` (`pgedge`); catch-up `105–115 ms` (streaming), `139 ms` (`bucardo`), `265 ms` (`cockroach`), `333–350 ms` (logical/Spock), `417 ms` (`yugabyte`).
-- **`T12` `UPDATE` vs `DELETE` Tombstone:** **`pg17-logical` DIVERGED** (`pub=upd_n1` vs `sub=DELETED`); async meshes dropped `UPDATE` (`DELETED`); streaming rejected standby `DELETE` (`25006`); Citus/YB/CRDB converged.
-- **`T13` Cross-Node FK Race:** Streaming blocked standby (`25006x10`); **`bucardo` failed `0/10` (`23503x10`)**; Raft/Citus and LAN logical/Spock passed `10/10`.
-- **`T14` Rich Fidelity (64 KiB `BYTEA`, `JSONB`, UTF-8):** `9/10` bit-identical (`md5=00493e3a`); `pgedge` image defaults to **`SQL_ASCII`** (`chr(20013)` hit **`54000`**; escaped UTF-8 matched `3/3`, `md5=f798eb5a`).
-- **`T15` RAW Lag (`n=30`, `p50/p95` ms):** `standalone` `1.15/1.55`, `pgedge` `1.16/1.63`, `pg-birep` `1.47/2.28`, `pg17-logical` `1.68/2.14`, `pg17-sync` `1.88/2.74`, `yugabyte` `2.01/2.83`, `citus` `1.71/13.89`, `cockroach` `4.09/4.98`, `pg17-async` `9.65/25.13`, **`bucardo` `548.74/1,275.25`**.
-- **`T16` `SIGKILL` & RPO:** `20/20` (`RPO=0` LAN) + `21/21` recovery on 8 stacks; `citus` `worker2` raised **`08006`** then recovered `21/21`; `bucardo` `node1` metadata crash ended `20/21`.
-- **`T17` 3s Open TX:** `NO_DIRTY_READ` on `10/10`; `cockroach` blocked reader via intent wait (`serializable_intent_wait=2.1s`).
-- **`T18` Sequence Sync (50 inserts):** Streaming (`66|true`, `next=67`), `yugabyte` (`101`), `cockroach`/`citus` (`51`) failover-safe; all 4 logical/trigger stacks stuck at `1|false` -> **`23505`** (`pg17-logical` retained `27,320 B` offline WAL vs `3,088 B` streaming).
+- **`T11` Bulk 10k & Catch-Up:** Throughput spanned `22,079` (`cockroach`) to `67,406 rows/s` (`pgedge`). Catch-up took `105–115 ms` (streaming), `139 ms` (`bucardo`), `265 ms` (`cockroach`), `333–350 ms` (logical/Spock), and `417 ms` (`yugabyte`).
+- **`T12` `UPDATE` vs `DELETE` Tombstone:** **`pg17-logical` DIVERGED** (`pub=upd_n1`, `sub=DELETED`). Async meshes dropped `UPDATE` (`DELETED`), streaming rejected standby `DELETE` (`25006`), and Citus/YB/CRDB converged.
+- **`T13` Cross-Node FK Race:** Streaming blocked standby writes (`25006x10`), and **`bucardo` failed `0/10` (`23503x10`)**. Raft/Citus and LAN logical/Spock passed `10/10`.
+- **`T14` Rich Fidelity (64 KiB `BYTEA`, `JSONB`, UTF-8):** `9/10` matched bit-identical (`md5=00493e3a`). The `pgedge` image uses **`SQL_ASCII`** (`chr(20013)` hit `54000`, escaped UTF-8 matched `3/3` `md5=f798eb5a`).
+- **`T15` RAW Lag (`n=30`, `p50/p95` ms):** `standalone` hit `1.15/1.55`, `pgedge` `1.16/1.63`, `pg-birep` `1.47/2.28`, `pg17-logical` `1.68/2.14`, and `pg17-sync` `1.88/2.74`. `yugabyte` ran `2.01/2.83`, `citus` `1.71/13.89`, `cockroach` `4.09/4.98`, `pg17-async` `9.65/25.13`, and `bucardo` `548.74/1,275.25`.
+- **`T16` `SIGKILL` & RPO:** Eight stacks passed `20/20` (`RPO=0` LAN) and `21/21` recovery. `citus` `worker2` raised **`08006`** then recovered `21/21`, while `bucardo` `node1` metadata crash ended `20/21`.
+- **`T17` 3s Open TX:** All `10/10` showed `NO_DIRTY_READ`. `cockroach` blocked the reader with intent wait (`serializable_intent_wait=2.1s`).
+- **`T18` Sequence Sync (50 inserts):** Streaming (`66|true`, `next=67`), `yugabyte` (`101`), and `cockroach`/`citus` (`51`) stayed safe. All 4 logical/trigger stacks stayed at `1|false` -> **`23505`** (`pg17-logical` retained `27,320 B` WAL vs `3,088 B` streaming).
 
 ---
 
