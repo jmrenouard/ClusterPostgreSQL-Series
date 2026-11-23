@@ -8,7 +8,7 @@ Ce chapitre rapporte les mesures empiriques collectées séquentiellement dans n
 
 ## 1. Synthèse des suites TPC-B (`pgbench` A, B1, B2, C)
 
-Les quatre premières suites comparent le débit nominal sur un nœud (`A`), l'écriture multi-nœuds sur plages disjointes (`B1`), l'écriture multi-nœuds avec chevauchement complet (`B2`) et la lecture pure (`C`, 16 clients).
+Les quatre premières suites comparent le débit sur un nœud (`A`), l'écriture disjointe (`B1`) et l'écriture chevauchante (`B2`). La Suite `C` mesure la lecture pure (`16` clients).
 
 | Topologie | A : Single RW (TPS / lat) | B1 : Disjoint RW (TPS / lat) | B2 : Overlap RW (TPS / lat) | Dérive B2 (`balance_drift`) | C : Read-Only 16c (TPS / lat) |
 |:---|---:|---:|---:|---:|---:|
@@ -28,7 +28,7 @@ Les quatre premières suites comparent le débit nominal sur un nœud (`A`), l'�
 ### Enseignements majeurs des suites A à C
 1. **L'illusion de la vitesse en asynchrone sous chevauchement (`B2`)** : `bucardo` (1 267,77 TPS) et `pg-birep` (1 228,60 TPS) affichent les débits bruts les plus élevés sur `B2`, car chaque nœud acquitte localement sans coordination. Mais le bilan comptable révèle l'ampleur de la corruption : `bucardo` perd/fausse le solde global de `+123 679` (`acc=786206` vs `exp_delta=662527`), `pgedge` LWW de `-66 328` (`-144853` vs `-78525`), et `pg-birep` laisse les deux nœuds diverger durablement (`node1=-193944` vs `node2=-208996`, `branches=-27614` vs `-19115`).
 2. **Convergence parfaite des systèmes à coordination** : `pg17-sync-streaming`, `citus`, `yugabyte` et `cockroach` maintiennent une dérive **rigoureusement nulle (`0`)**. Sous CockroachDB (`SERIALIZABLE`), `pgbench` absorbe 44 (`A`), 87 (`B1`) et 96 (`B2`) ré-essais `SQLSTATE 40001`.
-3. **Coût de la réplication synchrone physique (`pg17-sync-streaming`)** : La garantie `RPO = 0` intra-hôte divise le débit d'écriture par deux par rapport au nœud standalone (409,48 vs 866,82 TPS en Suite A), tout en conservant 54 483 TPS en lecture seule (`C`).
+3. **Coût de la réplication synchrone physique (`pg17-sync-streaming`)** : La garantie `RPO = 0` divise le débit d'écriture par deux (409,48 vs 866,82 TPS en Suite A). Le standby garde 54 483 TPS en lecture seule (`C`).
 
 ---
 
@@ -51,13 +51,13 @@ La Suite D concentre 8 clients concurrents sur 50 comptes chauds (`aid = random(
 | **`cockroach`** | 471,61 | 16,913 | 34,165 | 7 091 | 359 402 | 359 402 | **0** | `PASS_CONVERGED` |
 
 ### Preuve empirique du Delta-Apply CRDT
-Sous LWW standard, `bucardo_latest` perd **50,8 %** des incréments (`-531 620` sur `1 046 798`), `pgedge` LWW perd **16,0 %** (`-278 698`), et `pg-birep` laisse les deux nœuds dans des états incohérents (`851 810` vs `851 747`). En activant `log_old_value = true` et `delta_apply_function = spock.delta_apply` sur `pgbench_accounts.abalance`, **`pgedge-delta-apply` maintient 1 837,64 TPS (-19,4 % vs LWW) avec une dérive exactement égale à `0`** sur l'ensemble des 3 nœuds (`1 391 780` identique partout).
+Sous LWW standard, `bucardo_latest` perd **50,8 %** des incréments (`-531 620` sur `1 046 798`), `pgedge` LWW perd **16,0 %** (`-278 698`), et `pg-birep` laisse les deux nœuds dans des états incohérents (`851 810` vs `851 747`). Avec `log_old_value = true` et `delta_apply_function = spock.delta_apply` sur `pgbench_accounts.abalance`, **`pgedge-delta-apply` maintient 1 837,64 TPS (-19,4 % vs LWW)**. La dérive vaut exactement **`0`** sur les 3 nœuds (`1 391 780` partout).
 
 ---
 
 ## 3. Suite E (`sysbench`) et Suite F (`tc netem 25ms` simulé WAN)
 
-La Suite E évalue un profil OLTP multi-requêtes (`sysbench oltp_read_write`, 4 tables $\times$ 10 000 lignes, 8 threads, 20 s), tandis que la Suite F injecte une latence réseau artificielle unidirectionnelle de **25 ms** via `tc qdisc replace dev eth0 root netem delay 25ms` sur les pairs répliqués (soit ~50 ms RTT effectif sur les liens inter-nœuds).
+La Suite E mesure un profil OLTP multi-requêtes (`sysbench oltp_read_write`, 4 tables $\times$ 10 000 lignes, 8 threads, 20 s). La Suite F injecte **25 ms** de délai unidirectionnel (`tc qdisc ... netem delay 25ms`, ~50 ms RTT) sur les pairs.
 
 | Topologie | E : `sysbench` TPS | E : `sysbench` QPS | E : Lat. avg / p95 | E : Erreurs ignorées | F : TPS sous `netem 25ms` | F : Lat. avg / p95 (`netem`) | Ratio F / A |
 |:---|---:|---:|---:|---:|---:|---:|---:|
@@ -73,27 +73,27 @@ La Suite E évalue un profil OLTP multi-requêtes (`sysbench oltp_read_write`, 4
 | **`cockroach` (`#6`)** | 44,84 | 1 531,47 | 177,91 / 502,20 ms | **685** (sur 1 587 ; 902 val.) | **10,06** | 715,77 / 2 930,54 ms | **-76,1 %** (14 retries) |
 
 ### Analyse de l'effondrement WAN et du comportement `sysbench`
-1. **Validation physique de l'équation de latence WAN (`Suite F`)** : L'ajout de 25 ms sur le réseau des pairs fait s'effondrer toute architecture **PC/EC** : `yugabyte` passe de 173,64 à **5,78 TPS** (-96,7 %, p95 à **3,40 s**), `cockroach` à **10,06 TPS** (p95 à **2,93 s**), `citus` à **21,67 TPS** (p95 à **633,96 ms** par cumul d'allers-retours coordinateur $\leftrightarrow$ workers), et `pg17-sync-streaming` à **57,00 TPS**. À l'opposé, les architectures **PA/EL** (`pg-birep` 824,04 TPS, `bucardo` 763,23 TPS, `pgedge` 646,77 TPS) conservent une latence locale quasi constante autour de 10 ms.
-2. **Piège `sysbench` sous `SERIALIZABLE` (`Suite E`)** : Alors que `pgbench --max-tries=100` gère nativement les ré-essais `40001` sur CockroachDB, `sysbench oltp_read_write` ne ré-essaie pas les conflits de sérialisation et comptabilise **685 erreurs ignorées** (`tx_failed`), expliquant son débit réduit à 44,84 TPS (et 502,20 ms au p95). Sous `yugabyte` (`read_committed` activé dans l'image `2026.1.3.0`), le mode *Wait-on-Conflict* absorbe la charge avec **0 erreur**, au prix d'une latence moyenne de 62,25 ms.
-3. **Surcharge de coordination sur transactions multi-requêtes** : Sur `citus`, une transaction TPC-B modifiant `accounts`, `tellers` et `branches` touche potentiellement plusieurs workers, générant un coût d'orchestration qui limite le débit local à 309,04 TPS (`A`) et 189,44 TPS (`E`), contre 866,82 TPS (`A`) en PostgreSQL standalone.
+1. **Validation physique de l'équation WAN (`Suite F`)** : L'ajout de 25 ms effondre toute architecture **PC/EC** (`yugabyte` 173,64 -> **5,78 TPS**, `-96,7 %`, `p95` `3,40 s`). `cockroach` tombe à **10,06 TPS** (`p95` `2,93 s`), `citus` à **21,67 TPS** (`p95` `633,96 ms`) et `pg17-sync-streaming` à **57,00 TPS**. À l'opposé, les architectures **PA/EL** (`pg-birep` 824,04 TPS, `bucardo` 763,23 TPS, `pgedge` 646,77 TPS) conservent une latence locale quasi constante autour de 10 ms.
+2. **Piège `sysbench` sous `SERIALIZABLE` (`Suite E`)** : `pgbench --max-tries=100` gère les ré-essais `40001` sur CockroachDB. À l'inverse, `sysbench oltp_read_write` ne ré-essaie pas et subit **685 erreurs** (`tx_failed`), limitant le débit à 44,84 TPS (`p95` `502,20 ms`). Sous `yugabyte` (`read_committed` activé dans l'image `2026.1.3.0`), le mode *Wait-on-Conflict* absorbe la charge avec **0 erreur**, au prix d'une latence moyenne de 62,25 ms.
+3. **Surcharge de coordination multi-requêtes** : Sur `citus`, une transaction TPC-B modifie `accounts`, `tellers` et `branches` sur plusieurs workers. Ce coût d'orchestration limite le débit local à 309,04 TPS (`A`) et 189,44 TPS (`E`), vs 866,82 TPS (`A`) en standalone.
 
 ---
 
 ## 4. Synthèse visuelle : Débit local vs WAN vs Intégrité comptable
 
 - **Zone à risque silencieux** (`#1`, `#2 LWW`, `#9`) : Débit local élevé et insensibilité au RTT WAN, mais **dérive financière garantie** dès que deux nœuds écrivent sur des clés communes.
-- **Compromis applicatif ciblé** (`#2 Spock Delta-Apply`) : Préserve les performances asynchrones locales tout en garantissant une dérive nulle sur les compteurs CRDT, sans offrir de cohérence globale sur les clés étrangères ou index `UNIQUE`.
+- **Compromis applicatif ciblé** (`#2 Spock Delta-Apply`) : Garde les performances locales avec une dérive nulle sur les compteurs CRDT. N'offre toutefois aucune cohérence globale sur FK ou `UNIQUE`.
 - **Zone ACID distribuée** (`#5`, `#6`, `#7`, `#15 sync`) : Intégrité comptable stricte (`balance_drift = 0`), mais soumission directe aux lois de la latence RTT inter-nœuds et obligation d'implémenter le retry `40001` pour les moteurs optimistes/sérialisables.
 
 ---
 
 ## 5. Balayages étendus V2 (`E2–E4`, `H`, WAN `10/25/50 ms`, `c=1..32`) et Graphiques Log10
 
-Les 187 mesures sur 10 topologies (`benchmark_extended_workloads.csv`, `benchmark_wan_sweep.csv`, `benchmark_concurrency_sweep.csv`) confirment ces tendances (méthodologie au [Chapitre 09](09_methodologie_benchmarks_et_graphiques.md) ; comparatif 5 niveaux au [Chapitre 10](10_comparatif_streaming_logique_multimaster.md) ; explorateur interactif [**`dashboard/index.html`**](../../dashboard/index.html)) :
+Les 187 mesures sur 10 topologies (`benchmark_extended_workloads.csv`, `benchmark_wan_sweep.csv`, `benchmark_concurrency_sweep.csv`) confirment ces tendances. Consultez le [Chapitre 09](09_methodologie_benchmarks_et_graphiques.md), le [Chapitre 10](10_comparatif_streaming_logique_multimaster.md) et [**`dashboard/index.html`**](../../dashboard/index.html) :
 
-- **`sysbench` étendu (`E2–E4`) et `H_append_only` :** Les piles PG natives atteignent `1 659–1 806 TPS` (`E2` RO), `801–1 784 TPS` (`E3` WO ; `pg17-sync` chute à `370,71`) et `124 105–148 022 TPS` (`E4` point-select) contre `180–522` (`E2`), `119–563` (`E3`) et `11 557–19 831 TPS` (`E4`) en moteurs distribués. L'append-only (`H`) brille sur `yugabyte` (`2 987,24 TPS`) et `pgedge` (`2 206,60`) près de `standalone` (`3 108,22`).
+- **`sysbench` étendu (`E2–E4`) et `H_append_only` :** PG natif atteint `1 659–1 806` (`E2`), `801–1 784` (`E3`, `pg17-sync` `370,71`) et `124 105–148 022 TPS` (`E4`). Les moteurs distribués atteignent `180–522` (`E2`), `119–563` (`E3`) et `11 557–19 831 TPS` (`E4`). L'append-only (`H`) brille sur `yugabyte` (`2 987,24 TPS`) et `pgedge` (`2 206,60`) près de `standalone` (`3 108,22`).
 - **Balayage WAN (`10 -> 25 -> 50 ms`) :** Les piles asynchrones restent stables (`pg17-async` `587->600->619`, `pgedge` `645->647->687`, `bucardo` `593->763->613 TPS`), tandis que les moteurs `PC/EC` décrochent (`pg17-sync` `121,8->57,0->25,8`, `citus` `44,4->21,7->8,8`, `cockroach` `19,4->10,1->4,5`, `yugabyte` `15,4->5,8->3,1 TPS`, `p95 = 5 474,7 ms`).
-- **Concurrence (`c = 1..32`) :** `standalone` grimpe de `298` à `801 TPS` ; `pg17-sync` sature à `425 TPS` ; `cockroach` culmine à `c = 4` (`74,11 TPS`) puis recule à `40,25 TPS` (`88` retries, `p95 = 3 400 ms`) à `c = 32`.
+- **Concurrence (`c = 1..32`) :** `standalone` grimpe de `298` à `801 TPS`, et `pg17-sync` sature à `425 TPS`. `cockroach` culmine à `c = 4` (`74,11`) puis recule à `40,25 TPS` (`88` retries, `p95 = 3 400 ms`) à `c = 32`.
 
 ![Débit Log10 toutes suites](../../assets/charts/chart_01_tps_log_all_suites.png)
 ![Latence Log10 toutes suites](../../assets/charts/chart_02_latency_log_all_suites.png)

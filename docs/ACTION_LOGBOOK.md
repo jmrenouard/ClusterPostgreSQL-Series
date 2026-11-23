@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-222 - Refactor Chapter 06 FR Part 1 (Sections 1-5) for STE Compliance (`#617`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#617` (`docs/issue-617-ch06-fr-p1`)
+- **Request / Changes / Result**: Refactored Sections 1-5 (before `## 6. Extension V3`) of `docs/fr/06_resultats_tests_et_benchmarks.md` to 0 STE errors, 0 `via`, and 0 weak modals in Part 1 while preserving all CSV metrics; Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
+
 ### ACT-221 - Complete Chapter 06 EN Part 2 (Sections 6-8) for 0 STE Errors (`#615`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#615` (`docs/issue-615-ch06-en-p2`)
 - **Request / Changes / Result**: Completed Sections 6-8 of `docs/en/06_empirical_test_and_benchmark_results.md` reaching full-file 0 STE mixed-mode errors, 0 `via`, and 0 forbidden modals; Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
