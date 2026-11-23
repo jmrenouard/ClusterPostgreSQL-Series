@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-233 - Refactor pg17_bidirectional_logical and pg17_standalone EN/FR Sheets (`#639`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#639` (`docs/issue-639-pg17-bidir-standalone`)
+- **Request / Changes / Result**: Refactored `docs/{en,fr}/solutions/pg17_bidirectional_logical.md` for 0 STE mixed-mode errors and removed non-CSV `via` in `docs/{en,fr}/solutions/pg17_standalone.md` while keeping verbatim CSV findings intact; Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-232 - Refactor Citus EN/FR Sheets and Ch 04-05 FR via Cleanup (`#637`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#637` (`docs/issue-637-citus-ch04-05-via`)
 - **Request / Changes / Result**: Refactored `docs/en/solutions/citus.md` and `docs/fr/solutions/citus.md` for 0 STE mixed-mode errors and removed non-CSV `via` in `docs/fr/04_etude_comparative_fonctionnalites.md` and `docs/fr/05_architectures_poc_et_protocole_de_test.md`; Windows unittest and WSL `make test lint check-math check-security` pass.

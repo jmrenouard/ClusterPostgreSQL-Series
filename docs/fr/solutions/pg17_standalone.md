@@ -45,10 +45,10 @@ Une image mémoire unique garantit une linéarisabilité immédiate (`catchup = 
 
 ## 3. Principes de fonctionnement et modes d'implémentation
 
-PostgreSQL 17 garantit l'ACID local via le **Write-Ahead Logging (WAL)** et le **MVCC** :
+PostgreSQL 17 garantit l'ACID local avec le **Write-Ahead Logging (WAL)** et le **MVCC** :
 
 1. **Commit WAL séquentiel :** Les enregistrements redo sont écrits dans les tampons WAL puis forcés sur disque (`fdatasync`) avant le retour du `COMMIT`.
-2. **Sérialisation par ligne :** Les mises à jour concurrentes sur clés chaudes (`D_hot_conflict`, `B2_overlap_rw`) se sérialisent via les verrous de tuple (`xmax`), sans divergence ni ré-essais `40001`.
+2. **Sérialisation par ligne :** Les mises à jour concurrentes sur clés chaudes (`D_hot_conflict`, `B2_overlap_rw`) se sérialisent par les verrous de tuple (`xmax`), sans divergence ni ré-essais `40001`.
 3. **Modèle de latence de commit :**
 
 $$
@@ -59,7 +59,7 @@ La durabilité dépend de `synchronous_commit` et `wal_sync_method` (valeurs par
 
 | Mode / Paramètre | Portée | Chemin de durabilité | Fenêtre de perte (`RPO`) | Compromis latence / débit |
 | :--- | :--- | :--- | :--- | :--- |
-| **`synchronous_commit = on`** *(PoC)* | Session / global | Flush WAL via `wal_sync_method` avant `COMMIT` | **`RPO = 0`** (`20/20` sur `SIGKILL`, `T16`) | Référence (`866.82 TPS` Suite A ; `p95 = 23.958 ms`) |
+| **`synchronous_commit = on`** *(PoC)* | Session / global | Flush WAL par `wal_sync_method` avant `COMMIT` | **`RPO = 0`** (`20/20` sur `SIGKILL`, `T16`) | Référence (`866.82 TPS` Suite A ; `p95 = 23.958 ms`) |
 | **`synchronous_commit = local`** | Session / global | Identique à `on` sans standby déclaré | **`RPO = 0`** | Aucune différence en standalone |
 | **`synchronous_commit = off`** | Session / global *(Arch.)* | Retour dès le tampon WAL ; `walwriter` écrit selon `wal_writer_delay` (`200 ms`) | **`RPO > 0`** (~`600 ms` max ; zéro corruption) | Débit accru sur disques lents ; supprime l'attente `fsync` |
 | **`wal_sync_method`** (`fdatasync`, `open_datasync`, `fsync`) | Serveur | Appel système Linux de flush WAL (`fdatasync` évite les métadonnées inode) | **`RPO = 0`** avec `on` | `fdatasync` / `open_datasync` plus rapides que `fsync` |
