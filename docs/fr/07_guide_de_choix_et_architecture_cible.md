@@ -41,6 +41,7 @@ flowchart TD
 | **Ledger financier / Inventaire strict** | Zéro *Lost Update*, linéarisabilité globale | **#5 YugabyteDB** / **#6 CockroachDB** / **#13 Spanner** | Tout LWW asynchrone (`#1`, `#3`, `#9`) |
 | **Synchronisation Edge / Hétérogène** | PG $\leftrightarrow$ MySQL/Oracle, coupures réseau longues | **#10 SymmetricDS** | PG natif, Citus, Raft |
 | **Migration sans arrêt entre versions** | Transition PG 14 $\rightarrow$ 17 avec bascule contrôlée | **#1 PG logique natif** (ou `#3 pglogical 2`) | Solutions à triggers lourds (`#9`, `#14`) |
+| **Conformité TDE & gestion de clés KMS** | Chiffrement heap/WAL/backups + séparation KMS (`PCI-DSS`, `HDS`) | **#4 EDB PGD** ou **#15 Patroni + `pg_tde`** (ou **#5/#12/#13**) | Couplage TDE natif + `KMIP`/`OpenBao`/KMS cloud ([Ch. 14](14_chiffrement_transparent_tde.md)) |
 
 ---
 
@@ -69,6 +70,7 @@ Utiliser PgPool-II *Native Replication* pour diffuser `INSERT INTO logs VALUES (
 - **Quorum et réseau** : Prévoir un nombre impair de votants ($3$ ou $5$ nœuds) pour Raft/`etcd`. En réplication logique asynchrone, surveillez la taille des *slots* avec `pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn)`. Bornez `max_slot_wal_keep_size` pour éviter la saturation WAL des survivants.
 - **Empreinte mémoire** : En PostgreSQL standard/Spock/Citus, allouer ~25 % de la RAM à `shared_buffers` (plus cache système OS). En YugabyteDB/CockroachDB, dimensionner généreusement la RAM pour les *block caches* RocksDB/Pebble et la coordination Raft (minimum 8–16 Go par nœud en production, loin des profils minimalistes de PoC).
 - **Boucle de retry applicative** : Pour YugabyteDB et CockroachDB, intégrer dès la couche DAO/ORM une logique exponentielle de ré-essai idempotent sur `SQLSTATE 40001` (et `40P01` deadlock).
+- **Chiffrement au repos (TDE / KMS)** : En environnement régulé, utiliser un KMS externe (`KMIP`, `OpenBao`, KMS cloud), le chiffrement WAL et `pgBackRest` chiffré ([Ch. 14](14_chiffrement_transparent_tde.md)). Tester l'accès KMS sur chaque nœud de reprise avant tout PITR.
 
 ### 4.2 Le piège de la sauvegarde et du PITR multi-maîtres
 Dans une architecture **mono-primaire** (`#15`), `pgBackRest` fournit un **PITR (*Point-in-Time Recovery*)** transactionnellement cohérent à la microseconde près sur l'ensemble de la base. Dans une topologie **logique multi-maîtres asynchrone** (`#1`, `#2`, `#3`, `#9`), restaurer $N_1$ et $N_2$ au même instant `T` rompt la cohérence globale. À cause du lag et de la dérive NTP, des écritures sur $N_1$ manquent sur $N_2$. Reconstruisez les pairs depuis un nœud de référence, ou utilisez une sauvegarde distribuée (`yb_backup`, `BACKUP`, Cloud Spanner).
