@@ -20,14 +20,14 @@
 ## 1. Technology Description & What It Does
 
 Catalog `#13` groups two fundamentally distinct Google Cloud architectures to eliminate a recurring market confusion (`Ch. 01`, `Ch. 03b`):
-- **Google Cloud Spanner (PostgreSQL Interface)** is a globally distributed, horizontally sharded active-active `PC/EC` relational engine. Using **Multi-Paxos** per data split and **TrueTime** hardware clocks (GPS + atomic clocks bounding clock uncertainty $\varepsilon < 7\text{ ms}$), Spanner delivers **External Consistency (Strict Serializability)** across continents. Applications connect via standard PostgreSQL drivers through the **`PGAdapter`** gRPC sidecar proxy using Spanner's PostgreSQL SQL dialect.
-- **Google Cloud AlloyDB for PostgreSQL (and AlloyDB Omni)** is **NOT active-active multi-master**. It is a high-performance **single-primary** PostgreSQL engine built over a disaggregated **Log Processing Service (LPS)** storage layer, elastic **Read Pools**, and an adaptive in-memory **Columnar Engine** (`AlloyDB Omni` brings this stack to self-managed containers/Kubernetes).
+- **Google Cloud Spanner (PostgreSQL Interface)** is a globally distributed, horizontally sharded active-active `PC/EC` relational engine. Using **Multi-Paxos** per data split and **TrueTime** hardware clocks (GPS + atomic clocks bounding clock uncertainty $\varepsilon < 7\text{ ms}$), Spanner delivers **External Consistency (Strict Serializability)** across continents. Applications connect with standard PostgreSQL drivers through the **`PGAdapter`** gRPC sidecar proxy using Spanner's PostgreSQL dialect.
+- **Google Cloud AlloyDB for PostgreSQL (and AlloyDB Omni)** is **NOT active-active multi-master**. It is a **single-primary** PostgreSQL engine over disaggregated **LPS** storage, elastic **Read Pools**, and an in-memory **Columnar Engine**. `AlloyDB Omni` brings this stack to containers and Kubernetes.
 
 ---
 
 ## 2. Architecture & Data Flow
 
-Spanner coordinates distributed multi-region writes via **PGAdapter**, **Multi-Paxos** split leaders, **2PC**, and **TrueTime**, whereas AlloyDB funnels all writes through one primary instance to disaggregated **LPS** storage shared with **Read Pools**:
+Spanner coordinates global writes using **PGAdapter**, **Multi-Paxos**, **2PC**, and **TrueTime**. Conversely, AlloyDB routes all writes through one primary to **LPS** storage shared with **Read Pools**:
 
 ```mermaid
 flowchart TB
@@ -49,7 +49,7 @@ flowchart TB
     end
 ```
 
-Notice the structural boundary: Spanner scales writes globally with strict serializability via Paxos + TrueTime, while AlloyDB keeps PostgreSQL single-writer semantics (`100%` extension/trigger parity) and scales reads plus HTAP analytics.
+Spanner scales writes globally with strict serializability using Paxos and TrueTime. AlloyDB keeps single-writer semantics (`100%` extension parity) and scales reads plus HTAP analytics.
 
 ---
 
@@ -61,7 +61,7 @@ $$
 L_{\text{Spanner-Write}} \approx L_{\text{Paxos-quorum}} + 2 \cdot \varepsilon_{\text{TrueTime}} + k_{\text{2PC}} \cdot \text{RTT}_{\text{2PC}}, \qquad \varepsilon_{\text{TrueTime}} < 7\text{ ms}
 $$
 
-2. **Spanner PG Dialect Constraints vs. AlloyDB LPS:** Spanner uses **Wound-Wait** concurrency control, **Interleaved Tables**, **bit-reversed sequences**, and **Change Streams** (`~65%` PG compatibility: zero C extensions, no triggers, mandatory PKs). Conversely, AlloyDB offloads dirty-page writes to **LPS** and accelerates OLAP scans in Read Pools via its **Columnar Engine**.
+2. **Spanner PG Dialect Constraints vs. AlloyDB LPS:** Spanner uses **Wound-Wait** concurrency control, **Interleaved Tables**, **bit-reversed sequences**, and **Change Streams** (`~65%` PG compatibility: zero C extensions, no triggers, mandatory PKs). Conversely, AlloyDB offloads dirty pages to **LPS** and speeds OLAP scans in Read Pools with its **Columnar Engine**.
 
 | Mode / Variant | Scope & Mechanism | Commit & Sync Path | Conflict / Failover | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
@@ -86,7 +86,7 @@ $$
 
 ## 5. Architectural Exclusion (`APP-005`), Mode Comparison & Reference Baseline
 
-**Why `#13 GCP Spanner & AlloyDB` Were Not Live-Benchmarked (`APP-005`):** Per `docs/RCA_REGISTER.md` (`APP-005`), Cloud Spanner depends on proprietary TrueTime GPS/atomic-clock hardware and Colossus/Borg infrastructure, while AlloyDB is a proprietary GCP managed service (`AlloyDB Omni` is commercially licensed). Zero synthetic TPS or latency figures are invented here.
+**Why `#13 GCP Spanner & AlloyDB` Were Not Live-Benchmarked (`APP-005`):** Per `docs/RCA_REGISTER.md` (`APP-005`), Cloud Spanner uses proprietary TrueTime hardware and Colossus storage. AlloyDB is a closed GCP service (`AlloyDB Omni` requires a commercial license). Zero synthetic TPS or latency figures are invented here.
 
 In our empirical baseline (`results/benchmark_summary.csv`, `results/functional_limits_matrix.csv`), Spanner maps onto `T5` (`PC/EC` Multi-Raft) while AlloyDB maps onto `T1/T2` single-primary HA (99th-percentile latency is not recorded in `results/`):
 
@@ -107,8 +107,8 @@ Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 | **Google Cloud Spanner & AlloyDB (#13)** | `Partial (PGAdapter only; engine proprietary)` -- `Proprietary (Managed Cloud)` | N/A (Proprietary) | N/A / N/A / N/A | N/A / N/A | N/A / N/A | N/A / Proprietary | N/A / N/A |
 | **Cloud Spanner PGAdapter (#13a)** | `Partial (Proxy only)` -- `Primary (Client Proxy; Engine Proprietary)` | [`GoogleCloudPlatform/pgadapter`](https://github.com/GoogleCloudPlatform/pgadapter) (`Org / 1545`) | 94 / 36 / 26 | 4040 / 934 | 22 / 74 | Java / `Apache-2.0` | `v0.56.4` / `2026-11-20T11:30:29Z` |
 
-- **Maintenance Level:** **Closed / Managed Cloud (+ OSS Proxy)** -- Core Spanner and AlloyDB engines are closed GCP services (`N/A`); open-source `GoogleCloudPlatform/pgadapter` logs `934` commits/12m (`4,040` total, `22` contributors, `94` stars, `74` open issues).
-- **Currency / Freshness:** **Opaque Engine + Active Proxy** -- Engine push `N/A`; PGAdapter last push `2026-11-20T11:30:29Z`, `934` commits/12m, latest release `v0.56.4`.
+- **Maintenance Level:** **Closed / Managed Cloud (+ OSS Proxy)** -- Spanner and AlloyDB engines are closed GCP services (`N/A`). Open-source `GoogleCloudPlatform/pgadapter` logs `934` commits/12m (`4,040` total, `22` contributors, `94` stars, `74` open issues).
+- **Currency / Freshness:** **Opaque Engine + Active Proxy** -- Engine push is `N/A`. PGAdapter last push was `2026-11-20T11:30:29Z` (`934` commits/12m, release `v0.56.4`).
 - **Operational Manageability:** **Vendor Lock-In** -- Requires managed GCP Spanner/AlloyDB services (or commercial `AlloyDB Omni`), `PGAdapter` sidecar ops, and Spanner dialect constraints.
 
 ---
