@@ -21,15 +21,15 @@
 
 ## 1. Technology Description & What It Does
 
-**PostgreSQL Native Uni-Directional Logical Replication** (`pg17-logical`) decodes committed WAL records (`wal_level = logical`) into row-level `INSERT` / `UPDATE` / `DELETE` tuples via the built-in `pgoutput` plugin, streaming them asynchronously from a **Publisher** (`CREATE PUBLICATION`) to a **Subscriber** (`CREATE SUBSCRIPTION`).
+**PostgreSQL Native Uni-Directional Logical Replication** (`pg17-logical`) decodes committed WAL records (`wal_level = logical`) into `INSERT`/`UPDATE`/`DELETE` tuples using `pgoutput`. It streams them asynchronously from a **Publisher** (`CREATE PUBLICATION`) to a **Subscriber** (`CREATE SUBSCRIPTION`).
 
-Unlike block-level physical streaming (`#15b`), logical replication decouples physical storage, OS/CPU architecture, and major PostgreSQL versions (`PG 15 -> 17 -> 18`), enabling **zero-downtime major upgrades**, **selective table/row/column replication**, and **writable subscribers** for local reporting tables.
+Unlike physical streaming (`#15b`), logical replication decouples storage, OS/CPU, and major PostgreSQL versions (`PG 15 -> 17 -> 18`). It enables **zero-downtime major upgrades**, selective table/row/column filters, and writable subscribers.
 
 ---
 
 ## 2. Architecture & Data Flow
 
-In `env/multi-db-docker-env/docker-compose-pg-logical.yml`, clients write to `pg_logical_pub` (`127.0.0.1:15436:5432`) while `pg_logical_sub` (`127.0.0.1:15437:5432`) applies row changes over `pg_logical_net` via logical slot `sub_logical`:
+In `env/multi-db-docker-env/docker-compose-pg-logical.yml`, clients write to `pg_logical_pub` (`127.0.0.1:15436:5432`). Meanwhile `pg_logical_sub` (`127.0.0.1:15437:5432`) applies changes over `pg_logical_net` using logical slot `sub_logical`:
 
 ```mermaid
 flowchart LR
@@ -50,7 +50,7 @@ $$
 L_{\text{T3-logical}} \approx L_{\text{disk}} \quad (\text{local publisher WAL fsync; apply is asynchronous})
 $$
 
-3. **Three Mandatory Operational Traps:** (a) keyless tables reject `UPDATE`/`DELETE` (`SQLSTATE 55000`); (b) DDL (`ALTER TABLE ADD COLUMN`) is not replicated; (c) **Sequence Non-Sync (`T18` / `L1`):** PostgreSQL 15–17 logical replication never advances subscriber sequences (`pub=50|true` vs `sub=1|false`), triggering `23505` on failover unless `setval()` is run first.
+3. **Three Operational Traps:** Keyless tables reject `UPDATE`/`DELETE` (`55000`), and DDL does not replicate. Also PostgreSQL 15–17 never advances subscriber sequences (`pub=50|true` vs `sub=1|false`), causing `23505` until `setval()` runs.
 
 | Mode / Option | Scope | Behavior & Filter Mechanics | Failover / Sequence Impact | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
@@ -150,7 +150,7 @@ Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 
 - **Maintenance Level:** **Tier S (Core)** -- `postgres/postgres` logs `3,446` commits/12m (`66,091` total, `58` mirror committers, `22,894` stars) under multi-vendor PostgreSQL governance.
 - **Currency / Freshness:** **Current -- Daily Active** -- Last push `2026-11-20T16:52:40Z`, `3,446` commits/12m, latest release `REL_19_0`.
-- **Operational Manageability:** **Low Risk** -- Built-in core feature (PostgreSQL License, zero extensions); runbooks only need `setval()` on cutover and `max_slot_wal_keep_size` guards.
+- **Operational Manageability:** **Low Risk** -- Built-in core feature (PostgreSQL License, zero extensions). Runbooks only need `setval()` on cutover and `max_slot_wal_keep_size` guards.
 
 ---
 
