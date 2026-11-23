@@ -6,7 +6,7 @@
 
 > **Auteur** : Jean-Marie Renouard (`jmrenouard`) | **Soutenu par** : [LightPath](https://www.lightpath.fr) | **Licence** : MIT | [English Version (`README.md`)](README.md)
 
-Ce dépôt présente une étude comparative de **16 solutions PostgreSQL** (7 familles, **19 fiches**) et **18 topologies Docker** (`10` PG 17/distribuées, `5` PostgreSQL 18.6, `2` YT Cluster 1.21.3, `cockroach-rc` via [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.2`, `13` piles). La suite couvre **18 sondes (`L1–L8`, `T11–T18`)**, PG 18.6 AIO, `uuidv7()`, conflits et `T_REVERT` YT Cluster. Nous publions **628 mesures brutes** (**310 baseline `PG_SCALE=2`** / **301 dédupliquées** + **318 V5 `PG_SCALE=20`**). Le dépôt inclut **22 entrées de télémétrie GitHub** (`19` publics + `3` fermés/managés), **13 graphiques `log10`** et [**`dashboard/index.html`**](dashboard/index.html).
+Ce dépôt présente une étude comparative de **16 solutions PostgreSQL** (7 familles, **19 fiches**) et **18 topologies Docker** (`10` PG 17/distribuées, `5` PostgreSQL 18.6, `2` YT Cluster 1.21.3, `cockroach-rc` avec [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.2`, `13` piles). La suite couvre **18 sondes (`L1–L8`, `T11–T18`)**, PG 18.6 AIO, `uuidv7()`, conflits et `T_REVERT` YT Cluster. Nous publions **628 mesures brutes** (**310 baseline `PG_SCALE=2`** / **301 dédupliquées** + **318 V5 `PG_SCALE=20`**). Le dépôt inclut **22 entrées de télémétrie GitHub** (`19` publics + `3` fermés/managés), **13 graphiques `log10`** et [**`dashboard/index.html`**](dashboard/index.html).
 
 ---
 
@@ -81,6 +81,8 @@ Ouvrez [**`dashboard/index.html`**](dashboard/index.html) hors-ligne (**bascule 
 
 ## 2. Plan complet de l'étude (Français / Anglais)
 
+Consultez le [Portail documentaire Diátaxis](docs/index.md) pour parcourir tutoriels, guides pratiques, références et explications.
+
 | # | Document Français (`docs/fr/`) | Document Anglais (`docs/en/`) | Thème couvert |
 |:-:|:---|:---|:---|
 | **01** | [Synthèse exécutive et taxonomie](docs/fr/01_synthese_et_taxonomie.md) | [Executive Summary & Taxonomy](docs/en/01_executive_summary_and_taxonomy.md) | Problématique WAL unique, taxonomie 7 familles / 15 solutions, Mermaid |
@@ -108,10 +110,10 @@ Chaque solution étudiée dispose d'une fiche technique d'environ 1 à 2 pages A
 
 | Solution et fiche dédiée | Lien produit / doc | Dépôt GitHub | Description brève |
 | :--- | :--- | :--- | :--- |
-| **[#1 — PG 17 Logique Bidirectionnelle](docs/fr/solutions/pg17_bidirectional_logical.md)** | [Doc PG 17](https://www.postgresql.org/docs/17/logical-replication-subscription.html) | [`postgres/postgres`](https://github.com/postgres/postgres) | Maillage actif-actif natif PG 16/17+ via `origin = none` (`PA/EL`) sans extension externe, s'arrêtant sur collision `23505` faute de résolution automatique. |
+| **[#1 — PG 17 Logique Bidirectionnelle](docs/fr/solutions/pg17_bidirectional_logical.md)** | [Doc PG 17](https://www.postgresql.org/docs/17/logical-replication-subscription.html) | [`postgres/postgres`](https://github.com/postgres/postgres) | Maillage actif-actif natif PG 16/17+ avec `origin = none` (`PA/EL`) sans extension externe, s'arrêtant sur collision `23505` faute de résolution automatique. |
 | **[#2 — Plateforme pgEdge / Spock v5](docs/fr/solutions/pgedge_spock.md)** | [Doc pgEdge](https://docs.pgedge.com/) | [`pgEdge/spock`](https://github.com/pgEdge/spock) · [`snowflake`](https://github.com/pgEdge/snowflake) | Extension logique multi-maîtres open-source (`PA/EL`) intégrant résolution `LWW`, colonnes `CRDT` `delta_apply`, identifiants Snowflake et réplication DDL automatique. |
 | **[#3 — pglogical 2](docs/fr/solutions/pglogical2.md)** | [Doc pglogical](https://www.enterprisedb.com/docs/pglogical/latest/) | [`2ndQuadrant/pglogical`](https://github.com/2ndQuadrant/pglogical) | Extension historique de réplication logique asynchrone (`PA/EL`) offrant jeux sélectifs, politiques de conflits et `replicate_ddl_command` sans CRDT. |
-| **[#4 — EDB Postgres Distributed (PGD/BDR)](docs/fr/solutions/edb_pgd.md)** | [Doc EDB PGD](https://www.enterprisedb.com/docs/pgd/latest/) | Propriétaire / N/A | Plateforme commerciale `bdr` combinant réplication logique asynchrone/CRDT (`PA/EL`) et consensus Raft embarqué (`CAMO`, Eager, Write-Lead `PC/EC`) via `pgd-proxy`. |
+| **[#4 — EDB Postgres Distributed (PGD/BDR)](docs/fr/solutions/edb_pgd.md)** | [Doc EDB PGD](https://www.enterprisedb.com/docs/pgd/latest/) | Propriétaire / N/A | Plateforme commerciale `bdr` combinant réplication logique asynchrone/CRDT (`PA/EL`) et consensus Raft embarqué (`CAMO`, Eager, Write-Lead `PC/EC`) par `pgd-proxy`. |
 | **[#5 — YugabyteDB (YSQL + DocDB)](docs/fr/solutions/yugabytedb.md)** | [Doc YugabyteDB](https://docs.yugabyte.com/) | [`yugabyte/yugabyte-db`](https://github.com/yugabyte/yugabyte-db) | SGBD SQL distribué (`PC/EC`) associant un fork C PostgreSQL (`YSQL`) au moteur transactionnel `DocDB` Raft par tablet (`RF=3`), horloge HLC et `READ COMMITTED` pessimiste. |
 | **[#6 — CockroachDB](docs/fr/solutions/cockroachdb.md)** | [Doc CockroachDB](https://www.cockroachlabs.com/docs/stable/) | [`cockroachdb/cockroach`](https://github.com/cockroachdb/cockroach) | Moteur SQL distribué en Go compatible `pgwire` sur stockage `Pebble` Multi-Raft (`RF=3`, `PC/EC`), imposant l'isolation stricte `SERIALIZABLE` (boucles `40001`). |
 | **[#7 — Citus](docs/fr/solutions/citus.md)** | [Doc Citus](https://docs.citusdata.com/en/stable/) | [`citusdata/citus`](https://github.com/citusdata/citus) | Extension pure PostgreSQL de sharding horizontal (`PC/EC`) orchestrant Coordinateur et Workers par hachage, 2PC distribué, tables de référence et routage `Citus MX`. |

@@ -86,6 +86,8 @@ Open [**`dashboard/index.html`**](dashboard/index.html) offline in any browser w
 
 ## Complete Study Navigation (English & French)
 
+See the [Diataxis Documentation Portal](docs/index.md) for a goal-based map across Tutorials, How-To Guides, Reference, and Explanation.
+
 | Chapter | English (`docs/en/`) | Français (`docs/fr/`) |
 | :--- | :--- | :--- |
 | **01 — Taxonomy** | [01 — Executive Summary & Taxonomy](docs/en/01_executive_summary_and_taxonomy.md) | [01 — Synthèse et taxonomie](docs/fr/01_synthese_et_taxonomie.md) |
@@ -121,7 +123,7 @@ Every evaluated solution has an EN (`docs/en/solutions/`) and FR (`docs/fr/solut
 | **[#6 — CockroachDB](docs/en/solutions/cockroachdb.md)** | [CockroachDB Docs](https://www.cockroachlabs.com/docs/stable/) | [`cockroachdb/cockroach`](https://github.com/cockroachdb/cockroach) | Clean-room Go distributed SQL engine speaking `pgwire` over `Pebble` Multi-Raft ranges (`RF=3`, `PC/EC`), enforcing strict `SERIALIZABLE` isolation (`40001` retries) by default. |
 | **[#7 — Citus](docs/en/solutions/citus.md)** | [Citus Docs](https://docs.citusdata.com/en/stable/) | [`citusdata/citus`](https://github.com/citusdata/citus) | Pure PostgreSQL horizontal sharding extension (`PC/EC`) orchestrating Coordinator + Worker hash shards, 2PC distributed transactions/reference tables, and optional `Citus MX`. |
 | **[#8 — OpenTenBase / Postgres-XL / XC](docs/en/solutions/opentenbase_pgxl.md)** | [OpenTenBase Docs](https://docs.opentenbase.org/) | [`OpenTenBase/OpenTenBase`](https://github.com/OpenTenBase/OpenTenBase) | Shared-nothing MPP PostgreSQL fork (`PC/EC`) with stateless Coordinators, sharded Datanodes, and a centralized Global Transaction Manager (`GTM`) for 2PC (XC retired, XL dormant). |
-| **[#9 — Bucardo 5](docs/en/solutions/bucardo.md)** | [Bucardo Site](https://bucardo.org/) | [`bucardo/bucardo`](https://github.com/bucardo/bucardo) | External Perl daemon (`PA/EL`) capturing row changes via `PL/Perl` triggers into `bucardo_delta` tables for asynchronous PK-mandatory multi-master batch sync. |
+| **[#9 — Bucardo 5](docs/en/solutions/bucardo.md)** | [Bucardo Site](https://bucardo.org/) | [`bucardo/bucardo`](https://github.com/bucardo/bucardo) | External Perl daemon (`PA/EL`) capturing row changes using `PL/Perl` triggers into `bucardo_delta` tables for asynchronous PK-mandatory multi-master batch sync. |
 | **[#10 — SymmetricDS](docs/en/solutions/symmetricds.md)** | [SymmetricDS Docs](https://symmetricds.org/docs/overview/) | [`jumpmindinc/symmetric-ds`](https://github.com/jumpmindinc/symmetric-ds) | Java JVM trigger-based asynchronous engine (`PA/EL`) staging changes in `sym_data` for heterogeneous (PG/MySQL/Oracle/SQLite) HTTP/HTTPS edge and mesh batch sync. |
 | **[#11 — PgPool-II](docs/en/solutions/pgpool_ii.md)** | [PgPool-II Docs](https://www.pgpool.net/docs/latest/en/html/) | [`pgpool/pgpool2`](https://github.com/pgpool/pgpool2) | C SQL proxy supporting single-primary `streaming_replication` load balancing/Watchdog HA alongside fragile statement-broadcast `replication` and `snapshot_isolation` (`PC/EC`) modes. |
 | **[#12 — AWS Aurora Limitless (& MM v1)](docs/en/solutions/aws_aurora_limitless.md)** | [AWS Aurora Limitless Docs](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/limitless.html) | Proprietary / N/A | Managed AWS sharded engine (`PC/EC`) pairing Transaction Routers, Data Access Shards, 4/6 AZ storage quorum, and Time Sync MVCC 2PC (superseding retired Aurora MM v1). |
@@ -178,7 +180,7 @@ make pages-build && make pages-check  # Stage & verify offline GitHub Pages bund
 
 - **Living Registers:** Every engineering decision, bug RCA, dead-end, and simplification is tracked in [`docs/ACTION_LOGBOOK.md`](docs/ACTION_LOGBOOK.md) and [`docs/RCA_REGISTER.md`](docs/RCA_REGISTER.md).
 - **Credential Hygiene:** Repository files hold zero real passwords or host paths. Containers read defaults from [`.env.example`](.env.example).
-- **Threats to Validity:** Local benchmarks share one 20-vCPU / 16.4 GiB NVMe host. We modeled WAN delay via `tc netem` (`25 ms`), not separate regions (see [Chapter 05](docs/en/05_poc_architectures_and_test_protocol.md)).
+- **Threats to Validity:** Local benchmarks share one 20-vCPU / 16.4 GiB NVMe host. We modeled WAN delay with `tc netem` (`25 ms`), not separate regions (see [Chapter 05](docs/en/05_poc_architectures_and_test_protocol.md)).
 
 ---
 

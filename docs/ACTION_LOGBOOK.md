@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-252 - Link Diataxis Portal and Clean via in README EN/FR (`#677`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#677` (`docs/issue-677-readme-diataxis-links`)
+- **Request / Changes / Result**: Added `docs/index.md` navigation links and eliminated residual non-CSV `via` across `README.md` and `README.fr.md` while keeping 0 STE procedural errors and full Tier 1-5 CSV parity; Windows unittest and WSL `make test lint check-math check-security pages-build pages-check` pass.
+
 ### ACT-251 - Create docs/index.md Diataxis Documentation Portal (`#675`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#675` (`docs/issue-675-diataxis-index`)
 - **Request / Changes / Result**: Created `docs/index.md` mapping all EN/FR chapters, 19 bilingual solution sheet pairs, `stacks/README.md`, and governance registers into the 4 Diataxis quadrants with 0 STE errors; Windows unittest and WSL `make test lint check-math check-security pages-build pages-check clean` pass.
