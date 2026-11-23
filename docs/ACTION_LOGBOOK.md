@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-239 - Refactor pglogical2 EN/FR Sheets (`#651`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#651` (`docs/issue-651-pglogical2`)
+- **Request / Changes / Result**: Refactored `docs/{en,fr}/solutions/pglogical2.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-238 - Refactor symmetricds EN/FR Sheets (`#649`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#649` (`docs/issue-649-symmetricds`)
 - **Request / Changes / Result**: Refactored `docs/{en,fr}/solutions/symmetricds.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.

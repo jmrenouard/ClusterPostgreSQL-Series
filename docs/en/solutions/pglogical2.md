@@ -19,9 +19,9 @@
 
 ## 1. Technology Description & What It Does
 
-**pglogical 2** is the foundational C-extension logical replication framework developed by 2ndQuadrant before PostgreSQL 10 introduced built-in `pgoutput` logical replication. Loaded via `shared_preload_libraries = 'pglogical'`, it runs a custom WAL output plugin alongside supervisor and per-subscription apply workers to stream row-level changes selectively across homogeneous or cross-major-version PostgreSQL clusters (`PG 9.4` through `PG 16/17`).
+**pglogical 2** is the foundational C-extension logical replication framework developed by 2ndQuadrant before PostgreSQL 10 introduced built-in `pgoutput` logical replication. Loaded with `shared_preload_libraries = 'pglogical'`, it runs a custom WAL plugin plus supervisor and apply workers. It streams row changes selectively across homogeneous or cross-version clusters (`PG 9.4–16/17`).
 
-It pioneered **Replication Sets** (`default`, `default_insert_only`, `ddl_sql`), time-delayed logical replicas (`apply_delay`), configurable conflict handlers (`pglogical.conflict_resolution`), and zero-downtime upgrades from pre-PG-10 instances. Historically, 2ndQuadrant engineers contributed PG 10+ native logical replication, **pgEdge (`#2 Spock`)** forked `pglogical` into an open-source CRDT/Auto-DDL multi-master engine, and **EDB (`#4 PGD`)** carried forward the commercial BDR multi-master line.
+It pioneered **Replication Sets** (`default`, `default_insert_only`, `ddl_sql`), time-delayed logical replicas (`apply_delay`), configurable conflict handlers (`pglogical.conflict_resolution`), and zero-downtime upgrades from pre-PG-10 instances. Historically, 2ndQuadrant contributed native PG 10+ logical replication. Then **pgEdge (`#2 Spock`)** forked `pglogical` into an OSS CRDT multi-master engine, while **EDB (`#4 PGD`)** built commercial BDR.
 
 ---
 
@@ -51,7 +51,7 @@ $$
 L_{\text{pglogical2-async}} \approx L_{\text{disk}}, \qquad L_{\text{pglogical2-sync}} \approx L_{\text{disk}} + \text{RTT}_{\text{subscriber}}
 $$
 
-3. **Conflict Policies, DDL & Sequences:** With `track_commit_timestamp = on`, `pglogical.conflict_resolution` arbitrates collisions via five policies (`error`, `apply_remote`, `keep_local`, `last_update_wins`, `first_update_wins`), with **zero CRDT (`delta_apply`) support**. Raw SQL DDL does not replicate automatically and must be wrapped in `pglogical.replicate_ddl_command('...')`; `pglogical.synchronize_sequence()` syncs values in batches rather than preventing multi-writer PK collisions.
+3. **Conflict Policies, DDL & Sequences:** With `track_commit_timestamp = on`, `pglogical.conflict_resolution` arbitrates collisions using five policies (`error`, `apply_remote`, `keep_local`, `last_update_wins`, `first_update_wins`), with **zero CRDT (`delta_apply`) support**. Raw SQL DDL does not replicate automatically, so admins must wrap it in `pglogical.replicate_ddl_command('...')`. Also `pglogical.synchronize_sequence()` syncs batches rather than stopping multi-writer PK collisions.
 
 | Mode / Option | Scope | Mechanics & Key Strategy | Conflict / Failover Impact | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
@@ -77,12 +77,12 @@ $$
 
 ## 5. Architectural Exclusion, Mode Comparison & Reference Baseline
 
-**Why `pglogical 2` Was Not Live-Benchmarked:** The Docker PoC (`env/multi-db-docker-env/`) targets **PostgreSQL 17**, where `pglogical 2` is in maintenance mode and superseded across every role it once filled:
-1. **Uni-directional & upgrade role:** Replaced by native PG 17 `pgoutput` (`#16 pg17-logical`), which includes `WHERE` row filters, column lists (PG 15+), `pg_createsubscriber`, and `failover=true` slot sync without external extensions.
+**Why `pglogical 2` Is Not Live-Benchmarked:** The Docker PoC (`env/multi-db-docker-env/`) targets **PostgreSQL 17**. On PG 17, `pglogical 2` is in maintenance mode and superseded across every role:
+1. **Uni-directional & upgrade role:** Native PG 17 `pgoutput` (`#16 pg17-logical`) replaces this role. It includes `WHERE` filters, column lists, `pg_createsubscriber`, and `failover=true` slots without external extensions.
 2. **Zero-extension bidirectional role:** Replaced by native PG 16+ `origin = none` (`#1 pg-birep`).
 3. **Extension-enhanced multi-master role:** Replaced by its direct open-source fork **`#2 pgEdge / Spock 5`** (`pgedge` / `pgedge-delta-apply`), which adds `spock.delta_apply` CRDTs (`0` drift vs `-278,698` in Suite D), `snowflake` 64-bit IDs, and automatic DDL replication.
 
-Because `pglogical 2` shares the identical PostgreSQL 17 heap, `wal_level = logical`, and `track_commit_timestamp = on` commit engine, its performance and limit profile map directly onto the live-benchmarked Tier 3/4 baselines below (no synthetic numbers are invented for `pglogical 2`):
+`pglogical 2` shares the same PG 17 heap, `wal_level = logical`, and `track_commit_timestamp = on` engine. Therefore, its behavior maps directly onto the live Tier 3/4 baselines below:
 
 | Capability / Baseline | `#3 pglogical 2` *(Arch. Ref.)* | `#16 pg17-logical` *(PoC Baseline)* | `#1 pg-birep` *(PoC Baseline)* | `#2 pgEdge / Spock 5` *(PoC Fork)* |
 | :--- | :--- | :--- | :--- | :--- |
@@ -103,7 +103,7 @@ Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 
 - **Maintenance Level:** **Tier C (Fragile / Maintenance)** -- `2ndQuadrant/pglogical` logs only `15` commits/12m (`876` total, `52` contributors, `1,243` stars, `191` open issues).
 - **Currency / Freshness:** **Low Cadence** -- Last push `2026-07-28T18:10:14Z`, `15` commits/12m, latest release `REL2_4_8`.
-- **Operational Manageability:** **High Risk** -- Maintenance-only C extension (`PostgreSQL License` / `NOASSERTION` SPDX); superseded by native PG 17 logical replication and `pgEdge/spock`.
+- **Operational Manageability:** **High Risk** -- Maintenance-only C extension (`PostgreSQL License` / `NOASSERTION` SPDX). Native PG 17 logical replication and `pgEdge/spock` supersede it.
 
 ---
 
