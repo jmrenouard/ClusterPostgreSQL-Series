@@ -19,15 +19,15 @@
 
 ## 1. Description de la technologie et rôle
 
-**pglogical 2** est l'extension C fondatrice de réplication logique développée par 2ndQuadrant avant l'arrivée de `pgoutput` dans PostgreSQL 10. Chargée via `shared_preload_libraries = 'pglogical'`, elle exécute un plugin de sortie WAL dédié et des workers superviseurs/d'application pour diffuser sélectivement les lignes sur des clusters homogènes ou hétérogènes en version majeure (`PG 9.4` à `PG 16/17`).
+**pglogical 2** est l'extension C fondatrice de réplication logique développée par 2ndQuadrant avant l'arrivée de `pgoutput` dans PostgreSQL 10. Chargée par `shared_preload_libraries = 'pglogical'`, elle exécute un plugin WAL dédié et des workers d'application. Elle diffuse sélectivement les lignes entre versions majeures (`PG 9.4` à `PG 16/17`).
 
-Elle a introduit les **Replication Sets** (`default`, `default_insert_only`, `ddl_sql`), les réplicas différés (`apply_delay`), la résolution de conflits (`pglogical.conflict_resolution`) et les migrations sans coupure depuis des instances pré-PG-10. Historiquement, 2ndQuadrant a contribué `pgoutput` au cœur PG 10+, **pgEdge (`#2 Spock`)** a forké `pglogical` vers un moteur CRDT/Auto-DDL open source, et **EDB (`#4 PGD`)** a poursuivi la lignée commerciale BDR.
+Elle a introduit les **Replication Sets** (`default`, `default_insert_only`, `ddl_sql`), les réplicas différés (`apply_delay`), la résolution de conflits (`pglogical.conflict_resolution`) et les migrations sans coupure depuis des instances pré-PG-10. 2ndQuadrant a contribué `pgoutput` au cœur PG 10+. Ensuite **pgEdge (`#2 Spock`)** a forké `pglogical` vers un moteur CRDT/Auto-DDL open source et **EDB (`#4 PGD`)** a développé BDR.
 
 ---
 
 ## 2. Architecture et flux de données
 
-Dans un déploiement `pglogical`, `pglogical.create_node(...)` et `pglogical.create_subscription(...)` relient le plugin de sortie du fournisseur aux workers du souscripteur via des ensembles de réplication et le filtrage d'origine :
+Dans `pglogical`, `create_node(...)` et `create_subscription(...)` relient le fournisseur au souscripteur avec des ensembles de réplication et filtres d'origine :
 
 ```mermaid
 flowchart TB
@@ -51,7 +51,7 @@ $$
 L_{\text{pglogical2-async}} \approx L_{\text{disque}}, \qquad L_{\text{pglogical2-sync}} \approx L_{\text{disque}} + \text{RTT}_{\text{souscripteur}}
 $$
 
-3. **Politiques de conflit, DDL & séquences :** Avec `track_commit_timestamp = on`, `pglogical.conflict_resolution` applique cinq règles (`error`, `apply_remote`, `keep_local`, `last_update_wins`, `first_update_wins`), **sans CRDT (`delta_apply`)**. Le DDL brut n'est pas répliqué et doit passer par `pglogical.replicate_ddl_command('...')` ; `pglogical.synchronize_sequence()` synchronise par lots sans empêcher les collisions PK multi-écrivains.
+3. **Politiques de conflit, DDL & séquences :** Avec `track_commit_timestamp = on`, `pglogical.conflict_resolution` applique cinq règles (`error`, `apply_remote`, `keep_local`, `last_update_wins`, `first_update_wins`), **sans CRDT (`delta_apply`)**. Le DDL brut ne réplique pas seul, donc utilisez `pglogical.replicate_ddl_command('...')`. De plus, `pglogical.synchronize_sequence()` resynchronise par lots sans éviter les collisions PK.
 
 | Mode / Option | Portée | Mécanique et stratégie de clés | Impact conflit / bascule | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
@@ -77,7 +77,7 @@ $$
 
 ## 5. Exclusion architecturale, comparatif des modes et base de référence
 
-**Pourquoi `pglogical 2` n'a pas été benchmarké en direct :** Le PoC Docker (`env/multi-db-docker-env/`) cible **PostgreSQL 17**, où `pglogical 2` est en mode maintenance et dépassé sur chacun de ses rôles :
+**Pourquoi `pglogical 2` reste hors benchmark direct :** Le PoC Docker (`env/multi-db-docker-env/`) cible **PostgreSQL 17**. Sous PG 17, `pglogical 2` reste en maintenance et remplacé sur chaque rôle :
 1. **Rôle unidirectionnel & montée de version :** Remplacé par `pgoutput` natif PG 17 (`#16 pg17-logical`), intégrant filtres `WHERE`, listes de colonnes (PG 15+), `pg_createsubscriber` et slots `failover=true` sans extension.
 2. **Rôle bidirectionnel sans extension :** Remplacé par `origin = none` natif PG 16+ (`#1 pg-birep`).
 3. **Rôle multi-maîtres avancé :** Remplacé par son fork open source direct **`#2 pgEdge / Spock 5`** (`pgedge` / `pgedge-delta-apply`), ajoutant les CRDT `spock.delta_apply` (`0` dérive vs `-278698` en Suite D), les IDs `snowflake` 64 bits et l'Auto-DDL.
@@ -103,7 +103,7 @@ Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf 
 
 - **Niveau de maintenance :** **Niveau C (Fragile / Maintenance)** -- `2ndQuadrant/pglogical` n'enregistre que `15` commits/12m (`876` total, `52` contributeurs, `1 243` stars, `191` issues).
 - **Fraîcheur / Actualité :** **Cadence faible** -- Dernier push `2026-07-28T18:10:14Z`, `15` commits/12m, dernière version `REL2_4_8`.
-- **Maintenabilité opérationnelle :** **Risque élevé** -- Extension C en maintenance (`PostgreSQL License` / SPDX `NOASSERTION`) ; dépassée par PG 17 logique natif et `pgEdge/spock`.
+- **Maintenabilité opérationnelle :** **Risque élevé** -- Extension C en maintenance (`PostgreSQL License`, SPDX `NOASSERTION`). PG 17 logique natif et `pgEdge/spock` la remplacent.
 
 ---
 
