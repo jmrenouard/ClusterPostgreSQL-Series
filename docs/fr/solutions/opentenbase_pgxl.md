@@ -21,13 +21,13 @@
 
 **OpenTenBase**, **Postgres-XL** et leur ancêtre retiré **Postgres-XC** (initié par NTT) forment une lignée PostgreSQL **MPP *shared-nothing***. À la différence de `#7 Citus` (extension C pure sur PostgreSQL 17 standard), cette famille forke le noyau PostgreSQL pour séparer trois rôles : des **Coordinateurs (CN)** sans état, des **Datanodes (DN)** shardés par hachage et un **Global Transaction Manager (GTM)** centralisé.
 
-En délivrant des identifiants globaux (`GXID`), des instantanés MVCC globaux / *Commit Sequence Numbers* (`CSN`) et des séquences globales depuis le GTM, le cluster garantit une isolation par instantané cohérente entre shards et des jointures analytiques parallèles (`HTAP`/`OLAP`). Aujourd'hui, **Postgres-XC** est retiré, **Postgres-XL** est gelé sur `PG 10` (~2018) et **OpenTenBase** (fork de TBase par Tencent sous l'OpenAtom Foundation) reste le seul descendant actif.
+Le GTM délivre les `GXID`, les instantanés `CSN` et les séquences globales. Le cluster garantit ainsi une isolation par instantané cohérente et des jointures parallèles (`HTAP`/`OLAP`). Aujourd'hui, **Postgres-XC** est retiré, **Postgres-XL** est gelé sur `PG 10` (~2018) et **OpenTenBase** (fork de TBase par Tencent sous l'OpenAtom Foundation) reste le seul descendant actif.
 
 ---
 
 ## 2. Architecture et flux de données
 
-Un cluster OpenTenBase / Postgres-XL canonique route le SQL via des **Coordinateurs** sans état, demande `GXID`/instantanés au **GTM** (tamponnés optionnellement par **GTM-Proxy**) et valide sur les **Datanodes** en 2PC (`PREPARE TRANSACTION` / `COMMIT PREPARED`) :
+Un cluster OpenTenBase ou Postgres-XL route le SQL par des **Coordinateurs** sans état. Ceux-ci demandent `GXID` et instantanés au **GTM** (ou **GTM-Proxy**) puis valident en 2PC sur les **Datanodes** :
 
 ```mermaid
 flowchart TB
@@ -41,7 +41,7 @@ flowchart TB
     CN2 <-->|"Push-Down MPP + 2PC"| DN2
 ```
 
-Comme **chaque** `BEGIN`, lecture d'instantané et `COMMIT` 2PC distribué dépend du GTM, les liens WAN amplifient fortement la latence comparé à Citus mono-shard ou aux moteurs Raft/HLC décentralisés (`#5`, `#6`).
+Chaque `BEGIN`, lecture et `COMMIT` 2PC dépend du GTM, ce qui alourdit la latence WAN. Citus mono-shard et les moteurs Raft/HLC (`#5`, `#6`) évitent ce point central.
 
 ---
 
@@ -54,7 +54,7 @@ $$
 L_{\text{N5-MPP-GTM}} \approx L_{\text{disque-DN}} + \text{RTT}_{\text{CN-GTM}} + 2 \cdot \text{RTT}_{\text{CN-DN}}
 $$
 
-3. **Modes de distribution et lignée :** Les tables utilisent `DISTRIBUTE BY HASH(col)` / `MODULO(col)` pour le sharding MPP, ou `DISTRIBUTE BY REPLICATION` pour les référentiels mis à jour par 2PC ; toute contrainte `PK`/`UNIQUE` distribuée impose la clé de distribution (`Ch. 04`).
+3. **Distribution et lignée :** Utiliser `DISTRIBUTE BY HASH(col)` ou `MODULO(col)` pour le sharding MPP, et `DISTRIBUTE BY REPLICATION` pour les référentiels en 2PC. Toute `PK`/`UNIQUE` distribuée exige la clé de distribution (`Ch. 04`).
 
 | Lignée / Mode | Statut & noyau | Mécanique et stratégie de clés | Impact conflit / bascule | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
@@ -79,7 +79,7 @@ $$
 
 ## 5. Exclusion architecturale, comparatif des modes et base de référence
 
-**Pourquoi `#8 OpenTenBase / Postgres-XL / Postgres-XC` n'a pas été benchmarké en direct :** Le PoC Docker (`env/multi-db-docker-env/`, `Makefile` `PG_STACKS`) évalue 9 stacks centrés sur **PostgreSQL 17** et les moteurs SQL distribués actuels. Postgres-XC est retiré, Postgres-XL figé sur `PG 10` (EOL) et OpenTenBase vise le MPP/HTAP massif intra-datacenter sur un noyau `PG 10–11` forké plutôt que l'OLTP actif-actif PG 17. Aucun chiffre synthétique de TPS ou latence n'est inventé ici.
+**Pourquoi `#8 OpenTenBase / Postgres-XL / Postgres-XC` n'a pas été benchmarké en direct :** Le PoC Docker (`env/multi-db-docker-env/`, `Makefile` `PG_STACKS`) évalue 9 stacks centrés sur **PostgreSQL 17** et les moteurs SQL distribués actuels. Postgres-XC est retiré et Postgres-XL figé sur `PG 10`. OpenTenBase vise le MPP/HTAP intra-DC sur noyau `PG 10–11` plutôt que l'OLTP PG 17. Aucun chiffre synthétique de TPS ou latence n'est inventé ici.
 
 À la place, `#8` se compare directement aux bases de référence `T5` (`CP / PC-EC`) et mono-nœud mesurées dans `results/benchmark_summary.csv` et `results/functional_limits_matrix.csv` (la latence au 99e percentile n'est pas enregistrée dans `results/`) :
 
@@ -99,7 +99,7 @@ Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf 
 | :--- | :--- | :--- | :---: | :---: | :---: | :--- | :--- |
 | **OpenTenBase (#8)** | `Yes` -- `Primary (PG-XL/XC Successor)` | [`OpenTenBase/OpenTenBase`](https://github.com/OpenTenBase/OpenTenBase) (`Org / 14`) | 816 / 636 / 112 | 817 / 14 | 64 / 421 | C / `NOASSERTION` | `v5.0` / `2026-11-09T13:23:30Z` |
 
-- **Niveau de maintenance :** **Niveau C (Fragile / Maintenance)** -- `OpenTenBase/OpenTenBase` n'enregistre que `14` commits/12m (`817` total, `64` contributeurs, `816` stars, `421` issues) ; Postgres-XC est retiré et Postgres-XL figé sur PG 10.
+- **Niveau de maintenance :** **Niveau C (Fragile / Maintenance)** -- `OpenTenBase/OpenTenBase` compte `14` commits/12m (`817` total, `64` contributeurs, `816` stars, `421` issues). Postgres-XC est retiré et Postgres-XL figé sur PG 10.
 - **Fraîcheur / Actualité :** **Cadence faible** -- Dernier push `2026-11-09T13:23:30Z`, `14` commits/12m, dernière version `v5.0`.
 - **Maintenabilité opérationnelle :** **Risque élevé** -- Noyau forké `PG 10–11` (`MulanPSL-2.0` / SPDX `NOASSERTION`) et pile 4 rôles GTM/CN/DN très lourds face à `#7 Citus`.
 

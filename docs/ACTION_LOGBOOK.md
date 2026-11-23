@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-242 - Refactor opentenbase_pgxl EN/FR Sheets (`#657`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#657` (`docs/issue-657-opentenbase-pgxl`)
+- **Request / Changes / Result**: Refactored `docs/{en,fr}/solutions/opentenbase_pgxl.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-241 - Refactor pgpool_ii EN/FR Sheets (`#655`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#655` (`docs/issue-655-pgpool-ii`)
 - **Request / Changes / Result**: Refactored `docs/{en,fr}/solutions/pgpool_ii.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.
