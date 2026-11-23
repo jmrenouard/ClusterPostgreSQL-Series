@@ -19,9 +19,9 @@
 
 ## 1. Description de la technologie et rôle
 
-La **réplication logique bidirectionnelle native PostgreSQL** (`pg-birep`) relie deux ou plusieurs primaires PostgreSQL 16/17/18 inscriptibles en maillage actif-actif via `pgoutput` et l'option `WITH (origin = none)`.
+La **réplication logique bidirectionnelle native PostgreSQL** (`pg-birep`) relie des primaires PostgreSQL 16/17/18 en maillage actif-actif avec `pgoutput` et `WITH (origin = none)`.
 
-Introduite dans PostgreSQL 16, l'option `origin = none` filtre les modifications portant déjà un `pg_replication_origin` distant, coupant les boucles infinies `Nœud 1 -> Nœud 2 -> Nœud 1` sans extension tierce. Devant un équilibreur **HAProxy TCP round-robin**, chaque nœud acquitte localement au rythme du disque, limitant toutefois `pg-birep` aux **espaces de clés strictement disjoints** car PostgreSQL natif n'offre **aucune résolution automatique de conflit**.
+Introduite dans PostgreSQL 16, l'option `origin = none` filtre les modifications portant déjà un `pg_replication_origin` distant, coupant les boucles infinies `Nœud 1 -> Nœud 2 -> Nœud 1` sans extension tierce. Derrière **HAProxy TCP round-robin**, chaque nœud acquitte localement au rythme du disque. Sans **aucune résolution automatique de conflit**, `pg-birep` exige des **espaces de clés disjoints**.
 
 ---
 
@@ -42,14 +42,14 @@ flowchart TB
 
 ## 3. Principes de fonctionnement et modes d'implémentation
 
-1. **Suppression de boucle (`origin = none`) :** Les commits locaux ont `origin = NULL` et sont diffusés ; les workers entrants marquent les tuples d'un `pg_replication_origin`, ignoré par les flux `walsender` sortants.
+1. **Suppression de boucle (`origin = none`) :** Les commits locaux gardent `origin = NULL` et sont diffusés. Les workers marquent les lignes reçues d'un `pg_replication_origin`, filtré au départ par `origin = none`.
 2. **Modèle de latence de commit :**
 
 $$
 L_{\text{N4-birep}} \approx L_{\text{disque}} \quad (\text{fsync WAL local ; application asynchrone sur le pair})
 $$
 
-3. **Zéro résolution de conflit (`23505` / `55000`) :** `track_commit_timestamp = on` journalise les horodatages pour diagnostic, mais toute collision PK/`UNIQUE` gèle le worker (`apply_error_count`) jusqu'à suppression de ligne ou `ALTER SUBSCRIPTION ... SKIP (lsn = '...')`.
+3. **Zéro résolution (`23505` / `55000`) :** `track_commit_timestamp = on` trace l'horodatage, mais tout conflit PK/`UNIQUE` gèle le worker (`apply_error_count`). Débloquer par suppression ou `ALTER SUBSCRIPTION ... SKIP (lsn = '...')`.
 
 | Mode / Option | Portée | Mécanique et stratégie de clés | Impact conflit / bascule | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
@@ -94,7 +94,7 @@ Tests à `pg_scale = 2` (`retries_40001 = 0`). Seules `Avg`, `Stddev` (`0` pour 
 | `H_append_only_insert` | 8 / 12s | 627.13 | N/A | 12.717 / 11.294 / 32.793 | 7522 (0) | 0 | `PASS_CONVERGED` |
 | `F_wan_netem_25ms` | 8 / 15s | 824.04 | N/A | 9.694 / 10.444 / 24.949 | 12354 (0) | 0 | `PASS_NETEM_25MS` |
 
-*(Détails divergence : `B2` `exp=-189377`, `n1=-193944` vs `n2=-208996` ; `D` `exp=922873`, `n1=851810` vs `n2=851747`.)*
+*(Détails divergence : `B2` `exp=-189377`, `n1=-193944` vs `n2=-208996`. `D` `exp=922873`, `n1=851810` vs `n2=851747`.)*
 
 ### Tableau B — Balayages concurrence & WAN (`benchmark_concurrency_sweep.csv`, `benchmark_wan_sweep.csv`)
 

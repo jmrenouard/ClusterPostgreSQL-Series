@@ -45,10 +45,10 @@ A single authoritative memory image yields immediate linearizability (`catchup =
 
 ## 3. Operating Principles & Implementation Modes
 
-PostgreSQL 17 enforces local ACID via **Write-Ahead Logging (WAL)** and **MVCC**:
+PostgreSQL 17 enforces local ACID with **Write-Ahead Logging (WAL)** and **MVCC**:
 
 1. **Sequential WAL Commit:** Redo records are appended to WAL buffers and flushed (`fdatasync`) before `COMMIT` returns.
-2. **Row-Level Serialization:** Concurrent updates on hot keys (`D_hot_conflict`, `B2_overlap_rw`) serialize via local tuple locks (`xmax`) with zero write divergence or `40001` retries.
+2. **Row-Level Serialization:** Concurrent updates on hot keys (`D_hot_conflict`, `B2_overlap_rw`) serialize through local tuple locks (`xmax`) with zero write divergence or `40001` retries.
 3. **Commit Latency Model:**
 
 $$
@@ -59,7 +59,7 @@ Durability depends on `synchronous_commit` and `wal_sync_method` (Linux PG 17 de
 
 | Mode / Parameter | Scope | Commit Durability Path | Data Loss (`RPO`) | Latency / Throughput Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
-| **`synchronous_commit = on`** *(PoC)* | Session / global | Flushes WAL via `wal_sync_method` before `COMMIT` | **`RPO = 0`** (`20/20` on `SIGKILL`, `T16`) | Baseline (`866.82 TPS` Suite A; `p95 = 23.958 ms`) |
+| **`synchronous_commit = on`** *(PoC)* | Session / global | Flushes WAL using `wal_sync_method` before `COMMIT` | **`RPO = 0`** (`20/20` on `SIGKILL`, `T16`) | Baseline (`866.82 TPS` Suite A; `p95 = 23.958 ms`) |
 | **`synchronous_commit = local`** | Session / global | Identical to `on` when no standby exists | **`RPO = 0`** | Same as `on` on standalone |
 | **`synchronous_commit = off`** | Session / global *(Arch.)* | Returns from WAL buffer; `walwriter` flushes every `wal_writer_delay` (`200 ms`) | **`RPO > 0`** (~`600 ms` max; zero corruption) | Higher fsync-bound TPS; drops flush stall |
 | **`wal_sync_method`** (`fdatasync`, `open_datasync`, `fsync`) | Server | Selects Linux WAL flush syscall (`fdatasync` skips inode metadata) | **`RPO = 0`** with `on` | `fdatasync` / `open_datasync` faster than `fsync` |

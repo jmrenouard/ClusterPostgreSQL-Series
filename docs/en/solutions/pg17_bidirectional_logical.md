@@ -19,9 +19,9 @@
 
 ## 1. Technology Description & What It Does
 
-**PostgreSQL Native Bidirectional Logical Replication** (`pg-birep`) connects two or more writable PostgreSQL 16/17/18 primaries in an active-active logical mesh using core `pgoutput` publications and subscriptions configured with `WITH (origin = none)`.
+**PostgreSQL Native Bidirectional Logical Replication** (`pg-birep`) links writable PostgreSQL 16/17/18 primaries in an active-active mesh. It uses core `pgoutput` publications and subscriptions with `WITH (origin = none)`.
 
-Introduced in PostgreSQL 16, `origin = none` filters out changes that carry a remote `pg_replication_origin`, breaking infinite `Node 1 -> Node 2 -> Node 1` replication loops without third-party extensions. Fronted by **HAProxy TCP round-robin**, both nodes accept local writes at disk speed, making `pg-birep` viable **only for strictly disjoint keyspaces** (sharded tenants or stepped sequences) because core PostgreSQL includes **zero automatic conflict resolution**.
+Introduced in PostgreSQL 16, `origin = none` filters out changes that carry a remote `pg_replication_origin`, breaking infinite `Node 1 -> Node 2 -> Node 1` replication loops without third-party extensions. Behind **HAProxy TCP round-robin**, both nodes accept local writes at disk speed. Because core PostgreSQL offers **zero auto-conflict resolution**, `pg-birep` fits **strictly disjoint keyspaces** only.
 
 ---
 
@@ -42,14 +42,14 @@ flowchart TB
 
 ## 3. Operating Principles & Implementation Modes
 
-1. **Loop Prevention (`origin = none`):** Local commits have `origin = NULL` and replicate to peers; peer apply workers tag incoming rows with a `pg_replication_origin`, which `origin = none` skips on outbound `walsender` streams.
+1. **Loop Prevention (`origin = none`):** Local commits keep `origin = NULL` and replicate to peers. Apply workers tag incoming rows with `pg_replication_origin`, so `origin = none` skips them outbound.
 2. **Commit Latency Model:**
 
 $$
 L_{\text{T4-birep}} \approx L_{\text{disk}} \quad (\text{local WAL fsync; peer apply is asynchronous})
 $$
 
-3. **No Conflict Resolution (`23505` / `55000` Halt):** `track_commit_timestamp = on` records commit timestamps for diagnostics, but PK/`UNIQUE` collisions halt the apply worker (`pg_stat_subscription_stats.apply_error_count`) until resolved via row deletion or `ALTER SUBSCRIPTION ... SKIP (lsn = '...')`.
+3. **No Conflict Resolution (`23505` / `55000` Halt):** `track_commit_timestamp = on` records timestamps for diagnostics, but PK/`UNIQUE` collisions halt apply (`apply_error_count`). Recover with row cleanup or `ALTER SUBSCRIPTION ... SKIP (lsn = '...')`.
 
 | Mode / Option | Scope | Mechanics & Sequence Strategy | Conflict / Failover Impact | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
@@ -94,7 +94,7 @@ Ran at `pg_scale = 2` (`retries_40001 = 0`). Only `Avg`, `Stddev` (`0` for `sysb
 | `H_append_only_insert` | 8 / 12s | 627.13 | N/A | 12.717 / 11.294 / 32.793 | 7522 (0) | 0 | `PASS_CONVERGED` |
 | `F_wan_netem_25ms` | 8 / 15s | 824.04 | N/A | 9.694 / 10.444 / 24.949 | 12354 (0) | 0 | `PASS_NETEM_25MS` |
 
-*(Divergence details: `B2` `exp=-189377`, `n1=-193944` vs `n2=-208996`; `D` `exp=922873`, `n1=851810` vs `n2=851747`.)*
+*(Divergence details: `B2` `exp=-189377`, `n1=-193944` vs `n2=-208996`. `D` `exp=922873`, `n1=851810` vs `n2=851747`.)*
 
 ### Table B — Concurrency & WAN Latency Sweeps (`benchmark_concurrency_sweep.csv`, `benchmark_wan_sweep.csv`)
 
