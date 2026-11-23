@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-234 - Refactor pg17_logical_unidirectional EN/FR Sheets (`#641`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#641` (`docs/issue-641-pg17-logical-unidir`)
+- **Request / Changes / Result**: Refactored `docs/{en,fr}/solutions/pg17_logical_unidirectional.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-233 - Refactor pg17_bidirectional_logical and pg17_standalone EN/FR Sheets (`#639`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#639` (`docs/issue-639-pg17-bidir-standalone`)
 - **Request / Changes / Result**: Refactored `docs/{en,fr}/solutions/pg17_bidirectional_logical.md` for 0 STE mixed-mode errors and removed non-CSV `via` in `docs/{en,fr}/solutions/pg17_standalone.md` while keeping verbatim CSV findings intact; Windows unittest and WSL `make test lint check-math check-security` pass.

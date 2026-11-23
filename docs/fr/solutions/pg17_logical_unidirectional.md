@@ -21,15 +21,15 @@
 
 ## 1. Description de la technologie et rôle
 
-La **réplication logique native unidirectionnelle** (`pg17-logical`) décode le WAL validé (`wal_level = logical`) en tuples `INSERT` / `UPDATE` / `DELETE` via le plugin natif `pgoutput`, et les diffuse de façon asynchrone d'un **Éditeur** (`CREATE PUBLICATION`) vers un **Abonné** (`CREATE SUBSCRIPTION`).
+La **réplication logique native unidirectionnelle** (`pg17-logical`) décode le WAL validé (`wal_level = logical`) en tuples `INSERT`/`UPDATE`/`DELETE` avec `pgoutput`. Elle diffuse le flux de l'**Éditeur** (`CREATE PUBLICATION`) vers l'**Abonné** (`CREATE SUBSCRIPTION`).
 
-Contrairement au streaming physique (`#15b`), elle découple le stockage physique, l'OS/CPU et la version majeure PostgreSQL (`PG 15 -> 17 -> 18`), permettant les **upgrades majeurs sans coupure**, le **filtrage par table/ligne/colonne** et des **abonnés inscriptibles** pour des tables locales de reporting.
+Contrairement au streaming physique (`#15b`), elle découple le stockage, l'OS/CPU et les versions majeures (`PG 15 -> 17 -> 18`). Elle permet les **upgrades majeurs sans coupure**, le filtrage et les abonnés inscriptibles.
 
 ---
 
 ## 2. Architecture et flux de données
 
-Dans `env/multi-db-docker-env/docker-compose-pg-logical.yml`, les clients écrivent sur `pg_logical_pub` (`127.0.0.1:15436:5432`) tandis que `pg_logical_sub` (`127.0.0.1:15437:5432`) applique le flux sur `pg_logical_net` via le slot logique `sub_logical` :
+Dans `env/multi-db-docker-env/docker-compose-pg-logical.yml`, les clients écrivent sur `pg_logical_pub` (`127.0.0.1:15436:5432`). L'abonné `pg_logical_sub` (`127.0.0.1:15437:5432`) applique le flux sur `pg_logical_net` avec le slot `sub_logical` :
 
 ```mermaid
 flowchart LR
@@ -50,7 +50,7 @@ $$
 L_{\text{N3-logique}} \approx L_{\text{disque}} \quad (\text{fsync WAL local éditeur ; application asynchrone})
 $$
 
-3. **Trois pièges opérationnels majeurs :** (a) sans PK, `UPDATE`/`DELETE` échoue (`SQLSTATE 55000`) ; (b) le DDL (`ALTER TABLE ADD COLUMN`) ne réplique pas ; (c) **Non-sync des séquences (`T18` / `L1`) :** PG 15–17 ne synchronise pas les séquences (`pub=50|true` vs `sub=1|false`), provoquant `23505` sur bascule sans `setval()`.
+3. **Trois pièges opérationnels majeurs :** Sans PK, `UPDATE`/`DELETE` échoue (`55000`), et le DDL ne réplique pas. PG 15–17 ne synchronise pas non plus les séquences (`pub=50|true` vs `sub=1|false`), causant `23505` sans `setval()`.
 
 | Mode / Option | Portée | Comportement et filtrage | Impact bascule / séquences | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
@@ -150,7 +150,7 @@ Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf 
 
 - **Niveau de maintenance :** **Niveau S (Cœur)** -- Le miroir `postgres/postgres` totalise `3 446` commits/12m (`66 091` total, `58` committeurs, `22 894` stars) sous gouvernance multi-éditeurs.
 - **Fraîcheur / Actualité :** **À jour -- Actif au quotidien** -- Dernier push `2026-11-20T16:52:40Z`, `3 446` commits/12m, dernière version `REL_19_0`.
-- **Maintenabilité opérationnelle :** **Risque faible** -- Fonction native (licence PostgreSQL, zéro extension) ; prévoir seulement `setval()` au basculement et `max_slot_wal_keep_size`.
+- **Maintenabilité opérationnelle :** **Risque faible** -- Fonction native (licence PostgreSQL, zéro extension). Prévoir seulement `setval()` au basculement et `max_slot_wal_keep_size`.
 
 ---
 
