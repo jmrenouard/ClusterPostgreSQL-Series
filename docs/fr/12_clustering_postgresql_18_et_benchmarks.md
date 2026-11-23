@@ -10,7 +10,7 @@
 
 ## 1. Évolution du clustering : PostgreSQL 16 -> 17 -> 18
 
-Nous avons déployé **`PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)`** sur les cinq topologies natives (`pg18-standalone`, `pg18-async-streaming`, `pg18-sync-streaming`, `pg18-logical`, `pg18-birep`), collectant **87 lignes de benchmarks séquentiels** ([`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv)) et **5 x 26 sondes fonctionnelles** ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv) ; journal [`results/logs/pg18-benchmark.log`](../../results/logs/pg18-benchmark.log)).
+Nous avons déployé **`PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)`** sur les cinq topologies natives (`pg18-standalone`, `pg18-async-streaming`, `pg18-sync-streaming`, `pg18-logical`, `pg18-birep`), collectant **87 lignes de benchmarks séquentiels** ([`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv)) et **5 x 26 sondes fonctionnelles** ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv), journal [`results/logs/pg18-benchmark.log`](../../results/logs/pg18-benchmark.log)).
 
 ```mermaid
 flowchart LR
@@ -69,10 +69,10 @@ $$
 | `confl_multiple_unique_conflicts` *(PG 18)* | 0 | **1** | `INSERT` unique heurtant simultanément la PK et `UNIQUE(email)` |
 
 Résultats clés `L1-L8` / `T11-T18` (`results/functional_limits_pg18.csv`) :
-- **`T11` Bulk 10k :** `pg18-async-streaming` mène à **`87 903 lignes/s`** (`114 ms`, rattrapage `88,4 ms` vs `28 693` PG 17) ; `standalone` `80 108` (`+52,6 %`) ; `sync-streaming` `75 629` (`+90,5 %`, `99,8 ms`) ; `birep` `70 470` (`321,2 ms`) ; `logical` `69 827` (`316,0 ms`).
-- **`T13` Course FK inter-nœuds :** `pg18-birep` révèle une course FK asynchrone (**`2/10 ok ; 23503x8`**) ; le streaming bloque (`25006x10`) ; `standalone` et `logical` passent `10/10`.
-- **`T14` / `T15` / `T16` / `T17` :** 5/5 bit-identiques (`md5=00493e3a`, `BYTEA` `65 536 o`, `JSONB`, UTF-8) ; lag RAW `T15` réduit partout (`pg18-async` `4,41/5,80` vs `9,65/25,13 ms`, `sync` `1,47/2,07`, `logical` `1,46/1,68`, `birep` `1,25/1,75 ms`) ; 5/5 valident `T16` (`RPO=0`, `21/21`) et `T17` (`NO_DIRTY_READ`, `82-114 ms`).
-- **`T18` Séquences & `L7` WAL :** Le streaming garde `66|true` (`next_id=67`, `3 008 o` WAL ; sync gèle sur `wait_event=SyncRep`). `pg18-logical` (`19 448 o`) et `pg18-birep` (`352 664 o`) lèvent **`SQLSTATE 42601`** (`FOR ALL SEQUENCES` / `REFRESH SEQUENCES`) et restent à `1|false` -> **`SQLSTATE 23505`**.
+- **`T11` Bulk 10k :** `pg18-async-streaming` mène à **`87 903 lignes/s`** (`114 ms`, rattrapage `88,4 ms` vs `28 693` PG 17). `standalone` atteint `80 108` (`+52,6 %`), `sync-streaming` `75 629` (`+90,5 %`, `99,8 ms`), `birep` `70 470` (`321,2 ms`) et `logical` `69 827` (`316,0 ms`).
+- **`T13` Course FK inter-nœuds :** `pg18-birep` révèle une course FK asynchrone (**`2/10 ok`, `23503x8`**). Le streaming bloque (`25006x10`), tandis que `standalone` et `logical` passent `10/10`.
+- **`T14` / `T15` / `T16` / `T17` :** 5/5 sont bit-identiques (`md5=00493e3a`, `BYTEA` `65 536 o`, `JSONB`, UTF-8). Le lag RAW `T15` baisse partout (`pg18-async` `4,41/5,80` vs `9,65/25,13 ms`, `sync` `1,47/2,07`, `logical` `1,46/1,68`, `birep` `1,25/1,75 ms`). 5/5 valident `T16` (`RPO=0`, `21/21`) et `T17` (`NO_DIRTY_READ`, `82-114 ms`).
+- **`T18` Séquences & `L7` WAL :** Le streaming garde `66|true` (`next_id=67`, `3 008 o` WAL, sync gèle sur `wait_event=SyncRep`). `pg18-logical` (`19 448 o`) et `pg18-birep` (`352 664 o`) lèvent **`SQLSTATE 42601`** (`FOR ALL SEQUENCES` / `REFRESH SEQUENCES`) et restent à `1|false` -> **`SQLSTATE 23505`**.
 
 ---
 
@@ -114,9 +114,9 @@ Les 87 mesures PG 18.6 tournent séquentiellement à `PG_SCALE=2` dans le harnai
 
 ### Synthèse des performances
 
-1. **Gains nets de PG 18.6 :** `substream=p`, `uuidv7()` et le groupement I/O propulsent `H_append_only` (`pg18-birep` **3,30x**, `pg18-logical` **+85,1 %**, `pg18-sync` **+35,3 %**), `sysbench` écriture (`pg18-sync` `E3` **3,20x**, `pg18-logical` `E` **+72,5 %** / `E3` **+97,5 %**), la concurrence `pg18-birep` (`c=8` **4,92x**), le WAN `50 ms` (**3,50x**) et le bulk `T11` (+7 % à **3,06x**).
-2. **Coût honnête sur micro-OLTP chaud :** Sur petites écritures en cache (`A`/`B1`/`B2`) et `C`, `data_checksums=on` + l'IPC `io_method=worker` réduisent les pointes de `-8,5 %` à `-41 %` vs PG 17 (`checksums=off`, `sync`), cohérent avec la sonde A/B (`290,75` vs `323,98 TPS`).
-3. **Lois physiques inchangées :** `pg18-sync-streaming` chute de `-94,9 %` à `50 ms` WAN (`25,60 TPS`, `p95 = 766,21 ms`) ; `pg18-birep` diverge toujours sur chevauchement (`B2` `-338` ; `D` `-83 252`).
+1. **Gains nets de PG 18.6 :** `substream=p`, `uuidv7()` et le groupement I/O accélèrent `H_append_only` (`pg18-birep` **3,30x**, `pg18-logical` **+85,1 %**, `pg18-sync` **+35,3 %**). En `sysbench` écriture, `pg18-sync` `E3` gagne **3,20x** et `pg18-logical` **+72,5 %** (`E`) / **+97,5 %** (`E3`), avec `c=8` (**4,92x**), WAN `50 ms` (**3,50x**) et `T11` (+7 % à **3,06x**).
+2. **Coût honnête sur micro-OLTP chaud :** Sur petites écritures en cache (`A`/`B1`/`B2`) et `C`, `data_checksums=on` et `io_method=worker` réduisent les pointes de `-8,5 %` à `-41 %`. Ce retrait concorde avec PG 17 (`checksums=off`, `sync`) et la sonde A/B (`290,75` vs `323,98 TPS`).
+3. **Lois physiques inchangées :** `pg18-sync-streaming` chute de `-94,9 %` à `50 ms` WAN (`25,60 TPS`, `p95 = 766,21 ms`). `pg18-birep` diverge encore sur chevauchement (`B2` `-338`, `D` `-83 252`).
 
 ---
 
@@ -125,7 +125,7 @@ Les 87 mesures PG 18.6 tournent séquentiellement à `PG_SCALE=2` dans le harnai
 ### 4.1 Liste de contrôle (`PG 16/17 -> PG 18.6`)
 
 1. **Stockage conteneur :** Monter `/var/lib/postgresql` et résoudre `$PGDATA` (`/var/lib/postgresql/18/docker`) dans `pg_basebackup` et Patroni.
-2. **Checksums et AIO :** Activer les checksums avant `pg_upgrade` (`pg_checksums --enable`). Garder `io_method=worker` en mixte/scans ; tester `sync` en micro-OLTP RAM ; ouvrir `io_uring` dans seccomp avant bascule.
+2. **Checksums et AIO :** Activer les checksums avant `pg_upgrade` (`pg_checksums --enable`). Garder `io_method=worker` en mixte ou scans. Tester `sync` en micro-OLTP RAM et ouvrir `io_uring` dans seccomp avant bascule.
 3. **Séquences manuelles :** Avant PG 19, exécuter le script `setval()` (Ch. 10, §5.2) sur chaque bascule logique pour éviter `SQLSTATE 23505`.
 
 ### 4.2 Frontière honnête : PG 18 natif vs extensions et SQL distribué
