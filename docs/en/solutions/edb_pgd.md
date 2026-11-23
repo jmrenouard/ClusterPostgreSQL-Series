@@ -19,9 +19,9 @@
 
 ## 1. Technology Description & What It Does
 
-**EDB Postgres Distributed (PGD)** — evolved from 2ndQuadrant's Bi-Directional Replication (**BDR**) — is a commercial distributed PostgreSQL multi-master platform built on PostgreSQL / EDB Postgres Extended. Unlike pure asynchronous logical extensions, PGD v5/v6 embeds a **native Raft consensus plane** inside the `bdr` extension across data and optional witness nodes, paired with **`pgd-proxy`** (which superseded the older external `etcd`/`Consul`-based **HARP** daemon from BDR v3/v4).
+**EDB Postgres Distributed (PGD)** — evolved from 2ndQuadrant's Bi-Directional Replication (**BDR**) — is a commercial distributed PostgreSQL multi-master platform built on PostgreSQL / EDB Postgres Extended. Unlike async logical extensions, PGD v5/v6 embeds a **native Raft plane** inside `bdr` across data and witness nodes. It pairs with **`pgd-proxy`**, replacing the external HARP daemon.
 
-Within a single cluster, PGD spans the PACELC trade-off spectrum: workloads can run in local-speed asynchronous mesh mode using `bdr.conflict_history` LWW or conflict-free CRDT column types (`bdr.crdt_gcounter`, `bdr.crdt_pncounter`, `bdr.crdt_delta_counter`, `bdr.crdt_delta_sum`), or tighten to Raft-coordinated `RPO = 0` via **CAMO**, **Eager All-Node Replication**, or **Write-Lead** routing.
+PGD covers the full PACELC spectrum. Workloads can run in fast async mesh mode with LWW or CRDT columns (`bdr.crdt_*`), or enforce Raft `RPO = 0` using **CAMO**, **Eager**, or **Write-Lead**.
 
 ---
 
@@ -53,7 +53,7 @@ $$
 L_{\text{PGD-Async/CRDT}} \approx L_{\text{disk}}, \qquad L_{\text{PGD-CAMO/Eager}} \approx L_{\text{disk}} + 2 \cdot \text{RTT}_{\text{Raft/Partner}}
 $$
 
-3. **Exact CRDTs, Conflict Audit & Global Sequences:** Numeric CRDT columns use `bdr.crdt_gcounter`, `bdr.crdt_pncounter`, `bdr.crdt_delta_counter`, or `bdr.crdt_delta_sum` with `REPLICA IDENTITY FULL`; row-level conflicts and LWW outcomes (`column_modify_timestamp`) are recorded in `bdr.conflict_history`. Global IDs use `bdr.global_sequences` (`snowflakeid` recommended 64-bit `bigint`, `galloc` Raft chunks for 32-bit PKs, or legacy `timeshard`).
+3. **Exact CRDTs, Audit & Sequences:** Numeric CRDTs (`bdr.crdt_*`) require `REPLICA IDENTITY FULL`, and `bdr.conflict_history` logs LWW outcomes (`column_modify_timestamp`). Global IDs use `bdr.global_sequences` (`snowflakeid`, `galloc`, or `timeshard`).
 
 | Mode / Feature | Scope | Mechanics & Key Strategy | Conflict / Failover / RPO Impact | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
@@ -80,11 +80,11 @@ $$
 
 ## 5. Architectural Exclusion (`APP-005`), Mode Comparison & Reference Baseline
 
-**Why EDB PGD Was Not Live-Benchmarked (`APP-005`):** Per `docs/RCA_REGISTER.md` (`APP-005`), EDB Postgres Distributed requires a commercial EnterpriseDB subscription and gated package/container registries. Including trial-gated proprietary binaries in `env/multi-db-docker-env/` would break the open, MIT-reproducible `make bench-all` contract.
+**Why EDB PGD Was Not Live-Benchmarked (`APP-005`):** Per `docs/RCA_REGISTER.md` (`APP-005`), EDB Postgres Distributed requires a commercial EnterpriseDB subscription and gated package/container registries. Adding trial-gated proprietary binaries in `env/multi-db-docker-env/` breaks the open, MIT-reproducible `make bench-all` contract.
 
 Instead, each PGD mode maps apples-to-apples onto live-benchmarked baselines in `results/*.csv` (no synthetic TPS or latency values are invented for EDB PGD):
-- **PGD Async + CRDT** shares the `wal_level = logical` local-commit + delta-merge physics of **`#2 pgedge` / `pgedge-delta-apply`** (`1,837.64 TPS` with `0` drift in `D_hot_conflict`; `646.77 TPS` at `25 ms` WAN).
-- **PGD Eager / CAMO** enters the `PC/EC` Raft-consensus regime bounded by WAN `2 * RTT` physics (`#5 YugabyteDB`: `5.78 TPS` at `25 ms` WAN; `#6 CockroachDB`: `10.06 TPS` at `25 ms` WAN).
+- **PGD Async + CRDT** shares the `wal_level = logical` local-commit physics of **`#2 pgedge` / `pgedge-delta-apply`** (`1,837.64 TPS`, `0` drift in `D_hot_conflict`, and `646.77 TPS` at `25 ms` WAN).
+- **PGD Eager / CAMO** enters the `PC/EC` Raft-consensus regime bounded by WAN `2 * RTT` physics (`#5 YugabyteDB`: `5.78 TPS` at `25 ms` WAN. `#6 CockroachDB`: `10.06 TPS` at `25 ms` WAN).
 - **PGD Write-Lead** behaves operationally like **`#15b Patroni HA`** in single-region OLTP while preserving hot cross-region peers.
 
 | Capability / Baseline | `#4 EDB PGD` *(Arch. Ref., `APP-005`)* | `#2 pgEdge / Spock 5` *(PoC)* | `#1 pg-birep` *(PoC)* | `#5 YugabyteDB` / `#6 CockroachDB` *(PoC)* |
