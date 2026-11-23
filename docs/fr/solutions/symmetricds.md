@@ -19,9 +19,9 @@
 
 ## 1. Description de la technologie et rôle
 
-**SymmetricDS** est un moteur Java de réplication et synchronisation asynchrone conçu pour les topologies **multi-maîtres**, **en étoile multi-niveaux (*hub-and-spoke*)** et **hétérogènes**. Plutôt que de décoder le journal WAL PostgreSQL, SymmetricDS se connecte via JDBC et installe des déclencheurs SQL (`INSERT`/`UPDATE`/`DELETE`) sur les tables suivies de chaque base participante.
+**SymmetricDS** est un moteur Java de réplication et synchronisation asynchrone conçu pour les topologies **multi-maîtres**, **en étoile multi-niveaux (*hub-and-spoke*)** et **hétérogènes**. Plutôt que de décoder le journal WAL PostgreSQL, SymmetricDS utilise JDBC et installe des triggers SQL (`INSERT`/`UPDATE`/`DELETE`) sur les tables suivies.
 
-Son atout majeur est la **portabilité multi-SGBD et la résilience hors-ligne** : un nœud SymmetricDS synchronise PostgreSQL avec MySQL, MariaDB, Oracle, SQL Server, SQLite ou DB2 via HTTP/HTTPS (Push ou Pull), en tamponnant localement les lots compressés durant des heures ou jours de coupure réseau (*retail POS*, sites distants) sans retenir de slots WAL PostgreSQL.
+Son atout majeur reste la **portabilité multi-SGBD et la résilience hors-ligne**. Un nœud SymmetricDS synchronise PostgreSQL avec MySQL, MariaDB, Oracle, SQL Server, SQLite ou DB2 par HTTP/HTTPS (Push ou Pull). Il stocke les lots compressés durant des jours de coupure sans retenir de slot WAL.
 
 ---
 
@@ -51,7 +51,7 @@ $$
 L_{\text{SymmetricDS-local}} \approx L_{\text{disque}} + L_{\text{trigger}}, \qquad T_{\text{lag-synchro}} \approx T_{\text{routage}} + T_{\text{lot-HTTP}} + T_{\text{apply}}
 $$
 
-3. **Détection, résolution de conflits, chargement initial et DDL :** `sym_conflict` combine des modes de détection (`USE_PK_DATA`, `USE_CHANGED_DATA`, `USE_TIMESTAMP`, `USE_VERSION`) et de résolution (`FALLBACK`, `NEWER_WINS`, `MANUAL` en quarantaine, `IGNORE`), sans CRDT delta-apply natif (`spock.delta_apply`). Le chargement initial passe par `symadmin reload-node` et la propagation DDL par `symadmin send-schema`.
+3. **Détection, résolution de conflits, chargement initial et DDL :** `sym_conflict` combine des modes de détection (`USE_PK_DATA`, `USE_CHANGED_DATA`, `USE_TIMESTAMP`, `USE_VERSION`) et de résolution (`FALLBACK`, `NEWER_WINS`, `MANUAL` en quarantaine, `IGNORE`), sans CRDT delta-apply natif (`spock.delta_apply`). Le chargement initial utilise `symadmin reload-node` et le DDL utilise `symadmin send-schema`.
 
 | Mode / Politique | Portée | Mécanique et stratégie de clés | Impact conflit / bascule | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
@@ -71,13 +71,13 @@ $$
 | **Référence hétérogène et Edge hors-ligne :** Synchronise PostgreSQL <-> MySQL, Oracle, SQL Server et SQLite sur HTTP/HTTPS, survivant à des coupures multi-jours sans saturer les slots WAL (`L7`). | **Amplification d'écriture et latence :** Chaque `INSERT`/`UPDATE`/`DELETE` écrit dans `sym_data` (surcoût `VACUUM`) et paie la sérialisation JVM/HTTP impropre à l'OLTP intensif. |
 | **Politiques de conflit par colonne :** `USE_CHANGED_DATA`, `USE_VERSION` et mise en quarantaine `MANUAL` affinent la résolution au-delà de `#1 pg-birep` (`23505`) ou `#9 Bucardo` (`bucardo_latest`). | **Zéro CRDT Delta-Apply (*Lost Updates*) :** Les incréments concurrents (`balance = balance + delta`) sous `NEWER_WINS` ou `FALLBACK` perdent des mises à jour comme `#9 Bucardo` (`-531 620`) et `#2 pgEdge LWW` (`-278 698`). |
 | **Indépendant des slots WAL et du noyau :** Opère sur diverses versions PostgreSQL ou instances cloud managées restreignant `wal_level = logical` ou extensions C (`Spock`). | **Empreinte JVM et exploitation :** Exige l'exploitation d'agents JVM (`sym`), la purge de `sym_data` et l'orchestration manuelle `symadmin send-schema`. |
-| **100 % d'extensions PostgreSQL locales :** Préserve stockage heap, `PostGIS`, `pgvector` et triggers locaux (via garde de session) sur chaque pair PostgreSQL. | **Pièges sans PK et ordre des FK :** Requiert une PK (`USE_PK_DATA`) pour les mises à jour et un regroupement strict dans `sym_channel` contre les erreurs FK (`23503`). |
+| **100 % d'extensions PostgreSQL locales :** Préserve stockage heap, `PostGIS`, `pgvector` et triggers locaux (par garde de session) sur chaque pair PostgreSQL. | **Pièges sans PK et ordre des FK :** Requiert une PK (`USE_PK_DATA`) pour les mises à jour et un regroupement strict dans `sym_channel` contre les erreurs FK (`23503`). |
 
 ---
 
 ## 5. Exclusion architecturale, comparatif des modes et base de référence
 
-**Pourquoi `#10 SymmetricDS` n'a pas été benchmarké en direct :** Le PoC Docker (`env/multi-db-docker-env/`, `Makefile` `PG_STACKS`) évalue des piles homogènes **PostgreSQL 17** actives-actives et SQL distribuées. SymmetricDS cible la **synchronisation hétérogène multi-moteurs** et les **topologies Edge intermittentes HTTP/HTTPS** plutôt que le débit OLTP homogène PG 17, et ne dispose pas de stack Compose dans `env/multi-db-docker-env/`. Aucun chiffre synthétique de TPS ou latence n'est inventé pour `#10` (et la latence au 99e percentile n'est pas enregistrée dans `results/`).
+**Pourquoi `#10 SymmetricDS` n'a pas été benchmarké en direct :** Le PoC Docker (`env/multi-db-docker-env/`, `Makefile` `PG_STACKS`) évalue des piles homogènes **PostgreSQL 17** actives-actives et SQL distribuées. SymmetricDS vise la **synchronisation hétérogène multi-moteurs** et l'Edge HTTP/HTTPS intermittent plutôt que l'OLTP PG 17 homogène. Aucun module Compose n'existe dans `env/multi-db-docker-env/`. Aucun chiffre synthétique de TPS ou latence n'est inventé pour `#10` (et la latence au 99e percentile n'est pas enregistrée dans `results/`).
 
 La physique Famille 5 de SymmetricDS (`PA/EL`, amplification par triggers, latence de lots et pertes LWW) se projette directement sur les bases Famille 5 / Niveau 4 mesurées dans `results/benchmark_summary.csv` et `results/extended_functional_matrix.csv` :
 
@@ -99,7 +99,7 @@ Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf 
 
 - **Niveau de maintenance :** **Niveau B (Niche)** -- `jumpmindinc/symmetric-ds` totalise `425` commits/12m (`14 926` total, `96` contributeurs, `882` stars, `17` issues).
 - **Fraîcheur / Actualité :** **À jour -- Actif** -- Dernier push `2026-11-20T16:39:06Z`, `425` commits/12m, dernière version `3.18.4`.
-- **Maintenabilité opérationnelle :** **Modéré** -- Moteur Java actif (SPDX GitHub `N/A` ; double licence LGPL/GPLv3) ; les agents JVM et purges `sym_data` exigent du suivi.
+- **Maintenabilité opérationnelle :** **Modéré** -- Moteur Java actif (double licence LGPL/GPLv3, SPDX `N/A`). Les agents JVM et purges `sym_data` demandent un suivi strict.
 
 ---
 
