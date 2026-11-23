@@ -111,16 +111,18 @@ nav:
       - "FR - 13 Optimisation Production (PG_SCALE=20)": fr/13_optimisation_production_et_benchmarks_realistes.md
   - Reference:
       - Chapters & Matrices:
-          - "EN - 04 Feature Comparison (36 Criteria)": en/04_comprehensive_feature_comparison.md
+          - "EN - 04 Feature Comparison (40 Criteria)": en/04_comprehensive_feature_comparison.md
           - "EN - 06 Empirical Benchmarks (A-H)": en/06_empirical_test_and_benchmark_results.md
           - "EN - 08 Limits & Failure Modes": en/08_limits_and_failure_modes.md
           - "EN - 09 Methodology & 13 Charts": en/09_benchmarks_methodology_and_charts.md
           - "EN - 11 Ecosystem Popularity & Vitality": en/11_ecosystem_popularity_and_vitality.md
-          - "FR - 04 Etude Comparative (36 Criteres)": fr/04_etude_comparative_fonctionnalites.md
+          - "EN - 14 Transparent Data Encryption (TDE)": en/14_transparent_data_encryption_tde.md
+          - "FR - 04 Etude Comparative (40 Criteres)": fr/04_etude_comparative_fonctionnalites.md
           - "FR - 06 Resultats Empiriques (A-H)": fr/06_resultats_tests_et_benchmarks.md
           - "FR - 08 Limites & Defaillances": fr/08_limites_et_modes_de_defaillance.md
           - "FR - 09 Methodologie & 13 Graphiques": fr/09_methodologie_benchmarks_et_graphiques.md
           - "FR - 11 Popularite & Vitalite": fr/11_popularite_et_vitalite_ecosysteme.md
+          - "FR - 14 Chiffrement Transparent (TDE)": fr/14_chiffrement_transparent_tde.md
       - Solutions (EN):
           - "#1 PG 17 Bidirectional Logical": en/solutions/pg17_bidirectional_logical.md
           - "#2 pgEdge / Spock v5": en/solutions/pgedge_spock.md

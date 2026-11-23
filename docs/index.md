@@ -38,12 +38,13 @@ Consult exact specifications, empirical throughput/latency numbers, failure mode
 
 | Reference Document | English | Francais | Scope |
 | :--- | :--- | :--- | :--- |
-| **Feature & Limit Matrix** | [Ch. 04 — Feature Comparison](en/04_comprehensive_feature_comparison.md) | [Ch. 04 — Etude comparative](fr/04_etude_comparative_fonctionnalites.md) | DDL, sequences, FKs, conflict policies |
+| **Feature & Limit Matrix** | [Ch. 04 — Feature Comparison](en/04_comprehensive_feature_comparison.md) | [Ch. 04 — Etude comparative](fr/04_etude_comparative_fonctionnalites.md) | 40 criteria across 6 matrices (incl. TDE) |
 | **Empirical Benchmarks (`A`–`H`)** | [Ch. 06 — Benchmark Results](en/06_empirical_test_and_benchmark_results.md) | [Ch. 06 — Resultats benchmarks](fr/06_resultats_tests_et_benchmarks.md) | 301 default rows + 318 tuned rows |
 | **Limits & SQLSTATE Probes** | [Ch. 08 — Limits & Failures](en/08_limits_and_failure_modes.md) | [Ch. 08 — Limites et defaillances](fr/08_limites_et_modes_de_defaillance.md) | `L1`–`L8` and `T11`–`T18` results |
 | **Methodology & 13 Charts** | [Ch. 09 — Methodology & Charts](en/09_benchmarks_methodology_and_charts.md) | [Ch. 09 — Methodologie et graphiques](fr/09_methodologie_benchmarks_et_graphiques.md) | Schemas, `log10` axes, chart traceability |
 | **Ecosystem Vitality (`22` Repos)** | [Ch. 11 — Ecosystem Vitality](en/11_ecosystem_popularity_and_vitality.md) | [Ch. 11 — Popularite et vitalite](fr/11_popularite_et_vitalite_ecosysteme.md) | Stars, 12-month commits, bus factor |
-| **Governance & Registers** | [Action Logbook](ACTION_LOGBOOK.md) | [RCA & Assumptions Register](RCA_REGISTER.md) | Chronological changes, RCAs, `APP-001`..`APP-007` |
+| **TDE & Encryption at Rest** | [Ch. 14 — Transparent Data Encryption](en/14_transparent_data_encryption_tde.md) | [Ch. 14 — Chiffrement Transparent (TDE)](fr/14_chiffrement_transparent_tde.md) | Key hierarchy, `pg_tde` 2.1, KMS, 18-arch matrix |
+| **Governance & Registers** | [Action Logbook](ACTION_LOGBOOK.md) | [RCA & Assumptions Register](RCA_REGISTER.md) | Chronological changes, RCAs, `APP-001`..`APP-016` |
 
 ### 19 Bilingual Architecture Sheets (`docs/{en,fr}/solutions/`)
 

@@ -356,6 +356,9 @@
 ### APP-015 - Conditional Node.js Skip Guard in `test_dashboard_js_syntax_and_unit_behavior`
 - **Date / Action**: `2026-11-22` (`ACT-194`, PR `#560`) | **Approximation**: `test_dashboard_js_syntax_and_unit_behavior` skips gracefully via `shutil.which("node")` only on Python-only runners lacking Node.js (`APP-013`), while active Windows (`v26`) and WSL (`v24`) developer/CI runtimes execute all `31/31` assertions non-skipped.
 
+### APP-016 - Architecture-Only TDE & KMS Custody Evaluation (`Ch. 14` & Matrix F)
+- **Date / Action**: `2026-11-23` (`ACT-259`..`ACT-267`, Issues `#691`..`#707`) | **Approximation**: TDE engine capabilities (`pg_tde` 2.1, `EPAS`/`PGE` `key_wrap_command`, DocDB, CockroachDB Pebble, and Cloud KMS/CMEK) are synthesized from upstream docs and source models alongside `APP-001` ephemeral lab stacks, without live `pgbench`/`sysbench` TDE-on-vs-off throughput/latency A/B runs or live `KMIP`/`OpenBao` hardware enclaves. Remove once dedicated encrypted-heap and WAL benchmark suites execute against `pg_tde` 2.1 with `KMIP`/`OpenBao`.
+
 ## 4. Unimplemented Ideas & Future Roadmap (`IDEA-XXX`)
 
 ### IDEA-001 - Automated Cross-Topology `pgbench` & `sysbench` Matrix
@@ -389,3 +392,7 @@
 ### IDEA-008 - Automated `make popularity` Markdown Sync & Drift Guard Across All 38 Solution Sheets
 - **Date / Action**: `2026-11-20` (`ACT-154`)
 - **Proposal**: Add a deterministic `scripts/sync_popularity_sheets.py` helper (wired to `make popularity`) to refresh Section 6 telemetry rows across all 38 `docs/{en,fr}/solutions/*.md` sheets directly from `results/project_popularity.csv` whenever the live GitHub snapshot is regenerated.
+
+### IDEA-009 - Empirical `pg_tde` 2.1 AIO vs Plaintext Heap/WAL Overhead Benchmark Suite
+- **Date / Action**: `2026-11-23` (`ACT-267`)
+- **Proposal**: Add a reproducible Docker and bare-metal benchmark suite comparing `PostgreSQL 18.6` `io_method=worker` plaintext against `pg_tde` 2.1 (`pg_tde.wal_encrypt = on`, AES-GCM/CBC) backed by containerized `KMIP` or `OpenBao` across Suites `A`, `E`, `H`, and `T11` to measure real CPU/latency overhead under `APP-016`.
