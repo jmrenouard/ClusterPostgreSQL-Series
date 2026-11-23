@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-253 - Add Documentation Hygiene and STE Structural Gate (`#679`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#679` (`test/issue-679-docs-hygiene-gate`)
+- **Request / Changes / Result**: Added `tests/test_docs_hygiene.py` enforcing link/`#anchor` resolution, `Makefile` target checks, zero `file:///` links, zero weak modals/`\u00e9ventuellement`, and zero STE structural errors across all docs and sheets; Windows unittest (`35/35`) and WSL `make test lint check-math check-security pages-build pages-check` pass.
+
 ### ACT-252 - Link Diataxis Portal and Clean via in README EN/FR (`#677`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#677` (`docs/issue-677-readme-diataxis-links`)
 - **Request / Changes / Result**: Added `docs/index.md` navigation links and eliminated residual non-CSV `via` across `README.md` and `README.fr.md` while keeping 0 STE procedural errors and full Tier 1-5 CSV parity; Windows unittest and WSL `make test lint check-math check-security pages-build pages-check` pass.
