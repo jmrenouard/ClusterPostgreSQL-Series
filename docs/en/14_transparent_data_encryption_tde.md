@@ -3,7 +3,7 @@
 **Series:** PostgreSQL Multi-Master & Active-Active Architectures  
 **Author:** Jean-Marie Renouard (`jmrenouard`) - [LightPath](https://www.lightpath.fr)  
 **License:** MIT License  
-**Links:** [Ch. 04 - Feature Matrix](04_comprehensive_feature_comparison.md) | [Ch. 07 - Decision Guide](07_decision_framework_and_production_guide.md) | [Ch. 10 - 5-Tier Spectrum](10_streaming_vs_logical_vs_multimaster.md) | [Ch. 12 - PG 18.6 Clustering](12_postgresql_18_clustering_and_benchmarks.md) | [Docs Portal](../index.md)
+**Links:** [Version française](../fr/14_chiffrement_transparent_tde.md) | [Ch. 04 - Feature Matrix](04_comprehensive_feature_comparison.md) | [Ch. 07 - Decision Guide](07_decision_framework_and_production_guide.md) | [Ch. 10 - 5-Tier Spectrum](10_streaming_vs_logical_vs_multimaster.md) | [Ch. 12 - PG 18.6 Clustering](12_postgresql_18_clustering_and_benchmarks.md) | [Docs Portal](../index.md)
 
 ---
 
