@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-249 - Refactor yt_cluster_lite EN Sheet for 0 STE Errors (`#671`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#671` (`docs/issue-671-yt-cluster-lite-en`)
+- **Request / Changes / Result**: Refactored `docs/en/solutions/yt_cluster_lite.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-248 - Refactor gcp_spanner_alloydb FR Sheet for 0 STE Errors (`#669`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#669` (`docs/issue-669-gcp-spanner-alloydb-fr`)
 - **Request / Changes / Result**: Refactored `docs/fr/solutions/gcp_spanner_alloydb.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.

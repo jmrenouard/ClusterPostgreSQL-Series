@@ -21,15 +21,15 @@
 
 ## 1. Overview & Operating Principles (MIT Split, Jepsen Nuance & Reversibility)
 
-**YT Cluster** (DBinvent) turns unmodified PostgreSQL 14-19 instances into an active-active multi-master cluster via a C extension (`yt_cluster`) paired with a local Rust coordinator daemon (`ytserv`). Row-level triggers (`yt_synchronize`) capture old/new row images and stream them over a Unix-domain HTTP/2 gRPC socket (`.s.YT.<port>`) to `ytserv`. At `XACT_EVENT_PRE_COMMIT`, `yt_cluster.c` invokes `yt_complete(true)`: an elected cluster Leader (`term.subterm`) arbitrates global write order and write-time conflicts (`checkin`, rejecting races with `55409` or `40001`), then commits across nodes using PostgreSQL XA two-phase commit (`PREPARE TRANSACTION` / `COMMIT PREPARED`, requiring `max_prepared_transactions >= 100`).
+**YT Cluster** (DBinvent) turns unmodified PostgreSQL 14-19 nodes into an active-active cluster using a C extension (`yt_cluster`) and a Rust daemon (`ytserv`). Row-level triggers (`yt_synchronize`) capture old/new row images and stream them over a Unix-domain HTTP/2 gRPC socket (`.s.YT.<port>`) to `ytserv`. At `XACT_EVENT_PRE_COMMIT`, `yt_cluster.c` invokes `yt_complete(true)`: an elected cluster Leader (`term.subterm`) arbitrates global write order and write-time conflicts (`checkin`, rejecting races with `55409` or `40001`), then commits across nodes using PostgreSQL XA two-phase commit (`PREPARE TRANSACTION` / `COMMIT PREPARED`, requiring `max_prepared_transactions >= 100`).
 
 $$
 L_{\text{YT-half}} \approx L_{\text{trig}} + \text{RTT}_{\text{leader}} + 2 \cdot L_{\text{2PC-fsync}}, \qquad L_{\text{YT-async}} \approx L_{\text{trig}} + \text{RTT}_{\text{leader}} + L_{\text{disk}}
 $$
 
-- **CRITICAL MIT vs Dual-License Split:** `DBinvent/yt-cluster-lite` (**MIT**) is designed to be embedded and connected to a real cluster node: it ships `yt-core-proto`, the `ytpgc` C extension, and `yt-lite` (a single-DB leaf node connecting upstream to `ytserv >= 1.21` over TLS 1.3; rejects multi-DB with `0A000` and **cannot form a standalone peer-to-peer multi-master cluster alone**). Building a real cluster requires the full `ytserv` + `ytctl` image ([`dbinvent/yt:1.21.3`](https://hub.docker.com/r/dbinvent/yt), documented in [`dbinvent.com/agent.md`](https://dbinvent.com/agent.md)), which is closed-source under **PolyForm Noncommercial 1.0.0** (free for labs/evaluation) and **DBinvent Commercial License** and is the exact image deployed by our 3-node Docker PoC.
-- **Jepsen Chaos Test Nuance (`https://dbinvent.com/cluster/articles/jepsen`):** **Self-run by DBinvent** (not an independent Jepsen LLC / Kyle Kingsbury audit) on 5-node `1.20.1` (`Jepsen 0.3.14` + Elle), verified against **Elle `cursor-stability` only** (eventually consistent reads allowed, not strict serializability). Initial `1.20.1` failed every run, exposing **51 findings** (**24 severe** incl. dual-leader `#42`, duplicate insert `#1`, surviving failed write `#40`, stuck 2PC locks; **21 warnings**; **6 low**; **0 rated "critical"** under DBinvent's custom rubric). All 51 were reported fixed and retested green (**49/49** passing).
-- **Verified `T_REVERT` Reversibility:** Live testing proved `DROP EXTENSION yt_cluster CASCADE;` on `yt3` removed extension and triggers (`ext=0`, `triggers=0`) while preserving `5/5` committed user rows and accepting plain PostgreSQL writes (`6/6`).
+- **CRITICAL MIT vs Dual-License Split:** `DBinvent/yt-cluster-lite` (**MIT**) ships `yt-core-proto`, `ytpgc`, and `yt-lite` (a leaf node for `ytserv >= 1.21` rejecting multi-DB with `0A000`). It **cannot form a standalone peer-to-peer cluster alone**. Building a real cluster requires `ytserv` + `ytctl` ([`dbinvent/yt:1.21.3`](https://hub.docker.com/r/dbinvent/yt), documented in [`dbinvent.com/agent.md`](https://dbinvent.com/agent.md)), dual-licensed under **PolyForm Noncommercial 1.0.0** and commercial DBinvent terms.
+- **Jepsen Chaos Test Nuance (`https://dbinvent.com/cluster/articles/jepsen`):** **Self-run by DBinvent** (not an independent Jepsen LLC / Kyle Kingsbury audit) on 5-node `1.20.1` (`Jepsen 0.3.14` + Elle), verified against **Elle `cursor-stability` only** (eventually consistent reads allowed, not strict serializability). Initial `1.20.1` failed every run with **51 findings**. These cover **24 severe** bugs (dual-leader `#42`, duplicate insert `#1`, failed write `#40`, stuck 2PC locks), **21 warnings**, **6 low**, and **0 critical**. All 51 were reported fixed and retested green (**49/49** passing).
+- **Verified `T_REVERT` Reversibility:** Live testing ran `DROP EXTENSION yt_cluster CASCADE;` on `yt3` (`ext=0`, `triggers=0`). It preserved `5/5` committed user rows and accepted plain PostgreSQL writes (`6/6`).
 
 ---
 
@@ -54,13 +54,13 @@ flowchart LR
 | **`yt-cluster` (`cc=half`, `NO_SC`)** *(Default PoC)* | `PC/EC` writes / `EL` reads | 2-of-3 sync XA 2PC, **`RPO=0`**, `0` drift (`55409`/`40001` conflict reject) | Strongest default safety, but `20.63 TPS` (`A`), `2.25 TPS` at `25ms` WAN |
 | **`yt-cluster-async` (`cc=nodes>=0`, `NO_SC`)** | `PA/EL` async apply | Leader `checkin` + async peer apply (`RPO > 0` risk on crash); `0` drift | `2.0x` (`41.45` `A`) to `5.1x` (`55.03` `B2`) faster; still `4.78 TPS` WAN |
 | **`cc=all` + `SC` (`sequential_consistency`)** | Strict `PC/EC` | All-node sync 2PC + sequential read barrier (tested in DBinvent Jepsen) | Highest latency; any single node outage blocks writes |
-| **`yt-lite` Leaf (`DBinvent/yt-cluster-lite`)** | Upstream leaf (MIT) | Single-DB TLS 1.3 leaf syncing via `yt_outbox` to `ytserv >= 1.21` | MIT open core, never a leader, no P2P multi-master alone (`0A000` multi-DB) |
+| **`yt-lite` Leaf (`DBinvent/yt-cluster-lite`)** | Upstream leaf (MIT) | Single-DB TLS 1.3 leaf syncing through `yt_outbox` to `ytserv >= 1.21` | MIT open core, never a leader, no P2P multi-master alone (`0A000` multi-DB) |
 
 ---
 
 ## 4. Empirical Benchmarks & Verified Limits (`results/benchmark_yt_cluster.csv` & `results/functional_limits_yt_cluster.csv`)
 
-All 36 rows (18 `yt-cluster` + 18 `yt-cluster-async`) ran sequentially at `pg_scale = 2` on 3-node `dbinvent/yt:1.21.3` (`balance_drift = 0` on every write suite; see [`chart_11`](../../../assets/charts/chart_11_yt_cluster_vs_multimaster_log.png) and [Ch. 09](../09_benchmarks_methodology_and_charts.md)). Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` are recorded (`p99` latency is unmeasured).
+All 36 rows (18 `yt-cluster` + 18 `yt-cluster-async`) ran sequentially at `pg_scale = 2` on `dbinvent/yt:1.21.3` with `balance_drift = 0`. See [`chart_11`](../../../assets/charts/chart_11_yt_cluster_vs_multimaster_log.png) and [Ch. 09](../09_benchmarks_methodology_and_charts.md). Only `Avg`, `Stddev` (`0` for `sysbench`), and `p95` are recorded (`p99` latency is unmeasured).
 
 | Suite (`PG_SCALE=2`) | `yt-cluster` (`cc=half`) TPS | `cc=half` Avg / p95 (ms) | `cc=half` Retries / Fail | `yt-cluster-async` (`cc=nodes>=0`) TPS | `async` Avg / p95 (ms) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
@@ -79,7 +79,7 @@ All 36 rows (18 `yt-cluster` + 18 `yt-cluster-async`) ran sequentially at `pg_sc
 | Verified Probe / Limit | Empirical YT Cluster 1.21.3 Result (`results/functional_limits_yt_cluster.csv`) |
 | :--- | :--- |
 | **`AA`, `L1` & `T18` Sequences** | `AA` `30/30` (`sum=300`, `0` drift); concurrent `SERIAL` collided (`yt2=55409`, `1:yt1`), `uuidv7()` converged `60/60/60`; `T18` synced seq (`50|true`, `next_id=51`) |
-| **`L2` Keyless, `L3` Lost Upd & `L4` Unique** | Keyless DML synced (`1/1/1`, `upd/upd/upd`, `0/0/0`; node-copy needs PK); `L3` blocked `+100/-30` (`55409`), retry converged **`1070.00`** (`0` drift); `L4` rejected duplicate via **`40001`** |
+| **`L2` Keyless, `L3` Lost Upd & `L4` Unique** | Keyless DML synced (`1/1/1`, `upd/upd/upd`, `0/0/0`; node-copy needs PK); `L3` blocked `+100/-30` (`55409`), retry converged **`1070.00`** (`0` drift); `L4` rejected duplicate with **`40001`** |
 | **`L5` DDL/`SAVEPOINT` & `L6` Features** | `ALTER TABLE` not propagated (`1/0/0`), `TRUNCATE` OK; **`SAVEPOINT` rollback over writes failed on `COMMIT` with `0A000`** (`rows=0`); `advisory_lock`/`LISTEN` local; `TEMP` & `ENUM` OK |
 | **`L7` Outage & `L8` Quorum** | `1/3` down (`yt3`): `10/10` writes OK (`yt1+yt2`), catchup `78 ms`; `2/3` down (`min_cluster_size=2`): write blocked (**`57P03`**, `YT-E1852 Not enough working nodes`), clean recovery |
 | **`T11` Bulk 10k, `T12` & `T13` FK** | `T11`: **`86 rows/s`** (`115,961 ms`, per-row trigger + 2PC; catchup `yt2=111 ms`, `yt3=12,059 ms`); `T12` `DELETED/DELETED/DELETED`; `T13` `10/10` cross-node FK consistent |
