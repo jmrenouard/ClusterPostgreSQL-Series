@@ -6,7 +6,7 @@
 
 **Author:** Jean-Marie Renouard (`jmrenouard`) | **Supported by:** [LightPath](https://www.lightpath.fr) | **License:** [MIT](LICENSE) | **Version française :** [README.fr.md](README.fr.md)
 
-This repository provides a comparative PostgreSQL study, a 36-criterion matrix, and 13 Docker Compose labs ([`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.3`). The harness runs 18 functional/limit probes (`L1-L8`, `T11-T18`) plus PG 18.6 AIO, `uuidv7()`, conflict, and YT `T_REVERT` checks. We collected **628 raw benchmark rows** (**310 baseline `PG_SCALE=2`** / **301 deduplicated** + **318 V5 tuned `PG_SCALE=20`** `pgbench`/`sysbench`/`tc netem`) across **18 live PostgreSQL topologies** (`cockroach-rc` included, `16` solutions / `19` architecture sheets). The repo also stores **22 GitHub popularity rows** (`19` repos + `3` closed/managed), **13 `log10` charts**, and [**`dashboard/index.html`**](dashboard/index.html).
+This repository provides a comparative PostgreSQL study, a 40-criterion matrix, and 13 Docker Compose labs ([`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.4`). The harness runs 18 functional/limit probes (`L1-L8`, `T11-T18`) plus PG 18.6 AIO, `uuidv7()`, conflict, and YT `T_REVERT` checks. We collected **628 raw benchmark rows** (**310 baseline `PG_SCALE=2`** / **301 deduplicated** + **318 V5 tuned `PG_SCALE=20`** `pgbench`/`sysbench`/`tc netem`) across **18 live PostgreSQL topologies** (`cockroach-rc` included, `16` solutions / `19` architecture sheets). The repo also stores **22 GitHub popularity rows** (`19` repos + `3` closed/managed), **13 `log10` charts**, and [**`dashboard/index.html`**](dashboard/index.html).
 
 ---
 
@@ -94,7 +94,7 @@ See the [Diataxis Documentation Portal](docs/index.md) for a goal-based map acro
 | **02 — Theory** | [02 — CAP, PACELC & Conflict Calculus](docs/en/02_theoretical_foundations_cap_pacelc_conflicts.md) | [02 — Fondements théoriques & conflits](docs/fr/02_fondements_theoriques_cap_pacelc_conflits.md) |
 | **03a — Native/Ext** | [03a — Native Logical, Extensions & Baselines](docs/en/03a_solutions_native_and_extensions.md) | [03a — Solutions natives & extensions](docs/fr/03a_catalogue_natif_et_extensions.md) |
 | **03b — Dist/Cloud** | [03b — Distributed SQL, Triggers & Cloud](docs/en/03b_solutions_distributed_triggers_cloud.md) | [03b — SQL distribué, triggers & cloud](docs/fr/03b_catalogue_distribue_triggers_cloud.md) |
-| **04 — Matrices** | [04 — 36-Criterion Feature Comparison](docs/en/04_comprehensive_feature_comparison.md) | [04 — Étude comparative (36 critères)](docs/fr/04_etude_comparative_fonctionnalites.md) |
+| **04 — Matrices** | [04 — 40-Criterion Feature Comparison](docs/en/04_comprehensive_feature_comparison.md) | [04 — Étude comparative (40 critères)](docs/fr/04_etude_comparative_fonctionnalites.md) |
 | **05 — Protocol** | [05 — PoC Architectures & Test Protocol](docs/en/05_poc_architectures_and_test_protocol.md) | [05 — Architectures PoC & protocole](docs/fr/05_architectures_poc_et_protocole_de_test.md) |
 | **06 — Benchmarks** | [06 — Empirical Test & Benchmark Results](docs/en/06_empirical_test_and_benchmark_results.md) | [06 — Résultats de tests & benchmarks](docs/fr/06_resultats_tests_et_benchmarks.md) |
 | **07 — Guide** | [07 — Decision Framework & Production Guide](docs/en/07_decision_framework_and_production_guide.md) | [07 — Guide de choix & architecture cible](docs/fr/07_guide_de_choix_et_architecture_cible.md) |
@@ -104,6 +104,7 @@ See the [Diataxis Documentation Portal](docs/index.md) for a goal-based map acro
 | **11 — Popularity** | [11 — Ecosystem Popularity & Engineering Vitality](docs/en/11_ecosystem_popularity_and_vitality.md) | [11 — Popularité et vitalité de l'écosystème](docs/fr/11_popularite_et_vitalite_ecosysteme.md) |
 | **12 — PG 18.6** | [12 — PostgreSQL 18.6 Clustering & Benchmarks](docs/en/12_postgresql_18_clustering_and_benchmarks.md) | [12 — Clustering PostgreSQL 18.6 et benchmarks](docs/fr/12_clustering_postgresql_18_et_benchmarks.md) |
 | **13 — V5 Tuning** | [13 — Production Tuning & Realistic Scale Benchmarks](docs/en/13_production_tuning_and_realistic_benchmarks.md) | [13 — Optimisation de Production et Benchmarks Réalistes](docs/fr/13_optimisation_production_et_benchmarks_realistes.md) |
+| **14 — TDE** | [14 — Transparent Data Encryption (TDE)](docs/en/14_transparent_data_encryption_tde.md) | [14 — Chiffrement Transparent (TDE)](docs/fr/14_chiffrement_transparent_tde.md) |
 
 ---
 
@@ -159,7 +160,7 @@ PoC topologies, `T11–T18` suites, and V2 benchmarks use [`jmrenouard/multi-db-
 ### Common Commands
 
 ```bash
-# Initialize the multi-db-docker-env Git submodule (13 Compose stacks; v2.6.3 benchmark harness)
+# Initialize the multi-db-docker-env Git submodule (13 Compose stacks; v2.6.4 benchmark harness)
 make init-env
 make help
 
