@@ -19,16 +19,16 @@
 
 ## 1. Description de la technologie et rôle
 
-Avant l'arrivée de la réplication physique en streaming (PostgreSQL 9.0) puis du décodage logique WAL `pgoutput` (PostgreSQL 9.4/10), la réplication sélective et les migrations inter-versions reposaient sur des **triggers en base** alimentant des tables tampons lues par des daemons externes :
-- **Slony-I :** Moteur C/PLpgSQL (`_slony.logTrigger`) avec un daemon `slon` par nœud offrant des arbres **en cascade mono-origine** maître-vers-esclaves (**pas** de multi-maîtres actif-actif) et des montées de version sans coupure via verrous DDL `EXECUTE SCRIPT`.
-- **Londiste (Skytools) + PGQ :** Système à files conçu par Skype capturant les lignes via `pgq.logutriga` dans des tables **PGQ** rotatives découpées en **lots** (*batches*) par le daemon **`pgq.ticker`**, consommées par les workers Python `londiste`.
-- **RubyRep :** Outil Ruby/JRuby bidirectionnel combinant triggers (`rr_pending_changes`) et sommes de contrôle périodiques ; abandonné vers 2012 et inadapté à l'OLTP concurrent.
+Avant PG 9.0 (streaming) puis PG 9.4/10 (`pgoutput`), la réplication sélective utilisait des **triggers en base**. Ces triggers écrivaient dans des tables tampons lues par des daemons externes :
+- **Slony-I :** Moteur C/PLpgSQL (`_slony.logTrigger`) avec un daemon `slon` par nœud. Il offre des arbres **en cascade mono-origine** et des migrations par verrous DDL `EXECUTE SCRIPT`.
+- **Londiste (Skytools) + PGQ :** Système à files capturant les lignes par `pgq.logutriga` dans des tables **PGQ** rotatives. Le daemon **`pgq.ticker`** découpe les lots pour les workers `londiste`.
+- **RubyRep :** Outil Ruby/JRuby combinant triggers (`rr_pending_changes`) et sommes de contrôle. Abandonné vers 2012, il reste inadapté à l'OLTP concurrent.
 
 ---
 
 ## 2. Architecture et flux de données
 
-Ces trois systèmes interceptent le LMD directement dans les transactions applicatives via triggers SQL/C au lieu de lire le WAL hors ligne, doublant les écritures avant que les daemons n'appliquent les lots sur les cibles :
+Ces systèmes interceptent le LMD dans les transactions par triggers SQL/C au lieu de lire le WAL. Cela double les écritures avant rejeu des lots :
 
 ```mermaid
 flowchart TB
@@ -47,19 +47,19 @@ flowchart TB
     end
 ```
 
-Contrairement au décodage logique `pgoutput` (lecture du WAL après commit), la capture par trigger s'exécute **dans** la transaction d'écriture, doublant la charge heap/index/WAL et la pression `VACUUM` sur les tables files.
+Contrairement à `pgoutput` (lecture WAL post-commit), le trigger s'exécute **dans** la transaction d'écriture. Cela double la charge heap/WAL et la pression `VACUUM`.
 
 ---
 
 ## 3. Principes de fonctionnement et modes d'implémentation
 
-1. **Capture synchrone par trigger vs rejeu asynchrone :** Chaque `INSERT`/`UPDATE`/`DELETE` écrit à la fois la table métier et la table journal (`sl_log_1`, `pgq.event_*` ou `rr_pending_changes`), avant scrutation périodique du daemon :
+1. **Capture par trigger vs rejeu asynchrone :** Chaque écriture LMD écrit la table métier et le journal (`sl_log_1`, `pgq.event_*`, `rr_pending_changes`). Le daemon scrute ensuite périodiquement :
 
 $$
 \text{Coût}_{\text{trigger}} \approx W_{\text{heap}} + W_{\text{file}} + 2 \cdot W_{\text{WAL}} + V_{\text{vacuum-file}}, \qquad L_{\text{lot}} \ge \Delta t_{\text{tick}} + \frac{Q_{\text{lot}}}{\mu_{\text{worker}}}
 $$
 
-2. **Discipline de schéma et clé primaire :** Toute table répliquée impose une `PRIMARY KEY` (ou clé unique) ; le DDL ne se propage jamais seul (`Slony-I` exige `EXECUTE SCRIPT` sous verrou via `slonik`, tandis que `Londiste` et `RubyRep` imposent une coordination manuelle).
+2. **Schéma et clé primaire :** Chaque table exige une `PRIMARY KEY` et le DDL reste manuel. `Slony-I` impose `EXECUTE SCRIPT` par `slonik`, tandis que `Londiste` et `RubyRep` exigent une coordination manuelle.
 
 | Outil / Mode | Portée et mécanique | Chemin de commit et sync | Conflits / bascule | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
@@ -83,9 +83,9 @@ $$
 
 ## 5. Exclusion architecturale, comparatif des modes et base de référence
 
-**Pourquoi `#14 Systèmes historiques à triggers` n'ont pas été benchmarkés en direct :** Slony-I, Londiste/PGQ et RubyRep relèvent de générations historiques/EOL antérieures à PostgreSQL 9.4 plutôt que de piles PG 17 de production (`env/multi-db-docker-env/` exclut les daemons EOL). Aucun chiffre synthétique de TPS ou latence n'est inventé ici.
+**Pourquoi `#14 Systèmes à triggers` restent hors benchmark direct :** Slony-I, Londiste/PGQ et RubyRep sont des outils historiques EOL (`env/multi-db-docker-env/` les exclut). Aucun chiffre synthétique de TPS ou latence n'est inventé ici.
 
-**Désambiguïsation catalogue :** L'identifiant `#14` est strictement réservé à ces systèmes historiques à triggers (Slony-I, Londiste/PGQ, RubyRep), tandis que la réplication logique unidirectionnelle native PostgreSQL 17 (`pg17-logical`) est répertoriée séparément (`pg17-logical`, `Niveau 3`).
+**Désambiguïsation catalogue :** L'ID `#14` désigne ces systèmes historiques à triggers. La réplication logique native PostgreSQL 17 (`pg17-logical`) figure séparément sous `Niveau 3`.
 
 À la place, ces architectures historiques à triggers se situent directement face aux références à triggers et logiques mesurées dans `results/benchmark_summary.csv`, `results/functional_limits_matrix.csv` et `results/extended_functional_matrix.csv` (la latence au 99e percentile n'est pas enregistrée dans `results/`) :
 
@@ -108,9 +108,9 @@ Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf 
 | **Londiste (#14c)** | `Yes` -- `Primary` | [`pgq/londiste`](https://github.com/pgq/londiste) (`Org / 13`) | 26 / 8 / 5 | 195 / 8 | 5 / 2 | Python / `ISC` | `v3.12` / `2026-07-22T11:29:04Z` |
 | **RubyRep (#14d)** | `Yes` -- `Primary (Dormant)` | [`rubyrep/rubyrep`](https://github.com/rubyrep/rubyrep) (`User / 2`) | 179 / 74 / 6 | 556 / 0 | 2 / 58 | Ruby / `MIT` | `v2.0.0` / `2023-07-10T16:53:19Z` |
 
-- **Niveau de maintenance :** **Niveau D (EOL / Dormant)** -- `ssinger/slony1-engine` (`0` commit/12m) et `rubyrep/rubyrep` (`0` commit/12m, `2` contributeurs, `58` issues ouvertes) sont figés ; `pgq/pgq` et `pgq/londiste` ne comptent que `8` commits/12m chacun (`7` et `5` contributeurs).
+- **Niveau de maintenance :** **Niveau D (EOL / Dormant)** -- `slony1-engine` (`0`/12m) et `rubyrep` (`0`/12m, `58` issues) sont figés. `pgq/pgq` et `pgq/londiste` comptent `8` commits/12m chacun.
 - **Fraîcheur / Actualité :** **Dormant / Maintenance minimale** -- Dernier push `2024-03-11T01:27:53Z` (`Slony-I`), `2023-07-10T16:53:19Z` (`RubyRep`), `2026-07-09T12:49:14Z` / `2026-07-22T11:29:04Z` (`PGQ`/`Londiste`), dernières versions `REL_2_2_11`, `v3.5.2`, `v3.12`, `v2.0.0`.
-- **Maintenabilité opérationnelle :** **Ne pas déployer** -- Surcoût de triggers, fragilité des contraintes FK/DDL et absence de support PG 17+ moderne ; migrer vers la réplication logique native (`pgoutput`), `#2 pgEdge Spock 5` ou `#10 SymmetricDS`.
+- **Maintenabilité opérationnelle :** **Ne pas déployer** -- Surcoût de triggers, fragilité FK/DDL et absence de support PG 17+ bloquent la production. Migrer vers `pgoutput` natif, `#2 pgEdge Spock 5` ou `#10 SymmetricDS`.
 
 ---
 
