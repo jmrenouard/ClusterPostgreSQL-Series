@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-226 - Refactor Chapter 10 EN for 0 STE Errors (`#625`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#625` (`docs/issue-625-ch10-en`)
+- **Request / Changes / Result**: Refactored `docs/en/10_streaming_vs_logical_vs_multimaster.md` for full-file 0 STE mixed-mode errors, 0 `via`, and 0 weak modals while keeping comparisons, Mermaid diagrams, and anchors intact; Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-225 - Refactor Chapter 09 FR for 0 STE Errors (`#623`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#623` (`docs/issue-623-ch09-fr`)
 - **Request / Changes / Result**: Refactored `docs/fr/09_methodologie_benchmarks_et_graphiques.md` for full-file 0 STE mixed-mode errors, 0 `via`, and 0 weak modals while keeping benchmark formulas, charts, and anchors intact; Windows unittest and WSL `make test lint check-math check-security` pass.
