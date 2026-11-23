@@ -14,6 +14,7 @@
 | **Versions** | `Cloud Spanner PostgreSQL Interface` (`PGAdapter`); `AlloyDB for PostgreSQL` (`PG 14–16+`) & `AlloyDB Omni` |
 | **CAP / PACELC Profile** | `PC/EC` (Spanner TrueTime + Multi-Paxos) / `PC/EC` or `PA/EL` (AlloyDB Single-Primary + Read Pools) |
 | **License / Deployment** | Proprietary GCP Managed Services (`Spanner`, `AlloyDB`) & Containerized Commercial (`AlloyDB Omni`) |
+| **TDE / Encryption at Rest** | **Managed (`CMEK`)**: `GCP Cloud KMS`/`EKM` on Colossus/LPS; `Omni` uses OS/CSI KMS ([Ch. 14](../14_transparent_data_encryption_tde.md)) |
 
 ---
 

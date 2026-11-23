@@ -14,6 +14,7 @@
 | **Versions** | `Cloud Spanner PostgreSQL Interface` (`PGAdapter`) ; `AlloyDB for PostgreSQL` (`PG 14–16+`) & `AlloyDB Omni` |
 | **Profil CAP / PACELC** | `PC/EC` (Spanner TrueTime + Multi-Paxos) / `PC/EC` ou `PA/EL` (AlloyDB Mono-Primaire + Read Pools) |
 | **Licence / Déploiement** | Services managés propriétaires GCP (`Spanner`, `AlloyDB`) & conteneur commercial (`AlloyDB Omni`) |
+| **TDE / Chiffrement au repos** | **Managé (`CMEK`)** : `GCP Cloud KMS`/`EKM` sur Colossus/LPS ; `Omni` sur KMS OS/CSI ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 

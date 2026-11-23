@@ -14,6 +14,7 @@
 | **Versions** | `Aurora PostgreSQL 16.4+ Limitless Database` (GA 2024) ; `Aurora Global DB` ; `Multi-Master v1` (retiré 2024) |
 | **Profil CAP / PACELC** | `PC/EC` (Limitless 2PC + MVCC Time Sync ; Aurora de base quorum 4/6 ; Global DB async `PA/EL`) |
 | **Licence / Déploiement** | Service cloud propriétaire AWS / DB Shard Group (`Transaction Routers` + `Data Access Shards`) |
+| **TDE / Chiffrement au repos** | **Managé (`AWS KMS`)** : CMK fixée à création + stockage 6x AZ et snapshots chiffrés ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 

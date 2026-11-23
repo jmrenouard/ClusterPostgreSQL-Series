@@ -14,6 +14,7 @@
 | **Versions** | `YugabyteDB 2026.1.3.0-b100`, YSQL `15.12-YB-2026.1.3.0-b0` (fork C `PG 15` + C++ `DocDB`) |
 | **Profil CAP / PACELC** | `CP / PC-EC` (`3 (RF=3 YSQL)` — Raft par tablet `RF=3`, HLC bornée) |
 | **Licence / Déploiement** | Apache 2.0 (Open Source) / 3 conteneurs (`docker-compose-yugabyte.yml`) |
+| **TDE / Chiffrement au repos** | **Intégré OSS (`DocDB`)** : clé universelle + DEK tablet, WAL & `yb_backup` chiffrés ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 
