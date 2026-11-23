@@ -21,7 +21,7 @@
 
 **pgEdge / Spock** (`pglogical` fork, PG 15–17) runs `spock` (`5.0.14`) for mesh replication, conflicts, and auto-DDL, plus `snowflake` (`2.6.1`) for 64-bit K-sortable PKs.
 
-Unlike `#1 pg-birep` (halts on `23505`), Spock stays writable via `last_update_wins` (`transdiscard`) or `spock.delta_apply` CRDT. Ecosystem `lolor` (`Ch. 03a`) is unloaded and untested.
+Unlike `#1 pg-birep` (halts on `23505`), Spock stays writable using `last_update_wins` (`transdiscard`) or `spock.delta_apply` CRDT. Ecosystem `lolor` (`Ch. 03a`) is unloaded and untested.
 
 ---
 
@@ -40,13 +40,13 @@ flowchart TB
     N1 <-->|"spock_output mesh"| N3
 ```
 
-Runs (`B1`–`D`, `H`) hit `node1`/`node2`; `node3` replicates passively (`tc netem` delays `node2`/`node3`).
+Runs (`B1`–`D`, `H`) target `node1` and `node2` while `node3` replicates passively. Meanwhile `tc netem` delays `node2` and `node3`.
 
 ---
 
 ## 3. Operating Principles & Implementation Modes
 
-1. **`spock_output`:** Six `spock.sub_create` links (`2/2`) decode WAL; UBI requires `output_plugin_libraries=pgoutput,spock_output` + `scram-sha-256` (`42501` fix).
+1. **`spock_output`:** Six `spock.sub_create` links (`2/2`) decode WAL. UBI requires `output_plugin_libraries=pgoutput,spock_output` and `scram-sha-256` (`42501` fix).
 2. **Commit Latency Model:**
 
 $$
@@ -59,7 +59,7 @@ $$
 | :--- | :--- | :--- | :--- | :--- |
 | **`last_update_wins` + `transdiscard`** *(Default)* | `conflict_resolution` / `exception_behaviour` | Commit-ts LWW; failed TX to `exception_log` | Peers writable; lost updates (`B2`/`D`/`L3`), `23505` drift (`L4`) | AP over consistency |
 | **`spock.delta_apply` CRDT** *(`pgedge-delta-apply` PoC)* | Column (`log_old_value=true`) | Ships $\Delta = v_{\text{new}} - v_{\text{old}}$ on `accounts.balance` / `abalance` | **Zero drift (`0`)** (`D`: `1,391,780` exact; `L3`: `1070.00` x3) | `-19.4%` TPS (`2,280.11 -> 1,837.64`); numeric only |
-| **Auto-DDL** *(PoC)* | `enable_ddl_replication=on`, `include_ddl_repset=on` | Event triggers capture `ALTER TABLE`; `TRUNCATE` streams natively via WAL (`L5`) | Replicates DDL without manual wrappers | No Raft global lock on concurrent DDL |
+| **Auto-DDL** *(PoC)* | `enable_ddl_replication=on`, `include_ddl_repset=on` | Event triggers capture `ALTER TABLE`; `TRUNCATE` streams natively in WAL (`L5`) | Replicates DDL without manual wrappers | No Raft global lock on concurrent DDL |
 | **`snowflake.nextval`** *(PoC)* | Extension `snowflake` (`2.6.1`, `node=1..3`) | 64-bit K-sortable ID (`ts + node + counter`) | Avoids `23505` PK collisions (`T18` seq trap) | Unique `snowflake.node` per peer |
 | **`default_insert_only`** *(PoC Keyless)* | `spock.tables` | Keyless tables route into `default_insert_only` (`L2`) | `INSERT` replicates; `UPDATE`/`DELETE` **silently skip peers** | Add PK for full DML replication |
 | **`lolor`** *(Ecosystem — Not in PoC)* | `pg_largeobject` | Replicates LOBs (`Ch. 03a`) | **Not loaded** (`shared_preload_libraries=spock,snowflake`) | Needs explicit setup outside PoC |
@@ -99,7 +99,7 @@ Ran at `pg_scale = 2` (`retries_40001 = 0`). Only `Avg`, `Stddev` (`0` for `sysb
 | `H_append_only_insert` | 8 / 12s | 2206.6 | N/A | 3.607 / 1.848 / 5.074 | 26449 (0) | 0 | `PASS_CONVERGED` |
 | `F_wan_netem_25ms` | 8 / 15s | 646.77 | N/A | 12.324 / 11.513 / 32.402 | 9737 (0) | 0 | `PASS_NETEM_25MS` |
 
-*(Divergence details: `B2` `exp=-78525`, `n1/n2/n3=-144853`; `D` LWW `exp=1737102`, `n1/n2/n3=1458404`; `D` CRDT `exp=1391780`, `n1/n2/n3=1391780`.)*
+*(Divergence details: `B2` `exp=-78525`, `n1/n2/n3=-144853`. `D` LWW `exp=1737102`, `n1/n2/n3=1458404`. `D` CRDT `exp=1391780`, `n1/n2/n3=1391780`.)*
 
 ### Table B — Concurrency & WAN Latency Sweeps (`benchmark_concurrency_sweep.csv`, `benchmark_wan_sweep.csv`)
 
@@ -158,7 +158,7 @@ Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 
 - **Maintenance Level:** **Tier A (Active OSS)** -- `pgEdge/spock` (`621`/12m, `32` contributors, `769` stars) plus active `snowflake` (`48`/12m) and `lolor` (`79`/12m).
 - **Currency / Freshness:** **Current -- High Velocity** -- Last push `2026-11-20T17:04:58Z`, `621` commits/12m, latest release `v6.0.0-beta.2`.
-- **Operational Manageability:** **Moderate** -- Active C extensions (`spock` + `snowflake`); note `NOASSERTION` SPDX on `spock`, `v6.0.0-beta.2` track, and `exception_log` monitoring.
+- **Operational Manageability:** **Moderate** -- Active C extensions (`spock` + `snowflake`). Monitor `NOASSERTION` SPDX on `spock`, `v6.0.0-beta.2` track, and `exception_log` rows.
 
 ---
 
