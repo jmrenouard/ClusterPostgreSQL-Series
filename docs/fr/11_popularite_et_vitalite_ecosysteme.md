@@ -20,7 +20,7 @@ $$
 M_{12\text{m}} = \frac{C_{12\text{m}}}{C_{\text{total}}} \times 100\%, \qquad R_{\text{vel/star}} = \frac{C_{12\text{m}}}{\max(S, 1)}, \qquad D_{\text{décades}} = \log_{10}\!\left(\frac{v_{\max}}{v_{\min}^{+}}\right)
 $$
 
-Les 18 dépôts couvrent **trois ordres de grandeur** : étoiles de `26` (`pgq/londiste`) à `32 638` (`cockroachdb/cockroach`, $1\,255\times$, $D = 3,10$), commits totaux `89` à `118 999` ($1\,337\times$, $D = 3,13$), commits 12m positifs `8` à `7 581` ($948\times$, $D = 2,98$) et contributeurs `2` à `1 217` ($609\times$, $D = 2,78$). Comme au [Chapitre 09](09_methodologie_benchmarks_et_graphiques.md), l'échelle `log10` est indispensable.
+Les 18 dépôts couvrent **trois ordres de grandeur** : étoiles de `26` (`pgq/londiste`) à `32 638` (`cockroachdb/cockroach`, $1\,255\times$, $D = 3,10$). Les commits totaux vont de `89` à `118 999` ($1\,337\times$, $D = 3,13$), les commits 12m de `8` à `7 581` ($948\times$, $D = 2,98$) et les contributeurs de `2` à `1 217` ($609\times$, $D = 2,78$). Comme au [Chapitre 09](09_methodologie_benchmarks_et_graphiques.md), l'échelle `log10` est indispensable.
 
 ---
 
@@ -53,17 +53,17 @@ Les 18 dépôts couvrent **trois ordres de grandeur** : étoiles de `26` (`pgq/l
 
 **Vitalité du cœur PostgreSQL 18.6 (`#17`) :** Le [Clustering Natif PostgreSQL 18.6](solutions/pg18_native_clustering.md) ([Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)) hérite directement du niveau **S** de `postgres/postgres` : **`66 089`** commits totaux, **`3 449`** commits/12m, **`22 893`** étoiles, **`6 122`** forks, `Organization` `postgres` (`6` dépôts publics), miroir officiel de `git.postgresql.org`.
 
-*\*Notes : `postgres/postgres` (58) et `pgpool/pgpool2` (35) sont des miroirs officiels en lecture seule de `git.postgresql.org` ; les contributeurs reflètent les committeurs, non tous les auteurs. `NOASSERTION` signale des licences personnalisées/doubles (PostgreSQL pour Core/Spock/pglogical ; BSL/CSL CockroachDB ; Apache-2.0 + Polyform YugabyteDB ; BSD PgPool/Bucardo/Slony). `cockroachdb` porte `v25.2.29` (correctif LTS) près de `v26.2.12` ; `pgEdge/spock` couple `v6.0.0-beta.2` et la stable `v5.0.14`.*
+*\*Notes : `postgres/postgres` (58) et `pgpool/pgpool2` (35) sont des miroirs officiels en lecture seule de `git.postgresql.org`. Les contributeurs reflètent les committeurs, non tous les auteurs. `NOASSERTION` signale des licences doubles ou personnalisées (PostgreSQL sur Core/Spock/pglogical, BSL/CSL CockroachDB, Apache-2.0 + Polyform YugabyteDB, BSD PgPool/Bucardo/Slony). `cockroachdb` porte `v25.2.29` (LTS) près de `v26.2.12`. `pgEdge/spock` couple `v6.0.0-beta.2` et la stable `v5.0.14`.*
 
 ---
 
 ## 3. Graphiques logarithmiques et Explorateur interactif
 
-Filtrez les 22 entrées (19 dépôts publics + 3 fermés), basculez `log10` / linéaire et croisez vitalité Git et débits empiriques via l'[**Explorateur interactif hors-ligne (`dashboard/index.html`)**](../../dashboard/index.html).
+Filtrez les 22 entrées (19 dépôts publics + 3 fermés), basculez `log10` / linéaire et croisez vitalité Git et débits empiriques dans l'[**Explorateur interactif hors-ligne (`dashboard/index.html`)**](../../dashboard/index.html).
 
 ### Graphique 08 — Portée communautaire : Étoiles et Forks (`log10`)
 ![Étoiles et Forks Log10 sur l'écosystème PostgreSQL](../../assets/charts/chart_08_popularity_stars_forks_log.png)
-*Compare la notoriété cumulée (`15` à `32 638` étoiles ; `0` à `6 122` forks) sur 19 dépôts face aux moteurs fermés/managés.*
+*Compare la notoriété cumulée (`15` à `32 638` étoiles et `0` à `6 122` forks) sur 19 dépôts face aux moteurs fermés/managés.*
 
 ### Graphique 09 — Vitalité d'ingénierie : Commits, Vélocité 12m et Contributeurs (`log10`)
 ![Commits totaux, vélocité 12 mois et contributeurs Log10](../../assets/charts/chart_09_popularity_commits_activity_log.png)
@@ -83,10 +83,10 @@ flowchart LR
 ```
 
 1. **Biais des miroirs GitHub (`postgres/postgres`, `pgpool/pgpool2`) :** `postgres/postgres` affiche `0` issue GitHub et `58` contributeurs — un artefact trompeur. Comme `pgpool/pgpool2` (`4 627` commits, `140`/12m, `V4_7_3`), `postgres/postgres` (`66 089` commits, `3 449`/12m, `6 122` forks, `REL_19_0`) est un **miroir officiel de `git.postgresql.org`** alimenté par listes de diffusion et Commitfest.
-2. **Ingénierie Raft vs licences (`CockroachDB`, `YugabyteDB`) :** `cockroachdb/cockroach` mène en étoiles (`32 638`), commits (`118 999`) et cadence 12m (`7 581` = `20,8`/j) ; `yugabyte/yugabyte-db` domine en contributeurs (`1 217`), dépôts org (`314`) et momentum ($M_{12\text{m}} = 12,9\%$, `5 342`/12m). Tous deux portent `8 029-9 772` issues et des licences `NOASSERTION` à auditer.
-3. **Piège de l'inertie des étoiles (`pgEdge/spock` vs `pglogical` et `Bucardo`) :** `2ndQuadrant/pglogical` (`1 243` étoiles) et `bucardo/bucardo` (`807` étoiles) devancent `pgEdge/spock` (`769` étoiles), mais **`pgEdge/spock` a livré `621` commits/12m** ($M_{12\text{m}} = 38,4\%$, $R_{\text{vel/star}} = 0,81$) — **`41,4x` plus que `pglogical`** (`15`/12m, `191` issues) — tandis que `bucardo` affiche **`0` commit** depuis le `2025-05-31`. Avec `snowflake` (`48`/12m) et `lolor` (`79`/12m, $M_{12\text{m}} = 49,7\%$), pgEdge cumule **`748` commits/12m**.
+2. **Ingénierie Raft vs licences (`CockroachDB`, `YugabyteDB`) :** `cockroachdb/cockroach` mène en étoiles (`32 638`), commits (`118 999`) et cadence 12m (`7 581` = `20,8`/j). `yugabyte/yugabyte-db` domine en contributeurs (`1 217`), dépôts org (`314`) et momentum ($M_{12\text{m}} = 12,9\%$, `5 342`/12m). Tous deux portent `8 029-9 772` issues et des licences `NOASSERTION` à auditer.
+3. **Piège de l'inertie des étoiles (`pgEdge/spock` vs `pglogical` et `Bucardo`) :** `2ndQuadrant/pglogical` (`1 243` étoiles) et `bucardo/bucardo` (`807` étoiles) devancent `pgEdge/spock` (`769` étoiles). Pourtant, **`pgEdge/spock` a livré `621` commits/12m** ($M_{12\text{m}} = 38,4\%$, $R_{\text{vel/star}} = 0,81$). Il devance `pglogical` de **`41,4x`** (`15`/12m, `191` issues), tandis que `bucardo` affiche **`0` commit** depuis le `2025-05-31`. Avec `snowflake` (`48`/12m) et `lolor` (`79`/12m, $M_{12\text{m}} = 49,7\%$), pgEdge cumule **`748` commits/12m**.
 4. **Maturité ciblée et moteurs discrets (`Patroni`, `Citus`, `SymmetricDS`, `PGAdapter`) :** `patroni/patroni` (`8 845` étoiles, `246` contributeurs, `1` dépôt, `MIT`) maintient la référence HA avec `141` commits/12m (`v4.1.5`). `citusdata/citus` (`12 865` étoiles, `AGPL-3.0`) suit PG 17/18 (`222`/12m, `v14.3.0`). `jumpmindinc/symmetric-ds` (`882` étoiles, `14 926` commits, `425`/12m) reste industriel et discret, tandis que `GoogleCloudPlatform/pgadapter` atteint **`934` commits/12m** pour `94` étoiles ($R_{\text{vel/star}} = 9,94$) devant un moteur propriétaire.
-5. **Stagnation à fort ratio de forks et EOL (`OpenTenBase`, `PGQ`, `Slony-I`, `RubyRep`) :** `OpenTenBase` montre un ratio forks/étoiles de `0,79` (`633/797`) pour `14` commits `master`/12m (`421` issues). `pgq`/`londiste` subsistent en survie (`8`/12m, `5-7` contributeurs) ; `ssinger/slony1-engine` (`User`, `0`/12m) et `rubyrep/rubyrep` (`User`, `2` contributeurs, `0`/12m) sont EOL.
+5. **Stagnation à fort ratio de forks et EOL (`OpenTenBase`, `PGQ`, `Slony-I`, `RubyRep`) :** `OpenTenBase` montre un ratio forks/étoiles de `0,79` (`633/797`) pour `14` commits `master`/12m (`421` issues). `pgq`/`londiste` subsistent en survie (`8`/12m, `5-7` contributeurs). `ssinger/slony1-engine` (`User`, `0`/12m) et `rubyrep/rubyrep` (`User`, `2` contributeurs, `0`/12m) sont EOL.
 
 ---
 
@@ -101,7 +101,7 @@ flowchart LR
 | **D — EOL** | `Bucardo 5` (`#9`), `Slony-I` (`#14a`), `RubyRep` (`#14d`) | **0** | Zéro commit 12m ; dépôts `User` (`#14a/d`), bus-factor 1-2 | **Ne pas déployer.** Décommissionner les parcs existants. |
 | **Fermé / Cloud** | `EDB PGD` (`#4`), `Aurora Limitless` (`#12`), `Spanner`/`AlloyDB` (`#13`) | Opaque (934 proxy) | Zéro télémétrie Git moteur ; SLA éditeur et verrouillage | **Audit contractuel.** Évaluer réversibilité, `PGAdapter`, TCO. |
 
-**Nuance vitalité YT Cluster Lite (`#18`) :** [YT Cluster Lite](solutions/yt_cluster_lite.md) (`DBinvent/yt-cluster-lite`, `15` étoiles, `0` fork, `21` commits totaux/`21` sur 12m, `v1.21`) est un dépôt MIT âgé de 7 jours comptant `2` contributeurs (`1` humain + `dependabot`, **bus-factor = 1**) ; le coordinateur multi-maîtres `ytserv` reste fermé sous licence PolyForm Noncommercial/Commerciale.
+**Nuance vitalité YT Cluster Lite (`#18`) :** [YT Cluster Lite](solutions/yt_cluster_lite.md) (`DBinvent/yt-cluster-lite`, `15` étoiles, `0` fork, `21` commits totaux/`21` sur 12m, `v1.21`) est un dépôt MIT âgé de 7 jours. Il compte `2` contributeurs (`1` humain + `dependabot`, **bus-factor = 1**), tandis que `ytserv` reste fermé sous licence PolyForm Noncommercial/Commerciale.
 
 ---
 
