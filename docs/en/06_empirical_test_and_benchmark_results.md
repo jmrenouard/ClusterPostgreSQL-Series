@@ -8,15 +8,15 @@
 
 ## 1. Executed Test Configuration & Dataset Parity
 
-All benchmarks were executed sequentially on a 20-vCPU, 16.4 GiB WSL2 Docker host using an isolated `bench_client` container (`multi-db-pgbench-sysbench:latest`) attached directly to each cluster's Docker bridge network. Every topology ran at uniform scale **`PG_SCALE = 2`** (`200,000` `pgbench_accounts`, `20` `pgbench_tellers`, `2` `pgbench_branches`) after warm-up, with a standardized surrogate Primary Key on `pgbench_history` (stepped `BIGINT` on `pg-birep`/`bucardo`, `snowflake.nextval()` on `pgedge`, composite `PRIMARY KEY(aid, hid)` on `citus`, `unique_rowid()` on `cockroach`, `BIGSERIAL` on `yugabyte` and baselines).
+All benchmarks ran sequentially on a 20-vCPU, 16.4 GiB WSL2 Docker host. An isolated `bench_client` container (`multi-db-pgbench-sysbench:latest`) attached directly to each cluster bridge network. Every topology ran at **`PG_SCALE = 2`** (`200,000` `pgbench_accounts`, `20` `pgbench_tellers`, `2` `pgbench_branches`) after warm-up. Each used a standard surrogate PK on `pgbench_history` (stepped `BIGINT` on `pg-birep`/`bucardo`, `snowflake.nextval()` on `pgedge`, composite `PRIMARY KEY(aid, hid)` on `citus`, `unique_rowid()` on `cockroach`, `BIGSERIAL` elsewhere).
 
-*Methodological note:* While Chapter 05 defines `PG_BENCH_SCALE=10` as an initial target, the live cross-engine matrix standardized on `PG_SCALE=2` so all eight topologies—including CockroachDB and trigger-based Bucardo—initialized cleanly within bounded startup windows without host RAM throttling.
+*Methodological note:* Chapter 05 defines `PG_BENCH_SCALE=10` as an initial target. Instead, the live matrix used `PG_SCALE=2` so all eight topologies (including CockroachDB and Bucardo) initialized cleanly without host RAM throttling.
 
 ---
 
 ## 2. Core Throughput & Latency Results (Suites A, B1, B2, C)
 
-The table below consolidates verbatim metrics from `results/benchmark_summary.csv` across `pgbench` Single-Node RW (`Suite A`, `8` clients, `20 s`), Disjoint Multi-Node RW (`Suite B1`, `2x4` clients, `20 s`), Overlapping Multi-Node RW (`Suite B2`, `2x4` clients, `20 s`), and Select-Only Read Scaling (`Suite C`, `16` clients, `20 s`).
+The table below lists verbatim metrics from `results/benchmark_summary.csv`. It covers `pgbench` Single-Node RW (`Suite A`, `8` clients, `20 s`), Disjoint RW (`Suite B1`, `2x4`), Overlap RW (`Suite B2`, `2x4`), and Select-Only (`Suite C`, `16` clients, `20 s`).
 
 | Topology | Suite A TPS (`avg ms`) | Suite B1 Disjoint TPS (`avg ms`) | Suite B2 Overlap TPS (`avg ms`) | B2 Retries (`40001`) | B2 Balance Drift | Suite C RO TPS (`avg ms`) |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -35,10 +35,10 @@ The table below consolidates verbatim metrics from `results/benchmark_summary.cs
 
 ### Key Insights from Suites A–C
 
-1. **Synchronous WAL Penalty (`#15`):** Enabling `synchronous_commit=on` against one local standby cuts `pg17-standalone` single-node RW throughput by **`52.8%`** (`866.82 -> 409.48 TPS`) and doubles `p95` latency (`23.96 -> 50.31 ms`), quantifying the physical `fsync` + network round-trip floor.
-2. **Disjoint Partitioning vs Overlap (`B1` vs `B2`):** Under strict disjoint key ranges (`B1`), `pg-birep` (`820.09 TPS`), `pgedge` (`346.95 TPS`), and `bucardo` (`1,078.90 TPS`) achieved **zero balance drift** (`0`). The instant multi-node workloads touched overlapping accounts (`B2`), raw TPS increased (`1,228.60` / `818.65` / `1,267.77 TPS`) solely because asynchronous writers skipped distributed locks—corrupting balances via `-4,567`, `-66,328`, and `+123,679` unit drifts! Notably, `pg-birep` did not even converge (`node1: -193,944` vs `node2: -208,996` vs expected `-189,377`).
+1. **Synchronous WAL Penalty (`#15`):** Enabling `synchronous_commit=on` against one local standby cuts `pg17-standalone` RW throughput by **`52.8%`** (`866.82 -> 409.48 TPS`). It also doubles `p95` latency (`23.96 -> 50.31 ms`), showing the `fsync` + network floor.
+2. **Disjoint Partitioning vs Overlap (`B1` vs `B2`):** Under strict disjoint key ranges (`B1`), `pg-birep` (`820.09 TPS`), `pgedge` (`346.95 TPS`), and `bucardo` (`1,078.90 TPS`) achieved **zero balance drift** (`0`). Once multi-node runs touched overlapping accounts (`B2`), raw TPS rose (`1,228.60` / `818.65` / `1,267.77 TPS`) because async writers skipped locks. That corrupted balances by `-4,567`, `-66,328`, and `+123,679` units! Notably, `pg-birep` did not even converge (`node1: -193,944` vs `node2: -208,996` vs expected `-189,377`).
 3. **Read-Only Scaling (`Suite C`):** Native PostgreSQL heap engines sustained `53,072–55,614 TPS` at `< 0.3 ms` average latency (`16` clients). Coordinator/LSM engines traded raw point-lookup speed for distributed routing: Citus (`21,324.70 TPS`), YugabyteDB (`17,150.58 TPS`), and CockroachDB (`13,185.54 TPS`).
-4. **Wait-on-Conflict vs Optimistic `SERIALIZABLE`:** YugabyteDB (`READ COMMITTED` default) ran Suites A–C with **`0` `40001` retries**, outperforming CockroachDB (`SERIALIZABLE` default) by **`4.1x`** on Suite A (`173.64` vs `42.08 TPS`), where CockroachDB logged `44` (`A`), `87` (`B1`), and `96` (`B2`) serialization retries across hot `pgbench_branches` updates (`p95 = 625.04 ms` in Suite A).
+4. **Wait-on-Conflict vs Optimistic `SERIALIZABLE`:** YugabyteDB (`READ COMMITTED`) ran Suites A–C with **`0` `40001` retries**, beating CockroachDB (`SERIALIZABLE`) by **`4.1x`** on Suite A (`173.64` vs `42.08 TPS`). CockroachDB logged `44` (`A`), `87` (`B1`), and `96` (`B2`) serialization retries (`p95 = 625.04 ms` in Suite A).
 
 ---
 
@@ -62,7 +62,7 @@ Suite D (`15 s`, `8` total clients targeting `50` hot accounts `aid = 1..50` wit
 
 This experiment yields a definitive architectural result:
 - **Silent Corruption Under Async LWW:** `pgedge` LWW looked fastest (`2,280.11 TPS`), yet silently discarded **`16.0%`** (`-278,698`) of committed credits. `bucardo` lost **`50.8%`** (`-531,620`) of committed money! `pg-birep` diverged even between its two nodes (`-71,063` on `node1`, `-71,126` on `node2`).
-- **CRDT Delta-Apply Proof:** Enabling `ALTER TABLE pgbench_accounts ALTER COLUMN abalance SET (log_old_value=true, delta_apply_function=spock.delta_apply)` on `pgedge` preserved **`1,837.64 TPS`** across 3 active writers with **`0` balance drift**—delivering `2.2x` higher hot-key throughput than YugabyteDB and `3.9x` higher than CockroachDB while remaining `PA/EL`.
+- **CRDT Delta-Apply Proof:** Enabling `ALTER TABLE pgbench_accounts ALTER COLUMN abalance SET (log_old_value=true, delta_apply_function=spock.delta_apply)` preserved **`1,837.64 TPS`** on 3 writers with **`0` balance drift**. That delivers `2.2x` YugabyteDB throughput and `3.9x` CockroachDB while remaining `PA/EL`.
 
 ---
 
@@ -85,8 +85,8 @@ To avoid single-benchmark bias (`pgbench`) and sub-millisecond Docker loopback i
 
 ### Two Critical Production Realities Exposed by Suites E & F
 
-1. **Client Drivers Without Retry Loops Collapse Under `SERIALIZABLE` (`Suite E`):** While `pgbench --max-tries=100` masked CockroachDB's `40001` aborts in Suites A–B2, stock `sysbench` lacks PostgreSQL `40001` retry handling and suffered **`685` ignored errors alongside `902` successful commits (`43.2%` abort exposure)** at `502.20 ms` `p95` latency. Meanwhile, YugabyteDB's `READ COMMITTED` Wait-on-Conflict sustained **`0` errors** (`128.24 TPS`).
-2. **PACELC `EC` Tax Over WAN (`Suite F`):** Introducing a `25 ms` one-way delay (`~50 ms` RTT) onto peer nodes crushed synchronous consensus and cross-shard engines cleanly in line with Chapter 02's latency equation:
+1. **Client Drivers Without Retry Loops Collapse Under `SERIALIZABLE` (`Suite E`):** `pgbench --max-tries=100` masked CockroachDB `40001` aborts in Suites A–B2. By contrast, stock `sysbench` lacks `40001` retries and suffered **`685` errors alongside `902` commits (`43.2%` exposure)** at `502.20 ms` `p95`. Meanwhile, YugabyteDB's `READ COMMITTED` Wait-on-Conflict sustained **`0` errors** (`128.24 TPS`).
+2. **PACELC `EC` Tax Over WAN (`Suite F`):** Adding `25 ms` one-way delay (`~50 ms` RTT) onto peer nodes crushed synchronous consensus engines. Measured drops match Chapter 02's latency equation:
    - `pg17-sync-streaming` collapsed by `-86.1%` (`57.00 TPS`, `avg = 139.56 ms`).
    - `citus` collapsed by `-93.0%` (`21.67 TPS`, `avg = 364.81 ms`) as multi-shard TPC-B statements paid cross-worker RTTs and 2PC overhead.
    - `yugabyte` (`5.78 TPS`, `avg = 1,327.30 ms`, `p95 = 3,401.33 ms`) and `cockroach` (`10.06 TPS`, `avg = 715.77 ms`, `14` retries) dropped `-96.7%` and `-76.1%` because each TPC-B transaction touched multiple non-colocated tablets/ranges (`accounts`, `tellers`, `branches`, `history`), paying repeated `2 * RTT` distributed commit trips.
@@ -96,11 +96,11 @@ To avoid single-benchmark bias (`pgbench`) and sub-millisecond Docker loopback i
 
 ## 5. Extended V2 Sweeps (`E2–E4`, `H`, WAN `10/25/50 ms`, `c=1..32`) & Log10 Charts
 
-Expanded 10-topology sweeps (`187` rows total; full methodology in [Chapter 09](09_benchmarks_methodology_and_charts.md), 5-tier comparison in [Chapter 10](10_streaming_vs_logical_vs_multimaster.md), interactive explorer in [**`dashboard/index.html`**](../../dashboard/index.html)):
+Expanded 10-topology sweeps (`187` rows total) confirm those trends. See [Chapter 09](09_benchmarks_methodology_and_charts.md) for methodology, [Chapter 10](10_streaming_vs_logical_vs_multimaster.md) for tiers, and [**`dashboard/index.html`**](../../dashboard/index.html) to explore:
 
-- **`sysbench` `E2–E4` & `H`:** Native PG reached `1,659–1,806` (`E2` RO), `801–1,784` (`E3` WO; `pg17-sync` `370.71`), and `124k–148k TPS` (`E4` point-select) vs distributed `180–522` (`E2`), `119–563` (`E3`), `11.6k–19.8k` (`E4`). Append-only `H` hit `3,108` (`standalone`), `2,987` (`yugabyte`), and `2,207` (`pgedge`).
+- **`sysbench` `E2–E4` & `H`:** Native PG reached `1,659–1,806` (`E2`), `801–1,784` (`E3`, `pg17-sync` `370.71`), and `124k–148k TPS` (`E4`) vs distributed `180–522` (`E2`), `119–563` (`E3`), `11.6k–19.8k` (`E4`). Append-only `H` hit `3,108` (`standalone`), `2,987` (`yugabyte`), and `2,207` (`pgedge`).
 - **WAN (`10 -> 25 -> 50 ms`):** Async stayed flat (`pg17-async` `587->600->619`, `pgedge` `645->647->687`, `bucardo` `593->763->613`) while `PC/EC` fell steeply (`pg17-sync` `121.8->57.0->25.8`, `citus` `44.4->21.7->8.8`, `cockroach` `19.4->10.1->4.5`, `yugabyte` `15.4->5.8->3.1 TPS`, `p95=5,475 ms`).
-- **Concurrency (`c=1..32`):** `standalone` scaled `298->801`; `pg17-sync` plateaued at `425`; `cockroach` peaked at `c=4` (`74.1`) then fell to `40.3` (`88` retries, `p95=3,400 ms`) at `c=32`.
+- **Concurrency (`c=1..32`):** `standalone` scaled `298->801`, while `pg17-sync` plateaued at `425`. `cockroach` peaked at `c=4` (`74.1`) then fell to `40.3` (`88` retries, `p95=3,400 ms`) at `c=32`.
 
 ![Log10 Throughput All Suites](../../assets/charts/chart_01_tps_log_all_suites.png)
 ![Log10 Latency All Suites](../../assets/charts/chart_02_latency_log_all_suites.png)
