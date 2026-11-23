@@ -201,6 +201,14 @@
 - **Applied Change / Fix**: Updated `stacks/README.md` to 13 Compose stacks / 18 active topologies (`cockroachdb/cockroach:latest-v25.4` active + `v24.3.0` V1/V2 note) and refactored `README.md`, `README.fr.md`, and `stacks/README.md` to 0 STE procedural errors.
 - **Result & Non-Regression Test**: Windows `unittest` (`31/31`) and WSL `make test lint check-math check-security` pass across PRs `#566`, `#568`, and `#569`.
 
+
+### RCA-029 - Cross-Document Drift, Unchecked Weak Modals & Submodule Image Tag Skew
+- **Date / Action**: `2026-11-23` (`ACT-199`..`ACT-254`, Issues `#571`..`#681`)
+- **Observed Symptom**: Documentation audit identified residual CockroachDB `v24.x`-only prose, missing Diataxis quadrant portal, weak modals and non-CSV `via` across `README*`, chapters `01`-`13`, and 38 solution sheets, plus stale `v2.6.2` and `haproxy:2.9-alpine` references in `README.md` vs submodule `v2.6.3` (`haproxy:lts-alpine`).
+- **Root Cause Analysis**: Previously no automated test verified GFM `#anchor` targets, `Makefile` references, forbidden modals, or ASD-STE100 sentence/semicolon limits across Markdown docs, and submodule image tags changed upstream without root README sync.
+- **Applied Change / Fix**: Refactored every EN/FR chapter and all 38 solution sheets to 0 STE structural errors, added `docs/index.md` Diataxis portal linked from `README*`, added stdlib `tests/test_docs_hygiene.py`, and synced `env/multi-db-docker-env` `v2.6.3` (`acfb0c2b`) + `haproxy:lts-alpine`.
+- **Result & Non-Regression Test**: Windows `unittest` (`35/35`) and WSL `make test` (`35/35`), `make lint`, `make check-math`, `make check-security`, and `make pages-check` pass.
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters

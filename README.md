@@ -6,7 +6,7 @@
 
 **Author:** Jean-Marie Renouard (`jmrenouard`) | **Supported by:** [LightPath](https://www.lightpath.fr) | **License:** [MIT](LICENSE) | **Version française :** [README.fr.md](README.fr.md)
 
-This repository provides a comparative PostgreSQL study, a 36-criterion matrix, and 13 Docker Compose labs ([`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.2`). The harness runs 18 functional/limit probes (`L1-L8`, `T11-T18`) plus PG 18.6 AIO, `uuidv7()`, conflict, and YT `T_REVERT` checks. We collected **628 raw benchmark rows** (**310 baseline `PG_SCALE=2`** / **301 deduplicated** + **318 V5 tuned `PG_SCALE=20`** `pgbench`/`sysbench`/`tc netem`) across **18 live PostgreSQL topologies** (`cockroach-rc` included, `16` solutions / `19` architecture sheets). The repo also stores **22 GitHub popularity rows** (`19` repos + `3` closed/managed), **13 `log10` charts**, and [**`dashboard/index.html`**](dashboard/index.html).
+This repository provides a comparative PostgreSQL study, a 36-criterion matrix, and 13 Docker Compose labs ([`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.3`). The harness runs 18 functional/limit probes (`L1-L8`, `T11-T18`) plus PG 18.6 AIO, `uuidv7()`, conflict, and YT `T_REVERT` checks. We collected **628 raw benchmark rows** (**310 baseline `PG_SCALE=2`** / **301 deduplicated** + **318 V5 tuned `PG_SCALE=20`** `pgbench`/`sysbench`/`tc netem`) across **18 live PostgreSQL topologies** (`cockroach-rc` included, `16` solutions / `19` architecture sheets). The repo also stores **22 GitHub popularity rows** (`19` repos + `3` closed/managed), **13 `log10` charts**, and [**`dashboard/index.html`**](dashboard/index.html).
 
 ---
 
@@ -145,7 +145,7 @@ PoC topologies, `T11–T18` suites, and V2 benchmarks use [`jmrenouard/multi-db-
 | :--- | :--- | :--- |
 | `docker-compose-pg17-baseline.yml` | PG 17 Standalone & Sync Streaming | `postgres:17` |
 | `docker-compose-pg-streaming.yml` / `pg-logical.yml` | PG 17 Async Streaming & Uni-Logical | `postgres:17` |
-| `docker-compose-pg-birep.yml` | PG 17 Bidirectional (`origin=none`) + HAProxy | `postgres:17`, `haproxy:2.9-alpine` |
+| `docker-compose-pg-birep.yml` | PG 17 Bidirectional (`origin=none`) + HAProxy | `postgres:17`, `haproxy:lts-alpine` |
 | `docker-compose-pgedge.yml` | 3-Node pgEdge Spock `5.0.14` + Snowflake + HAProxy | `ghcr.io/pgedge/pgedge-postgres:17-spock5-minimal` |
 | `docker-compose-bucardo.yml` | 2-Node PG 17 (`plperl`) + Bucardo `5.6.0` Daemon | Custom `postgres:17` + `debian:trixie-slim` |
 | `docker-compose-citus.yml` | Citus `14.2.0` (1 Coordinator + 2 Workers) | `citusdata/citus:14.2.0-pg17` |
@@ -153,13 +153,13 @@ PoC topologies, `T11–T18` suites, and V2 benchmarks use [`jmrenouard/multi-db-
 | `docker-compose-cockroach.yml` | 3-Node CockroachDB RF=3 Multi-Raft + HAProxy `:15480` | `cockroachdb/cockroach:latest-v25.4`, `haproxy:lts-alpine` |
 | `docker-compose-pg18-streaming.yml` | PG 18.6 Standalone, Async & Sync Streaming (`AIO worker`) | `postgres:18` (`18.6`) |
 | `docker-compose-pg18-logical.yml` | PG 18.6 Uni-Directional Logical (`substream=p`, `pubgencols=s`) | `postgres:18` (`18.6`) |
-| `docker-compose-pg18-birep.yml` | PG 18.6 Bidirectional Logical (`origin=none`, `uuidv7()`) + HAProxy | `postgres:18` (`18.6`), `haproxy:2.9-alpine` |
+| `docker-compose-pg18-birep.yml` | PG 18.6 Bidirectional Logical (`origin=none`, `uuidv7()`) + HAProxy | `postgres:18` (`18.6`), `haproxy:lts-alpine` |
 | `docker-compose-yt-cluster.yml` | 3-Node YT Cluster 1.21.3 (`yt_cluster` + `ytserv` XA 2PC) | `dbinvent/yt:1.21.3` (`PG 18.7`) |
 
 ### Common Commands
 
 ```bash
-# Initialize the multi-db-docker-env Git submodule (13 Compose stacks; v2.6.2 benchmark harness)
+# Initialize the multi-db-docker-env Git submodule (13 Compose stacks; v2.6.3 benchmark harness)
 make init-env
 make help
 

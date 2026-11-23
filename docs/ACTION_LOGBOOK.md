@@ -19,6 +19,7 @@
 | **Phase 10** | V5 Production Tuning & Realistic Scale Benchmarks (`PG_SCALE=20`, `18` Topologies, `318` Rows, `v2.6.1`) | `results/benchmark_optimized.csv` (`318` rows), `chart_12` & `chart_13`, dual-dataset offline dashboard (`301` + `318`), Chapter 13 EN/FR, Ch. 06 Section 8, Ch. 09 Matrix, `README*` & governance updates | Complete | `make charts && make dashboard && make test && make lint` |
 | **Phase 11** | Interactive PACELC Selector & GitHub Pages Explorer (`#496-#507`) | PACELC catalog/engine/UI, Node+parity tests, `make pages-build`/`pages-check`, EN/FR docs; `.github/workflows/pages.yml` tracked in `#506` (`RCA-003`) | Complete (`#506` pending `workflow` scope) | `make dashboard && make pages-build && make pages-check && make test && make lint` |
 | **Phase 12** | Ponytail Quality Audit, Chart/Dashboard Refactoring, Unit Hardening & Submodule `v2.6.2` (`#509-#563`) | Audited Makefile targets, pruned 14 shadowed scripts, fixed collector/builder/chart bugs, extracted `LPUtil`, regenerated charts/shards, reconciled PACELC hooks, added Python/Node unit tests, bumped submodule `v2.6.2` | Complete | `make test && make lint && make pages-check` |
+| **Phase 13** | Diataxis Portal, Repo-Wide STE Remediation, Hygiene Gate & Submodule `v2.6.3` (`#565-#681`) | Refactored `README*`, `stacks/README.md`, Ch. `01`-`13` EN/FR, and all `38` solution sheets to 0 STE errors/weak modals/prose `via`; added `docs/index.md` + `tests/test_docs_hygiene.py`; synced submodule `v2.6.3` | Complete | `make test && make lint && make check-math && make check-security && make pages-check` |
 
 ## 1. Ongoing Actions (`IN PROGRESS`)
 
@@ -27,6 +28,10 @@
 | *None* | - | - | - | All tracked actions archived below once verified. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-254 - Bump Submodule to `v2.6.3`, Align Root READMEs & Finalize Phase 13 (`#681`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#681` (`chore/issue-681-submodule-v2-6-3`)
+- **Request / Changes / Result**: Checked out `env/multi-db-docker-env` `v2.6.3` (`acfb0c2b2c32aea88e9120879ab23c223a9ce6ce`), updated `README.md`/`README.fr.md` (`v2.6.3`, `haproxy:lts-alpine`), added `Phase 13` + `RCA-029`; Windows `35/35` and WSL `make test lint check-math check-security pages-build pages-check` pass.
 
 ### ACT-253 - Add Documentation Hygiene and STE Structural Gate (`#679`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#679` (`test/issue-679-docs-hygiene-gate`)
