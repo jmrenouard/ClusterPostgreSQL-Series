@@ -19,7 +19,7 @@
 
 ## 1. Technology Description & What It Does
 
-**YugabyteDB** is an open-source distributed SQL database pairing a **forked PostgreSQL 15 C query layer (`YSQL`)** with **DocDB**, a C++ transactional storage engine built on **RocksDB** LSM-trees and per-tablet **Raft** consensus (`RF = 3`). Every node runs `yb-master` and `yb-tserver` processes, allowing any node to accept active-active reads and writes while routing operations to each tablet's Raft leader.
+**YugabyteDB** is an open-source distributed SQL engine. It pairs a **forked PostgreSQL 15 C query layer (`YSQL`)** with **DocDB**, a C++ storage engine built on **RocksDB** and per-tablet **Raft** (`RF = 3`). Every node runs `yb-master` and `yb-tserver` processes, allowing any node to accept active-active reads and writes while routing operations to each tablet's Raft leader.
 
 Unlike `#6 CockroachDB` (clean-room Go SQL over `pgwire`), reusing PostgreSQL's C parser, planner, and PL/pgSQL executor preserves triggers, `TEMP TABLE`, `pg_trgm`, `uuid-ossp`, and `pgvector`. Furthermore, YSQL defaults to **`READ COMMITTED` Wait-on-Conflict** pessimistic locking, eliminating `40001` retry storms observed under optimistic `SERIALIZABLE` engines.
 
@@ -39,27 +39,27 @@ flowchart TB
     N1 <-->|"Per-Tablet Raft RF=3 + HLC + 2PC"| N3
 ```
 
-Multi-writer suites (`B1`–`D`, `H`) drive `yb-node1` and `yb-node2` (`user=yugabyte`) while `yb-node3` participates in Raft quorum (`conv_chk` verifies all 3 nodes; `tc netem` delays `yb_node2` and `yb_node3`).
+Multi-writer suites (`B1`–`D`, `H`) drive `yb-node1` and `yb-node2` (`user=yugabyte`) while `yb-node3` votes in Raft quorum. Then `conv_chk` verifies all 3 nodes and `tc netem` delays `yb_node2` and `yb_node3`.
 
 ---
 
 ## 3. Operating Principles & Implementation Modes
 
-1. **Per-Tablet Raft & HLC Ordering:** Tables shard automatically into tablets replicated via Raft (`RF = 3`). Hybrid Logical Clocks (HLC, `--max_clock_skew_usec` default `500 ms`) order distributed reads/writes without central locking, while cross-tablet mutations execute distributed 2PC intents inside `DocDB`.
+1. **Per-Tablet Raft & HLC Ordering:** Tables shard into tablets replicated with Raft (`RF = 3`). Hybrid Logical Clocks (HLC, `--max_clock_skew_usec` default `500 ms`) order distributed reads/writes without central locking, while cross-tablet mutations execute distributed 2PC intents inside `DocDB`.
 2. **Commit Latency Model:**
 
 $$
 L_{\text{T5-yb-1tablet}} \approx L_{\text{disk-leader}} + \text{RTT}_{\text{Raft-quorum}}, \qquad L_{\text{T5-yb-2PC}} \approx L_{\text{disk}} + 2 \cdot \text{RTT}_{\text{Raft-quorum}} + \text{HLC}_{\text{wait}}
 $$
 
-3. **Isolation, Colocation & Sequences:** Default `READ COMMITTED` uses **Wait-on-Conflict** (`0` `40001` retries in `A`–`H`); `REPEATABLE READ` / `SERIALIZABLE` aborts conflicts with `40001` (`L3`). Default sequence `CACHE 100` pre-allocates 100-ID blocks per node (`T18` `next_id=101` on `node2` vs `CACHE 1` `1.89 ms`).
+3. **Isolation, Colocation & Sequences:** Default `READ COMMITTED` uses **Wait-on-Conflict** (`0` `40001` retries in `A`–`H`). `REPEATABLE READ` and `SERIALIZABLE` abort conflicts with `40001` (`L3`). Default sequence `CACHE 100` pre-allocates 100-ID blocks per node (`T18` `next_id=101` on `node2` vs `CACHE 1` `1.89 ms`).
 
 | Mode / Feature | Scope | Mechanics & Key Strategy | Conflict / Failover Impact | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
 | **`READ COMMITTED` Wait-on-Conflict** *(PoC Default)* | `iso=read_committed` (`F1`) | Pessimistic DocDB row lock queue waits for conflicting TX commit | **`0` `40001` retries** (`A`–`H`), `0` drift, `0` failed `E_sysbench_oltp_rw` | Higher tail wait under hot contention vs abort |
-| **`REPEATABLE READ` / `SERIALIZABLE`** *(PoC `L3`)* | Explicit `BEGIN ISOLATION LEVEL` | Optimistic SI / SSI checks via HLC and provisional intents | `L3` hits `8x` raw `40001`; converges `bal=1100` after `33` retries | Requires client `40001` retry loop |
+| **`REPEATABLE READ` / `SERIALIZABLE`** *(PoC `L3`)* | Explicit `BEGIN ISOLATION LEVEL` | Optimistic SI / SSI checks using HLC and provisional intents | `L3` hits `8x` raw `40001`; converges `bal=1100` after `33` retries | Requires client `40001` retry loop |
 | **Hash Sharding vs. Colocation** *(PoC `1` shard/ts)* | `ysql_num_shards_per_tserver=1` | Hash distributes rows (`pgbench_history` `hid BIGSERIAL PK`); colocation groups tables | Colocated single-tablet DML avoids 2PC RPCs (`H` `2,987.24 TPS`) | Cross-tablet TX incurs 2PC intent overhead |
-| **Global Sequences** *(`CACHE 100` vs `CACHE 1`)* | `CREATE SEQUENCE` (`L1`/`T18`) | YSQL defaults to `CACHE 100` (`1.98 ms`); `CACHE 1` allocates via master (`1.89 ms`) | Zero `23505` PK collisions (`T18` `node2` allocates `next_id=101`) | `CACHE 100` leaves ID gaps across nodes |
+| **Global Sequences** *(`CACHE 100` vs `CACHE 1`)* | `CREATE SEQUENCE` (`L1`/`T18`) | YSQL defaults to `CACHE 100` (`1.98 ms`); `CACHE 1` allocates from master (`1.89 ms`) | Zero `23505` PK collisions (`T18` `node2` allocates `next_id=101`) | `CACHE 100` leaves ID gaps across nodes |
 | **xCluster Async DR** *(Arch. — Not in PoC)* | Cross-cluster replication | Asynchronous CDC stream between two independent YugabyteDB universes | Converts inter-DC path to `AP / PA-EL` (survives region loss) | `RPO > 0`; loses cross-region linearizability |
 | **Geo-Partitioning** *(Arch. — Not in PoC)* | Row-level tablespaces | Pins partitions/tablets and Raft leaders to specific `cloud.region.zone` | Keeps regional reads/writes low-latency within regulatory zones | Cross-region joins/writes still pay WAN RTT |
 
@@ -151,7 +151,7 @@ Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 
 - **Maintenance Level:** **Tier A (Active OSS)** -- `yugabyte/yugabyte-db` logs `5,350` commits/12m (`41,479` total, `1,217` contributors, `10,670` stars, `9,765` open issues).
 - **Currency / Freshness:** **Current -- Daily Active** -- Last push `2026-11-20T17:22:06Z`, `5,350` commits/12m, latest release `v2026.1.3.0`.
-- **Operational Manageability:** **Moderate** -- High engineering velocity (Apache 2.0 core; `NOASSERTION` SPDX); `2 GiB`/node RAM floor and WAN sensitivity remain key ops constraints.
+- **Operational Manageability:** **Moderate** -- High engineering velocity (Apache 2.0 core, SPDX `NOASSERTION`). A `2 GiB`/node RAM floor and WAN sensitivity remain key ops constraints.
 
 ---
 

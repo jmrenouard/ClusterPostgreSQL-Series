@@ -19,7 +19,7 @@
 
 ## 1. Description de la technologie et rôle
 
-**YugabyteDB** est une base SQL distribuée open source associant une **couche requête PostgreSQL 15 forkée en C (`YSQL`)** à **DocDB**, un moteur de stockage transactionnel C++ fondé sur des arbres LSM **RocksDB** et un consensus **Raft** par *tablet* (`RF = 3`). Chaque nœud exécute `yb-master` et `yb-tserver`, acceptant des lectures/écritures actif-actif routées vers le leader Raft de chaque tablet.
+**YugabyteDB** est une base SQL distribuée open source. Elle associe une **couche requête PostgreSQL 15 C forkée (`YSQL`)** à **DocDB**, un stockage C++ sur **RocksDB** avec consensus **Raft** par *tablet* (`RF = 3`). Chaque nœud exécute `yb-master` et `yb-tserver`, acceptant des lectures/écritures actif-actif routées vers le leader Raft de chaque tablet.
 
 À la différence de `#6 CockroachDB` (moteur Go *clean-room* sur `pgwire`), réutiliser le parseur, le planificateur et l'exécuteur PL/pgSQL C de PostgreSQL préserve triggers, `TEMP TABLE`, `pg_trgm`, `uuid-ossp` et `pgvector`. De plus, YSQL utilise par défaut **`READ COMMITTED` Wait-on-Conflict** pessimiste, évitant les rafales de reprises `40001` des moteurs `SERIALIZABLE` optimistes.
 
@@ -39,7 +39,7 @@ flowchart TB
     N1 <-->|"Raft par tablet RF=3 + HLC + 2PC"| N3
 ```
 
-Les tirs multi-écrivains (`B1`–`D`, `H`) sollicitent `yb-node1` et `yb-node2` (`user=yugabyte`) tandis que `yb-node3` participe au quorum Raft (`conv_chk` vérifie les 3 nœuds ; `tc netem` retarde `yb_node2` et `yb_node3`).
+Les tirs multi-écrivains (`B1`–`D`, `H`) ciblent `yb-node1` et `yb-node2` (`user=yugabyte`) pendant que `yb-node3` vote dans Raft. Ensuite `conv_chk` vérifie les 3 nœuds et `tc netem` retarde `yb_node2` et `yb_node3`.
 
 ---
 
@@ -52,12 +52,12 @@ $$
 L_{\text{N5-yb-1tablet}} \approx L_{\text{disque-leader}} + \text{RTT}_{\text{quorum-Raft}}, \qquad L_{\text{N5-yb-2PC}} \approx L_{\text{disque}} + 2 \cdot \text{RTT}_{\text{quorum-Raft}} + \text{HLC}_{\text{attente}}
 $$
 
-3. **Isolation, colocalisation et séquences :** Le mode défaut `READ COMMITTED` applique **Wait-on-Conflict** (`0` reprise `40001` en `A`–`H`) ; `REPEATABLE READ` / `SERIALIZABLE` annule les conflits en `40001` (`L3`). Le cache défaut `CACHE 100` préalloue 100 IDs par nœud (`T18` `next_id=101` sur `node2` vs `CACHE 1` à `1.89 ms`).
+3. **Isolation, colocalisation et séquences :** Le mode défaut `READ COMMITTED` applique **Wait-on-Conflict** (`0` reprise `40001` en `A`–`H`). Les modes `REPEATABLE READ` et `SERIALIZABLE` annulent les conflits en `40001` (`L3`). Le cache défaut `CACHE 100` préalloue 100 IDs par nœud (`T18` `next_id=101` sur `node2` vs `CACHE 1` à `1.89 ms`).
 
 | Mode / Fonction | Portée | Mécanique et stratégie de clés | Impact conflit / bascule | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
 | **`READ COMMITTED` Wait-on-Conflict** *(Défaut PoC)* | `iso=read_committed` (`F1`) | File d'attente pessimiste sur verrou de ligne DocDB | **`0` reprise `40001`** (`A`–`H`), dérive `0`, `0` échec `E` | Attente en queue plus élevée sous contention |
-| **`REPEATABLE READ` / `SERIALIZABLE`** *(PoC `L3`)* | `BEGIN ISOLATION LEVEL` | Contrôle optimiste SI / SSI via HLC et intentions | `L3` lève `8x` `40001` ; converge `bal=1100` (`33` reprises) | Impose boucle de reprise client `40001` |
+| **`REPEATABLE READ` / `SERIALIZABLE`** *(PoC `L3`)* | `BEGIN ISOLATION LEVEL` | Contrôle optimiste SI / SSI par HLC et intentions | `L3` lève `8x` `40001` ; converge `bal=1100` (`33` reprises) | Impose boucle de reprise client `40001` |
 | **Sharding hachage vs colocalisation** *(PoC `1` shard/ts)* | `ysql_num_shards_per_tserver=1` | Hachage (`pgbench_history` `hid BIGSERIAL PK`) ; colocalisation regroupe les tables | DML mono-tablet sans RPC 2PC (`H` `2987.24 TPS`) | Les transactions multi-tablets paient le 2PC |
 | **Séquences globales** *(`CACHE 100` vs `CACHE 1`)* | `CREATE SEQUENCE` (`L1`/`T18`) | YSQL préalloue `CACHE 100` (`1.98 ms`) ; `CACHE 1` appelle le master (`1.89 ms`) | Zéro collision PK `23505` (`T18` `node2` obtient `next_id=101`) | `CACHE 100` crée des trous d'IDs entre nœuds |
 | **xCluster Async DR** *(Arch. — Hors PoC)* | Réplication inter-clusters | Flux CDC asynchrone entre deux univers YugabyteDB distincts | Bascule le lien inter-DC en `AP / PA-EL` (survit perte région) | `RPO > 0` ; pas de linéarisabilité inter-régions |
@@ -151,7 +151,7 @@ Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf 
 
 - **Niveau de maintenance :** **Niveau A (OSS Actif)** -- `yugabyte/yugabyte-db` totalise `5 350` commits/12m (`41 479` total, `1 217` contributeurs, `10 670` stars, `9 765` issues).
 - **Fraîcheur / Actualité :** **À jour -- Actif au quotidien** -- Dernier push `2026-11-20T17:22:06Z`, `5 350` commits/12m, dernière version `v2026.1.3.0`.
-- **Maintenabilité opérationnelle :** **Modéré** -- Vélocité élevée (Apache 2.0 ; SPDX `NOASSERTION`) ; le plancher `2 GiB`/nœud et la sensibilité WAN restent exigeants.
+- **Maintenabilité opérationnelle :** **Modéré** -- Vélocité élevée (Apache 2.0, SPDX `NOASSERTION`). Le plancher `2 GiB`/nœud et la sensibilité WAN restent exigeants.
 
 ---
 
