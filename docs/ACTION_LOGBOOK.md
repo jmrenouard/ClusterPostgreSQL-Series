@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-236 - Refactor pgedge_spock EN/FR Sheets (`#645`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#645` (`docs/issue-645-pgedge-spock`)
+- **Request / Changes / Result**: Refactored `docs/{en,fr}/solutions/pgedge_spock.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-235 - Refactor pg18_native_clustering EN/FR Sheets (`#643`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#643` (`docs/issue-643-pg18-native-clustering`)
 - **Request / Changes / Result**: Refactored `docs/{en,fr}/solutions/pg18_native_clustering.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while keeping PG 18.6 CSV metrics and Mermaid diagrams intact; Windows unittest and WSL `make test lint check-math check-security` pass.
