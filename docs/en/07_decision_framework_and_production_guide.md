@@ -44,6 +44,7 @@ flowchart TD
 | **Regulated Enterprise Multi-Region PG with SLA** | **#4 EDB PGD (BDR)** | #5 YugabyteDB Enterprise | Raft DDL locks, CAMO, Write-Lead proxy, and commercial vendor support |
 | **Disconnected Retail POS / Heterogeneous DB Sync** | **#10 SymmetricDS** | #9 Bucardo 5 (PG-only low vol) | Tolerates multi-hour offline stores and MySQL/Oracle/SQLite heterogeneous peers |
 | **Read-Heavy Global Analytics + Local Writes** | **#15 Patroni + Cross-Region Replicas** | #13 AlloyDB / #7 Citus | Logical or physical read replicas scale reads infinitely without multi-writer risk |
+| **Regulated TDE & Key Custody Compliance (PCI/HIPAA)** | **#4 EDB PGD** or **#15 Patroni + `pg_tde`** | #5 YugabyteDB / #12 Aurora / #13 Spanner | Native WAL and heap encryption plus external KMS (`KMIP`, `OpenBao`, Cloud KMS); see [Ch. 14](14_transparent_data_encryption_tde.md) |
 
 ---
 
@@ -69,6 +70,7 @@ Avoiding catastrophic production incidents requires recognizing the six recurrin
 | **Clock Hygiene** | `chrony` with redundant NTP/PTP sources; alert if drift `> 10 ms` | Protects LWW causality bounds and prevents HLC `max_clock_skew` node eviction |
 | **Application Retry Loop** | Exponential backoff + jitter for `SQLSTATE 40001` & `40P01` | Required by CockroachDB, YugabyteDB (`RR`/`SSI`), and multi-shard Citus deadlocks |
 | **Secrets & Transport** | TLS 1.3 mutual auth (`sslmode=verify-full`) + external KMS / secrets manager | Eliminates plaintext credential files and secures cross-DC WAL/Raft links |
+| **Storage TDE & KMS** | External KMS (`KMIP`, `OpenBao`, or Cloud KMS) + WAL encryption + encrypted backups | Prevents plaintext heap or WAL exposure and validates DR recovery paths ([Ch. 14](14_transparent_data_encryption_tde.md)) |
 | **Observability Metrics** | Track `pg_stat_replication`, `pg_stat_subscription_stats`, conflict counters, `40001` rate | Detects silent apply stalls (`23505`) or rising contention before SLA breach |
 
 ---

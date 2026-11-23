@@ -30,6 +30,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-262 - Add TDE Workload Row and KMS Guardrails in Ch. 07 EN/FR (`#697`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#697` (`docs/issue-697-tde-ch07-en-fr`)
+- **Request / Changes / Result**: Added regulated TDE workload rows and KMS/WAL/backup encryption production guardrails linking EN/FR Ch. 14 in `docs/en/07_*` and `docs/fr/07_*`; STE/STF, Windows `40/40`, MkDocs strict build, and WSL checks pass (`< 14,800` B PR diff).
+
 ### ACT-261 - Add Matrix F (40 Criteria) in Ch. 04 EN/FR (`#695`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#695` (`docs/issue-695-tde-ch04-ch07-en-fr`)
 - **Request / Changes / Result**: Extended `docs/en/04_*` and `docs/fr/04_*` to 40 criteria across six matrices by adding Matrix F (`#1`-`#18` TDE/KMS comparison) and Ch. 14 links (Ch. 07 split cleanly to follow-up PR to honor `< 14,800` B PR diff cap); STE/STF, Windows `40/40`, and WSL checks pass.
