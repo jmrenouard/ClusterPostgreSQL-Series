@@ -21,15 +21,15 @@
 
 ## 1. Présentation et principes de fonctionnement (Licence MIT, nuance Jepsen et réversibilité)
 
-**YT Cluster** (DBinvent) transforme des instances PostgreSQL 14–19 non modifiées en cluster actif-actif multi-maîtres via une extension C (`yt_cluster`) couplée au démon coordinateur Rust local (`ytserv`). Les triggers par ligne (`yt_synchronize`) capturent les images avant/après et les transmettent via socket Unix HTTP/2 gRPC (`.s.YT.<port>`) à `ytserv`. Au `XACT_EVENT_PRE_COMMIT`, `yt_cluster.c` appelle `yt_complete(true)` : un Leader élu (`term.subterm`) arbitre l'ordre global et les conflits (`checkin`, rejet `55409` ou `40001`), puis valide via XA 2PC PostgreSQL (`PREPARE TRANSACTION` / `COMMIT PREPARED`, exigeant `max_prepared_transactions >= 100`).
+**YT Cluster** (DBinvent) transforme PostgreSQL 14–19 en cluster actif-actif par une extension C (`yt_cluster`) et un démon Rust (`ytserv`). Les triggers (`yt_synchronize`) envoient les images par socket Unix gRPC (`.s.YT.<port>`) à `ytserv`. Au `XACT_EVENT_PRE_COMMIT`, `yt_complete(true)` arbitre les conflits (`55409` ou `40001`) puis valide en XA 2PC PostgreSQL (`max_prepared_transactions >= 100`).
 
 $$
 L_{\text{YT-half}} \approx L_{\text{trig}} + \text{RTT}_{\text{leader}} + 2 \cdot L_{\text{2PC-fsync}}, \qquad L_{\text{YT-async}} \approx L_{\text{trig}} + \text{RTT}_{\text{leader}} + L_{\text{disque}}
 $$
 
-- **Séparation CRITIQUE MIT vs double licence :** `DBinvent/yt-cluster-lite` (**MIT**) est conçu pour être embarqué et raccordé à un vrai nœud de cluster : il fournit `yt-core-proto`, l'extension `ytpgc` et `yt-lite` (nœud feuille mono-BD relié en amont à `ytserv >= 1.21` via TLS 1.3 ; rejette le multi-BD en `0A000` et **ne peut pas former seul un cluster multi-maîtres pair-à-pair**). Construire un vrai cluster requiert l'image complète `ytserv` + `ytctl` ([`dbinvent/yt:1.21.3`](https://hub.docker.com/r/dbinvent/yt), documentée dans [`dbinvent.com/agent.md`](https://dbinvent.com/agent.md)), à code fermé sous **PolyForm Noncommercial 1.0.0** (labo/évaluation gratuits) et **licence commerciale DBinvent**, qui est l'image exacte déployée par notre PoC Docker 3 nœuds.
-- **Nuance du test chaos Jepsen (`https://dbinvent.com/cluster/articles/jepsen`) :** **Auto-exécuté par DBinvent** (pas un audit indépendant Jepsen LLC / Kyle Kingsbury) sur 5 nœuds `1.20.1` (`Jepsen 0.3.14` + Elle), vérifié sur **Elle `cursor-stability` uniquement** (lectures à cohérence à terme tolérées, pas de sérialisabilité stricte). La build initiale `1.20.1` a échoué chaque run, révélant **51 anomalies** (**24 sévères** dont double leader `#42`, insertion dupliquée `#1`, écriture échouée survivante `#40`, verrous 2PC bloqués ; **21 alertes** ; **6 faibles** ; **0 classée « critique »** selon la grille DBinvent). Les 51 sont annoncées corrigées et retestées au vert (**49/49**).
-- **Preuve de réversibilité `T_REVERT` :** Le test en direct confirme que `DROP EXTENSION yt_cluster CASCADE;` sur `yt3` retire extension et triggers (`ext=0`, `triggers=0`) tout en conservant les `5/5` lignes validées et en acceptant une écriture PostgreSQL standard (`6/6`).
+- **Séparation CRITIQUE MIT vs double licence :** `DBinvent/yt-cluster-lite` (**MIT**) fournit `yt-core-proto`, `ytpgc` et `yt-lite` (nœud feuille pour `ytserv >= 1.21` rejetant le multi-BD en `0A000`). Il **ne peut pas former seul un cluster pair-à-pair**. Un vrai cluster exige l'image fermée `ytserv` + `ytctl` ([`dbinvent/yt:1.21.3`](https://hub.docker.com/r/dbinvent/yt), [`dbinvent.com/agent.md`](https://dbinvent.com/agent.md)) sous **PolyForm Noncommercial 1.0.0** et **licence commerciale DBinvent**.
+- **Nuance du test chaos Jepsen (`https://dbinvent.com/cluster/articles/jepsen`) :** **Auto-exécuté par DBinvent** (pas un audit indépendant Jepsen LLC / Kyle Kingsbury) sur 5 nœuds `1.20.1` (`Jepsen 0.3.14` + Elle), vérifié sur **Elle `cursor-stability` uniquement** (lectures à cohérence à terme tolérées, pas de sérialisabilité stricte). La build initiale `1.20.1` a échoué chaque run avec **51 anomalies**. Cela inclut **24 sévères** (double leader `#42`, insertion dupliquée `#1`, écriture échouée survivante `#40`, verrous 2PC), **21 alertes**, **6 faibles** et **0 critique**. Les 51 sont annoncées corrigées et retestées au vert (**49/49**).
+- **Preuve de réversibilité `T_REVERT` :** Le test en direct exécute `DROP EXTENSION yt_cluster CASCADE;` sur `yt3` (`ext=0`, `triggers=0`). Il conserve les `5/5` lignes validées et accepte les écritures PostgreSQL (`6/6`).
 
 ---
 
@@ -54,13 +54,13 @@ flowchart LR
 | **`yt-cluster` (`cc=half`, `NO_SC`)** *(Défaut PoC)* | Écritures `PC/EC` / lect. `EL` | XA 2PC synchrone 2-sur-3, **`RPO=0`**, dérive `0` (rejet `55409`/`40001`) | Sûreté par défaut élevée, mais `20.63 TPS` (`A`), `2.25 TPS` WAN `25ms` |
 | **`yt-cluster-async` (`cc=nodes>=0`, `NO_SC`)** | `PA/EL` asynchrone | `checkin` Leader + apply pair async (risque `RPO > 0`) ; dérive `0` | `2,0x` (`41.45` `A`) à `5,1x` (`55.03` `B2`) plus rapide ; `4.78 TPS` WAN |
 | **`cc=all` + `SC` (`sequential_consistency`)** | `PC/EC` strict | 2PC synchrone sur tous les nœuds + barrière de lecture séquentielle | Latence maximale ; toute perte de nœud bloque les écritures |
-| **Feuille `yt-lite` (`DBinvent/yt-cluster-lite`)** | Feuille amont (MIT) | Feuille mono-BD TLS 1.3 via `yt_outbox` vers `ytserv >= 1.21` | Cœur MIT, jamais Leader, zéro multi-maîtres P2P seul (`0A000` multi-BD) |
+| **Feuille `yt-lite` (`DBinvent/yt-cluster-lite`)** | Feuille amont (MIT) | Feuille mono-BD TLS 1.3 sur `yt_outbox` vers `ytserv >= 1.21` | Cœur MIT, jamais Leader, zéro multi-maîtres P2P seul (`0A000` multi-BD) |
 
 ---
 
 ## 4. Résultats empiriques et limites vérifiées (`results/benchmark_yt_cluster.csv` & `results/functional_limits_yt_cluster.csv`)
 
-Les 36 lignes (18 `yt-cluster` + 18 `yt-cluster-async`) ont été mesurées séquentiellement à `pg_scale = 2` sur 3 nœuds `dbinvent/yt:1.21.3` (`balance_drift = 0` sur toutes les écritures ; voir [`chart_11`](../../../assets/charts/chart_11_yt_cluster_vs_multimaster_log.png) et [Ch. 09](../09_methodologie_benchmarks_et_graphiques.md)). Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` sont enregistrées (la latence `p99` n'est pas mesurée).
+Les 36 lignes (18 `yt-cluster` + 18 `yt-cluster-async`) ont été mesurées à `pg_scale = 2` sur `dbinvent/yt:1.21.3` (`balance_drift = 0`). Voir [`chart_11`](../../../assets/charts/chart_11_yt_cluster_vs_multimaster_log.png) et [Ch. 09](../09_methodologie_benchmarks_et_graphiques.md). Seules `Avg`, `Stddev` (`0` pour `sysbench`) et `p95` sont enregistrées (la latence `p99` n'est pas mesurée).
 
 | Suite (`PG_SCALE=2`) | `yt-cluster` (`cc=half`) TPS | `cc=half` Avg / p95 (ms) | `cc=half` Retries / Échecs | `yt-cluster-async` (`cc=nodes>=0`) TPS | `async` Avg / p95 (ms) |
 | :--- | :---: | :---: | :---: | :---: | :---: |
