@@ -31,6 +31,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-271 - Split EN/FR MkDocs (`#715`)
+- **Date**: `2026-11-24` | **Status**: `COMPLETED` | **Issue / Branch**: `#715` (`docs/issue-715-mkdocs-fr-config`)
+- **Request / Changes / Result**: Isolated `mkdocs.yml` (EN) + `mkdocs.fr.yml` (FR), updated `scripts/build_mkdocs.py` and tests; `40/40` tests, strict EN/FR build, i18n check pass.
+
 ### ACT-270 - Add Language-Aware MkDocs Hooks and Dual EN/FR Builder Support (`#713`)
 - **Date**: `2026-11-24` | **Status**: `COMPLETED` | **Issue / Branch**: `#713` (`docs/issue-713-diataxis-i18n-mermaid`)
 - **Request / Changes / Result**: Updated `scripts/mkdocs_hooks.py` (`_site_lang`, `_alt_url` cross-language rewriting, language-filtered virtual docs) and `scripts/build_mkdocs.py` (builds `mkdocs.fr.yml` under `/fr/` when present) with unit assertions in `tests/test_mkdocs_publishing.py`; strict MkDocs and `40/40` unit tests pass (`< 15,000` B PR diff).

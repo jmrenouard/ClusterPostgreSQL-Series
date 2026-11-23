@@ -53,20 +53,26 @@ class TestMkDocsPublishing(unittest.TestCase):
         self.assertIn("stylesheets/extra.css", cfg["extra_css"])
         self.assertIn("javascripts/katex.js", cfg["extra_javascript"])
         nav = _flat_nav(cfg["nav"])
-        self.assertGreaterEqual(len(nav), 72)
+        self.assertGreaterEqual(len(nav), 36)
         for req in (
             "index.md",
             "overview-en.md",
-            "overview-fr.md",
             "stacks-overview.md",
             "dashboard/index.html",
             "en/14_transparent_data_encryption_tde.md",
-            "fr/14_chiffrement_transparent_tde.md",
         ):
             self.assertIn(req, nav)
+        self.assertFalse(any(p == "overview-fr.md" or p.startswith("fr/") for p in nav))
+        self.assertIn("fr/", cfg["exclude_docs"])
+        self.assertEqual({a["lang"] for a in cfg["extra"]["alternate"]}, {"en", "fr"})
         for p in (ROOT / "requirements-docs.txt", ROOT / "docs/javascripts/katex.js", ROOT / "docs/stylesheets/extra.css"):
             self.assertTrue(p.is_file(), f"Missing {p}")
         self.assertIn("site/", (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines())
+        fr = _MkDocsLoader((ROOT / "mkdocs.fr.yml").read_text(encoding="utf-8")).get_single_data()
+        fn = _flat_nav(fr["nav"])
+        self.assertEqual((fr["theme"]["language"], {a["lang"] for a in fr["extra"]["alternate"]}), ("fr", {"en", "fr"}))
+        self.assertTrue("en/" in fr["exclude_docs"] and len(fn) >= 36 and {"index.md", "overview-fr.md", "fr/14_chiffrement_transparent_tde.md"}.issubset(fn))
+        self.assertFalse(any(p == "overview-en.md" or p.startswith("en/") for p in fn))
 
     def test_hooks_alerts_links_and_gfm_slugify(self) -> None:
         self.assertEqual(
