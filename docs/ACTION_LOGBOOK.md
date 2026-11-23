@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-221 - Complete Chapter 06 EN Part 2 (Sections 6-8) for 0 STE Errors (`#615`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#615` (`docs/issue-615-ch06-en-p2`)
+- **Request / Changes / Result**: Completed Sections 6-8 of `docs/en/06_empirical_test_and_benchmark_results.md` reaching full-file 0 STE mixed-mode errors, 0 `via`, and 0 forbidden modals; Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
+
 ### ACT-220 - Refactor Chapter 06 EN Part 1 (Sections 1-5) for STE Compliance (`#613`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#613` (`docs/issue-613-ch06-en-p1`)
 - **Request / Changes / Result**: Refactored Sections 1-5 (before `## 6. V3 Extension`) of `docs/en/06_empirical_test_and_benchmark_results.md` to 0 STE errors, 0 `via`, and 0 forbidden modals in Part 1 while preserving all metrics; Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
