@@ -21,7 +21,7 @@
 
 **SymmetricDS** is a Java-based asynchronous database replication and synchronization engine designed for **multi-master**, **multi-tier hub-and-spoke**, and **heterogeneous** environments. Rather than decoding PostgreSQL WAL streams, SymmetricDS connects over JDBC and installs SQL capture triggers (`INSERT`/`UPDATE`/`DELETE`) on monitored tables inside each participating database.
 
-Its defining capability is **cross-engine portability and offline resilience**: a SymmetricDS node can synchronize PostgreSQL with MySQL, MariaDB, Oracle, SQL Server, SQLite, or DB2 over standard HTTP/HTTPS (Push or Pull), queuing compressed change batches locally across hours or days of WAN disconnection (such as retail POS stores or edge sites) without holding PostgreSQL replication slots open.
+Its core strength is **cross-engine portability and offline resilience**. A SymmetricDS node syncs PostgreSQL with MySQL, MariaDB, Oracle, SQL Server, SQLite, or DB2 over HTTP/HTTPS (Push or Pull). It queues compressed batches locally during hours or days of WAN outage without holding PostgreSQL slots open.
 
 ---
 
@@ -44,14 +44,14 @@ Loop-prevention guards inside the capture triggers tag incoming SymmetricDS sess
 
 ## 3. Operating Principles & Implementation Modes
 
-1. **Trigger Capture, Channels & Batch Transport:** Data changes fire `AFTER` triggers writing CSV-serialized row payloads into `sym_data`. Background routing jobs group events by `sym_channel` (controlling priority, `max_batch_size`, and data-loader strategy) into `sym_outgoing_batch` payloads transferred via HTTP/HTTPS Push or Pull and tracked at the target in `sym_incoming_batch`.
+1. **Trigger Capture, Channels & Batch Transport:** Data changes fire `AFTER` triggers writing CSV-serialized row payloads into `sym_data`. Background routing jobs group events by `sym_channel` into `sym_outgoing_batch` payloads. Nodes transfer these batches over HTTP/HTTPS Push or Pull and track apply status in `sym_incoming_batch`.
 2. **Commit Latency Model:**
 
 $$
 L_{\text{SymmetricDS-local}} \approx L_{\text{disk}} + L_{\text{trigger}}, \qquad T_{\text{sync-lag}} \approx T_{\text{route}} + T_{\text{batch-HTTP}} + T_{\text{apply}}
 $$
 
-3. **Conflict Detection, Resolution, Initial Load & DDL:** `sym_conflict` pairs detection modes (`USE_PK_DATA`, `USE_CHANGED_DATA`, `USE_TIMESTAMP`, `USE_VERSION`) with resolution policies (`FALLBACK`, `NEWER_WINS`, `MANUAL` error quarantine, `IGNORE`), without built-in CRDT delta-apply (`spock.delta_apply`). Initial loads run via `symadmin reload-node`, while DDL propagation requires explicit `symadmin send-schema` commands.
+3. **Conflict Detection, Resolution, Initial Load & DDL:** `sym_conflict` pairs detection modes (`USE_PK_DATA`, `USE_CHANGED_DATA`, `USE_TIMESTAMP`, `USE_VERSION`) with resolution policies (`FALLBACK`, `NEWER_WINS`, `MANUAL` error quarantine, `IGNORE`), without built-in CRDT delta-apply (`spock.delta_apply`). Initial loads run through `symadmin reload-node`, and DDL changes require explicit `symadmin send-schema` calls.
 
 | Mode / Policy | Scope | Mechanics & Key Strategy | Conflict / Failover Impact | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
@@ -99,7 +99,7 @@ Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 
 - **Maintenance Level:** **Tier B (Niche)** -- `jumpmindinc/symmetric-ds` records `425` commits/12m (`14,926` total, `96` contributors, `882` stars, `17` open issues).
 - **Currency / Freshness:** **Current -- Active** -- Last push `2026-11-20T16:39:06Z`, `425` commits/12m, latest release `3.18.4`.
-- **Operational Manageability:** **Moderate** -- Active Java trigger-sync engine (GitHub SPDX `N/A`; LGPL/GPLv3 dual-licensed); JVM agents and `sym_data` purge require disciplined ops.
+- **Operational Manageability:** **Moderate** -- Active Java trigger-sync engine (LGPL/GPLv3 dual-licensed, SPDX `N/A`). JVM agents and `sym_data` purge jobs require strict ops.
 
 ---
 

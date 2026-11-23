@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-238 - Refactor symmetricds EN/FR Sheets (`#649`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#649` (`docs/issue-649-symmetricds`)
+- **Request / Changes / Result**: Refactored `docs/{en,fr}/solutions/symmetricds.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-237 - Refactor edb_pgd EN/FR Sheets (`#647`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#647` (`docs/issue-647-edb-pgd`)
 - **Request / Changes / Result**: Refactored `docs/{en,fr}/solutions/edb_pgd.md` for full-file 0 STE mixed-mode errors, 0 weak modals, and 0 prose `via` while preserving CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.
