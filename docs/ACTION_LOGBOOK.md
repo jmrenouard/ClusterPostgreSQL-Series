@@ -30,6 +30,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-259 - Add English Chapter 14 on TDE and Encryption at Rest (`#691`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#691` (`docs/issue-691-tde-chapter-14-en`)
+- **Request / Changes / Result**: Added `docs/en/14_transparent_data_encryption_tde.md` covering key hierarchy (`KEK`/`DEK`), threat model, PG 17/18 + `pg_tde` 2.1, EDB/Cybertec, distributed SQL, cloud KMS, 18-architecture TDE table, and compliance guardrails; `ste_check.py`, Windows `40/40`, and WSL checks pass (`< 14,800` B PR diff).
+
 ### ACT-258 - Add IONOS GitHub Actions Publish Workflow and MkDocs Unit Tests (`#689`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#689` (`feat/issue-689-mkdocs-ionos-publish`)
 - **Request / Changes / Result**: Added `.github/workflows/docs-publish.yml` (IONOS SFTP deploy + HTTPS smoke checks), `tests/test_mkdocs_publishing.py`, and `Phase 14`; Windows `40/40` and WSL `make test lint check-math check-security pages-check` pass.
