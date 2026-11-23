@@ -31,7 +31,7 @@ $$
 
 ### Niveau 1 — Streaming physique asynchrone (`pg17-async-streaming`)
 
-- **Mécanisme :** `walsender` expédie octet par octet les blocs WAL 8 Kio vers `walreceiver` via un slot physique (`pg_basebackup`). Le standby rejoue des pages heap/index identiques en recouvrement continu.
+- **Mécanisme :** `walsender` expédie octet par octet les blocs WAL 8 Kio vers `walreceiver` par un slot physique (`pg_basebackup`). Le standby rejoue des pages heap/index identiques en recouvrement continu.
 - **Forces :** Zéro limite de schéma — tables sans PK, DDL, séquences `SERIAL`/`IDENTITY`, `pg_largeobject`, `TRUNCATE` et 100 % des extensions (`PostGIS`, `pgvector`) répliquent à vitesse locale sans conflit.
 - **Limites :** Standby strictement en **lecture seule** (**`SQLSTATE 25006`** en écriture). Impose même version majeure PG, architecture CPU et `glibc`. Une panne induit $\text{RPO} > 0$ (WAL non transmis).
 
@@ -39,26 +39,26 @@ $$
 
 - **Mécanisme :** Transport WAL physique complété par `synchronous_standby_names` et `synchronous_commit = on` (flush disque standby) ou `remote_apply` (visibilité lecture avant retour `COMMIT`).
 - **Forces :** **`RPO = 0`** strict, fidélité PostgreSQL totale, zéro conflit. Avec **Patroni + etcd** (`#15`), basculement automatisé avec fencing OS (`RTO ~ 10–30 s`).
-- **Limites :** Chaque commit paie le RTT standby : en local (`results/benchmark_summary.csv`), Suite A chute de **`52,8 %`** (`866,82 -> 409,48 TPS`) ; à `25 ms` WAN (`Suite F`), elle s'effondre de **`-86,1 %`** (`57,00 TPS`, `p95 = 353,49 ms`). Sans quorum `FIRST 1 (s1, s2)`, la perte du standby synchrone **gèle toutes les écritures du primaire**.
+- **Limites :** Chaque commit paie le RTT standby : en local (`results/benchmark_summary.csv`), Suite A chute de **`52,8 %`** (`866,82 -> 409,48 TPS`). À `25 ms` WAN (`Suite F`), elle chute de **`-86,1 %`** (`57,00 TPS`, `p95 = 353,49 ms`). Sans quorum `FIRST 1 (s1, s2)`, la perte du standby synchrone **gèle toutes les écritures du primaire**.
 
 ### Niveau 3 — Réplication logique native unidirectionnelle (`pg17-logical`)
 
-- **Mécanisme :** `wal_level = logical` décode le WAL via `pgoutput` en flux ligne (`INSERT`/`UPDATE`/`DELETE`) filtrés par `CREATE PUBLICATION` et appliqués via `CREATE SUBSCRIPTION`.
+- **Mécanisme :** `wal_level = logical` décode le WAL avec `pgoutput` en flux ligne (`INSERT`/`UPDATE`/`DELETE`) filtrés par `CREATE PUBLICATION` et appliqués par `CREATE SUBSCRIPTION`.
 - **Forces :** Granularité par table, filtres `WHERE`/colonnes, abonné inscriptible pour tables locales, portabilité OS/CPU et **upgrade inter-versions majeures sans coupure** (PG 15 -> 17 -> 18).
 - **Trois pièges majeurs :**
   1. **Tables sans PK (`SQLSTATE 55000`) :** `UPDATE`/`DELETE` échoue côté éditeur sans clé primaire ni `REPLICA IDENTITY FULL`.
-  2. **Zéro Auto-DDL :** `ALTER TABLE ADD COLUMN` ne se propage pas ; appliquer le DDL sur l'abonné en premier sinon le worker se bloque.
-  3. **Piège des séquences (`SQLSTATE 23505`) :** La réplication logique PG 15–17 **ne synchronise pas `last_value`**. Après `50` insertions éditeur (`id = 1..50`), la séquence abonné reste à `1` ; une promotion sans `setval()` déclenche aussitôt **`23505`**.
+  2. **Zéro Auto-DDL :** `ALTER TABLE ADD COLUMN` ne se propage pas. Appliquer le DDL sur l'abonné d'abord sinon le worker se bloque.
+  3. **Piège des séquences (`SQLSTATE 23505`) :** La réplication logique PG 15–17 **ne synchronise pas `last_value`**. Après `50` insertions éditeur (`id = 1..50`), la séquence abonné reste à `1`. Promouvoir sans `setval()` déclenche aussitôt **`23505`**.
 
 ### Niveau 4 — Bidirectionnel natif (`pg-birep`) vs Extensions (`pgEdge`, `Bucardo`, `EDB PGD`)
 
-- **Bidirectionnel natif (`#1 pg-birep`, `origin = none`) :** Coupe les boucles `A -> B -> A` (PG 16–18 ; `875,91 TPS` Suite A ; `824,04 TPS` à `25 ms` WAN), mais **aucune résolution de conflit** : toute collision PK/`UNIQUE(email)` fige le worker (`23505`) et les soldes divergent (`-71 063` en Suite D). Réservé aux clés disjointes.
-- **Extensions (`#2 pgEdge Spock 5`, `#9 Bucardo 5`, `#4 EDB PGD`) :** Ajoutent LWW, IDs globaux (`snowflake`/`timeshard`) et Auto-DDL (`Spock`, `PGD`). Seuls **CRDT Delta-Apply** (`spock.delta_apply` : `1 837,64 TPS`, dérive **`0`** en Suite D) ou **EDB PGD CAMO/Eager Raft** éliminent les *Lost Updates* (`-278 698` Spock LWW ; `-531 620` Bucardo).
+- **Bidirectionnel natif (`#1 pg-birep`, `origin = none`) :** Coupe les boucles `A -> B -> A` (PG 16–18, `875,91 TPS` Suite A, `824,04` WAN `25 ms`). Sans résolution de conflit, PK/`UNIQUE` fige (`23505`) et les soldes divergent (`-71 063` en D) hors clés disjointes.
+- **Extensions (`#2 pgEdge Spock 5`, `#9 Bucardo 5`, `#4 EDB PGD`) :** Ajoutent LWW, IDs globaux (`snowflake`/`timeshard`) et Auto-DDL (`Spock`, `PGD`). Seuls **CRDT Delta-Apply** (`spock.delta_apply` : `1 837,64 TPS`, dérive **`0`** en Suite D) ou **EDB PGD CAMO/Eager Raft** évitent les *Lost Updates* (`-278 698` Spock LWW, `-531 620` Bucardo).
 
 ### Niveau 5 — SQL distribué (`YugabyteDB`, `CockroachDB`) et Sharding (`Citus`)
 
-- **Consensus Raft (`#5 YugabyteDB`, `#6 CockroachDB`) :** Raft par tablette/plage (`RF = 3`) garantit `UNIQUE` global, `RPO = 0` et survie 1/3, au prix des retries `40001` (`685` échecs `sysbench` sur CockroachDB), du gel en perte de quorum 2/3 (`57014`) et d'une chute WAN (`5,78` / `10,06 TPS` à `25 ms`).
-- **Sharding (`#7 Citus`) :** Scale les écritures par tenant sur PG 17 (`0` dérive), mais bloque `UNIQUE` hors clé de shard (`0A000`), exige une HA Coordinateur et perd `-93,0 %` (`21,67 TPS`) en 2PC sous `25 ms` WAN.
+- **Consensus Raft (`#5 YugabyteDB`, `#6 CockroachDB`) :** Raft par tablette (`RF = 3`) garantit `UNIQUE` global, `RPO = 0` et survie 1/3. Les coûts incluent les retries `40001` (`685` échecs `sysbench` CockroachDB), le gel 2/3 (`57014`) et la chute WAN (`5,78` / `10,06 TPS`).
+- **Sharding (`#7 Citus`) :** Scale les écritures par tenant sur PG 17 (`0` dérive), mais bloque `UNIQUE` hors clé (`0A000`). Il exige une HA Coordinateur et perd `-93,0 %` (`21,67 TPS`) en 2PC à `25 ms` WAN.
 
 ---
 
@@ -119,7 +119,7 @@ Preuve empirique (`T12`, `T18`, `L7`) : le streaming retient `3 088 o` de WAL, r
 
 1. Isoler l'ancien primaire (watchdog Patroni / STONITH) contre tout split-brain.
 2. Promouvoir (`SELECT pg_promote(wait => true);` ou Patroni DCS) et vérifier `pg_is_in_recovery() = f`.
-3. Zéro recalage de séquence ou DDL requis ; basculer HAProxy/PgBouncer aussitôt.
+3. Zéro recalage de séquence ou DDL requis. Basculer HAProxy ou PgBouncer aussitôt.
 
 ### 5.2 Bascule Logique et Upgrade Majeur Zero-Downtime (`PG 15 -> 17 -> 18`)
 
@@ -145,6 +145,6 @@ FROM pg_sequences WHERE schemaname = 'public';
 
 ## 6. Apports de PostgreSQL 18.6 par niveau et vitalité de l'écosystème
 
-- **Niveaux 1 à 4 sous PG 18.6 ([Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)) :** Validé sur `87` lignes de benchmarks ([`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv)) et `5 x 26` sondes ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv)), PG 18.6 apporte `data_checksums=on`, l'AIO `io_method=worker` (`-18,5 %` sur scan froid), `substream=p`, `publish_generated_columns=stored`, 7 compteurs `confl_*` (+`confl_multiple_unique_conflicts`) et `uuidv7()` natif (`pg18-birep` `H_append_only` **`2 066,70 TPS`**, `3,30x` vs PG 17 ; `pg18-logical` **`3 518,49 TPS`**, `+85,1 %`).
-- **Frontières inchangées :** `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` lèvent encore **`SQLSTATE 42601`** en PG 18.6 (reporté PG 19) ; le Niveau 3 exige toujours `setval()`, les écritures chevauchantes de Niveau 4 exigent Spock/PGD CRDT, et l'ACID `RPO=0` global reste au Niveau 5.
+- **Niveaux 1 à 4 sous PG 18.6 ([Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)) :** Validé sur `87` mesures ([`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv)) et `5 x 26` sondes ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv)), PG 18.6 apporte `data_checksums=on` et `io_method=worker`. Il ajoute `substream=p`, `pubgencols=s`, 7 compteurs `confl_*` et `uuidv7()` (`pg18-birep` `H` **`2 066,70 TPS`**, `3,30x`, `pg18-logical` **`3 518,49`**, `+85,1 %`).
+- **Frontières inchangées :** `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` lèvent encore **`SQLSTATE 42601`** en PG 18.6 (PG 19). Le Niveau 3 exige `setval()`, les écritures chevauchantes de Niveau 4 exigent Spock/PGD CRDT, et l'ACID `RPO=0` reste au Niveau 5.
 - **Vitalité et graphiques :** Croisez le *bus-factor* et la vélocité 12m au [Ch. 11](11_popularite_et_vitalite_ecosysteme.md) et dans [`chart_08`](../../assets/charts/chart_08_popularity_stars_forks_log.png) / [`chart_09`](../../assets/charts/chart_09_popularity_commits_activity_log.png) / [`chart_10`](../../assets/charts/chart_10_pg18_vs_pg17_log.png).
