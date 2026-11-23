@@ -1,4 +1,4 @@
-# 04 — Comprehensive 36-Criterion Feature Comparison
+# 04 — Comprehensive 40-Criterion Feature Comparison
 
 **Series:** PostgreSQL Multi-Master & Active-Active Architectures  
 **Author:** Jean-Marie Renouard (`jmrenouard`) — [LightPath](https://www.lightpath.fr)  
@@ -6,7 +6,7 @@
 
 ---
 
-All **16+ architectures** from Chapter 01 -- including **[#17 PG 18.6 Native](solutions/pg18_native_clustering.md)** ([Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)) and **[#18 YT Cluster](solutions/yt_cluster_lite.md)** -- are evaluated across **36 technical and operational criteria** grouped into five matrices. Abbreviations: **Ext** (Extension), **RI** (`REPLICA IDENTITY`), **LWW** (Last-Write-Wins), **CRDT** (Conflict-Free Replicated Data Type), **2PC** (Two-Phase Commit), **HLC** (Hybrid Logical Clock), **OSS** (Open Source), **Std PG** (Standard PostgreSQL heap/B-tree).
+All **16+ architectures** from Chapter 01 -- including **[#17 PG 18.6 Native](solutions/pg18_native_clustering.md)** ([Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)) and **[#18 YT Cluster](solutions/yt_cluster_lite.md)** -- are evaluated across **40 technical and operational criteria** grouped into six matrices (see [Ch. 14](14_transparent_data_encryption_tde.md) for TDE depth). Abbreviations: **Ext** (Extension), **RI** (`REPLICA IDENTITY`), **LWW** (Last-Write-Wins), **CRDT** (Conflict-Free Replicated Data Type), **2PC** (Two-Phase Commit), **HLC** (Hybrid Logical Clock), **OSS** (Open Source), **Std PG** (Standard PostgreSQL heap/B-tree).
 
 ## Matrix A — Core Engine, Replication & CAP/PACELC (Criteria 1–8)
 
@@ -117,3 +117,28 @@ All **16+ architectures** from Chapter 01 -- including **[#17 PG 18.6 Native](so
 | #15 | Patroni + etcd | MIT / PostgreSQL | **Lowest TCO** for `RPO=0` HA | Core PG 17 | **Industry Std** | 80%+ OLTP workloads needing single-writer HA |
 | #17 | PG 18.6 Native (AIO/uuidv7) | PostgreSQL (OSS) | Lowest SW; AIO+checksums | Core PG 18.6 | **Current Target** | PG 18 HA, upgrades (`substream=p`), `uuidv7()` mesh |
 | #18 | YT Cluster 1.21 | MIT + PolyForm/Com | Closed `ytserv`; bus=1 | Core PG 18.7 | Young (`v1.21`) | Low-TPS zero-drift reversible PG 18 mesh |
+
+## Matrix F — TDE & Encryption at Rest (Criteria 37–40)
+
+Evaluated in detail in [Chapter 14 — Transparent Data Encryption](14_transparent_data_encryption_tde.md).
+
+| # | Solution | 37. Engine TDE Support | 38. KMS & Key Scope | 39. Replication & WAL Encryption | 40. Backup Encryption & Baseline |
+| :---: | :--- | :--- | :--- | :--- | :--- |
+| #1 | PG Native Birep | None in core (`pg_tde` opt.) | OS/LUKS or Percona `pg_tde` | Plain logical tuples over TLS | LUKS + `hostssl` + `pgBackRest` AES |
+| #2 | pgEdge Spock v5 | None in stock `spock` | OS/LUKS or Cloud Disk KMS | `spock_output` tuples over TLS | LUKS/KMS + `verify-full` + AES repo |
+| #3 | pglogical 2 | None in core PG | OS/LUKS or Cloud Disk KMS | `pglogical` tuples over TLS | LUKS/KMS + `pgBackRest` AES repo |
+| #4 | EDB PGD (BDR) | **Built-in (`EPAS`/`PGE`)** | `key_wrap_command` (`KMIP`/KMS) | Encrypted heap/WAL + TLS | `Barman` inherits TDE + key wrap |
+| #5 | YugabyteDB | **Built-in OSS (`DocDB`)** | Universe Key + tablet DEKs | SSTables + Raft WAL + TLS | `yb_backup` encrypted end-to-end |
+| #6 | CockroachDB | **Enterprise / Cloud only** | Store Keys + Cloud KMS/KMIP | Pebble + Raft WAL (absent BSL) | Encrypted `BACKUP` (Enterprise/Cloud) |
+| #7 | Citus | None in OSS (`pg_tde` opt.) | OS/LUKS or Azure CMK | Coordinator-worker TLS links | LUKS/KMS + TLS + `pgBackRest` AES |
+| #8 | OpenTenBase/XL | None in PG 10-11 fork | OS/LUKS on CN/DN/GTM disks | TLS on GTM/DN links | OS LUKS across CN/DN/GTM nodes |
+| #9 | Bucardo 5 | None in core PG | OS/LUKS on PG + `bucardo` DB | `bucardo.delta_*` unencrypted on disk | LUKS on data + control DBs + TLS |
+| #10 | SymmetricDS | None on PG (`Pro` batch) | OS/LUKS on PG + JVM staging | `sym_data` queues + HTTPS mTLS | LUKS on edge DB + disk + mTLS |
+| #11 | PgPool-II | **N/A (Proxy only)** | `pool_passwd` AES + TLS | Re-encrypts TLS; needs DB TDE | TLS on both hops + backend LUKS/TDE |
+| #12 | Aurora Limitless | **Managed (`AWS KMS`)** | Customer CMK (immutable) | Encrypts 6-way AZ storage | Managed encrypted snapshots/backups |
+| #13 | GCP Spanner PG | **Managed (`CMEK`)** | `GCP Cloud KMS` / `EKM` | Colossus/LPS encrypted (`Omni`: OS) | Managed encrypted PITR (`Omni`: CSI) |
+| #14 | Legacy Triggers | None in core PG | OS/LUKS on legacy hosts | `_slony`/`pgq` queues plain on disk | Migrate off EOL; LUKS + TLS |
+| #15 | Patroni + etcd | None in core (`pg_tde`/PGEE) | `KMIP`/`OpenBao` or OS/LUKS | Shared KEK on physical WAL | `pg_tde_basebackup` / `pgBackRest` AES |
+| #16 | PG 17 Uni-Logical | None in core (`pg_tde` opt.) | Independent Pub/Sub KEKs | Logical rows over TLS (`hostssl`) | Target `pg_tde`/LUKS + `pgBackRest` AES |
+| #17 | PG 18.6 Native | None in core (`pg_tde` 2.1) | `pg_tde` 2.1 (AIO) or OS/LUKS | `pg_tde.wal_encrypt` GA WAL | `pg_tde_basebackup` / `pgBackRest` AES |
+| #18 | YT Cluster 1.21 | None in PG 18.7 core | OS/LUKS on PG + `ytserv` | Unix gRPC + peer `ytserv` mTLS | LUKS on PG + `ytserv` + AES backups |

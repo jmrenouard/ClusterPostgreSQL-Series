@@ -1,8 +1,8 @@
-# Étude comparative fonctionnelle (36 critères sur 15 solutions)
+# Étude comparative fonctionnelle (40 critères sur 18 solutions)
 
 > **Auteur** : Jean-Marie Renouard (`jmrenouard`) - [LightPath](https://www.lightpath.fr) | **Licence** : MIT
 
-Les cinq matrices ci-dessous évaluent les **16+ solutions** — incluant **[#17 PG 18.6 Natif](solutions/pg18_native_clustering.md)** ([Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)) et **[#18 YT Cluster](solutions/yt_cluster_lite.md)** — sur **36 critères techniques** regroupés en cinq axes. Les identifiants `#1` à `#18` renvoient aux chapitres 03a et 03b.
+Les six matrices ci-dessous évaluent les **16+ solutions** — incluant **[#17 PG 18.6 Natif](solutions/pg18_native_clustering.md)** ([Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)) et **[#18 YT Cluster](solutions/yt_cluster_lite.md)** — sur **40 critères techniques** regroupés en six axes (détails TDE au [Ch. 14](14_chiffrement_transparent_tde.md)). Les identifiants `#1` à `#18` renvoient aux chapitres 03a, 03b et 14.
 
 ---
 
@@ -123,3 +123,30 @@ Les cinq matrices ci-dessous évaluent les **16+ solutions** — incluant **[#17
 | **#15** | PG 17 / Patroni | `pgBackRest` + PITR natif | Minimale | Standard | Référence | Open-Source | Nul |
 | **#17** | PG 18.6 Native (AIO/uuidv7) | `pgBackRest` (1-Pri/nœud) | Faible (AIO+chk) | Standard / Moy. (Birep) | **Cible PG 18.6** | PG License (Gratuit) | Nul |
 | **#18** | YT Cluster 1.21 | `pgBackRest` (réversible) | Élevée (2PC+trig) | Moy.-élevée (`ytserv`) | Jeune (`v1.21`, bus=1) | MIT + PolyForm/Com. | Modéré (`DROP EXT`) |
+
+---
+
+## 6. Matrice F : TDE et chiffrement au repos (4 critères : 37–40)
+
+Analyse complète des couches KMS et TDE au [Chapitre 14 — Chiffrement Transparent (TDE)](14_chiffrement_transparent_tde.md).
+
+| # | Solution | 37. TDE moteur | 38. KMS et portée des clés | 39. Réplication et WAL chiffré | 40. Sauvegarde chiffrée et socle |
+|:---|:---|:---|:---|:---|:---|
+| **#1** | PG 16-18 natif | Absent cœur (`pg_tde` opt.) | OS/LUKS ou Percona `pg_tde` | Tuples logiques en clair sous TLS | LUKS + `hostssl` + `pgBackRest` AES |
+| **#2** | pgEdge / Spock 5 | Absent de `spock` std | OS/LUKS ou KMS disque cloud | `spock_output` sous TLS (`hostssl`) | LUKS/KMS + `verify-full` + dépôt AES |
+| **#3** | pglogical 2 | Absent du cœur PG | OS/LUKS ou KMS disque cloud | Flux `pglogical` sous TLS | LUKS/KMS + dépôt `pgBackRest` AES |
+| **#4** | EDB PGD (Com.) | **Intégré (`EPAS`/`PGE`)** | `key_wrap_command` (`KMIP`/KMS) | Heap/WAL chiffrés + TLS | `Barman` hérite du TDE + KMS |
+| **#5** | YugabyteDB | **Intégré OSS (`DocDB`)** | Clé universelle + DEK tablet | SSTables + WAL Raft + TLS | `yb_backup` chiffré bout en bout |
+| **#6** | CockroachDB | **Enterprise / Cloud seul** | Store Keys + KMS cloud / KMIP | Pebble + WAL Raft (hors BSL gratuit) | `BACKUP` chiffré (Enterprise/Cloud) |
+| **#7** | Citus | Absent OSS (`pg_tde` opt.) | OS/LUKS ou Azure CMK | Liens 2PC coord-workers sous TLS | LUKS/KMS + TLS + `pgBackRest` AES |
+| **#8** | OpenTenBase/PG-XL | Absent fork PG 10-11 | OS/LUKS sur CN, DN et GTM | Trafic GTM/DN sous TLS | OS LUKS sur CN, DN et GTM |
+| **#9** | Bucardo 5 | Absent du cœur PG | OS/LUKS sur PG + base `bucardo` | `bucardo.delta_*` en clair sur disque | LUKS sur données + contrôle + TLS |
+| **#10** | SymmetricDS | Absent PG (`Pro` lots) | OS/LUKS sur PG + tampon JVM | Files `sym_data` + HTTPS mTLS | LUKS BD + disque Edge + mTLS |
+| **#11** | PgPool-II (Rep) | **N/A (Proxy seul)** | `pool_passwd` AES + TLS | Rechiffre TLS ; exige TDE backend | TLS deux sauts + LUKS/TDE backend |
+| **#12** | Aurora Limitless | **Managé (`AWS KMS`)** | CMK client (fixée à création) | Stockage 6x AZ chiffré | Snapshots/backups managés chiffrés |
+| **#13** | GCP Spanner PG | **Managé (`CMEK`)** | `GCP Cloud KMS` / `EKM` | Colossus/LPS chiffrés (`Omni` : OS) | PITR managé chiffré (`Omni` : CSI) |
+| **#14** | Legacy triggers | Absent du cœur PG | OS/LUKS sur hôtes historiques | Files `_slony`/`pgq` en clair disque | Migrer hors EOL ; LUKS + TLS |
+| **#15** | PG 17 / Patroni | Absent cœur (`pg_tde`/PGEE) | `KMIP`/`OpenBao` ou OS/LUKS | KEK partagée en WAL physique | `pg_tde_basebackup` / `pgBackRest` AES |
+| **#16** | PG 17 Logique Uni | Absent cœur (`pg_tde` opt.) | KEK indépendantes Pub / Sub | Lignes logiques sous TLS (`hostssl`) | Cible `pg_tde`/LUKS + `pgBackRest` AES |
+| **#17** | PG 18.6 Native | Absent cœur (`pg_tde` 2.1) | `pg_tde` 2.1 (AIO) ou OS/LUKS | `pg_tde.wal_encrypt` WAL GA | `pg_tde_basebackup` / `pgBackRest` AES |
+| **#18** | YT Cluster 1.21 | Absent cœur PG 18.7 | OS/LUKS sur PG + `ytserv` | gRPC Unix + mTLS pairs `ytserv` | LUKS PG + `ytserv` + backups AES |
