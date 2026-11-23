@@ -39,8 +39,8 @@ Ce chapitre recense les **huit limites architecturales (`L1` à `L8`)** effectiv
 - **Remédiation** : Utiliser `snowflake` (`#2`), `unique_rowid()` (`#6`), `UUIDv7` ou des séquences à pas décalés (`INCREMENT BY N START WITH k`).
 
 ### `L3` — Anomalie *Lost Update* sur `balance = balance + delta`
-- **Constat empirique** : Sur un solde initial `1000.00` subissant `+100` sur `node1` et `-30` sur `node2` (attendu `1070.00`), `pg-birep` diverge (`n1=970.00`, `n2=1100.00`), tandis que `pgedge` LWW et `bucardo_latest` convergent vers la valeur erronée `970.00`. En charge réelle (Suite D), la dérive atteint `-531 620` sur Bucardo et `-278 698` sur Spock LWW.
-- **Remédiation** : Activer `spock.delta_apply` (`1070.00` exact et dérive `0` en Suite D), ou basculer vers un moteur à sérialisation avec boucle de retry client sur `SQLSTATE 40001` (`yugabyte` : 33 retries observés ; `cockroach` : `TransactionRetryWithProtoRefreshError: WriteTooOldError`, 27 retries observés).
+- **Constat empirique** : Sur un solde initial `1000.00` (`+100` sur `node1`, `-30` sur `node2`, attendu `1070.00`), `pg-birep` diverge (`n1=970.00`, `n2=1100.00`). En face, `pgedge` LWW et `bucardo_latest` retiennent `970.00`. En charge réelle (Suite D), la dérive atteint `-531 620` sur Bucardo et `-278 698` sur Spock LWW.
+- **Remédiation** : Activer `spock.delta_apply` (`1070.00` exact, dérive `0` en Suite D) ou choisir un moteur sérialisable avec boucle de retry client (`40001`). `yugabyte` a enregistré `33` retries et `cockroach` (`WriteTooOldError`) `27` retries.
 
 ### `L4` — Contraintes `UNIQUE(email)` secondaires
 - **Constat empirique** : Deux insertions d'identifiants PK distincts portant le même `email` sur deux nœuds provoquent :
@@ -51,7 +51,7 @@ Ce chapitre recense les **huit limites architecturales (`L1` à `L8`)** effectiv
 - **Remédiation** : Partitionner les écritures par locataire (*geo/tenant routing*) en asynchrone, ou inclure la colonne de sharding dans l'index unique sous Citus, ou exiger Raft (`#5`, `#6`).
 
 ### `L5` — DDL, `TRUNCATE` et `SAVEPOINT`
-- **Constat empirique** : `ALTER TABLE ADD COLUMN` ne se propage pas automatiquement sous `pg-birep` (`#1`) et `bucardo` (`#9`), imposant une orchestration externe stricte sous peine de casser la réplication. En revanche, `TRUNCATE` se propage sur les deux via publication/trigger. `pgedge` (`Auto-DDL`), `citus`, `yugabyte` et `cockroach` propagent les DDL automatiquement et valident le rollback partiel `SAVEPOINT`.
+- **Constat empirique** : `ALTER TABLE ADD COLUMN` ne se propage pas automatiquement sous `pg-birep` (`#1`) et `bucardo` (`#9`), imposant une orchestration externe stricte sous peine de casser la réplication. En revanche, `TRUNCATE` se propage sur les deux par publication ou trigger. `pgedge` (`Auto-DDL`), `citus`, `yugabyte` et `cockroach` propagent les DDL automatiquement et valident le rollback partiel `SAVEPOINT`.
 
 ### `L6` — Primitives de session et compatibilité d'extensions
 - **Constat empirique** :
@@ -61,11 +61,11 @@ Ce chapitre recense les **huit limites architecturales (`L1` à `L8`)** effectiv
   - **`citus` (`#7`)** : L'image standard `citus:14.2.0-pg17` n'embarque pas l'extension `vector` (`0A000: extension "vector" is not available`).
 
 ### `L7` — Rétention WAL et engorgement sur coupure de nœud
-- **Constat empirique** : Lors d'un arrêt brutal (`docker stop`) d'un nœud pair suivi de seulement 5 insertions, les slots de réplication inactifs retiennent **54 432 octets** de WAL sur `pg-birep` et **309 560 octets** sur `pgedge`, tandis que `bucardo` empile 8 lignes dans `bucardo.delta_public_accounts`. À haut débit OLTP, une panne prolongée sature le disque primaire.
+- **Constat empirique** : Après l'arrêt d'un pair (`docker stop`) et 5 insertions, les slots inactifs retiennent **54 432 o** de WAL sur `pg-birep` et **309 560 o** sur `pgedge`. `bucardo` empile 8 lignes dans `bucardo.delta_public_accounts`. À haut débit OLTP, une panne prolongée sature le disque primaire.
 - **Remédiation** : Toujours borner `max_slot_wal_keep_size` en logique et monitorer `pg_replication_slots` + `VACUUM` des tables delta. En `pg17-sync-streaming` (`synchronous_commit = on`), l'absence du standby synchrone gèle au contraire les validations primaires (`RPO = 0`).
 
 ### `L8` — Perte de quorum 2/3 sous Raft et fragilité des pools/coordinateurs
-- **Constat empirique** : Sur `yugabyte` et `cockroach` (`RF = 3`), la perte de 1 nœud sur 3 laisse le cluster totalement opérationnel (`RPO = 0`, solde `500` vérifié). L'arrêt d'un 2e nœud (perte de majorité 2/3) **gèle immédiatement toute lecture/écriture** (`connection timeout expired` sur YugabyteDB ; `SQLSTATE 57014: query execution canceled due to statement timeout` sur CockroachDB), illustrant strictement le modèle **PC/EC**. Sous `citus`, la perte de `worker2` maintient les tables de référence et `worker1` accessibles tout en bloquant uniquement les shards du worker coupé.
+- **Constat empirique** : Sur `yugabyte` et `cockroach` (`RF = 3`), perdre 1 nœud sur 3 garde le cluster actif (`RPO = 0`, solde `500`). Perdre un 2e nœud (majorité 2/3 perdue) **gèle toute lecture et écriture** (`connection timeout expired` sur YugabyteDB, `SQLSTATE 57014` sur CockroachDB), prouvant le mode **PC/EC**. Sous `citus`, perdre `worker2` garde `worker1` et les tables de référence accessibles, mais bloque ses shards.
 
 ---
 
@@ -74,7 +74,7 @@ Ce chapitre recense les **huit limites architecturales (`L1` à `L8`)** effectiv
 Trois problèmes d'intégration reproductibles ont également été documentés lors du montage des piles :
 1. **pgEdge / Spock (`SQLSTATE 42501`)** : L'image minimale `17-spock5-minimal` restreint par défaut `output_plugin_libraries = 'pgoutput, test_decoding'`, bloquant `spock_output` (`42501`) jusqu'à surcharge explicite par `-c output_plugin_libraries=pgoutput,spock_output`.
 2. **Bucardo (`PL/PerlU`)** : Le schéma de contrôle Bucardo (`db_getconn`) exige `PL/PerlU` et `libdbd-pg-perl` dans le conteneur PostgreSQL lui-même (et non uniquement dans le conteneur daemon), imposant une image PostgreSQL 17 personnalisée (`Dockerfile.pg`).
-3. **YugabyteDB `yugabyted` RF=3** : Le facteur de réplication n'atteint `RF = 3` qu'après jonction effective des 3 nœuds TServer et mise à jour de placement, nécessitant une attente explicite sur la vue `yb_servers()` avant tout test de tolérance aux pannes.
+3. **YugabyteDB `yugabyted` RF=3** : Le facteur `RF = 3` devient effectif après jonction des 3 TServers et mise à jour du placement. Attendre explicitement `yb_servers()` avant tout test de panne.
 
 ---
 
@@ -82,20 +82,20 @@ Trois problèmes d'intégration reproductibles ont également été documentés 
 
 Les huit tests avancés (`results/extended_functional_matrix.csv`, `functional_limits_matrix.csv`) intègrent **`pg17-async-streaming`** et **`pg17-logical`** :
 
-- **`T11` Bulk 10k & rattrapage :** `22 079` (`cockroach`) à `67 406 lignes/s` (`pgedge`) ; rattrapage `105–115 ms` (streaming), `139 ms` (`bucardo`), `265 ms` (`cockroach`), `333–350 ms` (logique/Spock), `417 ms` (`yugabyte`).
-- **`T12` `UPDATE` vs `DELETE` :** **`pg17-logical` diverge** (`pub=upd_n1` vs `sub=DELETED`) ; les maillages async convergent vers `DELETED` ; streaming rejette (`25006`) ; Citus/YB/CRDB convergent.
-- **`T13` Course FK inter-nœuds :** Streaming bloque (`25006x10`) ; **`bucardo` échoue `0/10` (`23503x10`)** ; Raft/Citus et logique LAN passent `10/10`.
-- **`T14` Fidélité (64 Kio `BYTEA`, `JSONB`, UTF-8) :** `9/10` identiques (`md5=00493e3a`) ; image `pgedge` en **`SQL_ASCII`** (`chr(20013)` -> **`54000`** ; UTF-8 échappé `3/3` `md5=f798eb5a`).
-- **`T15` Lag RAW (`n=30`, `p50/p95` ms) :** `standalone` `1,15/1,55`, `pgedge` `1,16/1,63`, `pg-birep` `1,47/2,28`, `pg17-logical` `1,68/2,14`, `pg17-sync` `1,88/2,74`, `yugabyte` `2,01/2,83`, `citus` `1,71/13,89`, `cockroach` `4,09/4,98`, `pg17-async` `9,65/25,13`, **`bucardo` `548,74/1 275,25`**.
-- **`T16` Crash `SIGKILL` & `RPO` :** `20/20` (`RPO=0`) et `21/21` sur 8 piles ; `citus` `worker2` -> **`08006`** puis `21/21` ; `bucardo` `node1` -> `20/21`.
-- **`T17` TX ouverte 3 s :** `NO_DIRTY_READ` sur 10/10 ; `cockroach` bloque via intention (`serializable_intent_wait=2,1 s`).
-- **`T18` Séquences (50 inserts) :** Streaming (`66|true`), `yugabyte` (`101`), `cockroach`/`citus` (`51`) sûrs ; les 4 moteurs logiques/triggers restent à `1|false` -> **`23505`** (`pg17-logical` : `27 320 o` WAL vs `3 088 o` streaming).
+- **`T11` Bulk 10k & rattrapage :** Le débit va de `22 079` (`cockroach`) à `67 406 lignes/s` (`pgedge`). Le rattrapage dure `105–115 ms` (streaming), `139 ms` (`bucardo`), `265 ms` (`cockroach`), `333–350 ms` (logique/Spock) et `417 ms` (`yugabyte`).
+- **`T12` `UPDATE` vs `DELETE` :** **`pg17-logical` diverge** (`pub=upd_n1` vs `sub=DELETED`). Les maillages async retiennent `DELETED`, streaming rejette (`25006`) et Citus/YB/CRDB convergent.
+- **`T13` Course FK inter-nœuds :** Streaming bloque (`25006x10`), et **`bucardo` échoue `0/10` (`23503x10`)**. Raft/Citus et logique LAN passent `10/10`.
+- **`T14` Fidélité (64 Kio `BYTEA`, `JSONB`, UTF-8) :** `9/10` concordent (`md5=00493e3a`). L'image `pgedge` reste en **`SQL_ASCII`** (`chr(20013)` -> `54000`, UTF-8 échappé `3/3` `md5=f798eb5a`).
+- **`T15` Lag RAW (`n=30`, `p50/p95` ms) :** `standalone` mesure `1,15/1,55`, `pgedge` `1,16/1,63`, `pg-birep` `1,47/2,28`, `pg17-logical` `1,68/2,14` et `pg17-sync` `1,88/2,74`. `yugabyte` atteint `2,01/2,83`, `citus` `1,71/13,89`, `cockroach` `4,09/4,98`, `pg17-async` `9,65/25,13` et `bucardo` `548,74/1 275,25`.
+- **`T16` Crash `SIGKILL` & `RPO` :** Huit piles valident `20/20` (`RPO=0`) et `21/21`. `citus` `worker2` lève **`08006`** puis reprend `21/21`, tandis que `bucardo` `node1` finit à `20/21`.
+- **`T17` TX ouverte 3 s :** Les 10/10 confirment `NO_DIRTY_READ`. `cockroach` bloque le lecteur par attente d'intention (`serializable_intent_wait=2,1 s`).
+- **`T18` Séquences (50 inserts) :** Streaming (`66|true`), `yugabyte` (`101`) et `cockroach`/`citus` (`51`) restent sûrs. Les 4 piles logiques ou triggers restent à `1|false` -> **`23505`** (`pg17-logical` retient `27 320 o` WAL vs `3 088 o` en streaming).
 
 ---
 
 ## 5. Vérification des limites sur PostgreSQL 18.6 et pérennité
 
-La re-vérification en direct sous PG 18.6 ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv), [`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv) ; détail au [Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)) actualise ces limites :
+La re-vérification sous PG 18.6 ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv), [`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv), détail au [Ch. 12](12_clustering_postgresql_18_et_benchmarks.md)) actualise ces limites :
 - **Résolu en PG 18.6 :** `uuidv7()` natif converge **50/50 insertions actif-actif** (`0` `23505`, `0` inversion B-tree), `data_checksums=on` protège contre les corruptions silencieuses, et `pg_stat_subscription_stats` expose **7 compteurs `confl_*`** dont **`confl_multiple_unique_conflicts=1`**.
-- **Toujours ouvert en PG 18.6 :** `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` lèvent **`SQLSTATE 42601`** (reporté PG 19 ; pairs bloqués à `1|false` -> `23505`), `io_method=io_uring` échoue (`EPERM`) sous seccomp Docker, `pg18-birep` subit encore des courses FK `T13` (`2/10 ok ; 23503x8`) et des *Lost Updates* (`-83 252` en Suite D), sans Auto-DDL.
-- **Vitalité et graphiques :** Évaluez le risque de maintenance (`pgEdge/spock` `621`/12m vs `bucardo`/`slony`/`rubyrep` `0`/12m) au [Ch. 11](11_popularite_et_vitalite_ecosysteme.md) et via [`chart_08`](../../assets/charts/chart_08_popularity_stars_forks_log.png) / [`chart_09`](../../assets/charts/chart_09_popularity_commits_activity_log.png) / [`chart_10`](../../assets/charts/chart_10_pg18_vs_pg17_log.png).
+- **Toujours ouvert en PG 18.6 :** `FOR ALL SEQUENCES` et `REFRESH SEQUENCES` lèvent **`SQLSTATE 42601`** (reporté PG 19, laissant les pairs à `1|false` -> `23505`). `io_method=io_uring` échoue (`EPERM`) sous seccomp Docker. `pg18-birep` subit encore `T13` (`2/10 ok`, `23503x8`) et des *Lost Updates* (`-83 252` en Suite D), sans Auto-DDL.
+- **Vitalité et graphiques :** Évaluez le risque de maintenance (`pgEdge/spock` `621`/12m vs `bucardo`/`slony`/`rubyrep` `0`/12m) au [Ch. 11](11_popularite_et_vitalite_ecosysteme.md) et dans [`chart_08`](../../assets/charts/chart_08_popularity_stars_forks_log.png) / [`chart_09`](../../assets/charts/chart_09_popularity_commits_activity_log.png) / [`chart_10`](../../assets/charts/chart_10_pg18_vs_pg17_log.png).

@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-224 - Refactor Chapter 08 FR for 0 STE Errors (`#621`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#621` (`docs/issue-621-ch08-fr`)
+- **Request / Changes / Result**: Refactored `docs/fr/08_limites_et_modes_de_defaillance.md` for full-file 0 STE mixed-mode errors, 0 `via`, and 0 weak modals while preserving all failure-mode facts and anchors; Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-223 - Complete Chapter 06 FR Part 2 (Sections 6-8) for 0 STE Errors (`#619`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#619` (`docs/issue-619-ch06-fr-p2`)
 - **Request / Changes / Result**: Completed Sections 6-8 of `docs/fr/06_resultats_tests_et_benchmarks.md` reaching full-file 0 STE mixed-mode errors, 0 `via`, and 0 weak modals; Windows unittest (`31/31`) and WSL `make test lint check-math check-security` pass.
