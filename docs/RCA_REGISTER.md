@@ -209,6 +209,13 @@
 - **Applied Change / Fix**: Refactored every EN/FR chapter and all 38 solution sheets to 0 STE structural errors, added `docs/index.md` Diataxis portal linked from `README*`, added stdlib `tests/test_docs_hygiene.py`, and synced `env/multi-db-docker-env` `v2.6.3` (`acfb0c2b`) + `haproxy:lts-alpine`.
 - **Result & Non-Regression Test**: Windows `unittest` (`35/35`) and WSL `make test` (`35/35`), `make lint`, `make check-math`, `make check-security`, and `make pages-check` pass.
 
+### RCA-030 - MkDocs CLI `sys.path` Slugify & SSH Workflow Push Resolution (`#683-#687`)
+- **Date / Action**: `2026-11-23` (`ACT-255`..`ACT-257`)
+- **Observed Symptom**: Bare `mkdocs build` failed resolving `!!python/name:scripts.mkdocs_hooks.gfm_slugify` without `PYTHONPATH=.`, and HTTPS OAuth pushes lacked `workflow` scope (`RCA-003`).
+- **Root Cause Analysis**: Console-script `mkdocs` entrypoints omit CWD from `sys.path` during YAML parse, and the `gh` HTTPS token excludes `workflow` scope.
+- **Applied Change / Fix**: Attached `gfm_slugify` in `on_config()` (`scripts/mkdocs_hooks.py`), switched `origin` to SSH (`git@github.com`), and added `scripts/build_mkdocs.py` plus `.github/workflows/docs-publish.yml`.
+- **Result & Non-Regression Test**: `build_mkdocs.py --strict --check`, Windows `unittest`, and WSL suites pass with zero banned paths or tokens.
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters

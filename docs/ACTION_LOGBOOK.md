@@ -29,6 +29,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-257 - Add MkDocs Site Builder CLI, Makefile Targets, and RCA-030 (`#687`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#687` (`feat/issue-687-mkdocs-ionos-publish`)
+- **Request / Changes / Result**: Added `scripts/build_mkdocs.py` (`.htaccess`, strict build + link/hygiene verification), `Makefile` `docs-build`/`docs-check`/`clean` targets, and `RCA-030`; `build_mkdocs.py --strict --check`, Windows `35/35`, and WSL checks pass.
+
 ### ACT-256 - Configure MkDocs Material Theme, KaTeX, and Diataxis Navigation (`#685`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#685` (`feat/issue-685-mkdocs-material-config`)
 - **Request / Changes / Result**: Added `mkdocs.yml` (`site_url: https://postgresql-cluster.lightpath.fr/`, LightPath indigo/cyan Material theme, KaTeX, Mermaid, GFM TOC, Diataxis 4-quadrant navigation covering all 72 Markdown docs plus `dashboard/index.html`), `docs/javascripts/katex.js`, and `docs/stylesheets/extra.css`; `mkdocs build --strict`, Windows `35/35`, and WSL `make test lint check-math check-security pages-check` pass (`< 14,800` B PR diff).
