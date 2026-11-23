@@ -12,4 +12,5 @@ __pycache__/
 venv/
 reports/*.html
 _site/
+site/
 .DS_Store

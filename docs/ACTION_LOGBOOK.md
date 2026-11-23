@@ -29,6 +29,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-255 - Add MkDocs Hooks, Docs Dependencies, and Gitignore Entry (`#683`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#683` (`feat/issue-683-mkdocs-material-config`)
+- **Request / Changes / Result**: Added `requirements-docs.txt`, `site/` to `.gitignore`, and `scripts/mkdocs_hooks.py` (`gfm_slugify`, virtual root overviews, `assets/`/`dashboard/` staging, alert conversion, relative link/HTML `src` rewriting); Windows `35/35` and WSL `make test lint check-math check-security pages-check` pass (`< 14,800` B PR diff, `< 14,000` B script cap).
+
 ### ACT-254 - Bump Submodule to `v2.6.3`, Align Root READMEs & Finalize Phase 13 (`#681`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#681` (`chore/issue-681-submodule-v2-6-3`)
 - **Request / Changes / Result**: Checked out `env/multi-db-docker-env` `v2.6.3` (`acfb0c2b2c32aea88e9120879ab23c223a9ce6ce`), updated `README.md`/`README.fr.md` (`v2.6.3`, `haproxy:lts-alpine`), added `Phase 13` + `RCA-029`; Windows `35/35` and WSL `make test lint check-math check-security pages-build pages-check` pass.
