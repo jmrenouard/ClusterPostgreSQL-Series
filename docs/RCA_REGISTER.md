@@ -285,6 +285,9 @@
 ### IMP-015 - Bundling `README.md`, `README.fr.md` & `stacks/README.md` STE Refactors in One PR
 - **Date / Action**: `2026-11-22` (`ACT-196`..`ACT-198`, PRs `#566`, `#568`, `#569`) | **Rejected**: Combining `README.md` (`14.4 KB` diff), `README.fr.md` (`14.3 KB` diff), and `stacks/README.md` (`3.2 KB` diff) exceeded the `< 15,000`-char PR diff limit due to `-U3` unified diff context on long catalog/synthesis lines. Split into three sequential atomic PRs.
 
+### IMP-016 - Bundling Ch. 04/Ch. 07 TDE Edits or Both Root README Syncs in One PR (`> 14,800` B)
+- **Date / Action**: `2026-11-23` (`ACT-261`..`ACT-269`, Issues `#695`..`#711`) | **Rejected**: Combining Ch. 04 Matrix F (`11.7 KB`) with Ch. 07 (`6.4 KB`) produced `16,963` B, and bundling `docs/index.md`, `mkdocs.yml`, `README.md`, `README.fr.md`, and `ACTION_LOGBOOK.md` produced `23,352` B (`15,251` B for `README*` + `ACTION_LOGBOOK.md`) due to `-U3` context around long single-line Markdown paragraphs (`IMP-015`). Split into atomic PRs (`<= 11.7 KB` each).
+
 ## 3. Current Approximations & Simplifying Assumptions (`APP-XXX`)
 
 ### APP-001 - Ephemeral Local Laboratory Credentials
