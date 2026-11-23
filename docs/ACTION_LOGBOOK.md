@@ -30,6 +30,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-260 - Add French Chapter 14 on TDE and Cross-Link EN/FR (`#693`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#693` (`docs/issue-693-tde-chapter-14-fr`)
+- **Request / Changes / Result**: Added `docs/fr/14_chiffrement_transparent_tde.md` and linked it from `docs/en/14_transparent_data_encryption_tde.md`; `ste_check.py --lang fr`, `stf_check.py`, Windows `40/40`, and WSL checks pass (`< 14,800` B PR diff).
+
 ### ACT-259 - Add English Chapter 14 on TDE and Encryption at Rest (`#691`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#691` (`docs/issue-691-tde-chapter-14-en`)
 - **Request / Changes / Result**: Added `docs/en/14_transparent_data_encryption_tde.md` covering key hierarchy (`KEK`/`DEK`), threat model, PG 17/18 + `pg_tde` 2.1, EDB/Cybertec, distributed SQL, cloud KMS, 18-architecture TDE table, and compliance guardrails; `ste_check.py`, Windows `40/40`, and WSL checks pass (`< 14,800` B PR diff).
