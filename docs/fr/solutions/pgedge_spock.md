@@ -14,14 +14,15 @@
 | **Versions** | `PostgreSQL 17.12` (`pgedge-postgres:17-spock5-minimal`), `Spock 5.0.14`, `Snowflake 2.6.1`, `HAProxy 2.9` (`haproxy:2.9-alpine`) |
 | **Profil CAP / PACELC** | `AP / PA-EL` — maillage actif-actif asynchrone à 3 nœuds (LWW ou CRDT) |
 | **Licence / Stack** | PostgreSQL License / GPL-2.0 (HAProxy) / 4 conteneurs (`docker-compose-pgedge.yml`) |
+| **TDE / Chiffrement au repos** | Absent de `spock` ; LUKS OS + `verify-full` + dépôt AES ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 
 ## 1. Description de la technologie et rôle
 
-**pgEdge / Spock** (fork `pglogical`, PG 15–17) exécute `spock` (`5.0.14`) pour maillage, conflits et auto-DDL, plus `snowflake` (`2.6.1`) pour des PK 64 bits K-triables.
+**pgEdge / Spock** (fork `pglogical`, PG 15–17) exécute `spock` (`5.0.14`) et `snowflake` (`2.6.1`) pour PK 64 bits.
 
-Contrairement à `#1 pg-birep` (gèle sur `23505`), Spock reste inscriptible par `last_update_wins` (`transdiscard`) ou CRDT `spock.delta_apply`. `lolor` (`Ch. 03a`) n'est ni chargé ni testé.
+Contrairement à `#1 pg-birep` (gèle `23505`), Spock utilise `last_update_wins` (`transdiscard`) ou `spock.delta_apply` (`lolor` `Ch. 03a` absent).
 
 ---
 

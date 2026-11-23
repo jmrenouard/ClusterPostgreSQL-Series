@@ -14,6 +14,7 @@
 | **Versions** | `EDB PGD v5 / v6` (extension `bdr`, `pgd-proxy` remplaçant HARP) |
 | **Profil CAP / PACELC** | `Hybride` (`PA/EL` en Async / CRDT vs `PC/EC` en CAMO / Eager / Write-Lead Raft) |
 | **Licence / Déploiement** | Souscription commerciale propriétaire (EnterpriseDB) / min `3` nœuds (`2 data + 1 witness` ou `3 data`) |
+| **TDE / Chiffrement au repos** | **Intégré (`EPAS`/`PGE`)** : `key_wrap_command` (`KMIP`/KMS), TDE WAL + Barman ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 
