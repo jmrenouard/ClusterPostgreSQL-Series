@@ -19,16 +19,16 @@
 
 ## 1. Technology Description & What It Does
 
-Before PostgreSQL 9.0 introduced physical streaming replication and PostgreSQL 9.4/10 introduced logical WAL decoding (`pgoutput`), selective and cross-version PostgreSQL replication relied on **in-database triggers** writing row changes into staging tables polled by external daemons:
-- **Slony-I:** C/PLpgSQL trigger engine (`_slony.logTrigger`) with a `slon` daemon per node supporting **cascading single-origin** master-to-slaves trees (`NOT` active-active multi-master) and zero-downtime upgrades via explicit `EXECUTE SCRIPT` DDL locks.
-- **Londiste (Skytools) + PGQ:** Skype's queue-based system capturing changes via `pgq.logutriga` triggers into rotating **PGQ** tables cut into snapshot-consistent **batches** by a **`pgq.ticker`** daemon and applied by Python `londiste` consumer workers.
-- **RubyRep:** Ruby/JRuby bidirectional table-diff and trigger sync (`rr_pending_changes` + periodic full-table checksums); abandoned around 2012 and unsafe for modern OLTP.
+Before PG 9.0 physical streaming and PG 9.4/10 `pgoutput` decoding, selective replication used **in-database triggers**. Triggers logged row changes into staging tables polled by external daemons:
+- **Slony-I:** C/PLpgSQL trigger engine (`_slony.logTrigger`) with one `slon` daemon per node. It supports **cascading single-origin** trees (not multi-master) and upgrades with `EXECUTE SCRIPT` DDL locks.
+- **Londiste (Skytools) + PGQ:** Queue system capturing changes with `pgq.logutriga` triggers into rotating **PGQ** tables. A **`pgq.ticker`** daemon cuts snapshot **batches** applied by Python `londiste` workers.
+- **RubyRep:** Ruby/JRuby bidirectional diff and trigger sync (`rr_pending_changes` plus full checksums). Abandoned around 2012, it is unsafe for concurrent OLTP.
 
 ---
 
 ## 2. Architecture & Data Flow
 
-All three legacy engines intercept DML inside user transactions via SQL/C triggers rather than reading WAL asynchronously, incurring double write I/O before external daemons replay batches on target nodes:
+All three legacy engines capture DML inside user transactions with SQL/C triggers instead of reading WAL. This doubles write I/O before external daemons replay batches:
 
 ```mermaid
 flowchart TB
@@ -59,12 +59,12 @@ $$
 \text{Write}_{\text{trigger}} \approx W_{\text{heap}} + W_{\text{queue}} + 2 \cdot W_{\text{WAL}} + V_{\text{vacuum-queue}}, \qquad L_{\text{batch}} \ge \Delta t_{\text{tick}} + \frac{Q_{\text{batch}}}{\mu_{\text{worker}}}
 $$
 
-2. **Schema & Primary Key Discipline:** Every replicated table requires a `PRIMARY KEY` (or unique candidate key); DDL never propagates automatically (`Slony-I` requires blocking `EXECUTE SCRIPT` via `slonik`, while `Londiste` and `RubyRep` require manual out-of-band DDL coordination).
+2. **Schema & PK Discipline:** Every replicated table needs a `PRIMARY KEY`, and DDL never auto-propagates. `Slony-I` runs blocking `EXECUTE SCRIPT` with `slonik`, while `Londiste` and `RubyRep` need manual DDL.
 
 | Tool / Mode | Scope & Mechanism | Commit & Sync Path | Conflict / Failover | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
 | **Slony-I** *(Cascading Single-Origin)* | `_slony` schema + `logTrigger` + `slon` | Foreground trigger -> async `slon` replay | Single writer per set (zero write conflicts) | High admin complexity; superseded by streaming/`pg17-logical` |
-| **Slony-I `EXECUTE SCRIPT`** | Coordinated schema change via `slonik` | Acquires cluster-wide locks per set | Prevents DDL tuple mismatch | Causes brief cluster-wide write stalls |
+| **Slony-I `EXECUTE SCRIPT`** | Coordinated schema change using `slonik` | Acquires cluster-wide locks per set | Prevents DDL tuple mismatch | Causes brief cluster-wide write stalls |
 | **Londiste + PGQ** *(Queue Batching)* | `pgq.logutriga` + `pgq.ticker` + Python | Trigger -> PGQ event table -> tick batch | Single-origin per table (star/fan-out OK) | Clean batch rotation in its era; Python/PGQ EOL debt |
 | **RubyRep** *(Bidirectional Diff)* | `rr_pending_changes` + table checksums | Trigger + JRuby polling & diff sync | LWW / custom Ruby hooks (clock/lock risk) | Abandoned ~2012; severe CPU and scan lock overhead |
 
@@ -108,9 +108,9 @@ Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 | **Londiste (#14c)** | `Yes` -- `Primary` | [`pgq/londiste`](https://github.com/pgq/londiste) (`Org / 13`) | 26 / 8 / 5 | 195 / 8 | 5 / 2 | Python / `ISC` | `v3.12` / `2026-07-22T11:29:04Z` |
 | **RubyRep (#14d)** | `Yes` -- `Primary (Dormant)` | [`rubyrep/rubyrep`](https://github.com/rubyrep/rubyrep) (`User / 2`) | 179 / 74 / 6 | 556 / 0 | 2 / 58 | Ruby / `MIT` | `v2.0.0` / `2023-07-10T16:53:19Z` |
 
-- **Maintenance Level:** **Tier D (EOL / Dormant)** -- `ssinger/slony1-engine` (`0` commits/12m) and `rubyrep/rubyrep` (`0` commits/12m, `2` contributors, `58` open issues) are unmaintained; `pgq/pgq` and `pgq/londiste` log only `8` commits/12m each (`7` and `5` contributors).
+- **Maintenance Level:** **Tier D (EOL / Dormant)** -- `slony1-engine` (`0`/12m) and `rubyrep` (`0`/12m, `58` issues) are unmaintained. Both `pgq/pgq` and `pgq/londiste` record `8` commits/12m.
 - **Currency / Freshness:** **Dormant / Minimal Maintenance** -- Last push `2024-03-11T01:27:53Z` (`Slony-I`), `2023-07-10T16:53:19Z` (`RubyRep`), `2026-07-09T12:49:14Z` / `2026-07-22T11:29:04Z` (`PGQ`/`Londiste`), latest releases `REL_2_2_11`, `v3.5.2`, `v3.12`, `v2.0.0`.
-- **Operational Manageability:** **Do Not Deploy** -- Trigger bloat, single-table/FK ordering fragility, and absent modern PG 17+ support; migrate to native logical replication (`pgoutput`), `#2 pgEdge Spock 5`, or `#10 SymmetricDS`.
+- **Operational Manageability:** **Do Not Deploy** -- Trigger bloat, FK fragility, and absent PG 17+ support block production use. Migrate to native `pgoutput`, `#2 pgEdge Spock 5`, or `#10 SymmetricDS`.
 
 ---
 
