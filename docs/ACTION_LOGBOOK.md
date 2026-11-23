@@ -21,6 +21,7 @@
 | **Phase 12** | Ponytail Quality Audit, Chart/Dashboard Refactoring, Unit Hardening & Submodule `v2.6.2` (`#509-#563`) | Audited Makefile targets, pruned 14 shadowed scripts, fixed collector/builder/chart bugs, extracted `LPUtil`, regenerated charts/shards, reconciled PACELC hooks, added Python/Node unit tests, bumped submodule `v2.6.2` | Complete | `make test && make lint && make pages-check` |
 | **Phase 13** | Diataxis Portal, Repo-Wide STE Remediation, Hygiene Gate & Submodule `v2.6.3` (`#565-#681`) | Refactored `README*`, `stacks/README.md`, Ch. `01`-`13` EN/FR, and all `38` solution sheets to 0 STE errors/weak modals/prose `via`; added `docs/index.md` + `tests/test_docs_hygiene.py`; synced submodule `v2.6.3` | Complete | `make test && make lint && make check-math && make check-security && make pages-check` |
 | **Phase 14** | MkDocs Material Portal & IONOS Automated Publishing (`#683-#689`) | Configured MkDocs Material, KaTeX, Mermaid, hooks, `.htaccess` builder/verifier, `Makefile` targets, unit tests, and GitHub Actions SFTP deploy to `postgresql-cluster.lightpath.fr` | Complete | `make docs-check`, `unittest`, live HTTPS |
+| **Phase 15** | Transparent Data Encryption (TDE) Series Integration & Submodule `v2.6.4` (`#691-#707`) | Added EN/FR Ch. 14 (`KEK`/`DEK`, threat model, `pg_tde` 2.1, KMS matrix), Matrix F (`40` criteria) in Ch. 04, Ch. 07 KMS guardrails, 38 TDE sheet rows, Diataxis/MkDocs nav, and submodule `v2.6.4` | In Progress (`README*.md` sync next) | `make test && make lint && make docs-check` |
 
 ## 1. Ongoing Actions (`IN PROGRESS`)
 
@@ -29,6 +30,10 @@
 | *None* | - | - | - | All tracked actions archived below once verified. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-267 - Update Portal, MkDocs Nav, Builder, RCA, and Submodule v2.6.4 (`#707`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#707` (`docs/issue-707-tde-portal-mkdocs-submodule`)
+- **Request / Changes / Result**: Bumped `env/multi-db-docker-env` submodule to `v2.6.4` (`f019b25`), updated `docs/index.md`, `mkdocs.yml`, `scripts/build_mkdocs.py` (`REQUIRED_SITE_FILES`), `tests/test_mkdocs_publishing.py`, and `docs/RCA_REGISTER.md` (`APP-016`, `IDEA-009`), splitting `README*.md` updates to follow-up PR C8b to keep diff `< 14,800` B; STE/STF, Windows `40/40`, strict MkDocs, and WSL checks pass.
 
 ### ACT-266 - Add TDE Metadata Row to Batch 4 Solution Sheets (`#705`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#705` (`docs/issue-705-tde-sheets-batch-4`)

@@ -53,8 +53,16 @@ class TestMkDocsPublishing(unittest.TestCase):
         self.assertIn("stylesheets/extra.css", cfg["extra_css"])
         self.assertIn("javascripts/katex.js", cfg["extra_javascript"])
         nav = _flat_nav(cfg["nav"])
-        self.assertGreaterEqual(len(nav), 70)
-        for req in ("index.md", "overview-en.md", "overview-fr.md", "stacks-overview.md", "dashboard/index.html"):
+        self.assertGreaterEqual(len(nav), 72)
+        for req in (
+            "index.md",
+            "overview-en.md",
+            "overview-fr.md",
+            "stacks-overview.md",
+            "dashboard/index.html",
+            "en/14_transparent_data_encryption_tde.md",
+            "fr/14_chiffrement_transparent_tde.md",
+        ):
             self.assertIn(req, nav)
         for p in (ROOT / "requirements-docs.txt", ROOT / "docs/javascripts/katex.js", ROOT / "docs/stylesheets/extra.css"):
             self.assertTrue(p.is_file(), f"Missing {p}")
