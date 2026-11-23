@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-251 - Create docs/index.md Diataxis Documentation Portal (`#675`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#675` (`docs/issue-675-diataxis-index`)
+- **Request / Changes / Result**: Created `docs/index.md` mapping all EN/FR chapters, 19 bilingual solution sheet pairs, `stacks/README.md`, and governance registers into the 4 Diataxis quadrants with 0 STE errors; Windows unittest and WSL `make test lint check-math check-security pages-build pages-check clean` pass.
+
 ### ACT-250 - Refactor yt_cluster_lite FR Sheet for 0 STE Errors (`#673`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#673` (`docs/issue-673-yt-cluster-lite-fr`)
 - **Request / Changes / Result**: Refactored `docs/fr/solutions/yt_cluster_lite.md` for full-file 0 STE mixed-mode errors, removed the final French weak qualifier, and preserved CSV metrics and Mermaid diagrams; Windows unittest and WSL `make test lint check-math check-security` pass.
