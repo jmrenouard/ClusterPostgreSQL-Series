@@ -14,6 +14,7 @@
 | **Version** | `PostgreSQL 17.11` (`postgres:17`, Debian `17.11-1.pgdg13+2`) |
 | **CAP / PACELC Profile** | `AP / PA-EL (uni-directional logical)` |
 | **License / Deployment** | PostgreSQL License / 2 containers (`docker-compose-pg-logical.yml`) |
+| **TDE / Encryption at Rest** | None in core; independent Pub/Sub `pg_tde` KEKs or LUKS + `hostssl` ([Ch. 14](../14_transparent_data_encryption_tde.md)) |
 
 > **Catalog ID Disambiguation (`#16` vs `#14`):** `docs/en/10_streaming_vs_logical_vs_multimaster.md` assigns **`#16`** (`T3`) to `pg17-logical` and reserves `#14` for Legacy Trigger Systems (`Slony-I / Londiste / RubyRep`). Some legacy CSV/chapter tables (`results/functional_limits_matrix.csv`, `06`) still tag `pg17-logical` as `#14 Baseline`.
 

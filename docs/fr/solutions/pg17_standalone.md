@@ -14,6 +14,7 @@
 | **Version** | `PostgreSQL 17.11` (`postgres:17`, Debian `17.11-1.pgdg13+2`) |
 | **Profil CAP / PACELC** | `Single-Node (CA)` — ACID local strict, zéro tolérance aux partitions |
 | **Licence / Déploiement** | PostgreSQL License / Conteneur unique (`docker-compose-pg17-baseline.yml`) |
+| **TDE / Chiffrement au repos** | Absent du cœur PG 17 (`pg_tde` opt.) ; LUKS OS + `pgBackRest` AES ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 

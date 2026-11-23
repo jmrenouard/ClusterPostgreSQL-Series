@@ -14,14 +14,15 @@
 | **Versions** | `PostgreSQL 17.11` (`postgres:17`), `Patroni + etcd v3 + HAProxy` (`patroni-rhel8-*`) |
 | **CAP / PACELC** | Async : `AP / PA-EL (standby asynchrone)` \| Sync : `CP / PC-EC (standby synchrone)` (`RPO = 0`) |
 | **Licence / Stack** | PostgreSQL License / MIT (Patroni) / Apache-2.0 (etcd) / GPL-2.0 (HAProxy) |
+| **TDE / Chiffrement au repos** | Absent cœur (`pg_tde`/PGEE) ; KEK partagée WAL + LUKS/TLS ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 
 ## 1. Description et rôle
 
-La **réplication physique en streaming** expédie le WAL 8 Kio du primaire (`walsender`) aux standbys chauds (`walreceiver`), rejouant heap, index, séquences et DDL (`hot_standby = on`).
+La **réplication physique streaming** expédie le WAL 8 Kio (`walsender` -> `walreceiver`), rejouant heap, index, séqs et DDL (`hot_standby = on`).
 
-Modes **async (`N1`/`T1`)** ou **sync (`N2`/`T2`)**, couplés à **Patroni + etcd + HAProxy** (`docker-compose-patroni.yml`) : Raft, watchdog (`RTO ~ 10–30 s`), routage `/primary`/`/replica`.
+Modes **async (`N1`/`T1`)** / **sync (`N2`/`T2`)** avec **Patroni + etcd + HAProxy** (`docker-compose-patroni.yml`) : Raft HA (`RTO ~ 10–30 s`), routage `/primary`/`/replica`.
 
 ---
 

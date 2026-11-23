@@ -14,6 +14,7 @@
 | **Versions** | `PostgreSQL 17.11` (`postgres:17`), `HAProxy 2.9` (`haproxy:2.9-alpine`) |
 | **CAP / PACELC Profile** | `AP / PA-EL` — asynchronous active-active mesh |
 | **License / Deployment** | PostgreSQL License / GPL-2.0 (HAProxy) / 3 containers (`docker-compose-pg-birep.yml`) |
+| **TDE / Encryption at Rest** | None in core (`pg_tde` opt.); plain logical tuples need TLS + LUKS ([Ch. 14](../14_transparent_data_encryption_tde.md)) |
 
 ---
 
