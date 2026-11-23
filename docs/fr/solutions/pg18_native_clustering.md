@@ -16,6 +16,7 @@
 | **Stockage & AIO par défaut** | `PGDATA=/var/lib/postgresql/18/docker` (`VOLUME /var/lib/postgresql`), `io_method=worker` (`io_workers=3`), `data_checksums=on` |
 | **Moteur Logique & Conflits** | `uuidv7()` natif, `substream=p`, `publish_generated_columns=stored` (`s`), 7 compteurs `confl_*` (`pg_stat_subscription_stats`) |
 | **Licence / Stacks Docker** | PostgreSQL License / `docker-compose-pg18-streaming.yml`, `docker-compose-pg18-logical.yml`, `docker-compose-pg18-birep.yml` |
+| **TDE / Chiffrement au repos** | Absent cœur PG 18.6 ; `pg_tde` 2.1 offre TDE WAL GA + AIO ou LUKS ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 

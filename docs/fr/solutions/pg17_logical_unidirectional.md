@@ -14,6 +14,7 @@
 | **Version** | `PostgreSQL 17.11` (`postgres:17`, Debian `17.11-1.pgdg13+2`) |
 | **Profil CAP / PACELC** | `AP / PA-EL (logique unidirectionnel)` |
 | **Licence / Déploiement** | PostgreSQL License / 2 conteneurs (`docker-compose-pg-logical.yml`) |
+| **TDE / Chiffrement au repos** | Absent cœur ; KEK indépendantes Pub/Sub (`pg_tde`) ou LUKS + `hostssl` ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 > **Désambiguïsation (`#16` vs `#14`) :** `docs/fr/10_comparatif_streaming_logique_multimaster.md` attribue **`#16`** (`T3`) à `pg17-logical` et réserve `#14` aux systèmes à triggers historiques (`Slony-I / Londiste / RubyRep`). Certains tableaux CSV/chapitres (`results/functional_limits_matrix.csv`, `06`) mentionnent encore `#14 Baseline`.
 

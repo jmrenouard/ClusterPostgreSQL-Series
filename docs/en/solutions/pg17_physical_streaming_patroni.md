@@ -14,14 +14,15 @@
 | **Versions** | `PostgreSQL 17.11` (`postgres:17`), `Patroni + etcd v3 + HAProxy` (`patroni-rhel8-*`) |
 | **CAP / PACELC** | Async: `AP / PA-EL (async standby)` \| Sync: `CP / PC-EC (sync standby)` (`RPO = 0`) |
 | **License / Stack** | PostgreSQL License / MIT (Patroni) / Apache-2.0 (etcd) / GPL-2.0 (HAProxy) |
+| **TDE / Encryption at Rest** | None in core (`pg_tde`/PGEE); shared KEK on WAL + LUKS/TLS ([Ch. 14](../14_transparent_data_encryption_tde.md)) |
 
 ---
 
 ## 1. Description & Role
 
-**Physical Streaming Replication** ships raw 8 KiB WAL records from one primary (`walsender`) to hot standbys (`walreceiver`), replaying heap, index, sequence, and DDL blocks (`hot_standby = on`).
+**Physical Streaming Replication** ships 8 KiB WAL (`walsender` -> `walreceiver`), replaying heap, indexes, sequences, and DDL (`hot_standby = on`).
 
-Runs in **Async (`T1`)** or **Sync (`T2`)** mode, paired with **Patroni + etcd + HAProxy** (`docker-compose-patroni.yml`) for Raft election, watchdog fencing (`RTO ~ 10–30 s`), and `/primary`/`/replica` routing.
+Runs **Async (`T1`)** or **Sync (`T2`)**, with **Patroni + etcd + HAProxy** (`docker-compose-patroni.yml`) for Raft HA (`RTO ~ 10–30 s`) and routing.
 
 ---
 

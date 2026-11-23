@@ -14,6 +14,7 @@
 | **Versions** | `PostgreSQL 17.11` (`postgres:17`), `HAProxy 2.9` (`haproxy:2.9-alpine`) |
 | **Profil CAP / PACELC** | `AP / PA-EL` — maillage actif-actif asynchrone |
 | **Licence / Déploiement** | PostgreSQL License / GPL-2.0 (HAProxy) / 3 conteneurs (`docker-compose-pg-birep.yml`) |
+| **TDE / Chiffrement au repos** | Absent cœur (`pg_tde` opt.) ; tuples logiques en clair exigent TLS + LUKS ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 

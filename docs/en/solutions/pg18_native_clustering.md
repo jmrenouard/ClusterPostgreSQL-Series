@@ -16,6 +16,7 @@
 | **Storage & AIO Defaults** | `PGDATA=/var/lib/postgresql/18/docker` (`VOLUME /var/lib/postgresql`), `io_method=worker` (`io_workers=3`), `data_checksums=on` |
 | **Logical & Conflict Engine** | Native `uuidv7()`, `substream=p`, `publish_generated_columns=stored` (`s`), 7 `confl_*` counters in `pg_stat_subscription_stats` |
 | **License / Docker Stacks** | PostgreSQL License / `docker-compose-pg18-streaming.yml`, `docker-compose-pg18-logical.yml`, `docker-compose-pg18-birep.yml` |
+| **TDE / Encryption at Rest** | None in core PG 18.6; `pg_tde` 2.1 adds GA WAL TDE + AIO or LUKS ([Ch. 14](../14_transparent_data_encryption_tde.md)) |
 
 ---
 

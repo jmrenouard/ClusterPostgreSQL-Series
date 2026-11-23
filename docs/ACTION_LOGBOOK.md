@@ -30,6 +30,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-263 - Add TDE Metadata Row to Batch 1 Solution Sheets (`#699`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#699` (`docs/issue-699-tde-sheets-batch-1`)
+- **Request / Changes / Result**: Added `TDE / Encryption at Rest` / `TDE / Chiffrement au repos` metadata rows linking Ch. 14 across 5 EN/FR pairs (`pg17_standalone`, `pg17_physical_streaming_patroni` tightened `< 13,950` B, `pg17_logical_unidirectional`, `pg17_bidirectional_logical`, `pg18_native_clustering`); STE/STF, Windows `40/40`, MkDocs, and WSL checks pass (`< 14,800` B PR diff).
+
 ### ACT-262 - Add TDE Workload Row and KMS Guardrails in Ch. 07 EN/FR (`#697`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#697` (`docs/issue-697-tde-ch07-en-fr`)
 - **Request / Changes / Result**: Added regulated TDE workload rows and KMS/WAL/backup encryption production guardrails linking EN/FR Ch. 14 in `docs/en/07_*` and `docs/fr/07_*`; STE/STF, Windows `40/40`, MkDocs strict build, and WSL checks pass (`< 14,800` B PR diff).
