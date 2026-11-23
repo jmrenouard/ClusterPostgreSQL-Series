@@ -30,6 +30,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-261 - Add Matrix F (40 Criteria) in Ch. 04 EN/FR (`#695`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#695` (`docs/issue-695-tde-ch04-ch07-en-fr`)
+- **Request / Changes / Result**: Extended `docs/en/04_*` and `docs/fr/04_*` to 40 criteria across six matrices by adding Matrix F (`#1`-`#18` TDE/KMS comparison) and Ch. 14 links (Ch. 07 split cleanly to follow-up PR to honor `< 14,800` B PR diff cap); STE/STF, Windows `40/40`, and WSL checks pass.
+
 ### ACT-260 - Add French Chapter 14 on TDE and Cross-Link EN/FR (`#693`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#693` (`docs/issue-693-tde-chapter-14-fr`)
 - **Request / Changes / Result**: Added `docs/fr/14_chiffrement_transparent_tde.md` and linked it from `docs/en/14_transparent_data_encryption_tde.md`; `ste_check.py --lang fr`, `stf_check.py`, Windows `40/40`, and WSL checks pass (`< 14,800` B PR diff).
