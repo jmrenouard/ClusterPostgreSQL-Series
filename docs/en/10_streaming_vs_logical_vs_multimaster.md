@@ -31,33 +31,33 @@ $$
 
 ### Tier 1 — Physical Streaming Replication: Async (`pg17-async-streaming`)
 
-- **Mechanism:** `walsender` ships raw 8 KiB WAL page images byte-for-byte to `walreceiver` via a physical slot (`pg_basebackup`). Standby replays identical heap/index blocks in continuous recovery.
-- **Strengths:** Zero schema caveats—keyless tables, DDL, `SERIAL`/`IDENTITY` sequences, `pg_largeobject`, `TRUNCATE`, and all C extensions (`PostGIS`, `pgvector`) replicate identically at local primary commit speed with zero write conflicts.
+- **Mechanism:** `walsender` ships raw 8 KiB WAL page images byte-for-byte to `walreceiver` over a physical slot (`pg_basebackup`). Standby replays identical heap/index blocks in continuous recovery.
+- **Strengths:** Zero schema caveats apply to keyless tables, DDL, `SERIAL`/`IDENTITY` sequences, `pg_largeobject`, `TRUNCATE`, and all C extensions. They replicate identically at local primary speed with zero write conflicts.
 - **Hard Limits:** Standby is strictly **read-only** (`SQLSTATE 25006` on writes). Requires identical major PG version, CPU arch, and `glibc` collation lineage. Crash failover risks $\text{RPO} > 0$ (unshipped WAL bytes).
 
 ### Tier 2 — Physical Streaming Replication: Sync (`pg17-sync-streaming`)
 
 - **Mechanism:** Physical WAL streaming plus `synchronous_standby_names` and `synchronous_commit = on` (standby disk flush) or `remote_apply` (visible on standby before primary `COMMIT` returns).
 - **Strengths:** Strict **`RPO = 0`**, 100% PostgreSQL parity, zero conflicts. Paired with **Patroni + etcd** (`#15`), it delivers fenced automated failover (`RTO ~ 10–30 s`).
-- **Hard Limits:** Commit latency tracks standby RTT: locally (`results/benchmark_summary.csv`), Suite A drops **`52.8%`** (`866.82 -> 409.48 TPS`); at `25 ms` WAN delay (`Suite F`), throughput collapses **`-86.1%`** (`57.00 TPS`, `p95 = 353.49 ms`). Without a `FIRST 1 (s1, s2)` quorum standby list, losing the sole sync standby **stalls all primary writes**.
+- **Hard Limits:** Commit latency tracks standby RTT: locally (`results/benchmark_summary.csv`), Suite A drops **`52.8%`** (`866.82 -> 409.48 TPS`). At `25 ms` WAN delay (`Suite F`), throughput collapses **`-86.1%`** (`57.00 TPS`, `p95 = 353.49 ms`). Without a `FIRST 1 (s1, s2)` quorum standby list, losing the sole sync standby **stalls all primary writes**.
 
 ### Tier 3 — Native Uni-Directional Logical Replication (`pg17-logical`)
 
-- **Mechanism:** `wal_level = logical` decodes WAL via `pgoutput` into row-level `INSERT`/`UPDATE`/`DELETE` streams filtered by `CREATE PUBLICATION` and applied via `CREATE SUBSCRIPTION`.
+- **Mechanism:** `wal_level = logical` decodes WAL with `pgoutput` into row-level `INSERT`/`UPDATE`/`DELETE` streams filtered by `CREATE PUBLICATION` and applied by `CREATE SUBSCRIPTION`.
 - **Strengths:** Table-level granularity, `WHERE` row filters, column lists, writable subscriber for local reporting tables, cross-OS portability, and **zero-downtime cross-major-version upgrades** (PG 15 -> 17 -> 18).
 - **Three Operational Traps:**
   1. **Keyless Tables (`SQLSTATE 55000`):** `UPDATE`/`DELETE` fails on publisher tables without a `PRIMARY KEY` or `REPLICA IDENTITY FULL`.
-  2. **No Auto-DDL:** `ALTER TABLE ADD COLUMN` does not propagate; apply DDL subscriber-first or apply workers halt.
-  3. **Sequence Non-Synchronization Trap (`SQLSTATE 23505`):** Core PG 15–17 logical replication **never syncs sequence `last_value`**. After `50` publisher inserts (`id = 1..50`), the subscriber sequence stays at `1`; promoting without manual `setval()` immediately triggers **`23505`** collisions.
+  2. **No Auto-DDL:** `ALTER TABLE ADD COLUMN` does not propagate. Apply DDL subscriber-first or apply workers halt.
+  3. **Sequence Non-Synchronization Trap (`SQLSTATE 23505`):** Core PG 15–17 logical replication **never syncs sequence `last_value`**. After `50` publisher inserts (`id = 1..50`), the subscriber sequence stays at `1`. Promoting without manual `setval()` immediately triggers **`23505`** collisions.
 
 ### Tier 4 — Native Bidirectional (`pg-birep`) vs Multi-Master Extensions (`pgEdge`, `Bucardo`, `EDB PGD`)
 
-- **Native Bidirectional (`#1 pg-birep`, `origin = none`):** Breaks `A -> B -> A` loops natively in PG 16–18 (`875.91 TPS` Suite A; `824.04 TPS` under `25 ms` WAN), but offers **no conflict resolution**: PK/`UNIQUE(email)` collisions halt apply (`23505`) and overlapping increments diverge (`-71,063` drift in Suite D). Safe only on disjoint keyspaces.
-- **Extensions (`#2 pgEdge Spock 5`, `#9 Bucardo 5`, `#4 EDB PGD`):** Add LWW, global IDs (`snowflake`/`timeshard`), and auto-DDL (`Spock`, `PGD`). Only **CRDT Delta-Apply** (`spock.delta_apply`: `1,837.64 TPS`, **`0` drift** in Suite D) or **EDB PGD CAMO/Eager Raft** avoid Lost Updates (`-278,698` Spock LWW; `-531,620` Bucardo).
+- **Native Bidirectional (`#1 pg-birep`, `origin = none`):** Breaks `A -> B -> A` loops natively in PG 16–18 (`875.91 TPS` Suite A, `824.04` `25 ms` WAN). Without conflict resolution, PK/`UNIQUE` halts (`23505`) and increments diverge (`-71,063` in D), so restrict to disjoint keyspaces.
+- **Extensions (`#2 pgEdge Spock 5`, `#9 Bucardo 5`, `#4 EDB PGD`):** Add LWW, global IDs (`snowflake`/`timeshard`), and auto-DDL (`Spock`, `PGD`). Only **CRDT Delta-Apply** (`spock.delta_apply`: `1,837.64 TPS`, **`0` drift** in Suite D) or **EDB PGD CAMO/Eager Raft** avoid Lost Updates (`-278,698` Spock LWW, `-531,620` Bucardo).
 
 ### Tier 5 — Distributed SQL Consensus (`YugabyteDB`, `CockroachDB`) & Sharding (`Citus`)
 
-- **Consensus (`#5 YugabyteDB`, `#6 CockroachDB`):** Per-tablet/range Raft (`RF = 3`) guarantees global `UNIQUE`, `RPO = 0`, and 1-of-3 survival, at the cost of `40001` retry loops (`685` failed `sysbench` tx on CockroachDB), 2-of-3 quorum halt (`57014`), and severe WAN drop (`5.78` / `10.06 TPS` at `25 ms`).
+- **Consensus (`#5 YugabyteDB`, `#6 CockroachDB`):** Per-tablet/range Raft (`RF = 3`) guarantees global `UNIQUE`, `RPO = 0`, and 1-of-3 survival. Costs include `40001` retries (`685` failed `sysbench` tx on CockroachDB), 2-of-3 halt (`57014`), and WAN drop (`5.78` / `10.06 TPS` at `25 ms`).
 - **Sharding (`#7 Citus`):** Scales tenant-keyed PG 17 writes (`0` drift), but blocks non-shard `UNIQUE` (`0A000`), requires Coordinator HA, and drops `-93.0%` (`21.67 TPS`) under `25 ms` WAN 2PC.
 
 ---
@@ -119,7 +119,7 @@ Empirical proof (`T12`, `T18`, `L7`): physical streaming retained `3,088 B` WAL 
 
 1. Fence the failed primary (Patroni watchdog / STONITH) to prevent split-brain writes.
 2. Promote standby (`SELECT pg_promote(wait => true);` or Patroni DCS election) and confirm `pg_is_in_recovery() = f`.
-3. Zero sequence resync or DDL replay is needed; switch HAProxy/PgBouncer immediately.
+3. Zero sequence resync or DDL replay is needed. Switch HAProxy or PgBouncer immediately.
 
 ### 5.2 Logical Cutover & Zero-Downtime Major Upgrade (`PG 15 -> 17 -> 18`)
 
@@ -145,6 +145,6 @@ FROM pg_sequences WHERE schemaname = 'public';
 
 ## 6. PostgreSQL 18.6 Impact Across Tiers & Ecosystem Vitality
 
-- **Tiers 1-4 Under PG 18.6 ([Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)):** Tested live across `87` benchmark rows ([`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv)) and `5 x 26` probes ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv)), PG 18.6 adds default `data_checksums=on`, AIO `io_method=worker` (`-18.5%` cold scan), `substream=p`, `publish_generated_columns=stored`, 7 `confl_*` counters (+`confl_multiple_unique_conflicts`), and native `uuidv7()` (`pg18-birep` `H_append_only` **`2,066.70 TPS`**, `3.30x` vs PG 17; `pg18-logical` **`3,518.49 TPS`**, `+85.1%`).
-- **Unchanged Tier Boundaries:** `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` still raise **`SQLSTATE 42601`** in PG 18.6 (deferred to PG 19), so Tier 3 cutovers still require `setval()`, Tier 4 overlapping writes still require Spock/PGD CRDTs, and global `RPO=0` ACID remains Tier 5.
+- **Tiers 1-4 Under PG 18.6 ([Ch. 12](12_postgresql_18_clustering_and_benchmarks.md)):** Tested live across `87` benchmark rows ([`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv)) and `5 x 26` probes ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv)), PG 18.6 adds `data_checksums=on` and `io_method=worker`. It adds `substream=p`, `pubgencols=s`, 7 `confl_*` counters, and `uuidv7()` (`pg18-birep` `H` **`2,066.70 TPS`**, `3.30x`, `pg18-logical` **`3,518.49`**, `+85.1%`).
+- **Unchanged Tier Boundaries:** `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` still raise **`SQLSTATE 42601`** in PG 18.6 (PG 19 target). Tier 3 cutovers still require `setval()`, Tier 4 overlapping writes require Spock/PGD CRDTs, and global `RPO=0` ACID stays Tier 5.
 - **Vitality & Charts:** Cross-reference ecosystem bus-factor and 12m commit velocity in [Ch. 11](11_ecosystem_popularity_and_vitality.md) and [`chart_08`](../../assets/charts/chart_08_popularity_stars_forks_log.png) / [`chart_09`](../../assets/charts/chart_09_popularity_commits_activity_log.png) / [`chart_10`](../../assets/charts/chart_10_pg18_vs_pg17_log.png).
