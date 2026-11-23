@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-229 - Refactor Chapter 12 EN for 0 STE Errors (`#631`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#631` (`docs/issue-631-ch12-en`)
+- **Request / Changes / Result**: Refactored `docs/en/12_postgresql_18_clustering_and_benchmarks.md` for full-file 0 STE mixed-mode errors, 0 `via`, and 0 weak modals (split FR into a separate atomic PR to stay under 14,800 B); Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-228 - Refactor Chapter 11 FR for 0 STE Errors (`#629`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#629` (`docs/issue-629-ch11-fr`)
 - **Request / Changes / Result**: Refactored `docs/fr/11_popularite_et_vitalite_ecosysteme.md` for full-file 0 STE mixed-mode errors, 0 `via`, and 0 weak modals while keeping GitHub popularity figures, charts, and anchors intact; Windows unittest and WSL `make test lint check-math check-security` pass.

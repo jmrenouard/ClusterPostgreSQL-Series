@@ -10,7 +10,7 @@
 
 ## 1. PostgreSQL 16 -> 17 -> 18 Clustering Evolution
 
-We deployed **`PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)`** across all five native clustering tiers (`pg18-standalone`, `pg18-async-streaming`, `pg18-sync-streaming`, `pg18-logical`, `pg18-birep`), collecting **87 sequential benchmark rows** ([`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv)) and **5 x 26 functional probes** ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv); log [`results/logs/pg18-benchmark.log`](../../results/logs/pg18-benchmark.log)).
+We deployed **`PostgreSQL 18.6 (Debian 18.6-1.pgdg13+2)`** across all five native clustering tiers (`pg18-standalone`, `pg18-async-streaming`, `pg18-sync-streaming`, `pg18-logical`, `pg18-birep`), collecting **87 sequential benchmark rows** ([`results/benchmark_pg18.csv`](../../results/benchmark_pg18.csv)) and **5 x 26 functional probes** ([`results/functional_limits_pg18.csv`](../../results/functional_limits_pg18.csv), log [`results/logs/pg18-benchmark.log`](../../results/logs/pg18-benchmark.log)).
 
 ```mermaid
 flowchart LR
@@ -69,10 +69,10 @@ $$
 | `confl_multiple_unique_conflicts` *(PG 18)* | 0 | **1** | Single `INSERT` colliding simultaneously on PK + `UNIQUE(email)` |
 
 Key `L1-L8` / `T11-T18` results (`results/functional_limits_pg18.csv`):
-- **`T11` Bulk 10k:** `pg18-async-streaming` led at **`87,903 rows/s`** (`114 ms`, catch-up `88.4 ms` vs PG 17 `28,693`); `pg18-standalone` `80,108` (`+52.6%`); `pg18-sync-streaming` `75,629` (`+90.5%`, `99.8 ms`); `pg18-birep` `70,470` (`321.2 ms`); `pg18-logical` `69,827` (`316.0 ms`).
-- **`T13` Cross-Node FK Race:** `pg18-birep` exposed async FK race (**`2/10 ok; 23503x8`**); streaming rejected standby writes (`25006x10`); `standalone` & `logical` passed `10/10`.
-- **`T14` / `T15` / `T16` / `T17`:** 5/5 bit-identical (`md5=00493e3a`, `65,536 B` `BYTEA`, `JSONB`, UTF-8); `T15` RAW `p50/p95` dropped on every replicated stack (`pg18-async` `4.41/5.80` vs PG 17 `9.65/25.13 ms`, `pg18-sync` `1.47/2.07`, `pg18-logical` `1.46/1.68`, `pg18-birep` `1.25/1.75 ms`); 5/5 passed `T16` `SIGKILL` (`20/20`, `RPO=0`, `21/21`) and `T17` (`NO_DIRTY_READ`, `82-114 ms`).
-- **`T18` Sequence Sync & `L7` WAL:** Physical streaming kept `66|true` (`next_id=67`, `3,008 B` WAL; sync stalled primary on `wait_event=SyncRep`). `pg18-logical` (`19,448 B`) and `pg18-birep` (`352,664 B`) raised **`SQLSTATE 42601`** on `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` and stayed at `1|false` -> **`SQLSTATE 23505`**.
+- **`T11` Bulk 10k:** `pg18-async-streaming` led at **`87,903 rows/s`** (`114 ms`, catch-up `88.4 ms` vs PG 17 `28,693`). `pg18-standalone` hit `80,108` (`+52.6%`), `pg18-sync-streaming` `75,629` (`+90.5%`, `99.8 ms`), `pg18-birep` `70,470` (`321.2 ms`), and `pg18-logical` `69,827` (`316.0 ms`).
+- **`T13` Cross-Node FK Race:** `pg18-birep` exposed async FK races (**`2/10 ok`, `23503x8`**). Streaming rejected standby writes (`25006x10`), while `standalone` and `logical` passed `10/10`.
+- **`T14` / `T15` / `T16` / `T17`:** 5/5 passed bit-identical `T14` (`md5=00493e3a`, `65,536 B` `BYTEA`, `JSONB`, UTF-8). `T15` RAW `p50/p95` dropped across stacks (`pg18-async` `4.41/5.80` vs `9.65/25.13 ms`, `sync` `1.47/2.07`, `logical` `1.46/1.68`, `birep` `1.25/1.75 ms`). 5/5 passed `T16` `SIGKILL` (`20/20`, `RPO=0`, `21/21`) and `T17` (`NO_DIRTY_READ`, `82-114 ms`).
+- **`T18` Sequence Sync & `L7` WAL:** Physical streaming kept `66|true` (`next_id=67`, `3,008 B` WAL, sync stalled on `wait_event=SyncRep`). `pg18-logical` (`19,448 B`) and `pg18-birep` (`352,664 B`) raised **`SQLSTATE 42601`** on `FOR ALL SEQUENCES` / `REFRESH SEQUENCES` and stayed at `1|false` -> **`SQLSTATE 23505`**.
 
 ---
 
@@ -114,9 +114,9 @@ All 87 PG 18.6 rows ran sequentially at `PG_SCALE=2` in the identical `bench_cli
 
 ### Performance Takeaways
 
-1. **Decisive PG 18.6 Wins:** `substream=p`, `uuidv7()`, and I/O batching accelerated `H_append_only` (`pg18-birep` **3.30x**, `pg18-logical` **+85.1%**, `pg18-sync` **+35.3%**), write-heavy `sysbench` (`pg18-sync` `E3` **3.20x**, `pg18-logical` `E` **+72.5%** / `E3` **+97.5%**), `pg18-birep` concurrency (`c=8` **4.92x**) and WAN `50 ms` (**3.50x**), and `T11` bulk load (+7% to **3.06x**).
-2. **Honest Small-TX Overhead:** On tiny cached `pgbench` commits (`A`/`B1`/`B2`) and hot `C` scans, default `data_checksums=on` + `io_method=worker` IPC trimmed peaks by `-8.5%` to `-41%` vs PG 17 (`checksums=off`, `sync`), matching the AIO A/B probe (`290.75` vs `323.98 TPS`).
-3. **Unchanged Physics:** `pg18-sync-streaming` still dropped `-94.9%` at `50 ms` WAN (`25.60 TPS`, `p95 = 766.21 ms`); `pg18-birep` still diverged on overlapping writes (`B2` `-338`; `D` `-83,252`).
+1. **Decisive PG 18.6 Wins:** `substream=p`, `uuidv7()`, and I/O batching sped up `H_append_only` (`pg18-birep` **3.30x**, `pg18-logical` **+85.1%**, `pg18-sync` **+35.3%**). Write-heavy `sysbench` jumped (`pg18-sync` `E3` **3.20x**, `pg18-logical` `E` **+72.5%** / `E3` **+97.5%**), alongside `pg18-birep` `c=8` (**4.92x**), WAN `50 ms` (**3.50x**), and `T11` (+7% to **3.06x**).
+2. **Honest Small-TX Overhead:** On tiny cached `pgbench` commits (`A`/`B1`/`B2`) and hot `C` scans, `data_checksums=on` + `io_method=worker` IPC trimmed peaks by `-8.5%` to `-41%`. This matches PG 17 (`checksums=off`, `sync`) and the AIO A/B probe (`290.75` vs `323.98 TPS`).
+3. **Unchanged Physics:** `pg18-sync-streaming` still dropped `-94.9%` at `50 ms` WAN (`25.60 TPS`, `p95 = 766.21 ms`). `pg18-birep` still diverged on overlapping writes (`B2` `-338`, `D` `-83,252`).
 
 ---
 
@@ -125,7 +125,7 @@ All 87 PG 18.6 rows ran sequentially at `PG_SCALE=2` in the identical `bench_cli
 ### 4.1 Upgrade Checklist (`PG 16/17 -> PG 18.6`)
 
 1. **Docker Storage Layout:** Mount `/var/lib/postgresql` and resolve `$PGDATA` dynamically (`/var/lib/postgresql/18/docker`) in `pg_basebackup` and Patroni manifests.
-2. **Checksums & AIO:** Enable checksums before `pg_upgrade` (`pg_checksums --enable`). Keep `io_method=worker` for scans/mixed I/O; test `sync` on pure hot-RAM micro-OLTP; whitelist `io_uring` in seccomp before switching.
+2. **Checksums & AIO:** Enable checksums before `pg_upgrade` (`pg_checksums --enable`). Keep `io_method=worker` for scans and mixed I/O. Test `sync` on pure hot-RAM micro-OLTP, and whitelist `io_uring` in seccomp before switching.
 3. **Sequence Sync Still Required:** Until PG 19 adds logical sequence sync, run scripted `setval()` (Ch. 10, Section 5.2) during every logical cutover to prevent `SQLSTATE 23505`.
 
 ### 4.2 Honest Decision Boundary: Native PG 18 vs Extensions & Distributed SQL
