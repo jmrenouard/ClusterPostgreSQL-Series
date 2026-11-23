@@ -52,7 +52,7 @@ Pour garantir l'équité des benchmarks TPC-B et la comparabilité entre moteurs
 Chaque PoC doit valider ou documenter de façon automatisée dix vérifications structurelles :
 
 1. **Santé et paramètres système** : Vérification de `wal_level`, `track_commit_timestamp`, extensions chargées (`spock`, `snowflake`, `citus`), ou membres Raft actifs (`RF = 3`).
-2. **Routage d'entrée et isolation** : Preuve de distribution round-robin HAProxy (vérification via `inet_server_addr()`) et liaison stricte sur `127.0.0.1`.
+2. **Routage d'entrée et isolation** : Preuve de distribution round-robin HAProxy (vérification avec `inet_server_addr()`) et liaison stricte sur `127.0.0.1`.
 3. **Écritures multi-nœuds convergentes** : Insertion/mise à jour simultanée sur des nœuds distincts avec vérification d'état identique post-synchronisation.
 4. **Séquences et identifiants** : Validation du mécanisme anti-collision (`INCREMENT BY 2`, `snowflake.nextval()`, `unique_rowid()`, `bigserial` coordinateur).
 5. **Contraintes secondaires `UNIQUE`** : Création et test de détection sur index unique non primaire.
