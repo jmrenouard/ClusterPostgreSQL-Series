@@ -14,6 +14,7 @@
 | **Versions** | `Slony-I 2.2.x` (C/PLpgSQL) ; `Skytools 3 / Londiste + PGQ` (Python/C, EOL) ; `RubyRep 1.2.x` (JRuby, abandonné) |
 | **Profil CAP / PACELC** | `PA/EL` — capture asynchrone par triggers (`Slony`/`Londiste` mono-origine ; `RubyRep` bidir. fragile) |
 | **Licence / Déploiement** | Open Source (BSD / ISC / MIT) / Triggers SQL/C en base + tables files + daemon `slon`/`londiste`/`rubyrep` |
+| **TDE / Chiffrement au repos** | Absent cœur PG ; files `_slony`/`pgq` en clair (`LUKS` + migrer hors EOL ; [Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 

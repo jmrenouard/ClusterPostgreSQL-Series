@@ -14,6 +14,7 @@
 | **Versions** | `PgPool-II 4.6` (`pgpool/pgpool:4.6`), `PostgreSQL 17` (`postgres:17`), `HAProxy LTS` (`haproxy:lts`) |
 | **Profil CAP / PACELC** | Streaming : mono-primaire WAL \| Mode SI : `CP / PC-EC` \| Diffusion native : pseudo-synchrone fragile |
 | **Licence / Déploiement** | Open Source BSD / MIT / Couche proxy (`3+` nœuds Watchdog en prod) + backends PostgreSQL |
+| **TDE / Chiffrement au repos** | **N/A (Proxy seul)** : `pool_passwd` AES + TLS deux sauts ; exige TDE/LUKS backend ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 

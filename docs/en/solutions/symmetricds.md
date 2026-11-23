@@ -14,6 +14,7 @@
 | **Versions** | `SymmetricDS 3.x` (Java JVM engine + JDBC drivers; `PostgreSQL 17` compatible) |
 | **CAP / PACELC Profile** | `AP / PA-EL` — asynchronous trigger-captured batch shipping over HTTP/HTTPS |
 | **License / Deployment** | LGPL / GPLv3 Open Source & Commercial Pro (JumpMind) / External Java nodes + SQL triggers |
+| **TDE / Encryption at Rest** | None on PG (`Pro` batch enc.); OS/LUKS on PG + JVM staging & HTTPS mTLS ([Ch. 14](../14_transparent_data_encryption_tde.md)) |
 
 ---
 

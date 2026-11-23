@@ -14,6 +14,7 @@
 | **Versions** | `SymmetricDS 3.x` (moteur Java JVM + pilotes JDBC ; compatible `PostgreSQL 17`) |
 | **Profil CAP / PACELC** | `AP / PA-EL` — capture asynchrone par triggers et transport par lots HTTP/HTTPS |
 | **Licence / Déploiement** | Open Source LGPL / GPLv3 & Pro commercial (JumpMind) / Nœuds Java externes + triggers SQL |
+| **TDE / Chiffrement au repos** | Absent PG (`Pro` lots) ; LUKS OS sur PG + tampon JVM & HTTPS mTLS ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 
