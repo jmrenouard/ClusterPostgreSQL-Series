@@ -5,7 +5,7 @@ export PYTHONDONTWRITEBYTECODE := 1
 MDB_DIR ?= env/multi-db-docker-env
 PG_STACKS := pg17-baseline pg-streaming pg-logical pg-birep pgedge bucardo citus cockroach yugabyte pg18-streaming pg18-logical pg18-birep yt-cluster
 
-.PHONY: help init-env stacks build-bench-image test check-math check-security lint charts popularity dashboard pages-build pages-check test-pg-extended bench-all bench-pg18 bench-yt-cluster bench-optimized clean
+.PHONY: help init-env stacks build-bench-image test check-math check-security lint charts popularity dashboard pages-build pages-check docs-build docs-check test-pg-extended bench-all bench-pg18 bench-yt-cluster bench-optimized clean
 
 help: ## Show targets
 	@awk 'BEGIN {FS = ":.*##"; printf "\nTargets:\n"} /^[a-zA-Z0-9_%-]+:.*##/ { printf "  %-18s %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
@@ -45,6 +45,12 @@ pages-build: ## Build offline static GitHub Pages bundle in _site/
 
 pages-check: ## Verify _site/ GitHub Pages bundle links, zero-CDN, and hygiene
 	python3 scripts/build_pages.py --check
+
+docs-build: ## Build MkDocs Material site in site/ with .htaccess
+	python3 scripts/build_mkdocs.py --out site --strict
+
+docs-check: ## Verify built MkDocs site/ bundle links, artifacts, and hygiene
+	python3 scripts/build_mkdocs.py --out site --check-only
 
 lint: ## Lint repo Bash scripts and all 13 submodule PostgreSQL Compose files
 	@find . \( -path './.git' -o -path './env' \) -prune -o -name '*.sh' -type f -print0 | xargs -0 -r bash -n
@@ -119,7 +125,7 @@ bench-optimized: ## Run V5 production-tuned PG_SCALE=20 benchmark suite via $(MD
 	BENCH_OUT_CSV="$(CURDIR)/results/benchmark_optimized.csv" BENCH_LOG_DIR="$(CURDIR)/results/logs_optimized" bash "$(MDB_DIR)/scripts/bench_pg_optimized_runner.sh"
 	$(MAKE) charts dashboard
 
-clean: ## Clean caches, logs, generated reports, and _site/
+clean: ## Clean caches, logs, generated reports, _site/, and site/
 	python3 -c "import pathlib,shutil;[shutil.rmtree(p,ignore_errors=True) for p in pathlib.Path('.').rglob('*') if p.name in {'__pycache__','.pytest_cache'} and 'env' not in p.parts]"
-	rm -rf _site
+	rm -rf _site site
 	rm -f reports/*.html reports/*.md *.log
