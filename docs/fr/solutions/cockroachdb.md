@@ -14,14 +14,15 @@
 | **Versions** | `CockroachDB v24.3.0` (V1/V2) / `v25.4.21` (V5 `latest-v25.4`), PG-wire `13.0.0` (moteur SQL Go *clean-room* + Pebble LSM) |
 | **Profil CAP / PACELC** | `CP / PC-EC` (`3 (RF=3 SQL)` — Multi-Raft par *range* de `64 MiB` `RF=3`, HLC bornée) |
 | **Licence / Déploiement** | BSL 1.1 / Enterprise (fonctions soumises à licence) / 3 conteneurs (`docker-compose-cockroach.yml`) |
+| **TDE / Chiffrement au repos** | **Enterprise / Cloud seul** : Store Keys + KMS (`KMIP`/cloud) sur Pebble/Raft ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 
 ## 1. Description de la technologie et rôle
 
-**CockroachDB** est une base SQL distribuée en Go exposant `pgwire` `13.0.0` sur **Pebble** (LSM ordonné) et **Multi-Raft** par *range* de `64 MiB` (`RF = 3`). Chaque *Leaseholder* sert les lectures localement sans tour Raft et réplique les écritures sur le quorum.
+**CockroachDB** couche SQL Go (`pgwire` `13.0.0`) sur **Pebble** LSM et **Multi-Raft** `64 MiB` (`RF = 3`). Le *Leaseholder* lit localement.
 
-Contrairement à `#5 YugabyteDB` (fork C PG 15), CockroachDB n'est **pas** un fork PostgreSQL : il impose **`SERIALIZABLE`** optimiste MVCC par défaut, exclut toute extension C PG et exige des reprises applicatives `SQLSTATE 40001`.
+Hors fork PG (`#5`), il impose **`SERIALIZABLE`** optimiste, zéro extension C et des reprises `40001`.
 
 ---
 

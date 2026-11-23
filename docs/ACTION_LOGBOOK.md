@@ -30,6 +30,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-265 - Add TDE Metadata Row to Batch 3 Solution Sheets (`#703`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#703` (`docs/issue-703-tde-sheets-batch-3`)
+- **Request / Changes / Result**: Added `TDE / Encryption at Rest` / `TDE / Chiffrement au repos` metadata rows linking Ch. 14 across 5 EN/FR pairs (`yugabytedb`, `cockroachdb` tightened `< 13,950` B, `opentenbase_pgxl`, `aws_aurora_limitless`, `gcp_spanner_alloydb`); STE/STF, Windows `40/40`, MkDocs, and WSL checks pass (`< 14,800` B PR diff).
+
 ### ACT-264 - Add TDE Metadata Row to Batch 2 Solution Sheets (`#701`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#701` (`docs/issue-701-tde-sheets-batch-2`)
 - **Request / Changes / Result**: Added `TDE / Encryption at Rest` / `TDE / Chiffrement au repos` metadata rows linking Ch. 14 across 5 EN/FR pairs (`pgedge_spock` tightened `< 13,950` B, `pglogical2`, `edb_pgd`, `citus`, `yt_cluster_lite`); STE/STF, Windows `40/40`, MkDocs, and WSL checks pass (`< 14,800` B PR diff).

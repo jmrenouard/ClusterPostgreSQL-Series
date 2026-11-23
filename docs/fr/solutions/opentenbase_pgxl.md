@@ -14,6 +14,7 @@
 | **Versions** | `Postgres-XC` (retiré), `Postgres-XL 10` (gelé ~2018), `OpenTenBase` (fork actif PG 10–11 + rétroportages) |
 | **Profil CAP / PACELC** | `CP / PC-EC` — GTM centralisé (`GXID` + instantanés MVCC globaux) + 2PC CN/DN |
 | **Licence / Déploiement** | Open Source (PostgreSQL / licence Tencent Apache) / `GTM` (+ Standby/Proxy) + Coordinateurs + Datanodes |
+| **TDE / Chiffrement au repos** | Absent fork PG 10-11 ; LUKS OS sur CN/DN/GTM + TLS sur liens GTM/DN ([Ch. 14](../14_chiffrement_transparent_tde.md)) |
 
 ---
 

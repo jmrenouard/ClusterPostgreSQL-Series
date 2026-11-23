@@ -14,14 +14,15 @@
 | **Versions** | `CockroachDB v24.3.0` (V1/V2) / `v25.4.21` (V5 `latest-v25.4`), PG-wire `13.0.0` (Clean-room Go SQL engine + Pebble LSM) |
 | **CAP / PACELC Profile** | `CP / PC-EC` (`3 (RF=3 SQL)` — Multi-Raft per `64 MiB` Range `RF=3`, HLC bounded) |
 | **License / Deployment** | BSL 1.1 / Enterprise (licensed features) / 3 containers (`docker-compose-cockroach.yml`) |
+| **TDE / Encryption at Rest** | **Enterprise / Cloud only**: Store Keys + KMS (`KMIP`/cloud) over Pebble/Raft ([Ch. 14](../14_transparent_data_encryption_tde.md)) |
 
 ---
 
 ## 1. Technology Description & What It Does
 
-**CockroachDB** is a distributed SQL database written in Go that implements the PostgreSQL v3 wire protocol (`pgwire` `13.0.0`). It layers SQL over **Pebble** (ordered LSM key-value engine) and **Multi-Raft** consensus per `64 MiB` Range (`RF = 3`). Each range elects a **Leaseholder** that coordinates strongly consistent reads locally without Raft disk rounds while writes replicate across the range's Raft quorum.
+**CockroachDB** is a Go distributed SQL engine (`pgwire` `13.0.0`) over **Pebble** LSM and **Multi-Raft** `64 MiB` Ranges (`RF = 3`). Range **Leaseholders** serve local reads while Raft replicates writes.
 
-Unlike `#5 YugabyteDB` (forked PG 15 C engine defaulting to pessimistic `READ COMMITTED`), CockroachDB is **not** a PostgreSQL kernel fork: it defaults globally to strict **`SERIALIZABLE`** optimistic MVCC, supports zero PostgreSQL C extensions, and requires client-side `SQLSTATE 40001` retry loops under write contention.
+Unlike `#5 YugabyteDB` (PG 15 C fork), CockroachDB defaults to strict **`SERIALIZABLE`** optimistic MVCC, lacks PG C extensions, and needs `40001` client retries.
 
 ---
 
