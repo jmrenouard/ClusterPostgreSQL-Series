@@ -78,13 +78,21 @@ class TestMkDocsPublishing(unittest.TestCase):
         self.assertIn("> [!NOTE]", alerts.split("```", 1)[1])
 
         rew = mkdocs_hooks.rewrite_relative_links(
-            "[EN](../../README.md) [Img](../../assets/a.png) `[Code](../../README.md)`",
+            "[EN](../../README.md) [FR](../fr/14_chiffrement_transparent_tde.md) [Img](../../assets/a.png) `[Code](../../README.md)`",
             "en/06_empirical_test_and_benchmark_results.md",
             docs_dir=ROOT / "docs",
         )
         self.assertIn("](../overview-en.md)", rew)
+        self.assertIn("](/fr/fr/14_chiffrement_transparent_tde/)", rew)
         self.assertIn("](../assets/a.png)", rew)
         self.assertIn("`[Code](../../README.md)`", rew)
+        fr_rew = mkdocs_hooks.rewrite_relative_links(
+            "[EN](../en/14_transparent_data_encryption_tde.md)",
+            "fr/14_chiffrement_transparent_tde.md",
+            docs_dir=ROOT / "docs",
+            lang="fr",
+        )
+        self.assertIn("](/en/14_transparent_data_encryption_tde/)", fr_rew)
         ov = mkdocs_hooks.rewrite_relative_links('<img src="assets/logo.png">', "overview-en.md", docs_dir=ROOT / "docs")
         self.assertIn('src="../assets/logo.png"', ov)
         stk = mkdocs_hooks.rewrite_relative_links("[Sub](../env/multi-db-docker-env)", "stacks-overview.md", docs_dir=ROOT / "docs")

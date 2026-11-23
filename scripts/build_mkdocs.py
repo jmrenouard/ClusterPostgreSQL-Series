@@ -100,20 +100,25 @@ def build_mkdocs_site(
     strict: bool = True,
     mkdocs_bin: str | None = None,
 ) -> dict[str, int | str]:
-    """Build MkDocs Material site into out_dir and write root .htaccess."""
+    """Build EN and FR MkDocs Material sites into out_dir and write root .htaccess."""
     out = out_dir.resolve()
     protected = (ROOT, ROOT / "docs", ROOT / "scripts", ROOT / "assets", ROOT / "dashboard")
     if out == out.parent or any(out == d.resolve() or d.resolve().is_relative_to(out) for d in protected):
         raise ValueError(f"Refusing unsafe output directory: {out}")
     if out.exists():
         shutil.rmtree(out, ignore_errors=True)
-    cmd = [*_resolve_mkdocs_cmd(mkdocs_bin), "build", "-f", str(ROOT / "mkdocs.yml"), "-d", str(out)]
-    if strict:
-        cmd.append("--strict")
     env = os.environ.copy()
     env.setdefault("PYTHONUTF8", "1")
     env.setdefault("NO_MKDOCS_2_WARNING", "1")
-    subprocess.run(cmd, cwd=str(ROOT), env=env, check=True)
+    mk_cmd = _resolve_mkdocs_cmd(mkdocs_bin)
+    targets = [(ROOT / "mkdocs.yml", out)]
+    if (fr_cfg := ROOT / "mkdocs.fr.yml").is_file():
+        targets.append((fr_cfg, out / "fr"))
+    for cfg_path, dest in targets:
+        cmd = [*mk_cmd, "build", "-f", str(cfg_path), "-d", str(dest)]
+        if strict:
+            cmd.append("--strict")
+        subprocess.run(cmd, cwd=str(ROOT), env=env, check=True)
     (out / ".htaccess").write_text(render_htaccess(), encoding="utf-8", newline="\n")
     files = [p for p in out.rglob("*") if p.is_file()]
     return {"files": len(files), "bytes": sum(p.stat().st_size for p in files), "out_dir": str(out)}

@@ -31,6 +31,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-270 - Add Language-Aware MkDocs Hooks and Dual EN/FR Builder Support (`#713`)
+- **Date**: `2026-11-24` | **Status**: `COMPLETED` | **Issue / Branch**: `#713` (`docs/issue-713-diataxis-i18n-mermaid`)
+- **Request / Changes / Result**: Updated `scripts/mkdocs_hooks.py` (`_site_lang`, `_alt_url` cross-language rewriting, language-filtered virtual docs) and `scripts/build_mkdocs.py` (builds `mkdocs.fr.yml` under `/fr/` when present) with unit assertions in `tests/test_mkdocs_publishing.py`; strict MkDocs and `40/40` unit tests pass (`< 15,000` B PR diff).
+
 ### ACT-269 - Sync French README to 40-Criterion Matrix, Ch. 14 TDE, and Submodule v2.6.4 (`#711`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#711` (`docs/issue-711-tde-readme-fr`)
 - **Request / Changes / Result**: Updated `README.fr.md` (`v2.6.4`, `40`-criterion Matrix F, Ch. 14 TDE FR/EN row), recorded `IMP-016` in `docs/RCA_REGISTER.md`, and marked `Phase 15` `Complete` in `docs/ACTION_LOGBOOK.md`; STE/STF, Windows `40/40`, strict MkDocs, and WSL checks pass (`< 14,800` B PR diff).
