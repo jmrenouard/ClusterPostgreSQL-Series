@@ -21,7 +21,7 @@
 | **Phase 12** | Ponytail Quality Audit, Chart/Dashboard Refactoring, Unit Hardening & Submodule `v2.6.2` (`#509-#563`) | Audited Makefile targets, pruned 14 shadowed scripts, fixed collector/builder/chart bugs, extracted `LPUtil`, regenerated charts/shards, reconciled PACELC hooks, added Python/Node unit tests, bumped submodule `v2.6.2` | Complete | `make test && make lint && make pages-check` |
 | **Phase 13** | Diataxis Portal, Repo-Wide STE Remediation, Hygiene Gate & Submodule `v2.6.3` (`#565-#681`) | Refactored `README*`, `stacks/README.md`, Ch. `01`-`13` EN/FR, and all `38` solution sheets to 0 STE errors/weak modals/prose `via`; added `docs/index.md` + `tests/test_docs_hygiene.py`; synced submodule `v2.6.3` | Complete | `make test && make lint && make check-math && make check-security && make pages-check` |
 | **Phase 14** | MkDocs Material Portal & IONOS Automated Publishing (`#683-#689`) | Configured MkDocs Material, KaTeX, Mermaid, hooks, `.htaccess` builder/verifier, `Makefile` targets, unit tests, and GitHub Actions SFTP deploy to `postgresql-cluster.lightpath.fr` | Complete | `make docs-check`, `unittest`, live HTTPS |
-| **Phase 15** | Transparent Data Encryption (TDE) Series Integration & Submodule `v2.6.4` (`#691-#709`) | Added EN/FR Ch. 14 (`KEK`/`DEK`, threat model, `pg_tde` 2.1, KMS matrix), Matrix F (`40` criteria) in Ch. 04, Ch. 07 KMS guardrails, 38 TDE sheet rows, Diataxis/MkDocs nav, `README.md`, and submodule `v2.6.4` | In Progress (`README.fr.md` next) | `make test && make lint && make docs-check` |
+| **Phase 15** | Transparent Data Encryption (TDE) Series Integration & Submodule `v2.6.4` (`#691-#711`) | Added EN/FR Ch. 14 (`KEK`/`DEK`, threat model, `pg_tde` 2.1, KMS matrix), Matrix F (`40` criteria) in Ch. 04, Ch. 07 KMS guardrails, 38 TDE sheet rows, Diataxis/MkDocs nav, `README*`, and submodule `v2.6.4` | Complete | `make test && make lint && make docs-check` |
 
 ## 1. Ongoing Actions (`IN PROGRESS`)
 
@@ -30,6 +30,10 @@
 | *None* | - | - | - | All tracked actions archived below once verified. |
 
 ## 2. Completed Actions (`COMPLETED`)
+
+### ACT-269 - Sync French README to 40-Criterion Matrix, Ch. 14 TDE, and Submodule v2.6.4 (`#711`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#711` (`docs/issue-711-tde-readme-fr`)
+- **Request / Changes / Result**: Updated `README.fr.md` (`v2.6.4`, `40`-criterion Matrix F, Ch. 14 TDE FR/EN row), recorded `IMP-016` in `docs/RCA_REGISTER.md`, and marked `Phase 15` `Complete` in `docs/ACTION_LOGBOOK.md`; STE/STF, Windows `40/40`, strict MkDocs, and WSL checks pass (`< 14,800` B PR diff).
 
 ### ACT-268 - Sync English README to 40-Criterion Matrix, Ch. 14 TDE, and Submodule v2.6.4 (`#709`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#709` (`docs/issue-709-tde-readmes-sync`)

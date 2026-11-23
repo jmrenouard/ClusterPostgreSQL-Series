@@ -6,7 +6,7 @@
 
 > **Auteur** : Jean-Marie Renouard (`jmrenouard`) | **Soutenu par** : [LightPath](https://www.lightpath.fr) | **Licence** : MIT | [English Version (`README.md`)](README.md)
 
-Ce dépôt présente une étude comparative de **16 solutions PostgreSQL** (7 familles, **19 fiches**) et **18 topologies Docker** (`10` PG 17/distribuées, `5` PostgreSQL 18.6, `2` YT Cluster 1.21.3, `cockroach-rc` avec [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.3`, `13` piles). La suite couvre **18 sondes (`L1–L8`, `T11–T18`)**, PG 18.6 AIO, `uuidv7()`, conflits et `T_REVERT` YT Cluster. Nous publions **628 mesures brutes** (**310 baseline `PG_SCALE=2`** / **301 dédupliquées** + **318 V5 `PG_SCALE=20`**). Le dépôt inclut **22 entrées de télémétrie GitHub** (`19` publics + `3` fermés/managés), **13 graphiques `log10`** et [**`dashboard/index.html`**](dashboard/index.html).
+Ce dépôt présente une étude comparative de **16 solutions PostgreSQL** (7 familles, **19 fiches**) et **18 topologies Docker** (`10` PG 17/distribuées, `5` PostgreSQL 18.6, `2` YT Cluster 1.21.3, `cockroach-rc` avec [`jmrenouard/multi-db-docker-env`](https://github.com/jmrenouard/multi-db-docker-env) `v2.6.4`, `13` piles). La suite couvre **18 sondes (`L1–L8`, `T11–T18`)**, PG 18.6 AIO, `uuidv7()`, conflits et `T_REVERT` YT Cluster. Nous publions **628 mesures brutes** (**310 baseline `PG_SCALE=2`** / **301 dédupliquées** + **318 V5 `PG_SCALE=20`**). Le dépôt inclut **22 entrées de télémétrie GitHub** (`19` publics + `3` fermés/managés), **13 graphiques `log10`** et [**`dashboard/index.html`**](dashboard/index.html).
 
 ---
 
@@ -89,7 +89,7 @@ Consultez le [Portail documentaire Diátaxis](docs/index.md) pour parcourir tuto
 | **02** | [Fondements théoriques (CAP, PACELC, conflits)](docs/fr/02_fondements_theoriques_cap_pacelc_conflits.md) | [Theoretical Foundations](docs/en/02_theoretical_foundations_cap_pacelc_conflicts.md) | CAP/PACELC, 4 classes de conflits, équations RPO/RTO, RTT WAN, HLC |
 | **03a** | [Catalogue : natif PG, extensions et baselines](docs/fr/03a_catalogue_natif_et_extensions.md) | [Native & Extension Solutions](docs/en/03a_solutions_native_and_extensions.md) | `#1` PG natif, `#2` pgEdge/Spock 5, `#3` pglogical 2, `#4` EDB PGD (Com.), `#15` Baselines |
 | **03b** | [Catalogue : SQL distribué, MPP, triggers, Cloud](docs/fr/03b_catalogue_distribue_triggers_cloud.md) | [Distributed, Triggers & Cloud](docs/en/03b_solutions_distributed_triggers_cloud.md) | `#5` Yugabyte, `#6` Cockroach, `#7` Citus, `#8` OpenTenBase, `#9`–`#14` Triggers/Proxys/Cloud |
-| **04** | [Étude comparative fonctionnelle (36 critères)](docs/fr/04_etude_comparative_fonctionnalites.md) | [Feature Comparison (36 Criteria)](docs/en/04_comprehensive_feature_comparison.md) | 5 matrices croisant les 15 solutions sur 36 critères techniques |
+| **04** | [Étude comparative fonctionnelle (40 critères)](docs/fr/04_etude_comparative_fonctionnalites.md) | [Feature Comparison (40 Criteria)](docs/en/04_comprehensive_feature_comparison.md) | 6 matrices croisant les 18 solutions sur 40 critères techniques |
 | **05** | [Architectures PoC et protocole de test](docs/fr/05_architectures_poc_et_protocole_de_test.md) | [PoC Architectures & Test Protocol](docs/en/05_poc_architectures_and_test_protocol.md) | Hôte WSL2, réseau Docker isolé, surrogate PK, protocoles 10/8 points, biais |
 | **06** | [Résultats empiriques des tests et benchmarks](docs/fr/06_resultats_tests_et_benchmarks.md) | [Empirical Test & Benchmark Results](docs/en/06_empirical_test_and_benchmark_results.md) | Suites A–F (`pgbench`, `sysbench`, `netem 25ms`), `delta_apply`, dérives |
 | **07** | [Guide de choix, anti-patterns et architecture](docs/fr/07_guide_de_choix_et_architecture_cible.md) | [Decision Framework & Guide](docs/en/07_decision_framework_and_production_guide.md) | Arbre de décision Mermaid, 5 anti-patterns, dimensionnement, PITR, migration |
@@ -99,6 +99,7 @@ Consultez le [Portail documentaire Diátaxis](docs/index.md) pour parcourir tuto
 | **11** | [Popularité, Présence Git et Vitalité de l'Écosystème](docs/fr/11_popularite_et_vitalite_ecosysteme.md) | [Ecosystem Popularity & Vitality](docs/en/11_ecosystem_popularity_and_vitality.md) | Télémétrie GitHub API (21 entrées, 18 dépôts publics), étoiles, commits 12m, `chart_08`–`09` |
 | **12** | [Évolution du Clustering PostgreSQL 18.6 et Benchmarks](docs/fr/12_clustering_postgresql_18_et_benchmarks.md) | [PostgreSQL 18.6 Clustering & Benchmarks](docs/en/12_postgresql_18_clustering_and_benchmarks.md) | PG 16->17->18, AIO `worker`/`io_uring`, `uuidv7()`, 7 `confl_*`, 87 mesures PG 18.6, `chart_10` |
 | **13** | [Optimisation de Production et Benchmarks Réalistes (`PG_SCALE=20`)](docs/fr/13_optimisation_production_et_benchmarks_realistes.md) | [Production Tuning & Realistic Scale Benchmarks](docs/en/13_production_tuning_and_realistic_benchmarks.md) | `fillfactor=90`, `lz4`, `-M prepared`, `delta_apply`, Citus 1-shard, CRDB `v25.4`/RC, YT `v2.6.1`, `chart_12`–`13` |
+| **14** | [Chiffrement Transparent (TDE) et Données au Repos](docs/fr/14_chiffrement_transparent_tde.md) | [Transparent Data Encryption (TDE)](docs/en/14_transparent_data_encryption_tde.md) | Hiérarchie `KEK`/`DEK`, `pg_tde` 2.1, KMS (`KMIP`/`OpenBao`/cloud) et matrice TDE sur 18 architectures |
 
 ---
 
@@ -139,7 +140,7 @@ Les piles opérationnelles, la suite étendue (`T11–T18`) et les benchmarks V2
 ### Commandes `Makefile` essentielles
 
 ```bash
-make init-env        # Initialise le sous-module Git env/multi-db-docker-env (13 piles; harnais v2.6.3)
+make init-env        # Initialise le sous-module Git env/multi-db-docker-env (13 piles; harnais v2.6.4)
 make test && make lint  # Valide gouvernance, sécurité, LaTeX, 13 graphiques, Bash et 13 Compose
 cp .env.example .env
 make build-bench-image  # Construit multi-db-pgbench-sysbench:latest (scripts/Dockerfile.bench)
@@ -148,7 +149,7 @@ make bench-all && make bench-pg18 && make bench-yt-cluster && make bench-optimiz
 make pages-build && make pages-check  # Génère et vérifie le bundle statique hors-ligne GitHub Pages (_site/)
 ```
 
-### Piles Docker disponibles (`env/multi-db-docker-env` `v2.6.3` — voir [`stacks/README.md`](stacks/README.md))
+### Piles Docker disponibles (`env/multi-db-docker-env` `v2.6.4` — voir [`stacks/README.md`](stacks/README.md))
 
 - `pg17-baseline` / `pg-streaming` / `pg-logical` (Standalone, Streaming Async/Sync, Logique Uni PG 17)
 - `pg-birep` (`#1` PG 17 natif `origin = none`), `pgedge-spock` (`#2` Spock 5 + Snowflake), `bucardo` (`#9` Bucardo 5.6)
