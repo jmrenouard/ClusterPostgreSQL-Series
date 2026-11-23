@@ -36,7 +36,7 @@ flowchart TB
     COORD -->|"1PC Shard / 2PC PREPARE + Réf.<br/>libpq via .pgpass"| W2["citus_worker2 (PG 17.10 + Citus 14.2.0)<br/>127.0.0.1:15492->5432 | groupid=2 | Shards + Réf."]
 ```
 
-Dans le PoC, **Citus MX** (`start_metadata_sync_to_node`) n'est pas activé (`B1`–`D` et `H` passent par `citus_coord` seul) ; `tc netem` injecte la latence WAN vers `citus_worker1` et `citus_worker2`.
+Dans le PoC, **Citus MX** (`start_metadata_sync_to_node`) reste désactivé (`B1`–`D` et `H` passent par `citus_coord` seul). Ensuite, `tc netem` injecte le délai WAN vers `citus_worker1` et `citus_worker2`.
 
 ---
 
@@ -49,7 +49,7 @@ $$
 L_{\text{N5-citus-1PC}} \approx L_{\text{disque}} + \text{RTT}_{\text{coord-worker}}, \qquad L_{\text{N5-citus-2PC}} \approx L_{\text{disque}} + 3 \cdot \text{RTT}_{\text{coord-worker}}
 $$
 
-3. **Schéma (`0A000`), colocalisation et MX :** `PRIMARY KEY`/`UNIQUE` distribuées exigent la clé de sharding (`0A000` sinon, `L2`/`L4`). Les tables colocalisées gèrent les FK distribuées (`T13` : `10/10`) ; **Citus MX** synchronise les métadonnées vers les workers.
+3. **Schéma (`0A000`), colocalisation et MX :** `PRIMARY KEY`/`UNIQUE` distribuées exigent la clé de sharding (`0A000` sinon, `L2`/`L4`). Les tables colocalisées gèrent les FK distribuées (`T13` : `10/10`). **Citus MX** synchronise aussi les métadonnées aux workers.
 
 | Mode / Type de table | Portée | Mécanique et stratégie de clés | Impact conflit / bascule | Compromis |
 | :--- | :--- | :--- | :--- | :--- |
@@ -148,7 +148,7 @@ Télémétrie GitHub en direct (`2026-11-20T17:26:02Z`, `archived = false` sauf 
 
 - **Niveau de maintenance :** **Niveau A (OSS Actif)** -- `citusdata/citus` totalise `222` commits/12m (`7 400` total, `152` contributeurs, `12 865` stars, `475` issues).
 - **Fraîcheur / Actualité :** **À jour -- Actif** -- Dernier push `2026-11-20T12:28:36Z`, `222` commits/12m, dernière version `v14.3.0`.
-- **Maintenabilité opérationnelle :** **Modéré** -- Extension C PG (`AGPL-3.0`) ; impose la clé de distribution (`0A000`) et une HA externe (`08006`).
+- **Maintenabilité opérationnelle :** **Modéré** -- Extension C PG (`AGPL-3.0`). Elle impose la clé de distribution (`0A000`) et une HA externe (`08006`).
 
 ---
 

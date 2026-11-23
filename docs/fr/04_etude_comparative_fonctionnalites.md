@@ -36,7 +36,7 @@ Les cinq matrices ci-dessous évaluent les **16+ solutions** — incluant **[#17
 |:---|:---|:---|:---|:---|:---|:---|:---|:---|:---|
 | **#1** | PG natif | Worker (`23505`) | **Stoppe flux** | **Exposé** | Pas décalé / UUID | Non | Oui | Aucun | RC/RR/SSI |
 | **#2** | pgEdge/Spock 5 | `commit_ts` + log | LWW + `exception_log` | **Protégé** (Delta) | `snowflake` 64b | **Oui** | Oui | Aucun | RC/RR |
-| **#3** | pglogical 2 | `commit_ts` | LWW / keep / error | **Exposé** | Sync manuelle | Manuel | Via repset | Aucun | RC/RR |
+| **#3** | pglogical 2 | `commit_ts` | LWW / keep / error | **Exposé** | Sync manuelle | Manuel | Par repset | Aucun | RC/RR |
 | **#4** | EDB PGD (Com.) | Raft / `commit_ts` | CRDT / LWW / Eager | **Protégé** (CRDT) | `bdr.global_seq` | **Oui** (Raft) | Oui | Raft / CAMO | RC/RR/Ser |
 | **#5** | YugabyteDB | Verrous / HLC | Retry `40001` / Wait | **Protégé** (`40001`) | Seq PG / UUID | **Oui** | Oui | 2PC + Raft | RC/Snap/Ser |
 | **#6** | CockroachDB | Intentions HLC | Retry `40001` strict | **Protégé** (`40001`) | `unique_rowid`/seq | **Oui** | Oui | Parallel 2PC | **Ser** (+RC) |

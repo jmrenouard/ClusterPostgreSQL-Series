@@ -27,7 +27,7 @@ Tables span three classes: **Hash-Distributed** (`create_distributed_table`) sha
 
 ## 2. Architecture & Data Flow
 
-In `env/multi-db-docker-env/docker-compose-citus.yml`, clients connect exclusively to `citus_coord` (`groupid=0`, `shouldhaveshards=f`), which routes 1PC shard queries or 2PC distributed transactions to `citus_worker1` (`groupid=1`) and `citus_worker2` (`groupid=2`) across `citus_net` (`citus.shard_count=8`):
+In `env/multi-db-docker-env/docker-compose-citus.yml`, clients connect only to `citus_coord` (`groupid=0`, `shouldhaveshards=f`). It routes 1PC shard queries and 2PC transactions to `citus_worker1` (`groupid=1`) and `citus_worker2` (`groupid=2`) over `citus_net` (`citus.shard_count=8`):
 
 ```mermaid
 flowchart TB
@@ -36,7 +36,7 @@ flowchart TB
     COORD -->|"1PC Shard / 2PC PREPARE + Ref Sync<br/>libpq via .pgpass"| W2["citus_worker2 (PG 17.10 + Citus 14.2.0)<br/>127.0.0.1:15492->5432 | groupid=2 | Shards + Ref"]
 ```
 
-In the PoC, **Citus MX** (`start_metadata_sync_to_node`) is not enabled (`B1`–`D` and `H` execute through `citus_coord` only); `tc netem` injects WAN egress delay onto both `citus_worker1` and `citus_worker2`.
+In the PoC, **Citus MX** (`start_metadata_sync_to_node`) stays disabled, so `B1`–`D` and `H` run through `citus_coord` only. Then `tc netem` adds WAN egress delay onto `citus_worker1` and `citus_worker2`.
 
 ---
 
@@ -49,13 +49,13 @@ $$
 L_{\text{T5-citus-1PC}} \approx L_{\text{disk}} + \text{RTT}_{\text{coord-worker}}, \qquad L_{\text{T5-citus-2PC}} \approx L_{\text{disk}} + 3 \cdot \text{RTT}_{\text{coord-worker}}
 $$
 
-3. **Schema Rules (`0A000`), Colocation & MX:** `PRIMARY KEY`/`UNIQUE` on distributed tables must include the shard key (`0A000` otherwise, `L2`/`L4`). Colocated tables support distributed FKs (`T13`: `10/10`); **Citus MX** optionally syncs metadata to workers.
+3. **Schema Rules (`0A000`), Colocation & MX:** `PRIMARY KEY`/`UNIQUE` on distributed tables must include the shard key (`0A000` otherwise, `L2`/`L4`). Colocated tables support distributed FKs (`T13`: `10/10`). Optional **Citus MX** syncs metadata to workers.
 
 | Mode / Table Type | Scope | Mechanics & Key Strategy | Conflict / Failover Impact | Trade-Off |
 | :--- | :--- | :--- | :--- | :--- |
 | **Hash-Distributed (1PC)** *(PoC `D`/`H`)* | `create_distributed_table(..., col)` | Single-shard pushdown (`citus.shard_count=8`); colocated FKs (`T13`) | Native PG row locks; `0` drift; zero 2PC lock overhead | Requires shard key in `WHERE`, `PK`, and `UNIQUE` |
 | **Hash-Distributed (2PC)** *(PoC `A`/`B1`/`B2`)* | Multi-shard DML | Coordinator runs `PREPARE TRANSACTION` / `COMMIT PREPARED` across workers | Atomic `0` drift (`PASS_CONVERGED`); `RR` raises `40001` (`L3`) | `-64.3%` LAN TPC-B (`309.04` vs `866.82` standalone) & `-93.0%` WAN |
-| **Reference Tables** *(PoC `L7`)* | `create_reference_table(...)` | Full table replicated synchronously to all workers via 2PC | Survives worker outage for reads (`L7`: `worker2` down, ref OK) | Writes stall if any worker is unreachable |
+| **Reference Tables** *(PoC `L7`)* | `create_reference_table(...)` | Full table replicated synchronously to all workers using 2PC | Survives worker outage for reads (`L7`: `worker2` down, ref OK) | Writes stall if any worker is unreachable |
 | **Coordinator-Local Tables** *(PoC)* | Unsharded tables on `citus_coord` | Stored solely on coordinator (`groupid=0`, `shouldhaveshards=f`) | Coordinator sequence (`L1` `1.62 ms`, `T18` `next_id=51`) | Cannot shard horizontally; coordinator SPOF |
 | **Citus MX Multi-Coord** *(Arch. — Not in PoC)* | `start_metadata_sync_to_node` | Syncs shard metadata so workers act as SQL entry points (`shouldhaveshards=t`) | Removes single-coordinator SQL routing bottleneck | Still requires external HA per node; metadata sync overhead |
 | **Worker/Coord Patroni HA** *(Arch. — Not in PoC)* | Per-node streaming standby | Pairs coordinator and each worker with Patroni + `etcd` | Eliminates `08006` shard outage (`T16`) & coord SPOF (`L8`, `RTO 10–30 s`) | Doubles/triples container footprint |
@@ -148,7 +148,7 @@ Live GitHub telemetry (`2026-11-20T17:26:02Z`, `archived = false` unless `N/A`):
 
 - **Maintenance Level:** **Tier A (Active OSS)** -- `citusdata/citus` logs `222` commits/12m (`7,400` total, `152` contributors, `12,865` stars, `475` open issues).
 - **Currency / Freshness:** **Current -- Active** -- Last push `2026-11-20T12:28:36Z`, `222` commits/12m, latest release `v14.3.0`.
-- **Operational Manageability:** **Moderate** -- Standard PG C extension (`AGPL-3.0`); requires distribution-key schema discipline (`0A000`) and external HA (`08006`).
+- **Operational Manageability:** **Moderate** -- Standard PG C extension (`AGPL-3.0`). It requires distribution-key schema discipline (`0A000`) and external HA (`08006`).
 
 ---
 

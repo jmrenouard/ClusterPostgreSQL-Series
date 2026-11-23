@@ -28,6 +28,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-232 - Refactor Citus EN/FR Sheets and Ch 04-05 FR via Cleanup (`#637`)
+- **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#637` (`docs/issue-637-citus-ch04-05-via`)
+- **Request / Changes / Result**: Refactored `docs/en/solutions/citus.md` and `docs/fr/solutions/citus.md` for 0 STE mixed-mode errors and removed non-CSV `via` in `docs/fr/04_etude_comparative_fonctionnalites.md` and `docs/fr/05_architectures_poc_et_protocole_de_test.md`; Windows unittest and WSL `make test lint check-math check-security` pass.
+
 ### ACT-231 - Refactor Chapter 13 EN/FR for 0 STE Errors (`#635`)
 - **Date**: `2026-11-23` | **Status**: `COMPLETED` | **Issue / Branch**: `#635` (`docs/issue-635-ch13-en-fr`)
 - **Request / Changes / Result**: Refactored `docs/en/13_production_tuning_and_realistic_benchmarks.md` and `docs/fr/13_optimisation_production_et_benchmarks_realistes.md` for full-file 0 STE mixed-mode errors, 0 `via`, and 0 weak modals; Windows unittest and WSL `make test lint check-math check-security` pass.
