@@ -106,7 +106,7 @@ class TestMkDocsPublishing(unittest.TestCase):
 
     def test_build_mkdocs_htaccess_and_negative_guards(self) -> None:
         ht = build_mkdocs.render_htaccess()
-        for tok in ("Options -Indexes", "DirectoryIndex index.html", "ErrorDocument 404 /404.html", "RewriteEngine On", "R=301"):
+        for tok in ("Options -Indexes", "DirectoryIndex index.html", "ErrorDocument 404 /404.html", "RewriteEngine On", "R=301", "RewriteRule ^overview-fr/?$ /fr/overview-fr/ [R=301,L]"):
             self.assertIn(tok, ht)
         with self.assertRaises(ValueError):
             build_mkdocs.build_mkdocs_site(ROOT)
@@ -119,6 +119,20 @@ class TestMkDocsPublishing(unittest.TestCase):
                 p.write_text("<html></html>" if req.endswith(".html") else "", encoding="utf-8")
             (out / ".htaccess").write_text(ht, encoding="utf-8")
             self.assertEqual(build_mkdocs.verify_mkdocs_site(out), [])
+
+            (out / "overview-fr").mkdir()
+            (out / "overview-fr/index.html").write_text("<html></html>", encoding="utf-8")
+            self.assertTrue(any("Unexpected FR artifact" in e for e in build_mkdocs.verify_mkdocs_site(out)))
+            shutil.rmtree(out / "overview-fr")
+
+            (out / "fr/overview-en").mkdir()
+            (out / "fr/overview-en/index.html").write_text("<html></html>", encoding="utf-8")
+            self.assertTrue(any("Unexpected EN artifact" in e for e in build_mkdocs.verify_mkdocs_site(out)))
+            shutil.rmtree(out / "fr/overview-en")
+
+            (out / "index.html").write_text('<html lang="fr"></html>', encoding="utf-8")
+            self.assertTrue(any('Expected <html lang="en">' in e for e in build_mkdocs.verify_mkdocs_site(out)))
+            (out / "index.html").write_text("<html></html>", encoding="utf-8")
 
             (out / ".htaccess").unlink()
             self.assertTrue(any(".htaccess" in e for e in build_mkdocs.verify_mkdocs_site(out)))
@@ -170,6 +184,9 @@ class TestMkDocsPublishing(unittest.TestCase):
             out = pathlib.Path(tmp) / "site"
             st = build_mkdocs.build_mkdocs_site(out, strict=True, mkdocs_bin=mk_bin)
             self.assertGreater(st["files"], 100)
+            self.assertIn('lang="en"', (out / "index.html").read_text(encoding="utf-8")[:512])
+            self.assertIn('lang="fr"', (out / "fr/index.html").read_text(encoding="utf-8")[:512])
+            self.assertTrue((out / "fr/overview-fr/index.html").is_file())
             self.assertEqual(build_mkdocs.verify_mkdocs_site(out), [])
 
 

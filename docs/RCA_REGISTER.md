@@ -216,6 +216,13 @@
 - **Applied Change / Fix**: Attached `gfm_slugify` in `on_config()` (`scripts/mkdocs_hooks.py`), switched `origin` to SSH (`git@github.com`), and added `scripts/build_mkdocs.py` plus `.github/workflows/docs-publish.yml`.
 - **Result & Non-Regression Test**: `build_mkdocs.py --strict --check`, Windows `unittest`, and WSL suites pass with zero banned paths or tokens.
 
+### RCA-031 - Dual EN/FR MkDocs Separation, Cross-Language Links & Workflow OAuth Scope (`#713-#717`)
+- **Date / Action**: `2026-11-24` (`ACT-270`..`ACT-272`)
+- **Observed Symptom**: Splitting `mkdocs.yml` (EN `/`) and `mkdocs.fr.yml` (FR `/fr/`) initially overlapped on `site/fr/`, broke cross-language `.md` links under `--strict`, risked breaking `/overview-fr/` smoke checks, and remained subject to HTTPS OAuth `workflow` scope limits (`RCA-003`).
+- **Root Cause Analysis**: MkDocs clears target `-d` directories per build, excluded sibling-language docs do not emit local targets unless rewritten by hooks, and modifying `.github/workflows/*.yml` requires `workflow` scope (`IDEA-002`).
+- **Applied Change / Fix**: Separated `mkdocs.yml` (`exclude_docs`, EN `nav`) and `mkdocs.fr.yml` (`theme.language: fr`, FR `nav`), added `_alt_url` cross-language rewriting and virtual `docs/fr/index.md` mapping in `scripts/mkdocs_hooks.py`, added Apache `.htaccess` `/overview-fr/` -> `/fr/overview-fr/` redirect plus EN/FR isolation guards in `scripts/build_mkdocs.py`, and executed strict EN+FR checks inside `tests/test_mkdocs_publishing.py` without altering `.github/workflows/*.yml`.
+- **Result & Non-Regression Test**: `40/40` `unittest`, `build_mkdocs.py --strict --check`, and `audit_helpers.py` (`language_mix=0`) pass.
+
 ## 2. Technical Dead-Ends & Abandoned Leads (`IMP-XXX`)
 
 ### IMP-001 - Monolithic Bootstrap Pull Request Exceeding 15,000 Characters
@@ -369,8 +376,8 @@
 - **Proposal**: Implemented via `scripts/bench_pg_multimaster.sh` and `make bench-all`; extend in future iterations with `PG_SCALE=50+` I/O-bound sweeps.
 
 ### IDEA-002 - GitHub Actions CI Workflow Enablement Pending `workflow` OAuth Scope
-- **Date / Action**: `2026-11-19` (`ACT-003`)
-- **Proposal**: Add `.github/workflows/ci.yml` executing `python3 -m unittest discover -s tests -v`, `bash -n`, and `docker compose config` once the maintainer grants the GitHub `workflow` OAuth scope (`RCA-003`).
+- **Date / Action**: `2026-11-19` (`ACT-003`, updated `ACT-272`)
+- **Proposal**: Add `.github/workflows/ci.yml` / `docs-ci.yml` (Diataxis, STE/STF, Mermaid, and dual EN/FR MkDocs checks) and explicit `/fr/overview-fr/` live smoke check in `docs-publish.yml` once a maintainer `workflow`-scoped token is used (`RCA-003`); meanwhile `docs-publish.yml` runs `unittest` + `build_mkdocs.py --strict --check` and `.htaccess` redirects `/overview-fr/` to `/fr/overview-fr/`.
 
 ### IDEA-003 - Multi-Host Cloud Multi-Region Benchmark & PITR Soak Suite
 - **Date / Action**: `2026-11-19` (`ACT-047`)

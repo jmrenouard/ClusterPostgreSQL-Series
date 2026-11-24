@@ -31,6 +31,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-272 - Enforce EN/FR Site Isolation, Apache Redirect, STF Fix & RCA (`#717`)
+- **Date**: `2026-11-24` | **Status**: `COMPLETED` | **Issue / Branch**: `#717` (`docs/issue-717-i18n-checks-portal`)
+- **Request / Changes / Result**: Added Apache `/overview-fr/` redirect and EN/FR HTML isolation guards in `scripts/build_mkdocs.py`, expanded `tests/test_mkdocs_publishing.py`, fixed active voice in `README.fr.md`, and logged `RCA-031` / `IDEA-002`; `40/40` tests, STF check (`0` errors), strict EN/FR build, and `audit_helpers.py` pass (`< 11,000` B PR diff).
+
 ### ACT-271 - Split EN/FR MkDocs (`#715`)
 - **Date**: `2026-11-24` | **Status**: `COMPLETED` | **Issue / Branch**: `#715` (`docs/issue-715-mkdocs-fr-config`)
 - **Request / Changes / Result**: Isolated `mkdocs.yml` (EN) + `mkdocs.fr.yml` (FR), updated `scripts/build_mkdocs.py` and tests; `40/40` tests, strict EN/FR build, i18n check pass.
