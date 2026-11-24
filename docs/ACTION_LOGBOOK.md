@@ -31,6 +31,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-275 - Convert docs/index.md to 100% English Diataxis Portal (`#723`)
+- **Date**: `2026-11-24` | **Status**: `COMPLETED` | **Issue / Branch**: `#723` (`docs/issue-723-en-portal-index`)
+- **Request / Changes / Result**: Removed French links from `docs/index.md` and mapped EN tutorials, STE how-to guides, reference sheets, and explanations cleanly; `40/40` tests, strict EN/FR build, and `audit_helpers.py` pass (`< 13,500` B diff).
+
 ### ACT-274 - Align mkdocs.yml Diataxis Nav, Verify Guards & STE Fixes (`#721`)
 - **Date**: `2026-11-24` | **Status**: `COMPLETED` | **Issue / Branch**: `#721` (`docs/issue-721-en-portal-nav`)
 - **Request / Changes / Result**: Moved `05`/`07`/`13` to Reference and dropped `EN - ` prefixes in `mkdocs.yml`, added `03-reference` to `FR_BAD_RX` plus tutorial/howto artifacts in `scripts/build_mkdocs.py`, and cleared PR `#720` STE/git notes; Diataxis (`0` errors), STE (`0` warnings), `40/40` tests, strict EN/FR build, and `audit_helpers.py` pass.
