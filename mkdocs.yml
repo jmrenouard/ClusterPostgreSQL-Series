@@ -117,11 +117,18 @@ nav:
       - 13 Compose Stacks: stacks-overview.md
       - Interactive Explorer: dashboard/index.html
   - Tutorials:
+      - Tutorials Overview: en/01-tutorials/index.md
+      - "01 First Docker PoC Lab": en/01-tutorials/01-first-docker-poc-lab.md
+      - "02 pgbench & sysbench Lab": en/01-tutorials/02-pgbench-sysbench-lab.md
       - "EN - 05 PoC Architectures & Test Protocol": en/05_poc_architectures_and_test_protocol.md
   - How-To Guides:
+      - How-To Guides Overview: en/02-how-to-guides/index.md
+      - "01 Run Topology Benchmarks": en/02-how-to-guides/01-run-topology-benchmarks.md
+      - "02 Verify Limits & Hygiene": en/02-how-to-guides/02-verify-limits-and-hygiene.md
       - "EN - 07 Decision Framework & Guide": en/07_decision_framework_and_production_guide.md
       - "EN - 13 Production Tuning (PG_SCALE=20)": en/13_production_tuning_and_realistic_benchmarks.md
   - Reference:
+      - Reference Overview: en/03-reference/index.md
       - Chapters & Matrices:
           - "EN - 04 Feature Comparison (40 Criteria)": en/04_comprehensive_feature_comparison.md
           - "EN - 06 Empirical Benchmarks (A-H)": en/06_empirical_test_and_benchmark_results.md
@@ -153,6 +160,7 @@ nav:
           - Action Logbook: ACTION_LOGBOOK.md
           - RCA & Assumptions Register: RCA_REGISTER.md
   - Explanation:
+      - Explanation Overview: en/04-explanation/index.md
       - "EN - 01 Executive Summary & Taxonomy": en/01_executive_summary_and_taxonomy.md
       - "EN - 02 CAP, PACELC & Conflict Calculus": en/02_theoretical_foundations_cap_pacelc_conflicts.md
       - "EN - 03a Native & Extensions Catalog": en/03a_solutions_native_and_extensions.md
