@@ -43,7 +43,7 @@ make docs-check
 5. Check that your branch diff stays below the 15,000-character limit:
 
 ```bash
-git diff main | wc -c
+git diff main...HEAD | wc -c
 ```
 
 ## Validation

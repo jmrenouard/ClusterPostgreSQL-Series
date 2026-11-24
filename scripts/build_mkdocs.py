@@ -18,7 +18,7 @@ TEXT_EXTS = {".html", ".css", ".js", ".svg", ".json", ".txt"}
 SKIP_RX = re.compile(r"^(?:https?://|//|mailto:|tel:|data:|javascript:|#)", re.I)
 LANG_RX = re.compile(r'<html[^>]+lang=["\']([a-z-]+)["\']', re.I)
 EN_BAD_RX = re.compile(r"^(?:overview-fr|01-tutoriels|02-guides-pratiques|03-reference-fr|04-explications)/")
-FR_BAD_RX = re.compile(r"^(?:overview-en|en|01-tutorials|02-how-to-guides|04-explanation)/")
+FR_BAD_RX = re.compile(r"^(?:overview-en|en|01-tutorials|02-how-to-guides|03-reference|04-explanation)/")
 BANNED = (
     ("secret-store", re.compile(r"\b(?:k[e]epass|v[a]ult|password[_ -]?manag[e]r)\b|\.(?:kdb[x]|key[x])\b", re.I)),
     ("local-path", re.compile(r"[A-Za-z]:\\[U]sers\\|/mnt/[c]/|\b[D]ropbox\b", re.I)),
@@ -32,6 +32,8 @@ REQUIRED_SITE_FILES = (
     "assets/charts/chart_01_tps_log_all_suites.png",
     "overview-en/index.html",
     "stacks-overview/index.html",
+    "en/01-tutorials/01-first-docker-poc-lab/index.html",
+    "en/02-how-to-guides/01-run-topology-benchmarks/index.html",
     "en/01_executive_summary_and_taxonomy/index.html",
     "en/14_transparent_data_encryption_tde/index.html",
     "en/solutions/yt_cluster_lite/index.html",
