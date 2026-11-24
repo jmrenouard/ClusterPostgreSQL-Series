@@ -70,17 +70,24 @@ nav:
     - Piles Compose: stacks-overview.md
     - Explorateur: dashboard/index.html
   - Tutoriels:
-    - "05 PoC & Protocole": fr/05_architectures_poc_et_protocole_de_test.md
+    - Apercu Tutoriels: fr/01-tutoriels/index.md
+    - "01 Premier Lab PoC Docker": fr/01-tutoriels/01-premier-lab-poc-docker.md
+    - "02 Lab pgbench & sysbench": fr/01-tutoriels/02-lab-benchmarks-pgbench-sysbench.md
   - Guides pratiques:
-    - "07 Choix & Architecture": fr/07_guide_de_choix_et_architecture_cible.md
-    - "13 Tuning (SCALE=20)": fr/13_optimisation_production_et_benchmarks_realistes.md
+    - Apercu Guides pratiques: fr/02-guides-pratiques/index.md
+    - "01 Executer les benchmarks": fr/02-guides-pratiques/01-executer-benchmarks-topologies.md
+    - "02 Verifier limites & hygiene": fr/02-guides-pratiques/02-verifier-limites-et-hygiene.md
   - Reference:
+    - Apercu Reference: fr/03-reference/index.md
     - Chapitres:
       - "04 Etude (40 Criteres)": fr/04_etude_comparative_fonctionnalites.md
+      - "05 PoC & Protocole": fr/05_architectures_poc_et_protocole_de_test.md
       - "06 Benchmarks (A-H)": fr/06_resultats_tests_et_benchmarks.md
+      - "07 Choix & Architecture": fr/07_guide_de_choix_et_architecture_cible.md
       - "08 Limites": fr/08_limites_et_modes_de_defaillance.md
       - "09 Graphiques": fr/09_methodologie_benchmarks_et_graphiques.md
       - "11 Popularite": fr/11_popularite_et_vitalite_ecosysteme.md
+      - "13 Tuning (SCALE=20)": fr/13_optimisation_production_et_benchmarks_realistes.md
       - "14 TDE": fr/14_chiffrement_transparent_tde.md
     - Solutions:
       - "#1 PG 17 Bidir": fr/solutions/pg17_bidirectional_logical.md
@@ -106,6 +113,7 @@ nav:
       - Journal: ACTION_LOGBOOK.md
       - Registre RCA: RCA_REGISTER.md
   - Explications:
+    - Apercu Explications: fr/04-explications/index.md
     - "01 Synthese": fr/01_synthese_et_taxonomie.md
     - "02 CAP & Conflits": fr/02_fondements_theoriques_cap_pacelc_conflits.md
     - "03a Extensions": fr/03a_catalogue_natif_et_extensions.md
