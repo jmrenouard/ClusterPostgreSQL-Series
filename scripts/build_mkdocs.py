@@ -28,14 +28,16 @@ REQUIRED_SITE_FILES = (
     "dashboard/index.html",
     "assets/charts/chart_01_tps_log_all_suites.png",
     "overview-en/index.html",
-    "overview-fr/index.html",
     "stacks-overview/index.html",
     "en/01_executive_summary_and_taxonomy/index.html",
-    "fr/01_synthese_et_taxonomie/index.html",
     "en/14_transparent_data_encryption_tde/index.html",
-    "fr/14_chiffrement_transparent_tde/index.html",
     "en/solutions/yt_cluster_lite/index.html",
-    "fr/solutions/yt_cluster_lite/index.html",
+    "fr/index.html",
+    "fr/overview-fr/index.html",
+    "fr/dashboard/index.html",
+    "fr/fr/01_synthese_et_taxonomie/index.html",
+    "fr/fr/14_chiffrement_transparent_tde/index.html",
+    "fr/fr/solutions/yt_cluster_lite/index.html",
 )
 
 

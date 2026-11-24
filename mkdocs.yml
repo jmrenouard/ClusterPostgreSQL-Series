@@ -7,6 +7,15 @@ edit_uri: edit/main/docs/
 copyright: Copyright &copy; 2026 Jean-Marie Renouard &middot; LightPath
 
 docs_dir: docs
+exclude_docs: |
+  fr/
+  *_fr.md
+  overview-fr.md
+  /01-tutoriels/
+  /02-guides-pratiques/
+  /03-reference-fr/
+  /04-explications/
+  en/index.md
 
 hooks:
   - scripts/mkdocs_hooks.py
@@ -49,6 +58,13 @@ plugins:
   - search
 
 extra:
+  alternate:
+    - name: English
+      link: /
+      lang: en
+    - name: Francais
+      link: /fr/
+      lang: fr
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/jmrenouard/ClusterPostgreSQL-Series
@@ -98,17 +114,13 @@ nav:
   - Home: index.md
   - Overviews:
       - Overview (English): overview-en.md
-      - Apercu (Francais): overview-fr.md
       - 13 Compose Stacks: stacks-overview.md
       - Interactive Explorer: dashboard/index.html
   - Tutorials:
       - "EN - 05 PoC Architectures & Test Protocol": en/05_poc_architectures_and_test_protocol.md
-      - "FR - 05 Architectures PoC & Protocole": fr/05_architectures_poc_et_protocole_de_test.md
   - How-To Guides:
       - "EN - 07 Decision Framework & Guide": en/07_decision_framework_and_production_guide.md
       - "EN - 13 Production Tuning (PG_SCALE=20)": en/13_production_tuning_and_realistic_benchmarks.md
-      - "FR - 07 Guide de Choix & Architecture": fr/07_guide_de_choix_et_architecture_cible.md
-      - "FR - 13 Optimisation Production (PG_SCALE=20)": fr/13_optimisation_production_et_benchmarks_realistes.md
   - Reference:
       - Chapters & Matrices:
           - "EN - 04 Feature Comparison (40 Criteria)": en/04_comprehensive_feature_comparison.md
@@ -117,12 +129,6 @@ nav:
           - "EN - 09 Methodology & 13 Charts": en/09_benchmarks_methodology_and_charts.md
           - "EN - 11 Ecosystem Popularity & Vitality": en/11_ecosystem_popularity_and_vitality.md
           - "EN - 14 Transparent Data Encryption (TDE)": en/14_transparent_data_encryption_tde.md
-          - "FR - 04 Etude Comparative (40 Criteres)": fr/04_etude_comparative_fonctionnalites.md
-          - "FR - 06 Resultats Empiriques (A-H)": fr/06_resultats_tests_et_benchmarks.md
-          - "FR - 08 Limites & Defaillances": fr/08_limites_et_modes_de_defaillance.md
-          - "FR - 09 Methodologie & 13 Graphiques": fr/09_methodologie_benchmarks_et_graphiques.md
-          - "FR - 11 Popularite & Vitalite": fr/11_popularite_et_vitalite_ecosysteme.md
-          - "FR - 14 Chiffrement Transparent (TDE)": fr/14_chiffrement_transparent_tde.md
       - Solutions (EN):
           - "#1 PG 17 Bidirectional Logical": en/solutions/pg17_bidirectional_logical.md
           - "#2 pgEdge / Spock v5": en/solutions/pgedge_spock.md
@@ -143,26 +149,6 @@ nav:
           - "#16 PG 17 Uni-Directional Logical": en/solutions/pg17_logical_unidirectional.md
           - "#17 PG 18.6 Native Clustering": en/solutions/pg18_native_clustering.md
           - "#18 YT Cluster & YT Cluster Lite": en/solutions/yt_cluster_lite.md
-      - Solutions (FR):
-          - "#1 PG 17 Logique Bidirectionnelle": fr/solutions/pg17_bidirectional_logical.md
-          - "#2 pgEdge / Spock v5": fr/solutions/pgedge_spock.md
-          - "#3 pglogical 2": fr/solutions/pglogical2.md
-          - "#4 EDB Postgres Distributed": fr/solutions/edb_pgd.md
-          - "#5 YugabyteDB": fr/solutions/yugabytedb.md
-          - "#6 CockroachDB": fr/solutions/cockroachdb.md
-          - "#7 Citus": fr/solutions/citus.md
-          - "#8 OpenTenBase / PG-XL": fr/solutions/opentenbase_pgxl.md
-          - "#9 Bucardo 5": fr/solutions/bucardo.md
-          - "#10 SymmetricDS": fr/solutions/symmetricds.md
-          - "#11 PgPool-II": fr/solutions/pgpool_ii.md
-          - "#12 AWS Aurora Limitless": fr/solutions/aws_aurora_limitless.md
-          - "#13 GCP Spanner & AlloyDB": fr/solutions/gcp_spanner_alloydb.md
-          - "#14 Systemes Historiques a Triggers": fr/solutions/legacy_triggers.md
-          - "#15a PG 17 Standalone": fr/solutions/pg17_standalone.md
-          - "#15b PG 17 Streaming & Patroni": fr/solutions/pg17_physical_streaming_patroni.md
-          - "#16 PG 17 Logique Unidirectionnelle": fr/solutions/pg17_logical_unidirectional.md
-          - "#17 PG 18.6 Clustering Natif": fr/solutions/pg18_native_clustering.md
-          - "#18 YT Cluster & YT Cluster Lite": fr/solutions/yt_cluster_lite.md
       - Governance Registers:
           - Action Logbook: ACTION_LOGBOOK.md
           - RCA & Assumptions Register: RCA_REGISTER.md
@@ -173,9 +159,3 @@ nav:
       - "EN - 03b Distributed, Triggers & Cloud": en/03b_solutions_distributed_triggers_cloud.md
       - "EN - 10 Streaming vs Logical vs Multi-Master": en/10_streaming_vs_logical_vs_multimaster.md
       - "EN - 12 PG 18.6 Clustering": en/12_postgresql_18_clustering_and_benchmarks.md
-      - "FR - 01 Synthese & Taxonomie": fr/01_synthese_et_taxonomie.md
-      - "FR - 02 Fondements CAP, PACELC & Conflits": fr/02_fondements_theoriques_cap_pacelc_conflits.md
-      - "FR - 03a Catalogue Natif & Extensions": fr/03a_catalogue_natif_et_extensions.md
-      - "FR - 03b Catalogue Distribue & Cloud": fr/03b_catalogue_distribue_triggers_cloud.md
-      - "FR - 10 Streaming vs Logique vs Multi-Maitres": fr/10_comparatif_streaming_logique_multimaster.md
-      - "FR - 12 Clustering PG 18.6": fr/12_clustering_postgresql_18_et_benchmarks.md
