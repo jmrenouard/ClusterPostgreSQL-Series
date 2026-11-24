@@ -40,6 +40,8 @@ REQUIRED_SITE_FILES = (
     "fr/index.html",
     "fr/overview-fr/index.html",
     "fr/dashboard/index.html",
+    "fr/fr/01-tutoriels/01-premier-lab-poc-docker/index.html",
+    "fr/fr/02-guides-pratiques/01-executer-benchmarks-topologies/index.html",
     "fr/fr/01_synthese_et_taxonomie/index.html",
     "fr/fr/14_chiffrement_transparent_tde/index.html",
     "fr/fr/solutions/yt_cluster_lite/index.html",
