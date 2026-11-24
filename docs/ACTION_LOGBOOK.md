@@ -31,6 +31,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-274 - Align mkdocs.yml Diataxis Nav, Verify Guards & STE Fixes (`#721`)
+- **Date**: `2026-11-24` | **Status**: `COMPLETED` | **Issue / Branch**: `#721` (`docs/issue-721-en-portal-nav`)
+- **Request / Changes / Result**: Moved `05`/`07`/`13` to Reference and dropped `EN - ` prefixes in `mkdocs.yml`, added `03-reference` to `FR_BAD_RX` plus tutorial/howto artifacts in `scripts/build_mkdocs.py`, and cleared PR `#720` STE/git notes; Diataxis (`0` errors), STE (`0` warnings), `40/40` tests, strict EN/FR build, and `audit_helpers.py` pass.
+
 ### ACT-273 - Add EN Diataxis Quadrants, Tutorials & STE How-Tos (`#719`)
 - **Date**: `2026-11-24` | **Status**: `COMPLETED` | **Issue / Branch**: `#719` (`docs/issue-719-en-diataxis-quadrants`)
 - **Request / Changes / Result**: Added `docs/en/` Diataxis quadrants (`01-tutorials/`, STE `02-how-to-guides/`, `03-reference/`, `04-explanation/`, `index.md`) and updated `mkdocs.yml`; Diataxis (`0` errors), STE (`0` errors/warnings), `40/40` tests, strict EN/FR build, and `audit_helpers.py` pass.
