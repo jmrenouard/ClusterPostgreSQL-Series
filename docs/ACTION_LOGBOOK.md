@@ -31,6 +31,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-276 - Add French Diataxis Portal, Tutorials & STF Guides (`#725`)
+- **Date**: `2026-11-24` | **Status**: `COMPLETED` | **Issue / Branch**: `#725` (`docs/issue-725-fr-diataxis-quadrants`)
+- **Request / Changes / Result**: Added `docs/fr/` Diataxis quadrants (`index.md`, `01-tutoriels/`, STF `02-guides-pratiques/`, `03-reference/`, `04-explications/`) and `mkdocs.fr.yml` nav; Diataxis FR, STF (`0` errors/warnings), `40/40` tests, strict EN/FR build, and `audit_helpers.py` pass.
+
 ### ACT-275 - Convert docs/index.md to 100% English Diataxis Portal (`#723`)
 - **Date**: `2026-11-24` | **Status**: `COMPLETED` | **Issue / Branch**: `#723` (`docs/issue-723-en-portal-index`)
 - **Request / Changes / Result**: Removed French links from `docs/index.md` and mapped EN tutorials, STE how-to guides, reference sheets, and explanations cleanly; `40/40` tests, strict EN/FR build, and `audit_helpers.py` pass (`< 13,500` B diff).
