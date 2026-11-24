@@ -16,6 +16,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 DEFAULT_OUT = ROOT / "site"
 TEXT_EXTS = {".html", ".css", ".js", ".svg", ".json", ".txt"}
 SKIP_RX = re.compile(r"^(?:https?://|//|mailto:|tel:|data:|javascript:|#)", re.I)
+LANG_RX = re.compile(r'<html[^>]+lang=["\']([a-z-]+)["\']', re.I)
+EN_BAD_RX = re.compile(r"^(?:overview-fr|01-tutoriels|02-guides-pratiques|03-reference-fr|04-explications)/")
+FR_BAD_RX = re.compile(r"^(?:overview-en|en|01-tutorials|02-how-to-guides|04-explanation)/")
 BANNED = (
     ("secret-store", re.compile(r"\b(?:k[e]epass|v[a]ult|password[_ -]?manag[e]r)\b|\.(?:kdb[x]|key[x])\b", re.I)),
     ("local-path", re.compile(r"[A-Za-z]:\\[U]sers\\|/mnt/[c]/|\b[D]ropbox\b", re.I)),
@@ -84,6 +87,9 @@ ErrorDocument 404 /404.html
   RewriteCond %{HTTPS} !=on
   RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+  # Redirect legacy French overview URL to /fr/ subsite
+  RewriteRule ^overview-fr/?$ /fr/overview-fr/ [R=301,L]
 </IfModule>
 """
 
@@ -135,9 +141,13 @@ def verify_mkdocs_site(out_dir: pathlib.Path = DEFAULT_OUT) -> list[str]:
     ht_path = out / ".htaccess"
     if ht_path.is_file():
         ht = ht_path.read_text(encoding="utf-8", errors="ignore")
-        for tok in ("Options -Indexes", "RewriteEngine On", "R=301"):
+        for tok in ("Options -Indexes", "RewriteEngine On", "R=301", "RewriteRule ^overview-fr/?$ /fr/overview-fr/"):
             if tok not in ht:
                 errs.append(f"Missing .htaccess directive: {tok}")
+    for idx, exp in (("index.html", "en"), ("fr/index.html", "fr")):
+        if (idx_p := out / idx).is_file() and (m := LANG_RX.search(idx_p.read_text(encoding="utf-8", errors="ignore")[:1024])):
+            if m.group(1).lower().split("-")[0] != exp:
+                errs.append(f"Expected <html lang=\"{exp}\"> in {idx}")
 
     for path in sorted(out.rglob("*")):
         rel = path.relative_to(out)
@@ -150,6 +160,11 @@ def verify_mkdocs_site(out_dir: pathlib.Path = DEFAULT_OUT) -> list[str]:
             txt = path.read_text(encoding="utf-8", errors="ignore")
             errs.extend(f"Hygiene violation ({lbl}) in {rel.as_posix()}" for lbl, pat in BANNED if pat.search(txt))
         if path.suffix.lower() == ".html":
+            pos = rel.as_posix()
+            if pos.startswith("fr/") and FR_BAD_RX.match(pos[3:]):
+                errs.append(f"Unexpected EN artifact in FR subsite: {pos}")
+            elif not pos.startswith("fr/") and EN_BAD_RX.match(pos):
+                errs.append(f"Unexpected FR artifact in EN site: {pos}")
             parser = _LinkCollector()
             parser.feed(path.read_text(encoding="utf-8", errors="ignore"))
             for ref in parser.refs:

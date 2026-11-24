@@ -171,7 +171,7 @@ Les sorties brutes sont publiées dans `results/` (`benchmark_summary.csv`, `ben
 
 ## 5. Soutien et attribution
 
-Cette série technique open-source indépendante est réalisée par **Jean-Marie Renouard** (`jmrenouard`) sous licence [MIT](LICENSE), avec le soutien technique de **LightPath** :
+**Jean-Marie Renouard** (`jmrenouard`) maintient cette série technique open-source sous licence [MIT](LICENSE), avec le soutien de **LightPath** :
 
 <p align="center"><sub>Soutenu par</sub></p>
 
