@@ -31,6 +31,10 @@
 
 ## 2. Completed Actions (`COMPLETED`)
 
+### ACT-277 - Add Executable Tutorial, How-To, Diagram, and i18n Test Suite (`#727`)
+- **Date**: `2026-11-24` | **Status**: `COMPLETED` | **Issue / Branch**: `#727` (`docs/issue-727-tutorial-howto-tests`)
+- **Request / Changes / Result**: Added `tests/test_docs_tutorials_howtos.py` validating EN/FR Diataxis tutorials and STE/STF how-to guides, Makefile/script/Compose checks, zero ASCII diagrams, Mermaid syntax across all parent docs, math syntax, and EN/FR MkDocs isolation, plus FR tutorial/howto artifacts in `scripts/build_mkdocs.py`; all unit tests, Diataxis/STE/STF, strict EN/FR build, `mmdc`, and Playwright checks pass.
+
 ### ACT-276 - Add French Diataxis Portal, Tutorials & STF Guides (`#725`)
 - **Date**: `2026-11-24` | **Status**: `COMPLETED` | **Issue / Branch**: `#725` (`docs/issue-725-fr-diataxis-quadrants`)
 - **Request / Changes / Result**: Added `docs/fr/` Diataxis quadrants (`index.md`, `01-tutoriels/`, STF `02-guides-pratiques/`, `03-reference/`, `04-explications/`) and `mkdocs.fr.yml` nav; Diataxis FR, STF (`0` errors/warnings), `40/40` tests, strict EN/FR build, and `audit_helpers.py` pass.
